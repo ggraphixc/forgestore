@@ -150,3 +150,21 @@ def root(request: Request, db: Session = Depends(get_db)):
 @app.get("/health")
 def health():
     return {"status": "ok", "version": "1.0.0"}
+
+
+@app.get("/api/debug/ip")
+async def debug_ip(request: Request):
+    """Debug endpoint to show the server's IP info (for Brevo SMTP authorization)."""
+    import socket
+    hostname = socket.gethostname()
+    try:
+        server_ip = socket.gethostbyname(hostname)
+    except Exception:
+        server_ip = "unknown"
+    return {
+        "hostname": hostname,
+        "server_ip": server_ip,
+        "client_ip": request.client.host if request.client else "unknown",
+        "x_forwarded_for": request.headers.get("x-forwarded-for", ""),
+        "x_real_ip": request.headers.get("x-real-ip", ""),
+    }
