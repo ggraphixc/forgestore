@@ -1,0 +1,56 @@
+# Render Blueprint — ForgeStore Backend API
+# https://render.com/docs/blueprint-spec
+#
+# Deploy steps:
+#   1. Push this file to GitHub
+#   2. In Render dashboard → "New Blueprint" → connect your repo
+#   3. Set the sensitive env vars in Render dashboard (marked sync: false)
+#   4. Render auto-deploys your web service
+
+services:
+  - type: web
+    name: forgestore-api
+    env: docker
+    plan: starter
+    region: oregon
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      # ── Non-sensitive defaults ──
+      - key: DEBUG
+        value: false
+      - key: SITE_NAME
+        value: ForgeStore
+      - key: SITE_TAGLINE
+        value: "Your One-Stop Marketplace"
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 1440
+      - key: GUNICORN_LOG_LEVEL
+        value: info
+
+      # ── Set these in Render dashboard (sync: false = not in render.yaml) ──
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: SITE_BASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: PAYSTACK_PUBLIC_KEY
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: FROM_EMAIL
+        sync: false

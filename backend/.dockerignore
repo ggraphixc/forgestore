@@ -1,0 +1,44 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__
+*.py[cod]
+*.pyo
+*.egg-info
+.venv
+venv
+env
+*.egg
+
+# Local env files
+.env
+.env.local
+.env.*.local
+.env.example
+
+# IDE / OS
+.idea
+.vscode
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test & coverage
+.pytest_cache
+.coverage
+htmlcov
+.coverage.*
+test_*.db
+*.db
+
+# Project specific
+forgestore.db
+static/uploads
