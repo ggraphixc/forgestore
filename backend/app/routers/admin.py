@@ -126,7 +126,7 @@ def product_new(request: Request, db: Session = Depends(get_db)):
 async def product_create(
     request: Request,
     db: Session = Depends(get_db),
-    files: List[UploadFile] = File(None),
+    files: list[UploadFile] = File(None),
 ):
     admin = get_current_user_from_cookie(request, db)
     if not admin or not has_permission(admin, "catalog"):
