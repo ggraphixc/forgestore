@@ -25,8 +25,9 @@ loglevel = os.environ.get("GUNICORN_LOG_LEVEL", "info")
 # Graceful shutdown
 graceful_timeout = 30
 
-# Preload app for faster startup
-preload_app = True
+# Preload app for faster startup — disabled to avoid import-time crashes
+# when the database is unreachable. Re-enable once startup is stable.
+# preload_app = True
 
 # Max requests per worker to prevent memory leaks
 max_requests = 1000
