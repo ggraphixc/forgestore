@@ -1,0 +1,123 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ retailer.name }} — ForgeStore Admin{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <nav class="flex items-center gap-2 text-sm text-stone-400 mb-6">
+        <a href="/admin/retailers" class="hover:text-amber-600 transition-colors">Retailers</a>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
+        <span class="text-stone-600 font-medium">{{ retailer.name }}</span>
+    </nav>
+
+    <!-- Header -->
+    <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden mb-6 shadow-sm">
+        {% if retailer.cover_image %}
+        <div class="h-48 bg-stone-100">
+            <img src="{{ retailer.cover_image }}" alt="" class="w-full h-full object-cover">
+        </div>
+        {% else %}
+        <div class="h-32 bg-gradient-to-r from-stone-900 via-stone-800 to-amber-900"></div>
+        {% endif %}
+        <div class="px-6 pb-6 {% if retailer.cover_image %}pt-0{% else %}pt-6{% endif %}">
+            <div class="flex items-end gap-4 {% if retailer.cover_image %}-mt-16{% endif %}">
+                {% if retailer.logo %}
+                <img src="{{ retailer.logo }}" alt="{{ retailer.name }}" class="w-20 h-20 rounded-xl border-4 border-white shadow-md object-cover bg-white">
+                {% else %}
+                <div class="w-20 h-20 rounded-xl border-4 border-white shadow-md bg-gradient-to-br from-stone-800 to-stone-900 flex items-center justify-center text-white text-2xl font-bold">
+                    {{ retailer.name[0]|upper }}
+                </div>
+                {% endif %}
+                <div class="flex-1 pt-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h1 class="text-2xl font-heading font-bold text-stone-900">{{ retailer.name }}</h1>
+                            <p class="text-sm text-stone-400">{{ retailer.email or '' }}{% if retailer.phone %} · {{ retailer.phone }}{% endif %}</p>
+                        </div>
+                        <a href="/admin/retailers/{{ retailer.slug }}/edit" class="px-4 py-2.5 bg-gradient-to-r from-stone-800 to-stone-900 text-white text-sm font-bold rounded-xl hover:from-stone-900 hover:to-stone-950 transition-all shadow-md hover:shadow-lg">
+                            <span class="inline-flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                Edit Retailer
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <!-- Stats -->
+        <div class="lg:col-span-1 space-y-4">
+            <div class="bg-white rounded-2xl border border-stone-200 p-5 shadow-sm">
+                <h3 class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 mb-4">Details</h3>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between items-center">
+                        <span class="text-stone-400">Status</span>
+                        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full {% if retailer.status == 'ACTIVE' %}bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50{% else %}bg-stone-50 text-stone-400 ring-1 ring-stone-200/50{% endif %}">{{ retailer.status }}</span>
+                    </div>
+                    <div class="flex justify-between"><span class="text-stone-400">Rating</span><span class="font-medium text-amber-700">★ {{ "%.1f"|format(retailer.rating) if retailer.rating else '—' }}</span></div>
+                    <div class="flex justify-between"><span class="text-stone-400">Products</span><span class="font-medium text-stone-700">{{ products|length }}</span></div>
+                </div>
+                {% if retailer.description %}
+                <p class="text-sm text-stone-500 mt-4 pt-4 border-t border-stone-100 leading-relaxed">{{ retailer.description }}</p>
+                {% endif %}
+                {% if retailer.address %}
+                <div class="mt-3 pt-3 border-t border-stone-100">
+                    <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 mb-1.5">Address</p>
+                    <p class="text-xs text-stone-500">{{ retailer.address }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Products -->
+        <div class="lg:col-span-3">
+            <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
+                <div class="px-6 py-4 border-b border-stone-100 flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-stone-900 uppercase tracking-wider flex items-center gap-2">
+                        <svg class="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        Products
+                    </h2>
+                    <span class="text-xs text-stone-400 bg-stone-50 px-2.5 py-1 rounded-full">{{ products|length }} products</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-stone-50 bg-stone-50/50">
+                                <th class="text-left px-6 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Product</th>
+                                <th class="text-left px-6 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Price</th>
+                                <th class="text-left px-6 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Stock</th>
+                                <th class="text-left px-6 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-stone-50">
+                            {% for p in products %}
+                            <tr class="hover:bg-amber-50/20 transition-colors">
+                                <td class="px-6 py-3">
+                                    <a href="/admin/catalog/{{ p.id }}" class="flex items-center gap-3">
+                                        {% if p.images and p.images|length > 0 %}
+                                        <img src="{{ p.images[0] }}" alt="" class="w-10 h-10 rounded-lg object-cover ring-1 ring-stone-200">
+                                        {% else %}
+                                        <div class="w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center text-stone-300 ring-1 ring-stone-200">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                        </div>
+                                        {% endif %}
+                                        <span class="text-sm font-medium text-stone-900 hover:text-amber-700 transition-colors">{{ p.name }}</span>
+                                    </a>
+                                </td>
+                                <td class="px-6 py-3 text-sm text-stone-600">₦{{ "%.2f"|format(p.price) }}</td>
+                                <td class="px-6 py-3 text-sm text-stone-500">{{ p.stock_quantity or 0 }}</td>
+                                <td class="px-6 py-3">
+                                    <span class="px-2 py-0.5 text-[10px] font-medium rounded-full {% if p.status == 'ACTIVE' %}bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50{% else %}bg-stone-50 text-stone-400 ring-1 ring-stone-200/50{% endif %}">{{ p.status }}</span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="px-6 py-16 text-center text-sm text-stone-400">No products yet</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

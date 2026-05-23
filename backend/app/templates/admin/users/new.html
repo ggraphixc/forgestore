@@ -1,0 +1,83 @@
+{% extends "admin/base.html" %}
+
+{% block title %}New Admin User — ForgeStore{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center gap-4 mb-8">
+        <a href="/admin/admin-users" class="p-2 -ml-2 text-stone-400 hover:text-stone-900 hover:bg-stone-50 rounded-lg transition-all duration-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7"/></svg>
+        </a>
+        <div>
+            <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 mb-1 block">Admin Users</span>
+            <h1 class="text-3xl md:text-4xl font-display font-black text-stone-900">New <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Admin</span></h1>
+            <p class="text-sm text-stone-500 mt-1">Create a new administrator account</p>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white rounded-2xl border border-stone-200 p-6 lg:p-8 shadow-sm">
+        {% if error %}
+        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" class="space-y-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1.5" for="name">Full Name</label>
+                    <input id="name" name="name" class="input-forge" placeholder="e.g. Jane Doe" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1.5" for="email">Email Address</label>
+                    <input id="email" name="email" type="email" class="input-forge" placeholder="admin@forgestore.com" required>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1.5" for="password">Password</label>
+                    <input id="password" name="password" type="password" class="input-forge" placeholder="Min. 6 characters" minlength="6" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1.5" for="role">Role</label>
+                    <select id="role" name="role" class="select-forge" onchange="toggleVendorField()">
+                        <option value="LOGISTICS">LOGISTICS</option>
+                        <option value="MANAGEMENT">MANAGEMENT</option>
+                        <option value="TECH_ADMIN">TECH_ADMIN</option>
+                        <option value="RETAILER">RETAILER</option>
+                        <option value="DIR_ADMIN">DIR_ADMIN</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Vendor/Linked Retailer (only for RETAILER role) -->
+            <div id="vendor-field" class="hidden">
+                <label class="block text-sm font-medium text-stone-700 mb-1.5" for="vendor_id">Linked Retailer</label>
+                <select id="vendor_id" name="vendor_id" class="select-forge">
+                    <option value="">— Select a retailer —</option>
+                    {% for r in retailers %}
+                    <option value="{{ r.id }}">{{ r.name }}</option>
+                    {% endfor %}
+                </select>
+                <p class="text-xs text-stone-400 mt-1.5">RETAILER admins can only manage products belonging to this shop.</p>
+            </div>
+
+            <div class="pt-4 flex items-center gap-3">
+                <button type="submit" class="btn-forge text-sm">Create Admin User</button>
+                <a href="/admin/admin-users" class="btn-ghost text-sm">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleVendorField() {
+    const role = document.getElementById('role').value;
+    const field = document.getElementById('vendor-field');
+    field.classList.toggle('hidden', role !== 'RETAILER');
+}
+</script>
+{% endblock %}

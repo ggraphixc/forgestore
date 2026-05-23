@@ -1,0 +1,495 @@
+{% extends "web/base.html" %}
+{% block title %}
+    {% if checkout_order_id %}Order Confirmation — ForgeStore{% else %}Checkout — ForgeStore{% endif %}
+{% endblock %}
+{% block content %}
+{% set is_confirmation = checkout_order_id and order %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Steps indicator -->
+    <div class="flex items-center justify-center gap-2 mb-10">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">&#10003;</div>
+            <span class="text-sm font-medium text-stone-700">Cart</span>
+        </div>
+        <div class="w-12 h-px bg-stone-300 mx-2"></div>
+        <div class="flex items-center gap-2">
+            {% if is_confirmation %}
+            <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">&#10003;</div>
+            <span class="text-sm font-medium text-stone-700">Checkout</span>
+            {% else %}
+            <div class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold">2</div>
+            <span class="text-sm font-medium text-amber-700">Checkout</span>
+            {% endif %}
+        </div>
+        <div class="w-12 h-px bg-stone-300 mx-2"></div>
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold">3</div>
+            <span class="text-sm font-medium text-amber-700">Confirmation</span>
+        </div>
+    </div>
+
+    {% if is_confirmation %}
+    <!-- ===== CONFIRMATION MODE ===== -->
+    <div id="confirmation-section">
+        <!-- Payment Verifying State -->
+        <div id="payment-verifying" class="text-center py-12 bg-white rounded-2xl border border-stone-200 shadow-sm mb-8">
+            <div class="relative mb-6 inline-flex">
+                <div class="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto">
+                    <svg class="w-10 h-10 text-amber-500 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+            </div>
+            <h2 class="text-2xl font-display font-bold text-stone-900 mb-2">Verifying Payment</h2>
+            <p class="text-stone-500 max-w-md mx-auto">We're confirming your payment with the provider. Please wait a moment...</p>
+        </div>
+
+        <!-- Payment Paid State -->
+        <div id="payment-paid" class="hidden mb-8">
+            <div class="text-center py-10 bg-white rounded-2xl border border-stone-200 shadow-sm mb-6">
+                <div class="relative mb-6 inline-flex">
+                    <div class="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto">
+                        <svg class="w-10 h-10 text-emerald-500 animate-scale-check" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <div class="absolute inset-0 rounded-full bg-emerald-400/20 animate-ping"></div>
+                </div>
+                <h1 class="text-3xl md:text-5xl font-display font-black text-stone-900 mb-3">
+                    Order <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-emerald-400">Placed</span> Successfully!
+                </h1>
+                <p class="text-lg text-stone-600 mb-1 max-w-lg mx-auto">
+                    Thank you for your purchase! Your order is now <strong>awaiting shipment</strong>.
+                </p>
+                <p class="text-sm text-stone-400 mb-6">
+                    Order: <span class="font-mono text-stone-600 font-medium">{{ order.order_number }}</span>
+                    &middot; {{ format_price(order.total_amount, currency) }}
+                </p>
+                <div class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700 font-medium mb-4">
+                    <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                    Awaiting Shipment
+                </div>
+            </div>
+
+            <!-- Auto-redirect countdown -->
+            <div id="redirect-banner" class="text-center mb-8">
+                <p class="text-sm text-stone-400">
+                    Redirecting to your orders in
+                    <span id="countdown" class="font-mono font-bold text-amber-600">8</span>
+                    seconds...
+                </p>
+                <div class="max-w-xs mx-auto mt-2 h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                    <div id="countdown-bar" class="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all duration-1000" style="width: 100%"></div>
+                </div>
+                <a href="/shop/account/orders" class="mt-3 inline-block text-sm text-amber-600 hover:text-amber-700 underline underline-offset-2 font-medium">View orders now</a>
+            </div>
+
+            <!-- Order Details -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-sm font-bold text-stone-900 uppercase tracking-wider flex items-center gap-2">
+                                <svg class="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                </svg>
+                                Order Items
+                            </h3>
+                            <span class="text-xs font-mono text-stone-400 bg-stone-100 px-2.5 py-1 rounded-lg">{{ order.order_number }}</span>
+                        </div>
+                        <div class="divide-y divide-stone-100">
+                            {% for item in order_items %}
+                            {% set product = product_map.get(item.product_id) %}
+                            <div class="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
+                                <div class="w-16 h-16 rounded-xl overflow-hidden bg-stone-50 border border-stone-200 flex-shrink-0">
+                                    {% if product and product.images and product.images[0] %}
+                                    <img src="{{ product.images[0] }}" alt="{{ product.name }}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                                    {% else %}
+                                    <div class="w-full h-full flex items-center justify-center text-stone-200">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-stone-900 truncate">{{ product.name if product else 'Product' }}</p>
+                                    <p class="text-xs text-stone-400 mt-0.5">Qty: {{ item.quantity }} &times; {{ format_price(item.price, currency) }}</p>
+                                </div>
+                                <p class="text-sm font-semibold text-stone-900 whitespace-nowrap">{{ format_price(item.price * item.quantity, currency) }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="mt-6 pt-5 border-t border-stone-200 space-y-2">
+                            <div class="flex justify-between text-sm text-stone-500">
+                                <span>Subtotal</span>
+                                <span>{{ format_price(order.total_amount, currency) }}</span>
+                            </div>
+                            <div class="flex justify-between text-sm text-stone-500">
+                                <span>Shipping</span>
+                                <span class="text-emerald-600 font-medium">Free</span>
+                            </div>
+                            <div class="flex justify-between pt-3 mt-3 border-t border-stone-100 text-base font-bold text-stone-900">
+                                <span>Total</span>
+                                <span class="font-mono">{{ format_price(order.total_amount, currency) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="bg-white rounded-2xl border border-stone-200 p-5 shadow-sm">
+                        <h4 class="text-xs font-bold text-stone-500 uppercase tracking-wider mb-4">Order Status</h4>
+                        <div class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span>PAID</span>
+                        </div>
+                        <p class="text-xs text-stone-400 mt-3">
+                            Placed on {{ order.created_at.strftime('%b %d, %Y at %I:%M %p') if order.created_at else '&mdash;' }}
+                        </p>
+                    </div>
+                    {% if order.shipping_address %}
+                    <div class="bg-white rounded-2xl border border-stone-200 p-5 shadow-sm">
+                        <h4 class="text-xs font-bold text-stone-500 uppercase tracking-wider mb-4">Shipping To</h4>
+                        <div class="space-y-1.5 text-sm">
+                            <p class="font-medium text-stone-900">{{ order.shipping_address.get('name', '') }}</p>
+                            <p class="text-stone-500">{{ order.shipping_address.get('address', '') }}</p>
+                            <p class="text-stone-500">{{ order.shipping_address.get('phone', '') }}</p>
+                            <p class="text-stone-500">{{ order.shipping_address.get('email', '') }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="bg-gradient-to-br from-stone-50/80 to-emerald-50/50 rounded-2xl border border-stone-200 p-5 shadow-sm">
+                        <h4 class="text-xs font-bold text-stone-500 uppercase tracking-wider mb-4">What's Next?</h4>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">1</div>
+                                <p class="text-xs text-stone-600"><span class="font-medium text-stone-900">Confirmed</span> &mdash; The artisan receives your order and begins preparation.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">2</div>
+                                <p class="text-xs text-stone-600"><span class="font-medium text-stone-900">Awaiting Shipment</span> &mdash; Your order is being prepared for dispatch.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">3</div>
+                                <p class="text-xs text-stone-600"><span class="font-medium text-stone-900">Delivered</span> &mdash; Arrives at your doorstep with a confirmation email.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-center gap-3 pb-12">
+                <a href="/shop/account/orders" class="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-stone-900 hover:bg-stone-800 rounded-xl transition-all duration-200 active:scale-[0.98] shadow-lg shadow-stone-900/10">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    View My Orders
+                </a>
+                <a href="/shop/marketplace" class="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-stone-700 border border-stone-300 hover:bg-stone-50 rounded-xl transition-all duration-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    Continue Shopping
+                </a>
+            </div>
+        </div>
+
+        <!-- Payment Pending State -->
+        <div id="payment-pending" class="hidden mb-8">
+            <div class="text-center py-10 bg-white rounded-2xl border border-stone-200 shadow-sm">
+                <div class="relative mb-6 inline-flex">
+                    <div class="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto">
+                        <svg class="w-10 h-10 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <h1 class="text-3xl md:text-5xl font-display font-black text-stone-900 mb-3">
+                    Payment <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-amber-400">Pending</span>
+                </h1>
+                <p class="text-stone-500 mb-1 max-w-md mx-auto">Your order has been placed but we're waiting for payment confirmation.</p>
+                <p class="text-sm text-stone-400 mb-4">
+                    Order: <span class="font-mono text-stone-600 font-medium">{{ order.order_number }}</span>
+                </p>
+                <button id="retry-verify-btn" onclick="confirmVerify()" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 rounded-xl transition-all duration-200 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Check Again
+                </button>
+            </div>
+            <div class="flex justify-center gap-3 pb-12 mt-4">
+                <a href="/shop/account/orders" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-stone-700 border border-stone-300 hover:bg-stone-50 rounded-xl transition-all duration-200">View All Orders</a>
+                <a href="/shop/marketplace" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-stone-900 hover:bg-stone-800 rounded-xl transition-all duration-200">Continue Shopping</a>
+            </div>
+        </div>
+
+        <!-- Payment Failed State -->
+        <div id="payment-failed" class="hidden mb-8">
+            <div class="text-center py-10 bg-white rounded-2xl border border-stone-200 shadow-sm">
+                <div class="relative mb-6 inline-flex">
+                    <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto">
+                        <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </div>
+                </div>
+                <h1 class="text-3xl md:text-5xl font-display font-black text-stone-900 mb-3">
+                    Payment <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-400">Failed</span>
+                </h1>
+                <p class="text-stone-500 mb-1 max-w-md mx-auto" id="failure-message">Your payment could not be processed. Please try again.</p>
+                <p class="text-sm text-stone-400 mb-6">
+                    Order: <span class="font-mono text-stone-600 font-medium">{{ order.order_number }}</span>
+                </p>
+                <div class="flex items-center justify-center gap-3">
+                    <button onclick="window.location.href='/shop/checkout'" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-stone-900 hover:bg-stone-800 rounded-xl transition-all duration-200 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                        Try Again
+                    </button>
+                    <a href="/shop/marketplace" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-stone-600 border border-stone-300 hover:bg-stone-50 rounded-xl transition-all duration-200">Continue Shopping</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes scaleCheck {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-scale-check {
+            animation: scaleCheck 0.5s ease-out forwards;
+        }
+    </style>
+
+    <script>
+    var ORDER_ID = '{{ checkout_order_id|safe }}';
+    var REFERENCE = '{{ checkout_reference|safe }}';
+
+    async function confirmVerify() {
+        var verifyingEl = document.getElementById('payment-verifying');
+        var paidEl = document.getElementById('payment-paid');
+        var pendingEl = document.getElementById('payment-pending');
+        var failedEl = document.getElementById('payment-failed');
+
+        verifyingEl.classList.remove('hidden');
+        paidEl.classList.add('hidden');
+        pendingEl.classList.add('hidden');
+        failedEl.classList.add('hidden');
+
+        if (!REFERENCE) {
+            verifyingEl.classList.add('hidden');
+            pendingEl.classList.remove('hidden');
+            return;
+        }
+
+        try {
+            var res = await fetch('/api/payments/verify/' + encodeURIComponent(REFERENCE));
+            var data = await res.json();
+
+            verifyingEl.classList.add('hidden');
+
+            if (data.success && data.paid) {
+                paidEl.classList.remove('hidden');
+                startCountdown();
+            } else if (data.success && data.status === 'pending') {
+                pendingEl.classList.remove('hidden');
+            } else if (data.success && !data.paid) {
+                var msg = data.gateway_response || 'Payment was not completed.';
+                document.getElementById('failure-message').textContent = msg;
+                failedEl.classList.remove('hidden');
+            } else {
+                failedEl.classList.remove('hidden');
+                document.getElementById('failure-message').textContent = data.message || 'Verification failed.';
+            }
+        } catch (err) {
+            verifyingEl.classList.add('hidden');
+            pendingEl.classList.remove('hidden');
+            var btn = document.getElementById('retry-verify-btn');
+            if (btn) btn.textContent = 'Retry Verification';
+        }
+    }
+
+    function startCountdown() {
+        var seconds = 8;
+        var countdownEl = document.getElementById('countdown');
+        var barEl = document.getElementById('countdown-bar');
+
+        if (!countdownEl || !barEl) return;
+
+        var interval = setInterval(function() {
+            seconds--;
+            if (seconds <= 0) {
+                clearInterval(interval);
+                window.location.href = '/shop/account/orders';
+                return;
+            }
+            countdownEl.textContent = seconds;
+            barEl.style.width = (seconds / 8 * 100) + '%';
+        }, 1000);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (ORDER_ID && REFERENCE) {
+            confirmVerify();
+        }
+    });
+    </script>
+
+    {% else %}
+    <!-- ===== NORMAL CHECKOUT MODE ===== -->
+    <div id="checkout-content">
+        <div class="text-center py-16">
+            <div class="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p class="text-sm text-stone-400">Loading checkout...</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if not is_confirmation %}
+<script>
+var PAYSTACK_PUBLIC_KEY = '{{ paystack_public_key|escapejs }}';
+
+function formatCurrency(amount) {
+    return '\u20A6' + Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+async function loadCheckout() {
+    try {
+        const res = await fetch('/api/cart');
+        const data = await res.json();
+
+        if (!data.items || data.items.length === 0) {
+            document.getElementById('checkout-content').innerHTML = `
+                <div class="text-center py-20 bg-white rounded-2xl border border-stone-200">
+                    <div class="w-24 h-24 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-12 h-12 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                    </div>
+                    <p class="text-stone-400 mb-6">Your cart is empty. Add some items before checking out.</p>
+                    <a href="/shop/marketplace" class="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-stone-900 hover:bg-stone-800 rounded-xl transition-all duration-200">Browse Products</a>
+                </div>
+            `;
+            return;
+        }
+
+        let itemsHtml = '';
+        data.items.forEach(item => {
+            itemsHtml += `                        <div class="flex items-center justify-between py-3 border-b border-stone-50 last:border-0">
+                    <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                        ${item.image ? `<img src="${item.image}" alt="" class="w-12 sm:w-14 h-12 sm:h-14 rounded-xl object-cover border border-stone-200 flex-shrink-0">` : `
+                        <div class="w-12 sm:w-14 h-12 sm:h-14 rounded-xl bg-stone-100 flex items-center justify-center text-stone-300 flex-shrink-0">
+                            <svg class="w-5 sm:w-6 h-5 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        </div>`}
+                        <div class="min-w-0">
+                            <p class="text-xs sm:text-sm font-medium text-stone-900 truncate">${item.name}</p>
+                            <p class="text-xs text-stone-400">Qty: ${item.quantity} &times; ${formatCurrency(item.price)}</p>
+                        </div>
+                    </div>
+                    <p class="text-xs sm:text-sm font-semibold text-stone-900 whitespace-nowrap ml-2">${formatCurrency(item.price * item.quantity)}</p>
+                </div>
+            `;
+        });
+
+        document.getElementById('checkout-content').innerHTML = `
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <div class="lg:col-span-3">
+                    <div class="bg-white rounded-2xl border border-stone-200 p-6 lg:p-8 shadow-sm">
+                        <h2 class="text-lg font-display font-bold text-stone-900 mb-6">Shipping Details</h2>
+                        <form id="checkout-form" class="space-y-5" onsubmit="event.preventDefault(); placeOrder()">
+                            <div>
+                                <label class="block text-sm font-medium text-stone-700 mb-1.5" for="name">Full Name</label>
+                                <input id="name" name="name" required class="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all text-sm bg-white" placeholder="John Doe">
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-stone-700 mb-1.5" for="email">Email</label>
+                                    <input id="email" name="email" type="email" required class="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all text-sm bg-white" placeholder="you@example.com">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-stone-700 mb-1.5" for="phone">Phone</label>
+                                    <input id="phone" name="phone" required class="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all text-sm bg-white" placeholder="+234 800 000 0000">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-stone-700 mb-1.5" for="address">Shipping Address</label>
+                                <textarea id="address" name="address" rows="3" required class="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all text-sm bg-white resize-none" placeholder="Street, City, State"></textarea>
+                            </div>
+                            <div class="pt-2">
+                                <button type="submit" id="place-order-btn" class="w-full px-6 py-3.5 text-sm font-medium text-white bg-stone-900 hover:bg-stone-800 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] shadow-lg shadow-stone-900/10">
+                                    Place Order — ${formatCurrency(data.total)}
+                                </button>
+                            </div>
+                        </form>
+                        <div id="checkout-error" class="mt-4 text-sm text-red-500 hidden p-3 bg-red-50 rounded-xl"></div>
+                    </div>
+                </div>
+                <div class="lg:col-span-2">
+                    <div class="bg-gradient-to-br from-stone-50 to-amber-50/30 rounded-2xl border border-stone-200 p-5 sm:p-6 lg:p-8 sticky top-24 shadow-sm">
+                        <h2 class="text-sm font-bold text-stone-900 uppercase tracking-wider mb-6">Order Summary</h2>
+                        ${itemsHtml}
+                        <div class="flex justify-between pt-4 mt-4 border-t border-stone-200">
+                            <span class="font-semibold text-stone-900">Total</span>
+                            <span class="font-bold text-xl text-stone-900">${formatCurrency(data.total)}</span>
+                        </div>
+                        <div class="mt-6 p-4 bg-amber-50 rounded-xl border border-amber-200">
+                            <div class="flex items-start gap-3">
+                                <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                <p class="text-xs text-amber-800">Your payment is processed securely. We support all major Nigerian payment methods.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        document.getElementById('checkout-content').innerHTML = `
+            <div class="text-center py-16">
+                <p class="text-red-500">Failed to load checkout. Please try again.</p>
+            </div>
+        `;
+    }
+}
+
+async function placeOrder() {
+    const btn = document.getElementById('place-order-btn');
+    const error = document.getElementById('checkout-error');
+    error.classList.add('hidden');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="inline-block animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></span> Processing...';
+
+    const form = document.getElementById('checkout-form');
+    const formData = new FormData(form);
+    const shipping = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        phone: formData.get('phone'),
+        address: formData.get('address'),
+    };
+
+    try {
+        const res = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(shipping),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Checkout failed');
+
+        if (data.payment_url) {
+            window.location.href = data.payment_url;
+        } else if (data.paystack_error) {
+            window.location.href = '/shop/checkout?order_id=' + data.order_id + '&error=' + encodeURIComponent(data.paystack_error);
+        } else {
+            window.location.href = '/shop/checkout?order_id=' + data.order_id;
+        }
+    } catch (err) {
+        error.textContent = err.message;
+        error.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = 'Place Order';
+    }
+}
+
+loadCheckout();
+</script>
+{% endif %}
+{% endblock %}

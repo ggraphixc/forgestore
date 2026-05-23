@@ -1,0 +1,1556 @@
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, Form
+from fastapi.responses import JSONResponse, StreamingResponse
+from sqlalchemy.orm import Session
+from sqlalchemy import func
+from typing import List
+import os
+import uuid
+import json
+import asyncio
+from datetime import datetime
+
+from app.database import get_db
+from app.models import Product, Category, Retailer, Order, OrderItem, OrderStatus, User
+from app.schemas import (
+    ProductCreate, ProductUpdate, ProductResponse,
+    CategoryCreate, CategoryUpdate, CategoryResponse,
+    RetailerCreate, RetailerUpdate, RetailerResponse,
+)
+from app.auth import get_current_admin, require_role, hash_password, has_permission, AdminRole, log_admin_action
+from app.config import get_settings
+from app.models import AdminUser, NewsletterSubscriber, BroadcastCampaign, BroadcastEvent, BroadcastTemplate
+from app.services.email_service import send_newsletter_broadcast
+from app.config import get_settings
+import csv
+import io
+import secrets
+from concurrent.futures import ThreadPoolExecutor
+import threading
+
+BROADCAST_EXECUTOR = ThreadPoolExecutor(max_workers=4)
+
+router = APIRouter(prefix="/api/admin", tags=["admin-api"])
+settings = get_settings()
+
+# --- Background scheduler for scheduled broadcasts ---
+_scheduler_lock = threading.Lock()
+_scheduler_started = False
+
+
+def _start_broadcast_scheduler():
+    """Start a background thread that checks for scheduled broadcasts every 30 seconds."""
+    global _scheduler_started
+    with _scheduler_lock:
+        if _scheduler_started:
+            return
+        _scheduler_started = True
+
+    def _check_loop():
+        import time
+        while True:
+            try:
+                from app.database import SessionLocal
+                from datetime import datetime
+                from app.models import NewsletterSubscriber as NS
+                db = SessionLocal()
+                try:
+                    now = datetime.utcnow()
+                    pending = db.query(BroadcastCampaign).filter(
+                        BroadcastCampaign.status == "scheduled",
+                        BroadcastCampaign.scheduled_at != None,
+                        BroadcastCampaign.scheduled_at <= now,
+                    ).all()
+
+                    for campaign in pending:
+                        campaign.status = "sending"
+                        db.commit()
+
+                        # Get subscribers
+                        query = db.query(NS).filter(NS.confirmed == True)
+                        if campaign.tag_filter:
+                            subscribers = query.all()
+                            subscribers = [s for s in subscribers if s.tags and campaign.tag_filter in s.tags]
+                        else:
+                            subscribers = query.all()
+
+                        campaign.total_recipients = len(subscribers)
+                        db.commit()
+
+                        # Generate unsubscribe tokens
+                        for sub in subscribers:
+                            if not sub.unsubscribe_token:
+                                sub.unsubscribe_token = secrets.token_urlsafe(24)
+                        db.commit()
+
+                        # Send in background
+                        def _send_campaign(camp_id, subs):
+                            from app.database import SessionLocal as BGDb
+                            bg_db = BGDb()
+                            try:
+                                bg_campaign = bg_db.query(BroadcastCampaign).filter(BroadcastCampaign.id == camp_id).first()
+                                if not bg_campaign:
+                                    return
+                                base_url = settings.site_base_url.rstrip("/")
+                                sent = 0
+                                for s in subs:
+                                    unsub_url = f"{base_url}/api/newsletter/unsubscribe?email={s.email}&token={s.unsubscribe_token}"
+                                    send_newsletter_broadcast(
+                                        to_email=s.email,
+                                        subject=bg_campaign.subject,
+                                        html_body=bg_campaign.content,
+                                        unsubscribe_url=unsub_url,
+                                        campaign_id=camp_id,
+                                        subscriber_id=s.id,
+                                    )
+                                    # Record sent event
+                                    ev = BroadcastEvent(
+                                        campaign_id=camp_id,
+                                        subscriber_id=s.id,
+                                        event_type="sent",
+                                        timestamp=datetime.utcnow(),
+                                    )
+                                    bg_db.add(ev)
+                                    sent += 1
+                                bg_campaign.sent_count = sent
+                                bg_campaign.sent_at = datetime.utcnow()
+                                bg_campaign.status = "sent"
+                                bg_db.commit()
+                            except Exception:
+                                try:
+                                    bg_campaign.status = "failed"
+                                    bg_db.commit()
+                                except Exception:
+                                    pass
+                            finally:
+                                bg_db.close()
+
+                        BROADCAST_EXECUTOR.submit(_send_campaign, campaign.id, subscribers)
+                except Exception:
+                    pass
+                finally:
+                    db.close()
+            except Exception:
+                pass
+            time.sleep(30)
+
+    thread = threading.Thread(target=_check_loop, daemon=True)
+    thread.start()
+
+
+# Start the scheduler on import
+_start_broadcast_scheduler()
+settings = get_settings()
+
+
+# --- Admin Users Management API ---
+@router.get("/admin-users")
+def list_admin_users(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("admin_users")),
+):
+    admin_users = db.query(AdminUser).order_by(AdminUser.created_at).all()
+    return {
+        "admin_users": [
+            {
+                "id": u.id,
+                "email": u.email,
+                "name": u.name,
+                "role": u.role.value if hasattr(u.role, 'value') else u.role,
+                "vendor_id": u.vendor_id,
+                "created_at": u.created_at.isoformat() if u.created_at else None,
+            }
+            for u in admin_users
+        ]
+    }
+
+
+@router.post("/admin-users")
+def create_admin_user(
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("admin_users")),
+):
+    existing = db.query(AdminUser).filter(AdminUser.email == data.get("email")).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Admin with this email already exists")
+
+    new_admin = AdminUser(
+        email=data.get("email"),
+        password=hash_password(data.get("password", "changeme123")),
+        name=data.get("name"),
+        role=data.get("role", "LOGISTICS"),
+        vendor_id=data.get("vendor_id"),
+    )
+    db.add(new_admin)
+    db.commit()
+    db.refresh(new_admin)
+    log_admin_action(db, admin, "create", "admin_user", new_admin.id, f"Created admin user {data.get('email')}")
+    return {"success": True, "id": new_admin.id}
+
+
+@router.put("/admin-users/{admin_id}")
+def update_admin_user(
+    admin_id: str,
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("admin_users")),
+):
+    target = db.query(AdminUser).filter(AdminUser.id == admin_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="Admin user not found")
+
+    if "name" in data:
+        target.name = data["name"]
+    if "role" in data:
+        target.role = data["role"]
+    if "vendor_id" in data:
+        target.vendor_id = data["vendor_id"]
+    if "password" in data and data["password"]:
+        target.password = hash_password(data["password"])
+
+    db.commit()
+    log_admin_action(db, admin, "update", "admin_user", admin_id, f"Updated admin user {target.email}")
+    return {"success": True}
+
+
+@router.delete("/admin-users/{admin_id}")
+def delete_admin_user(
+    admin_id: str,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("admin_users")),
+):
+    if admin.id == admin_id:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+    target = db.query(AdminUser).filter(AdminUser.id == admin_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="Admin user not found")
+    db.delete(target)
+    db.commit()
+    log_admin_action(db, admin, "delete", "admin_user", admin_id, f"Deleted admin user {target.email}")
+    return {"success": True}
+
+
+# --- Product CRUD API ---
+@router.post("/products")
+def create_product(
+    data: ProductCreate,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    product = Product(**data.model_dump())
+    db.add(product)
+    db.commit()
+    db.refresh(product)
+    log_admin_action(db, admin, "create", "product", product.id, f"Created product '{data.name}'")
+    return {"success": True, "id": product.id}
+
+
+@router.put("/products/{product_id}")
+def update_product(
+    product_id: str,
+    data: ProductUpdate,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    # RETAILER can only update their own products
+    if admin.role == AdminRole.RETAILER and admin.vendor_id:
+        if product.retailer_id != admin.vendor_id:
+            raise HTTPException(status_code=403, detail="You can only edit your own products")
+
+    for key, value in data.model_dump(exclude_unset=True).items():
+        setattr(product, key, value)
+    product.updated_at = datetime.utcnow()
+
+    db.commit()
+    log_admin_action(db, admin, "update", "product", product_id, f"Updated product '{product.name}'")
+    return {"success": True}
+
+
+@router.delete("/products/{product_id}")
+def delete_product(
+    product_id: str,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    # RETAILER can only delete their own products
+    if admin.role == AdminRole.RETAILER and admin.vendor_id:
+        if product.retailer_id != admin.vendor_id:
+            raise HTTPException(status_code=403, detail="You can only delete your own products")
+    
+    db.delete(product)
+    db.commit()
+    log_admin_action(db, admin, "delete", "product", product_id, f"Deleted product '{product.name}'")
+    return {"success": True}
+
+
+# --- Category CRUD API ---
+@router.post("/categories")
+def create_category(
+    data: CategoryCreate,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("categories")),
+):
+    category = Category(**data.model_dump())
+    db.add(category)
+    db.commit()
+    db.refresh(category)
+    log_admin_action(db, admin, "create", "category", category.id, f"Created category '{data.name}'")
+    return {"success": True, "id": category.id}
+
+
+@router.put("/categories/{category_id}")
+def update_category(
+    category_id: str,
+    data: CategoryUpdate,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("categories")),
+):
+    category = db.query(Category).filter(Category.id == category_id).first()
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    for key, value in data.model_dump(exclude_unset=True).items():
+        setattr(category, key, value)
+    category.updated_at = datetime.utcnow()
+    db.commit()
+    log_admin_action(db, admin, "update", "category", category_id, f"Updated category '{category.name}'")
+    return {"success": True}
+
+
+@router.delete("/categories/{category_id}")
+def delete_category(
+    category_id: str,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("categories")),
+):
+    category = db.query(Category).filter(Category.id == category_id).first()
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    # Unlink products
+    db.query(Product).filter(Product.category_id == category_id).update({"category_id": None})
+    db.delete(category)
+    db.commit()
+    log_admin_action(db, admin, "delete", "category", category_id, f"Deleted category '{category.name}'")
+    return {"success": True}
+
+
+# --- Retailer CRUD API ---
+@router.post("/retailers")
+def create_retailer(
+    data: RetailerCreate,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("retailers")),
+):
+    retailer = Retailer(**data.model_dump())
+    db.add(retailer)
+    db.commit()
+    db.refresh(retailer)
+    log_admin_action(db, admin, "create", "retailer", retailer.id, f"Created retailer '{data.name}'")
+    return {"success": True, "id": retailer.id}
+
+
+@router.put("/retailers/{retailer_id}")
+def update_retailer(
+    retailer_id: str,
+    data: RetailerUpdate,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("retailers")),
+):
+    retailer = db.query(Retailer).filter(Retailer.id == retailer_id).first()
+    if not retailer:
+        raise HTTPException(status_code=404, detail="Retailer not found")
+    for key, value in data.model_dump(exclude_unset=True).items():
+        setattr(retailer, key, value)
+    retailer.updated_at = datetime.utcnow()
+    db.commit()
+    log_admin_action(db, admin, "update", "retailer", retailer_id, f"Updated retailer '{retailer.name}'")
+    return {"success": True}
+
+
+@router.delete("/retailers/{retailer_id}")
+def delete_retailer(
+    retailer_id: str,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("retailers")),
+):
+    retailer = db.query(Retailer).filter(Retailer.id == retailer_id).first()
+    if not retailer:
+        raise HTTPException(status_code=404, detail="Retailer not found")
+    # Unlink products
+    db.query(Product).filter(Product.retailer_id == retailer_id).update({"retailer_id": None})
+    db.delete(retailer)
+    db.commit()
+    log_admin_action(db, admin, "delete", "retailer", retailer_id, f"Deleted retailer '{retailer.name}'")
+    return {"success": True}
+
+
+# --- Order Management ---
+@router.get("/orders")
+def list_orders(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("orders")),
+):
+    orders = db.query(Order).order_by(Order.created_at.desc()).all()
+    result = []
+    for o in orders:
+        customer = db.query(User).filter(User.id == o.customer_id).first()
+        result.append({
+            "id": o.id,
+            "order_number": o.order_number,
+            "status": o.status.value if hasattr(o.status, 'value') else o.status,
+            "total_amount": o.total_amount,
+            "customer_name": customer.name if customer else "Unknown",
+            "created_at": o.created_at.isoformat() if o.created_at else None,
+        })
+    return {"orders": result}
+
+
+@router.put("/orders/{order_id}/status")
+def update_order_status(
+    order_id: str,
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("orders")),
+):
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    status = data.get("status", "")
+    if not status:
+        raise HTTPException(status_code=400, detail="status is required")
+    
+    try:
+        order.status = OrderStatus(status)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid status: {status}")
+    
+    order.updated_at = datetime.utcnow()
+    db.commit()
+
+    # Send email on status change
+    from app.services.email_service import send_order_status_email
+    customer = db.query(User).filter(User.id == order.customer_id).first()
+    if customer and customer.email:
+        send_order_status_email(
+            customer.email,
+            order.order_number,
+            customer.name or "Customer",
+            status
+        )
+
+    log_admin_action(db, admin, "update", "order", order_id, f"Updated order {order.order_number} to {status}")
+    return {"success": True}
+
+
+@router.delete("/orders/{order_id}")
+def delete_order(
+    order_id: str,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("orders")),
+):
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Delete order items first
+    db.query(OrderItem).filter(OrderItem.order_id == order_id).delete()
+    
+    order_number = order.order_number
+    db.delete(order)
+    db.commit()
+    
+    log_admin_action(db, admin, "delete", "order", order_id, f"Deleted order {order_number}")
+    return {"success": True}
+
+
+# --- Settings API ---
+
+SETTINGS_CATEGORY_PERMISSIONS = {
+    "global": "settings",
+    "design": "settings",
+    "technical": "settings",
+    "optional": "settings",
+    "developer": "settings",
+    "logistics": "settings",
+    "other": "settings",
+}
+
+
+def _get_setting_def(key: str):
+    from app.services.ai_service import SETTINGS_DEFINITIONS
+    for sd in SETTINGS_DEFINITIONS:
+        if sd["key"] == key:
+            return sd
+    return None
+
+
+@router.get("/settings")
+def get_settings(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """Get all settings, categorized for the admin UI."""
+    from app.config import get_categorized_settings
+    categorized = get_categorized_settings(db)
+    return {"categories": categorized}
+
+
+@router.put("/settings/{key}")
+def update_setting(
+    key: str,
+    value: str,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    from app.models import Settings as SettingsModel
+    from app.services.ai_service import SETTINGS_DEFINITIONS
+
+    # Find the setting definition
+    sd = _get_setting_def(key)
+    if not sd:
+        raise HTTPException(status_code=400, detail=f"Unknown setting key: {key}")
+
+    # Check category permission
+    cat_perm = SETTINGS_CATEGORY_PERMISSIONS.get(sd["category"], "settings")
+    if not has_permission(admin, cat_perm):
+        raise HTTPException(status_code=403, detail=f"You don't have permission to modify {sd['category']} settings")
+
+    setting = db.query(SettingsModel).filter(SettingsModel.key == key).first()
+    if setting:
+        setting.value = value
+    else:
+        setting = SettingsModel(
+            key=key, value=value,
+            category=sd["category"],
+            setting_type=sd["type"],
+            label=sd["label"],
+            description=sd.get("description", ""),
+        )
+        db.add(setting)
+    db.commit()
+
+    log_admin_action(db, admin, "update", "setting", key, f"Updated setting '{key}'")
+    from app.config import invalidate_settings_cache
+    invalidate_settings_cache()
+    return {"success": True}
+
+
+@router.post("/settings/bulk")
+def bulk_update_settings(
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """Bulk update multiple settings at once. Keys are the setting keys."""
+    from app.models import Settings as SettingsModel
+    from app.services.ai_service import SETTINGS_DEFINITIONS
+
+    updated = 0
+    for key, value in data.items():
+        # Validate setting exists
+        sd = _get_setting_def(key)
+        if not sd:
+            continue
+        cat_perm = SETTINGS_CATEGORY_PERMISSIONS.get(sd["category"], "settings")
+        if not has_permission(admin, cat_perm):
+            continue
+
+        setting = db.query(SettingsModel).filter(SettingsModel.key == key).first()
+        if setting:
+            setting.value = str(value)
+        else:
+            setting = SettingsModel(
+                key=key, value=str(value),
+                category=sd["category"],
+                setting_type=sd["type"],
+                label=sd["label"],
+                description=sd.get("description", ""),
+            )
+            db.add(setting)
+        updated += 1
+    db.commit()
+
+    log_admin_action(db, admin, "update", "settings_bulk", "", f"Bulk updated {updated} settings")
+    from app.config import invalidate_settings_cache
+    invalidate_settings_cache()
+    return {"success": True, "updated": updated}
+
+
+# --- AI Integration API ---
+
+@router.post("/ai/generate-description")
+def ai_generate_description(
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """Generate a product description using AI."""
+    from app.services.ai_service import generate_product_description
+
+    description = generate_product_description(
+        product_name=data.get("name", ""),
+        category=data.get("category", ""),
+        brand=data.get("brand", ""),
+        keywords=data.get("keywords", ""),
+        tone=data.get("tone", "professional"),
+    )
+
+    if description:
+        log_admin_action(db, admin, "ai_generate", "description", "", f"Generated description for '{data.get('name')}'")
+        return {"success": True, "description": description}
+    else:
+        return {"success": False, "description": None, "message": "AI is not configured. Set your API key in Developer Settings."}
+
+
+@router.post("/ai/generate-tags")
+def ai_generate_tags(
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """Generate SEO tags for a product using AI."""
+    from app.services.ai_service import generate_product_tags
+
+    tags = generate_product_tags(
+        product_name=data.get("name", ""),
+        description=data.get("description", ""),
+    )
+
+    if tags:
+        log_admin_action(db, admin, "ai_generate", "tags", "", f"Generated tags for '{data.get('name')}'")
+        return {"success": True, "tags": tags}
+    else:
+        return {"success": False, "tags": None, "message": "AI is not configured. Set your API key in Developer Settings."}
+
+
+# --- Notifications API ---
+
+@router.get("/notifications")
+def get_notifications(
+    limit: int = 20,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(get_current_admin),
+):
+    """Get recent notifications with pagination."""
+    from app.models import AdminNotification
+    total = db.query(func.count(AdminNotification.id)).scalar() or 0
+    notifications = db.query(AdminNotification).order_by(
+        AdminNotification.created_at.desc()
+    ).offset(offset).limit(limit).all()
+    return {
+        "notifications": [
+            {
+                "id": n.id,
+                "type": n.type,
+                "title": n.title,
+                "message": n.message,
+                "link": n.link,
+                "read": n.read,
+                "created_at": n.created_at.isoformat() if n.created_at else None,
+            }
+            for n in notifications
+        ],
+        "total": total,
+        "has_more": (offset + limit) < total,
+    }
+
+
+@router.put("/notifications/{notif_id}/read")
+def mark_notification_read(
+    notif_id: str,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(get_current_admin),
+):
+    """Mark a single notification as read."""
+    from app.models import AdminNotification
+    notif = db.query(AdminNotification).filter(AdminNotification.id == notif_id).first()
+    if notif:
+        notif.read = True
+        db.commit()
+    return {"success": True}
+
+
+@router.get("/notifications/unread-count")
+def get_unread_notification_count(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(get_current_admin),
+):
+    """Get the count of unread notifications."""
+    from app.models import AdminNotification
+    count = db.query(func.count(AdminNotification.id)).filter(
+        AdminNotification.read == False
+    ).scalar() or 0
+    return {"count": count}
+
+
+@router.put("/notifications/read-all")
+def mark_all_notifications_read(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(get_current_admin),
+):
+    """Mark ALL notifications as read in bulk."""
+    from app.models import AdminNotification
+    updated = db.query(AdminNotification).filter(
+        AdminNotification.read == False
+    ).update({"read": True})
+    db.commit()
+    return {"success": True, "marked": updated}
+
+
+@router.get("/notifications/stream")
+async def stream_notifications(
+    request: Request,
+    admin: AdminUser = Depends(get_current_admin),
+):
+    """Server-Sent Events endpoint for real-time notifications.
+    
+    The client connects and receives new notifications as they happen,
+    plus a keepalive ping every 30s to prevent connection drops.
+    """
+    from app.services.notification_bus import poll
+
+    last_id = 0
+
+    async def event_generator():
+        nonlocal last_id
+
+        # Send initial connection confirmation
+        yield f"event: connected\ndata: {{\"status\":\"ok\"}}\n\n"
+
+        while True:
+            if await request.is_disconnected():
+                break
+
+            try:
+                events = poll(since_id=last_id)
+                for ev in events:
+                    yield f"data: {json.dumps(ev)}\n\n"
+                    last_id = int(ev["id"])
+
+                # If no events, send keepalive every 30s
+                if not events:
+                    yield ": keepalive\n\n"
+
+                await asyncio.sleep(3)
+            except asyncio.CancelledError:
+                break
+            except Exception:
+                await asyncio.sleep(5)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+# --- Audit Log API ---
+
+@router.get("/audit-logs")
+def get_audit_logs(
+    limit: int = 20,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("admin_users")),
+):
+    """Get recent audit log entries with pagination."""
+    from app.models import AdminAuditLog
+    total = db.query(func.count(AdminAuditLog.id)).scalar() or 0
+    logs = db.query(AdminAuditLog).order_by(
+        AdminAuditLog.created_at.desc()
+    ).offset(offset).limit(limit).all()
+    return {
+        "logs": [
+            {
+                "id": log.id,
+                "admin_email": log.admin_email,
+                "action": log.action,
+                "resource_type": log.resource_type,
+                "resource_id": log.resource_id,
+                "details": log.details,
+                "created_at": log.created_at.isoformat() if log.created_at else None,
+            }
+            for log in logs
+        ],
+        "total": total,
+        "has_more": (offset + limit) < total,
+    }
+
+
+# --- Newsletter Subscribers ---
+@router.get("/newsletter-subscribers")
+def list_newsletter_subscribers(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    subscribers = db.query(NewsletterSubscriber).order_by(
+        NewsletterSubscriber.created_at.desc()
+    ).all()
+    return {
+        "subscribers": [
+            {
+                "id": s.id,
+                "email": s.email,
+                "confirmed": s.confirmed,
+                "tags": s.tags or [],
+                "created_at": s.created_at.isoformat() if s.created_at else None,
+            }
+            for s in subscribers
+        ]
+    }
+
+
+@router.delete("/newsletter-subscribers/{subscriber_id}")
+def delete_newsletter_subscriber(
+    subscriber_id: str,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    subscriber = db.query(NewsletterSubscriber).filter(
+        NewsletterSubscriber.id == subscriber_id
+    ).first()
+    if not subscriber:
+        raise HTTPException(status_code=404, detail="Subscriber not found")
+    email = subscriber.email
+    db.delete(subscriber)
+    db.commit()
+    log_admin_action(db, admin, "delete", "newsletter_subscriber", subscriber_id, f"Unsubscribed {email}")
+    return {"success": True}
+
+
+@router.put("/newsletter-subscribers/{subscriber_id}/tags")
+def update_subscriber_tags(
+    subscriber_id: str,
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """Update the tags for a newsletter subscriber."""
+    subscriber = db.query(NewsletterSubscriber).filter(
+        NewsletterSubscriber.id == subscriber_id
+    ).first()
+    if not subscriber:
+        raise HTTPException(status_code=404, detail="Subscriber not found")
+    subscriber.tags = data.get("tags", [])
+    db.commit()
+    return {"success": True, "tags": subscriber.tags}
+
+
+@router.post("/newsletter-subscribers/broadcast")
+def broadcast_newsletter(
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """
+    Send a broadcast email to all confirmed subscribers (immediately or scheduled).
+    Creates a BroadcastCampaign record for analytics tracking.
+    Runs the actual sends in a background thread pool.
+    """
+    subject = (data.get("subject") or "").strip()
+    content = (data.get("content") or "").strip()
+    tag_filter = data.get("tag_filter", None)
+    scheduled_at_str = data.get("scheduled_at", None)  # ISO format string or null for immediate
+    template_id = data.get("template_id", None)
+
+    if not subject or not content:
+        raise HTTPException(status_code=400, detail="Subject and content are required")
+
+    query = db.query(NewsletterSubscriber).filter(
+        NewsletterSubscriber.confirmed == True
+    )
+    subscribers = query.all()
+    if tag_filter:
+        subscribers = [s for s in subscribers if s.tags and tag_filter in s.tags]
+    if not subscribers:
+        raise HTTPException(status_code=400, detail="No confirmed subscribers to send to")
+
+    # Parse scheduled_at if provided
+    scheduled_at = None
+    if scheduled_at_str:
+        try:
+            scheduled_at = datetime.fromisoformat(scheduled_at_str)
+        except (ValueError, TypeError):
+            raise HTTPException(status_code=400, detail="Invalid scheduled_at format. Use ISO format (e.g. 2025-06-01T14:00:00)")
+
+    is_scheduled = scheduled_at is not None and scheduled_at > datetime.utcnow()
+
+    # Generate unsubscribe tokens for any subscriber that doesn't have one
+    for sub in subscribers:
+        if not sub.unsubscribe_token:
+            sub.unsubscribe_token = secrets.token_urlsafe(24)
+    db.commit()
+
+    # Create campaign record
+    campaign = BroadcastCampaign(
+        subject=subject,
+        content=content,
+        tag_filter=tag_filter or None,
+        status="scheduled" if is_scheduled else "sending",
+        scheduled_at=scheduled_at,
+        total_recipients=len(subscribers),
+        template_id=template_id or None,
+        created_by=admin.id,
+    )
+    db.add(campaign)
+    db.commit()
+    db.refresh(campaign)
+
+    if not is_scheduled:
+        # Send immediately
+        campaign.status = "sending"
+        db.commit()
+
+        def _send_all(camp_id, subs):
+            from app.database import SessionLocal as BGDb
+            bg_db = BGDb()
+            try:
+                bg_campaign = bg_db.query(BroadcastCampaign).filter(BroadcastCampaign.id == camp_id).first()
+                if not bg_campaign:
+                    return
+                base_url = settings.site_base_url.rstrip("/")
+                sent = 0
+                for s in subs:
+                    unsub_url = f"{base_url}/api/newsletter/unsubscribe?email={s.email}&token={s.unsubscribe_token}"
+                    send_newsletter_broadcast(
+                        to_email=s.email,
+                        subject=subject,
+                        html_body=content,
+                        unsubscribe_url=unsub_url,
+                        campaign_id=camp_id,
+                        subscriber_id=s.id,
+                    )
+                    ev = BroadcastEvent(
+                        campaign_id=camp_id,
+                        subscriber_id=s.id,
+                        event_type="sent",
+                        timestamp=datetime.utcnow(),
+                    )
+                    bg_db.add(ev)
+                    sent += 1
+                bg_campaign.sent_count = sent
+                bg_campaign.sent_at = datetime.utcnow()
+                bg_campaign.status = "sent"
+                bg_db.commit()
+            except Exception:
+                try:
+                    bg_campaign.status = "failed"
+                    bg_db.commit()
+                except Exception:
+                    pass
+            finally:
+                bg_db.close()
+
+        BROADCAST_EXECUTOR.submit(_send_all, campaign.id, subscribers)
+
+        log_admin_action(
+            db, admin, "broadcast", "newsletter", campaign.id,
+            f"Broadcast '{subject}' to {len(subscribers)} subscribers"
+        )
+
+        return {
+            "success": True,
+            "campaign_id": campaign.id,
+            "sent_to": len(subscribers),
+            "message": f"Broadcast queued to {len(subscribers)} subscriber(s)"
+        }
+    else:
+        log_admin_action(
+            db, admin, "schedule", "newsletter", campaign.id,
+            f"Scheduled broadcast '{subject}' for {scheduled_at_str}"
+        )
+        return {
+            "success": True,
+            "campaign_id": campaign.id,
+            "scheduled_at": scheduled_at_str,
+            "message": f"Broadcast scheduled for {scheduled_at_str}"
+        }
+
+
+@router.post("/newsletter-subscribers/import")
+async def import_newsletter_subscribers(
+    request: Request,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """
+    Import subscribers from a CSV file.
+    Expected CSV columns: Email (required), Tags (optional), Confirmed (optional).
+    Detects duplicates by email and returns a detailed summary.
+    """
+    import re
+
+    form = await request.form()
+    file = form.get("file")
+    if not file or not hasattr(file, "filename") or not file.filename:
+        raise HTTPException(status_code=400, detail="CSV file is required")
+
+    if not file.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Only .csv files are accepted")
+
+    content = await file.read()
+    try:
+        decoded = content.decode("utf-8-sig")  # Handle BOM
+    except UnicodeDecodeError:
+        try:
+            decoded = content.decode("latin-1")
+        except UnicodeDecodeError:
+            raise HTTPException(status_code=400, detail="Could not decode CSV file. Use UTF-8 or Latin-1 encoding.")
+
+    reader = csv.DictReader(io.StringIO(decoded))
+    if not reader.fieldnames:
+        raise HTTPException(status_code=400, detail="CSV file is empty or has no headers")
+
+    # Normalize column names (case-insensitive)
+    normalized_fields = {f.strip().lower(): f.strip() for f in reader.fieldnames}
+
+    # Find the email column (accept "email", "e-mail", "mail")
+    email_key = None
+    for candidate in ["email", "e-mail", "mail", "correo", "email_address"]:
+        if candidate in normalized_fields:
+            email_key = normalized_fields[candidate]
+            break
+    if not email_key:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Could not find an 'Email' column in CSV. Found columns: {', '.join(reader.fieldnames)}"
+        )
+
+    # Find tags and confirmed columns
+    tags_key = normalized_fields.get("tags")
+    confirmed_key = normalized_fields.get("confirmed")
+
+    email_regex = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+    # Fetch all existing emails in one query for fast duplicate detection
+    existing_emails = set(
+        row[0].lower()
+        for row in db.query(NewsletterSubscriber.email).all()
+    )
+
+    results = {
+        "total": 0,
+        "imported": 0,
+        "duplicates": 0,
+        "errors": 0,
+        "error_details": [],
+        "duplicate_emails": [],
+        "imported_emails": [],
+    }
+
+    subscribers_to_add = []
+
+    # Store all row results for error CSV generation
+    rows_with_status = []  # Each entry: { "email": str, "tags": str, "confirmed": str, "status": str, "error": str or None }
+
+    for row_idx, row in enumerate(reader, start=2):  # start=2 because row 1 is header
+        results["total"] += 1
+
+        raw_email = (row.get(email_key) or "").strip()
+        email = raw_email.lower()
+
+        raw_tags = ""
+        if tags_key and (row.get(tags_key) or "").strip():
+            raw_tags = row[tags_key].strip()
+
+        raw_confirmed = ""
+        if confirmed_key and (row.get(confirmed_key) or "").strip():
+            raw_confirmed = row[confirmed_key].strip()
+
+        if not email:
+            results["errors"] += 1
+            results["error_details"].append(f"Row {row_idx}: Missing email")
+            rows_with_status.append({"email": raw_email, "tags": raw_tags, "confirmed": raw_confirmed, "status": "error", "error": "Missing email"})
+            continue
+
+        if not email_regex.match(email):
+            results["errors"] += 1
+            results["error_details"].append(f"Row {row_idx}: Invalid email '{email}'")
+            rows_with_status.append({"email": raw_email, "tags": raw_tags, "confirmed": raw_confirmed, "status": "error", "error": "Invalid email format"})
+            continue
+
+        if email in existing_emails:
+            results["duplicates"] += 1
+            results["duplicate_emails"].append(email)
+            rows_with_status.append({"email": raw_email, "tags": raw_tags, "confirmed": raw_confirmed, "status": "duplicate", "error": "Already exists in database"})
+            continue
+
+        # Parse tags
+        tags = []
+        if raw_tags:
+            tags = [t.strip() for t in re.split(r"[;|,]", raw_tags) if t.strip()]
+
+        # Parse confirmed status
+        confirmed = False
+        if raw_confirmed.lower() in ("yes", "true", "1", "y", "confirmed"):
+            confirmed = True
+
+        subscriber = NewsletterSubscriber(
+            email=email,
+            confirmed=confirmed,
+            tags=tags or None,
+        )
+        if confirmed:
+            subscriber.confirm_token = secrets.token_urlsafe(24)
+            subscriber.unsubscribe_token = secrets.token_urlsafe(24)
+
+        subscribers_to_add.append(subscriber)
+        existing_emails.add(email)  # Prevent duplicate in same import
+        results["imported"] += 1
+        results["imported_emails"].append(email)
+        rows_with_status.append({"email": raw_email, "tags": raw_tags, "confirmed": raw_confirmed, "status": "imported", "error": None})
+
+    if results["total"] == 0:
+        raise HTTPException(status_code=400, detail="CSV file has no data rows")
+
+    if subscribers_to_add:
+        for sub in subscribers_to_add:
+            db.add(sub)
+        db.commit()
+
+    # Build downloadable error CSV
+    error_rows = [r for r in rows_with_status if r["status"] in ("error", "duplicate")]
+    if error_rows:
+        error_output = io.StringIO()
+        error_writer = csv.writer(error_output)
+        # Write header
+        header = ["Email", "Tags", "Confirmed", "Status", "Error"]
+        error_writer.writerow(header)
+        for r in error_rows:
+            error_writer.writerow([r["email"], r["tags"], r["confirmed"], r["status"], r["error"] or ""])
+        results["downloadable_error_csv"] = error_output.getvalue()
+        error_output.close()
+    else:
+        results["downloadable_error_csv"] = None
+
+    log_admin_action(
+        db, admin, "import", "newsletter_subscriber", "",
+        f"Imported {results['imported']} subscribers from CSV ({results['duplicates']} duplicates, {results['errors']} errors)"
+    )
+
+    return results
+
+
+@router.get("/newsletter-subscribers/import/sample-csv")
+def download_sample_csv(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """Download a sample CSV template for newsletter subscriber import."""
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Email", "Name", "Tags", "Confirmed"])
+    writer.writerow(["jane@example.com", "Jane Doe", "vip, new", "Yes"])
+    writer.writerow(["john@example.com", "John Smith", "wholesale", "No"])
+    writer.writerow(["alice@example.com", "Alice Johnson", "partner", "Yes"])
+    writer.writerow(["bob@example.com", "Bob Brown", "", "No"])
+    writer.writerow(["carol@example.com", "Carol White", "vip, repeat", "Yes"])
+
+    csv_content = output.getvalue()
+    output.close()
+
+    return StreamingResponse(
+        iter([csv_content]),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": "attachment; filename=newsletter-import-sample.csv",
+        },
+    )
+
+
+@router.get("/newsletter-subscribers/import/error-csv/{import_id}")
+def download_import_error_csv(
+    import_id: str,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """Download a CSV with error details from a previous import (stored in admin audit log metadata)."""
+    from app.models import AdminAuditLog
+
+    log_entry = db.query(AdminAuditLog).filter(
+        AdminAuditLog.id == import_id,
+        AdminAuditLog.action == "import",
+    ).first()
+    if not log_entry or not log_entry.details:
+        raise HTTPException(status_code=404, detail="Import log not found or has no error details")
+
+    # The error CSV was embedded in the response and can be regenerated from the details
+    # For now, return the details as a CSV-friendly format
+    details = log_entry.details
+
+    output = io.StringIO()
+    output.write("Error Details\n")
+    output.write(f"\"{details}\"\n")
+    csv_content = output.getvalue()
+    output.close()
+
+    return StreamingResponse(
+        iter([csv_content]),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": f"attachment; filename=import-errors-{import_id[:8]}.csv",
+        },
+    )
+
+
+@router.get("/newsletter-subscribers/export")
+def export_newsletter_subscribers(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    subscribers = db.query(NewsletterSubscriber).order_by(
+        NewsletterSubscriber.created_at.desc()
+    ).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Email", "Confirmed", "Tags", "Subscribed Date"])
+    for s in subscribers:
+        writer.writerow([
+            s.email,
+            "Yes" if s.confirmed else "No",
+            ", ".join(s.tags) if s.tags else "",
+            s.created_at.strftime("%Y-%m-%d %H:%M:%S") if s.created_at else "",
+        ])
+
+    csv_content = output.getvalue()
+    output.close()
+
+    return StreamingResponse(
+        iter([csv_content]),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename=newsletter-subscribers-{datetime.utcnow().strftime('%Y-%m-%d')}.csv",
+        },
+    )
+
+
+# --- Broadcast Campaign Analytics ---
+@router.get("/newsletter-campaigns")
+def list_broadcast_campaigns(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """List all broadcast campaigns with analytics."""
+    campaigns = db.query(BroadcastCampaign).order_by(
+        BroadcastCampaign.created_at.desc()
+    ).all()
+    return {
+        "campaigns": [
+            {
+                "id": c.id,
+                "subject": c.subject,
+                "tag_filter": c.tag_filter,
+                "status": c.status,
+                "scheduled_at": c.scheduled_at.isoformat() if c.scheduled_at else None,
+                "sent_at": c.sent_at.isoformat() if c.sent_at else None,
+                "total_recipients": c.total_recipients,
+                "sent_count": c.sent_count,
+                "opened_count": c.opened_count,
+                "clicked_count": c.clicked_count,
+                "unsubscribed_count": c.unsubscribed_count,
+                "template_id": c.template_id,
+                "created_at": c.created_at.isoformat() if c.created_at else None,
+                # Derived metrics
+                "open_rate": round(c.opened_count / c.sent_count * 100, 1) if c.sent_count > 0 else 0,
+                "click_rate": round(c.clicked_count / c.sent_count * 100, 1) if c.sent_count > 0 else 0,
+            }
+            for c in campaigns
+        ]
+    }
+
+
+@router.get("/newsletter-campaigns/{campaign_id}")
+def get_broadcast_campaign_detail(
+    campaign_id: str,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """Get detailed analytics for a specific campaign."""
+    campaign = db.query(BroadcastCampaign).filter(BroadcastCampaign.id == campaign_id).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+
+    # Get recent events with subscriber info
+    events = db.query(BroadcastEvent).filter(
+        BroadcastEvent.campaign_id == campaign_id
+    ).order_by(BroadcastEvent.timestamp.desc()).limit(100).all()
+
+    subscriber_ids = list(set(e.subscriber_id for e in events))
+    subscribers = {
+        s.id: s.email
+        for s in db.query(NewsletterSubscriber).filter(NewsletterSubscriber.id.in_(subscriber_ids)).all()
+    } if subscriber_ids else {}
+
+    # Aggregate events
+    event_counts = {}
+    for e in events:
+        event_counts[e.event_type] = event_counts.get(e.event_type, 0) + 1
+
+    return {
+        "campaign": {
+            "id": campaign.id,
+            "subject": campaign.subject,
+            "tag_filter": campaign.tag_filter,
+            "status": campaign.status,
+            "scheduled_at": campaign.scheduled_at.isoformat() if campaign.scheduled_at else None,
+            "sent_at": campaign.sent_at.isoformat() if campaign.sent_at else None,
+            "total_recipients": campaign.total_recipients,
+            "sent_count": campaign.sent_count,
+            "opened_count": campaign.opened_count,
+            "clicked_count": campaign.clicked_count,
+            "unsubscribed_count": campaign.unsubscribed_count,
+            "open_rate": round(campaign.opened_count / campaign.sent_count * 100, 1) if campaign.sent_count > 0 else 0,
+            "click_rate": round(campaign.clicked_count / campaign.sent_count * 100, 1) if campaign.sent_count > 0 else 0,
+            "created_at": campaign.created_at.isoformat() if campaign.created_at else None,
+        },
+        "event_counts": event_counts,
+        "recent_events": [
+            {
+                "id": e.id,
+                "event_type": e.event_type,
+                "email": subscribers.get(e.subscriber_id, "Unknown"),
+                "metadata": e.extra_data,
+                "timestamp": e.timestamp.isoformat() if e.timestamp else None,
+            }
+            for e in events[:50]
+        ],
+    }
+
+
+@router.delete("/newsletter-campaigns/{campaign_id}")
+def cancel_scheduled_broadcast(
+    campaign_id: str,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """Cancel a scheduled broadcast."""
+    campaign = db.query(BroadcastCampaign).filter(BroadcastCampaign.id == campaign_id).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    if campaign.status != "scheduled":
+        raise HTTPException(status_code=400, detail="Only scheduled campaigns can be cancelled")
+
+    campaign.status = "failed"
+    db.commit()
+    log_admin_action(db, admin, "cancel", "broadcast", campaign_id, f"Cancelled scheduled broadcast '{campaign.subject}'")
+    return {"success": True}
+
+
+# --- Broadcast Templates ---
+@router.get("/newsletter-templates")
+def list_broadcast_templates(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """List all broadcast email templates."""
+    templates = db.query(BroadcastTemplate).order_by(BroadcastTemplate.updated_at.desc()).all()
+    return {
+        "templates": [
+            {
+                "id": t.id,
+                "name": t.name,
+                "subject": t.subject,
+                "content": t.content,
+                "created_at": t.created_at.isoformat() if t.created_at else None,
+                "updated_at": t.updated_at.isoformat() if t.updated_at else None,
+                "campaign_count": db.query(func.count(BroadcastCampaign.id)).filter(
+                    BroadcastCampaign.template_id == t.id
+                ).scalar() or 0,
+            }
+            for t in templates
+        ]
+    }
+
+
+@router.post("/newsletter-templates")
+def create_broadcast_template(
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """Create a new broadcast template."""
+    name = (data.get("name") or "").strip()
+    subject = (data.get("subject") or "").strip()
+    content = (data.get("content") or "").strip()
+
+    if not name or not subject or not content:
+        raise HTTPException(status_code=400, detail="Name, subject, and content are required")
+
+    template = BroadcastTemplate(
+        name=name,
+        subject=subject,
+        content=content,
+        created_by=admin.id,
+    )
+    db.add(template)
+    db.commit()
+    db.refresh(template)
+    log_admin_action(db, admin, "create", "broadcast_template", template.id, f"Created template '{name}'")
+    return {"success": True, "id": template.id}
+
+
+@router.put("/newsletter-templates/{template_id}")
+def update_broadcast_template(
+    template_id: str,
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """Update a broadcast template."""
+    template = db.query(BroadcastTemplate).filter(BroadcastTemplate.id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+
+    if "name" in data:
+        template.name = data["name"]
+    if "subject" in data:
+        template.subject = data["subject"]
+    if "content" in data:
+        template.content = data["content"]
+    template.updated_at = datetime.utcnow()
+    db.commit()
+    log_admin_action(db, admin, "update", "broadcast_template", template_id, f"Updated template '{template.name}'")
+    return {"success": True}
+
+
+@router.delete("/newsletter-templates/{template_id}")
+def delete_broadcast_template(
+    template_id: str,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """Delete a broadcast template."""
+    template = db.query(BroadcastTemplate).filter(BroadcastTemplate.id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    db.delete(template)
+    db.commit()
+    log_admin_action(db, admin, "delete", "broadcast_template", template_id, f"Deleted template '{template.name}'")
+    return {"success": True}
+
+
+# --- Double Opt-in Management ---
+@router.get("/newsletter/pending-confirmations")
+def list_pending_confirmations(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """List subscribers awaiting confirmation (double opt-in)."""
+    pending = db.query(NewsletterSubscriber).filter(
+        NewsletterSubscriber.confirmed == False
+    ).order_by(NewsletterSubscriber.created_at.desc()).all()
+
+    now = datetime.utcnow()
+    return {
+        "pending": [
+            {
+                "id": s.id,
+                "email": s.email,
+                "created_at": s.created_at.isoformat() if s.created_at else None,
+                "expired": s.confirm_expires_at is not None and s.confirm_expires_at < now,
+                "expires_at": s.confirm_expires_at.isoformat() if s.confirm_expires_at else None,
+            }
+            for s in pending
+        ]
+    }
+
+
+@router.post("/newsletter/resend-confirmation")
+def resend_confirmation_email(
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """Re-send the confirmation email for a pending subscriber."""
+    subscriber_id = data.get("subscriber_id", "")
+    if not subscriber_id:
+        raise HTTPException(status_code=400, detail="subscriber_id is required")
+
+    subscriber = db.query(NewsletterSubscriber).filter(
+        NewsletterSubscriber.id == subscriber_id,
+        NewsletterSubscriber.confirmed == False,
+    ).first()
+    if not subscriber:
+        raise HTTPException(status_code=404, detail="Pending subscriber not found")
+
+    from app.services.email_service import send_newsletter_confirmation_email
+
+    # Generate fresh token and expiry
+    token = subscriber.confirm_token or secrets.token_urlsafe(24)
+    subscriber.confirm_token = token
+    subscriber.confirm_expires_at = datetime.utcnow()  # will be patched below
+    db.commit()
+
+    _settings = get_settings()
+    base_url = _settings.site_base_url.rstrip("/")
+    confirm_url = f"{base_url}/api/newsletter/confirm?token={token}&email={subscriber.email}"
+    send_newsletter_confirmation_email(subscriber.email, confirm_url)
+
+    log_admin_action(
+        db, admin, "resend_confirmation", "newsletter_subscriber", subscriber_id,
+        f"Re-sent confirmation email to {subscriber.email}"
+    )
+    return {"success": True, "message": f"Confirmation email re-sent to {subscriber.email}"}
+
+
+@router.delete("/newsletter/cleanup-expired")
+def cleanup_expired_confirmations(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """Delete expired unconfirmed subscribers."""
+    now = datetime.utcnow()
+    expired = db.query(NewsletterSubscriber).filter(
+        NewsletterSubscriber.confirmed == False,
+        NewsletterSubscriber.confirm_expires_at != None,
+        NewsletterSubscriber.confirm_expires_at < now,
+    ).all()
+
+    count = len(expired)
+    emails = [s.email for s in expired]
+    for s in expired:
+        db.delete(s)
+    db.commit()
+
+    if count > 0:
+        log_admin_action(
+            db, admin, "cleanup", "newsletter_subscriber", "",
+            f"Cleaned up {count} expired unconfirmed subscribers: {', '.join(emails[:5])}{'...' if count > 5 else ''}"
+        )
+
+    return {"success": True, "cleaned": count, "emails": emails}
+
+
+# --- File Upload ---
+@router.post("/upload")
+async def upload_file(files: List[UploadFile] = File(...)):
+    upload_dir = os.path.join("app", "static", "uploads", "products")
+    os.makedirs(upload_dir, exist_ok=True)
+
+    urls = []
+    for file in files:
+        ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+        unique_name = f"{int(datetime.utcnow().timestamp())}-{uuid.uuid4().hex[:8]}.{ext}"
+        file_path = os.path.join(upload_dir, unique_name)
+
+        content = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(content)
+
+        urls.append(f"/static/uploads/products/{unique_name}")
+
+    return {"urls": urls}

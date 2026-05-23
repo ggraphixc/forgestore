@@ -1,0 +1,53 @@
+{% extends "admin/base.html" %}
+{% block title %}Customers — ForgeStore Admin{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-heading font-bold text-stone-900">Customers</h1>
+            <p class="text-sm text-stone-500 mt-1">{{ customers|length }} total customers</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-stone-100 bg-stone-50/50">
+                        <th class="text-left px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Customer</th>
+                        <th class="text-left px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Email</th>
+                        <th class="text-left px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Joined</th>
+                        <th class="text-right px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Orders</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-50">
+                    {% for customer in customers %}
+                    <tr class="hover:bg-amber-50/20 transition-colors group">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-gradient-to-br from-amber-100 to-stone-200 rounded-full flex items-center justify-center text-sm font-bold text-stone-600">
+                                    {{ customer.name[0]|upper if customer.name else '?' }}
+                                </div>
+                                <span class="text-sm font-medium text-stone-900">{{ customer.name or 'Unknown' }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-stone-500">{{ customer.email }}</td>
+                        <td class="px-6 py-4 text-sm text-stone-400">{{ customer.created_at.strftime('%b %d, %Y') if customer.created_at else '—' }}</td>
+                        <td class="px-6 py-4 text-right text-sm text-stone-500">{{ customer.order_count or '—' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-16 text-center">
+                            <div class="w-12 h-12 bg-gradient-to-br from-stone-100 to-stone-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <svg class="w-6 h-6 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            </div>
+                            <p class="text-sm text-stone-400">No customers yet</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

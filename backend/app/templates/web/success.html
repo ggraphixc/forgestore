@@ -1,0 +1,356 @@
+{% extends "web/base.html" %}
+{% block title %}
+    {% if order %}Order {{ order.order_number }} — ForgeStore{% else %}Order Placed — ForgeStore{% endif %}
+{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="success-page">
+    <!-- Steps indicator -->
+    <div class="flex items-center justify-center gap-2 mb-10">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">&#10003;</div>
+            <span class="text-sm font-medium text-emerald-700">Cart</span>
+        </div>
+        <div class="w-12 h-px bg-emerald-300 mx-2"></div>
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">&#10003;</div>
+            <span class="text-sm font-medium text-emerald-700">Checkout</span>
+        </div>
+        <div class="w-12 h-px bg-emerald-300 mx-2"></div>
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold">3</div>
+            <span class="text-sm font-medium text-amber-700">Confirmation</span>
+        </div>
+    </div>
+
+    <!-- Payment Status Banner -->
+    <div id="payment-status-container" class="mb-8">
+        <div id="payment-verifying" class="text-center py-12">
+            <div class="relative mb-6 inline-flex">
+                <div class="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto">
+                    <svg class="w-10 h-10 text-amber-500 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+            </div>
+            <h2 class="text-2xl font-display font-bold text-stone-900 dark:text-stone-100 mb-2">Verifying Payment</h2>
+            <p class="text-stone-500 max-w-md mx-auto">We're confirming your payment with the payment provider. This should only take a moment...</p>
+        </div>
+
+        <div id="payment-paid" class="hidden">
+            <div class="text-center py-8">
+                <div class="relative mb-6 inline-flex">
+                    <div class="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto">
+                        <svg class="w-10 h-10 text-emerald-500 animate-scale-check" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <div class="absolute inset-0 rounded-full bg-emerald-400/20 animate-ping"></div>
+                </div>
+                <h1 class="text-3xl md:text-5xl font-display font-black text-stone-900 dark:text-stone-100 mb-3">
+                    Payment <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-emerald-400">Successful</span>!
+                </h1>
+                <p class="text-stone-500 mb-1 max-w-md mx-auto">Your payment has been confirmed and your order is being prepared.</p>
+                <p class="text-sm text-stone-400 mb-10">
+                    Order: <span class="font-mono text-stone-600 font-medium">{{ order.order_number if order else '' }}</span>
+                    {% if order %}&middot; {{ format_price(order.total_amount, currency) }}{% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div id="payment-pending" class="hidden">
+            <div class="text-center py-8">
+                <div class="relative mb-6 inline-flex">
+                    <div class="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto">
+                        <svg class="w-10 h-10 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <h1 class="text-3xl md:text-5xl font-display font-black text-stone-900 dark:text-stone-100 mb-3">
+                    Payment <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-amber-400">Pending</span>
+                </h1>
+                <p class="text-stone-500 mb-1 max-w-md mx-auto">Your order has been placed but we're still waiting for payment confirmation.</p>
+                <p class="text-sm text-stone-400 mb-4">
+                    Order: <span class="font-mono text-stone-600 font-medium">{{ order.order_number if order else '' }}</span>
+                </p>
+                <button id="retry-verify-btn" onclick="verifyPayment()" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 rounded-xl transition-all duration-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Check Again
+                </button>
+            </div>
+        </div>
+
+        <div id="payment-failed" class="hidden">
+            <div class="text-center py-8">
+                <div class="relative mb-6 inline-flex">
+                    <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto">
+                        <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </div>
+                </div>
+                <h1 class="text-3xl md:text-5xl font-display font-black text-stone-900 dark:text-stone-100 mb-3">
+                    Payment <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-400">Failed</span>
+                </h1>
+                <p class="text-stone-500 mb-1 max-w-md mx-auto" id="failure-message">Your payment could not be processed. Please try again.</p>
+                <p class="text-sm text-stone-400 mb-6">
+                    Order: <span class="font-mono text-stone-600 font-medium">{{ order.order_number if order else '' }}</span>
+                </p>
+                <div class="flex items-center justify-center gap-3">
+                    <button onclick="window.location.href='/shop/checkout'" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-stone-900 hover:bg-stone-800 dark:bg-amber-600 dark:hover:bg-amber-500 rounded-xl transition-all duration-200">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                        Try Again
+                    </button>
+                    <a href="/shop/marketplace" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-stone-600 border border-stone-300 hover:bg-stone-50 rounded-xl transition-all duration-200">Continue Shopping</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="payment-no-ref" class="hidden">
+            <div class="text-center py-8">
+                <div class="relative mb-6 inline-flex">
+                    <div class="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto">
+                        <svg class="w-10 h-10 text-emerald-500 animate-scale-check" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <div class="absolute inset-0 rounded-full bg-emerald-400/20 animate-ping"></div>
+                </div>
+                <h1 class="text-3xl md:text-5xl font-display font-black text-stone-900 dark:text-stone-100 mb-4">
+                    Order <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-emerald-400">Placed</span> Successfully!
+                </h1>
+                <p class="text-stone-500 mb-2 max-w-md mx-auto">Your order has been received and the artisan will begin crafting your pieces soon.</p>
+                <p class="text-sm text-stone-400 mb-2">
+                    Order: <span class="font-mono text-stone-600 font-medium">{{ order.order_number if order else '&mdash;' }}</span>
+                </p>
+                <p class="text-xs text-amber-600 bg-amber-50 rounded-xl px-4 py-2 inline-block">Offline payment &mdash; please follow the payment instructions provided.</p>
+                <div class="mt-8"></div>
+            </div>
+        </div>
+    </div>
+
+    {% if order %}
+    <!-- Order Details -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+        <!-- Order Items Card -->
+        <div class="lg:col-span-2">
+            <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-sm font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider flex items-center gap-2">
+                        <svg class="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                        Order Items
+                    </h3>
+                    <span class="text-xs font-mono text-stone-400 bg-stone-100 dark:bg-stone-700 px-2.5 py-1 rounded-lg">{{ order.order_number }}</span>
+                </div>
+
+                <div class="divide-y divide-stone-100 dark:divide-stone-700">
+                    {% for item in order_items %}
+                    {% set product = product_map.get(item.product_id) %}
+                    <div class="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
+                        <div class="w-16 h-16 rounded-xl overflow-hidden bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 flex-shrink-0">
+                            {% if product and product.images and product.images[0] %}
+                            <img src="{{ product.images[0] }}" alt="{{ product.name }}" class="w-full h-full object-cover" onerror="this.src='/static/img/placeholder.svg'">
+                            {% else %}
+                            <div class="w-full h-full flex items-center justify-center text-stone-200">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-stone-900 dark:text-stone-100 truncate">{{ product.name if product else 'Product' }}</p>
+                            <p class="text-xs text-stone-400 mt-0.5">Qty: {{ item.quantity }} &times; {{ format_price(item.price, currency) }}</p>
+                        </div>
+                        <p class="text-sm font-semibold text-stone-900 dark:text-stone-100 whitespace-nowrap">{{ format_price(item.price * item.quantity, currency) }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Totals -->
+                <div class="mt-6 pt-5 border-t border-stone-200 dark:border-stone-700 space-y-2">
+                    <div class="flex justify-between text-sm text-stone-500">
+                        <span>Subtotal</span>
+                        <span>{{ format_price(order.total_amount, currency) }}</span>
+                    </div>
+                    <div class="flex justify-between text-sm text-stone-500">
+                        <span>Shipping</span>
+                        <span class="text-emerald-600 font-medium">Free</span>
+                    </div>
+                    <div class="flex justify-between pt-3 mt-3 border-t border-stone-100 dark:border-stone-700 text-base font-bold text-stone-900 dark:text-stone-100">
+                        <span>Total</span>
+                        <span class="font-mono">{{ format_price(order.total_amount, currency) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-4">
+            <!-- Status Card -->
+            <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
+                <h4 class="text-xs font-bold text-stone-500 uppercase tracking-wider mb-4">Order Status</h4>
+                <div id="order-status-badge" class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-xl
+                    {% if order.status.value == 'PAID' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                    {% elif order.status.value == 'PENDING' %}bg-amber-50 text-amber-700 border border-amber-200
+                    {% elif order.status.value == 'PROCESSING' %}bg-blue-50 text-blue-700 border border-blue-200
+                    {% elif order.status.value == 'SHIPPED' %}bg-indigo-50 text-indigo-700 border border-indigo-200
+                    {% elif order.status.value == 'DELIVERED' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                    {% elif order.status.value == 'CANCELLED' %}bg-red-50 text-red-700 border border-red-200
+                    {% else %}bg-stone-50 text-stone-700 border border-stone-200{% endif %}">
+                    <span class="w-2 h-2 rounded-full
+                        {% if order.status.value == 'PAID' or order.status.value == 'DELIVERED' %}bg-emerald-500
+                        {% elif order.status.value == 'PENDING' %}bg-amber-500
+                        {% elif order.status.value == 'PROCESSING' %}bg-blue-500
+                        {% elif order.status.value == 'SHIPPED' %}bg-indigo-500
+                        {% elif order.status.value == 'CANCELLED' %}bg-red-500
+                        {% else %}bg-stone-400{% endif %}"></span>
+                    <span id="order-status-text">{{ order.status.value }}</span>
+                </div>
+                <p class="text-xs text-stone-400 mt-3">
+                    Placed on {{ order.created_at.strftime('%b %d, %Y at %I:%M %p') if order.created_at else '&mdash;' }}
+                </p>
+            </div>
+
+            <!-- Shipping Address -->
+            {% if order.shipping_address %}
+            <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
+                <h4 class="text-xs font-bold text-stone-500 uppercase tracking-wider mb-4">Shipping To</h4>
+                <div class="space-y-1.5 text-sm">
+                    <p class="font-medium text-stone-900 dark:text-stone-100">{{ order.shipping_address.get('name', '') }}</p>
+                    <p class="text-stone-500">{{ order.shipping_address.get('address', '') }}</p>
+                    <p class="text-stone-500">{{ order.shipping_address.get('phone', '') }}</p>
+                    <p class="text-stone-500">{{ order.shipping_address.get('email', '') }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- What happens next -->
+            <div class="bg-gradient-to-br from-stone-50/80 to-emerald-50/50 dark:from-stone-800/50 dark:to-emerald-900/20 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
+                <h4 class="text-xs font-bold text-stone-500 uppercase tracking-wider mb-4">What's Next?</h4>
+                <div class="space-y-3">
+                    <div class="flex items-start gap-3">
+                        <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">1</div>
+                        <p class="text-xs text-stone-600 dark:text-stone-400"><span class="font-medium text-stone-900 dark:text-stone-200">Confirmed</span> &mdash; The artisan receives your order and begins preparation.</p>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">2</div>
+                        <p class="text-xs text-stone-600 dark:text-stone-400"><span class="font-medium text-stone-900 dark:text-stone-200">Crafted &amp; Shipped</span> &mdash; Dispatched within 2-5 business days.</p>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">3</div>
+                        <p class="text-xs text-stone-600 dark:text-stone-400"><span class="font-medium text-stone-900 dark:text-stone-200">Delivered</span> &mdash; Arrives at your doorstep with a confirmation email.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="flex flex-wrap items-center justify-center gap-3 pb-12">
+        <a href="/shop" class="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-stone-900 hover:bg-stone-800 dark:bg-amber-600 dark:hover:bg-amber-500 dark:text-stone-950 rounded-xl transition-all duration-200 active:scale-[0.98] shadow-lg shadow-stone-900/10">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Continue Shopping
+        </a>
+        <a href="/shop/account/orders" class="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-stone-700 dark:text-stone-300 border border-stone-300 dark:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800 rounded-xl transition-all duration-200">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            View All Orders
+        </a>
+        <a href="/shop/marketplace" class="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-stone-700 dark:text-stone-300 border border-stone-300 dark:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800 rounded-xl transition-all duration-200">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            Browse Marketplace
+        </a>
+    </div>
+</div>
+
+<style>
+@keyframes scaleCheck {
+    0% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+}
+.animate-scale-check {
+    animation: scaleCheck 0.5s ease-out forwards;
+}
+</style>
+
+<script>
+var PAYSTACK_PUBLIC_KEY = '{{ paystack_public_key|escapejs }}';
+
+function getQueryParam(name) {
+    var params = new URLSearchParams(window.location.search);
+    return params.get(name) || '';
+}
+
+async function verifyPayment() {
+    var reference = getQueryParam('reference');
+    var verifyingEl = document.getElementById('payment-verifying');
+    var paidEl = document.getElementById('payment-paid');
+    var pendingEl = document.getElementById('payment-pending');
+    var failedEl = document.getElementById('payment-failed');
+
+    verifyingEl.classList.remove('hidden');
+    paidEl.classList.add('hidden');
+    pendingEl.classList.add('hidden');
+    failedEl.classList.add('hidden');
+
+    if (!reference) {
+        verifyingEl.classList.add('hidden');
+        document.getElementById('payment-no-ref').classList.remove('hidden');
+        return;
+    }
+
+    try {
+        var res = await fetch('/api/payments/verify/' + encodeURIComponent(reference));
+        var data = await res.json();
+
+        verifyingEl.classList.add('hidden');
+
+        if (data.success && data.paid) {
+            paidEl.classList.remove('hidden');
+            var statusBadge = document.getElementById('order-status-badge');
+            var statusText = document.getElementById('order-status-text');
+            if (statusBadge && statusText) {
+                statusBadge.className = 'inline-flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200';
+                statusText.textContent = 'PAID';
+            }
+        } else if (data.success && data.status === 'pending') {
+            pendingEl.classList.remove('hidden');
+        } else if (data.success && !data.paid) {
+            var msg = data.gateway_response || 'Payment was not completed.';
+            document.getElementById('failure-message').textContent = msg;
+            failedEl.classList.remove('hidden');
+        } else {
+            failedEl.classList.remove('hidden');
+        }
+    } catch (err) {
+        verifyingEl.classList.add('hidden');
+        pendingEl.classList.remove('hidden');
+        document.getElementById('retry-verify-btn').textContent = 'Retry Verification';
+    }
+}
+
+(function() {
+    var ref = getQueryParam('reference');
+    var oid = getQueryParam('order_id');
+
+    if (oid) {
+        if (ref) {
+            verifyPayment();
+        } else {
+            document.getElementById('payment-verifying').classList.add('hidden');
+            document.getElementById('payment-no-ref').classList.remove('hidden');
+        }
+    } else {
+        document.getElementById('payment-verifying').classList.add('hidden');
+        document.getElementById('payment-no-ref').classList.remove('hidden');
+        var h1 = document.querySelector('#payment-no-ref h1');
+        if (h1) h1.textContent = 'Thank You!';
+    }
+})();
+</script>
+{% endblock %}

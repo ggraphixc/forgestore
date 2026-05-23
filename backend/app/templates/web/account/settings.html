@@ -1,0 +1,144 @@
+{% extends "web/base.html" %}
+{% block title %}Account Settings — ForgeStore{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex items-center gap-4 mb-8">
+        <a href="/shop/account" class="p-2 -ml-2 text-stone-400 hover:text-stone-900 transition-all duration-200 hover:bg-stone-50 rounded-lg">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7"/></svg>
+        </a>
+        <div>
+            <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-1 block">Preferences</span>
+            <h1 class="text-3xl md:text-4xl font-display font-black text-stone-900 dark:text-stone-100">Account <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Settings</span></h1>
+            <p class="text-sm text-stone-500 mt-1">Manage your profile and security</p>
+        </div>
+    </div>
+
+    <div class="space-y-6">
+        <!-- Profile Section -->
+        <div class="bg-white rounded-2xl border border-stone-200 p-6 lg:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 bg-stone-50 rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                </div>
+                <h2 class="text-sm font-bold text-stone-900 uppercase tracking-wider">Profile</h2>
+            </div>
+            <form id="settings-form" onsubmit="event.preventDefault(); updateSettings()" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1.5" for="name">Full Name</label>
+                    <input id="name" name="name" class="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all text-sm" placeholder="Your name">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1.5" for="email">Email</label>
+                    <input id="email" name="email" type="email" class="w-full px-4 py-3 border border-stone-300 rounded-xl bg-stone-50 text-stone-400 cursor-not-allowed text-sm" readonly>
+                    <p class="text-xs text-stone-400 mt-1.5">Email cannot be changed</p>
+                </div>
+                <div class="pt-2">
+                    <button type="submit" id="settings-btn" class="px-6 py-3 text-sm font-medium text-white bg-stone-900 hover:bg-stone-800 rounded-xl transition-all duration-200 active:scale-[0.98] shadow-lg shadow-stone-900/10">Save Changes</button>
+                </div>
+            </form>
+            <div id="settings-error" class="mt-4 text-sm text-red-500 hidden p-3 bg-red-50 rounded-xl"></div>
+            <div id="settings-success" class="mt-4 text-sm text-emerald-500 hidden p-3 bg-emerald-50 rounded-xl"></div>
+        </div>
+
+        <!-- Password Section -->
+        <div class="bg-white rounded-2xl border border-stone-200 p-6 lg:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 bg-stone-50 rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                </div>
+                <h2 class="text-sm font-bold text-stone-900 uppercase tracking-wider">Change Password</h2>
+            </div>
+            <form id="password-form" onsubmit="event.preventDefault(); changePassword()" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1.5" for="current_password">Current Password</label>
+                    <input id="current_password" name="current_password" type="password" autocomplete="current-password" class="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all text-sm" placeholder="••••••••">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1.5" for="new_password">New Password</label>
+                    <input id="new_password" name="new_password" type="password" minlength="6" autocomplete="new-password" class="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all text-sm" placeholder="At least 6 characters">
+                </div>
+                <div class="pt-2">
+                    <button type="submit" id="password-btn" class="px-6 py-3 text-sm font-medium text-white bg-stone-900 hover:bg-stone-800 rounded-xl transition-all duration-200 active:scale-[0.98] shadow-lg shadow-stone-900/10">Update Password</button>
+                </div>
+            </form>
+            <div id="password-error" class="mt-4 text-sm text-red-500 hidden p-3 bg-red-50 rounded-xl"></div>
+            <div id="password-success" class="mt-4 text-sm text-emerald-500 hidden p-3 bg-emerald-50 rounded-xl"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function loadProfile() {
+    try {
+        const res = await fetch('/api/account/profile');
+        if (res.status === 401) { window.location.href = '/shop/login'; return; }
+        const user = await res.json();
+        document.getElementById('name').value = user.name || '';
+        document.getElementById('email').value = user.email || '';
+    } catch (err) {
+        document.getElementById('settings-error').textContent = 'Failed to load profile';
+        document.getElementById('settings-error').classList.remove('hidden');
+    }
+}
+
+async function updateSettings() {
+    const btn = document.getElementById('settings-btn');
+    const error = document.getElementById('settings-error');
+    const success = document.getElementById('settings-success');
+    error.classList.add('hidden');
+    success.classList.add('hidden');
+    btn.disabled = true;
+
+    try {
+        const name = document.getElementById('name').value;
+        const res = await fetch('/api/account/profile', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name }),
+        });
+        if (!res.ok) throw new Error('Failed to update');
+        success.textContent = '✓ Profile updated successfully';
+        success.classList.remove('hidden');
+        setTimeout(() => success.classList.add('hidden'), 3000);
+    } catch (err) {
+        error.textContent = err.message;
+        error.classList.remove('hidden');
+    }
+    btn.disabled = false;
+}
+
+async function changePassword() {
+    const btn = document.getElementById('password-btn');
+    const error = document.getElementById('password-error');
+    const success = document.getElementById('password-success');
+    error.classList.add('hidden');
+    success.classList.add('hidden');
+    btn.disabled = true;
+
+    try {
+        const current = document.getElementById('current_password').value;
+        const newPass = document.getElementById('new_password').value;
+        const res = await fetch('/api/account/password', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ current_password: current, new_password: newPass }),
+        });
+        if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.detail || 'Failed to update password');
+        }
+        success.textContent = '✓ Password updated successfully';
+        success.classList.remove('hidden');
+        document.getElementById('current_password').value = '';
+        document.getElementById('new_password').value = '';
+        setTimeout(() => success.classList.add('hidden'), 3000);
+    } catch (err) {
+        error.textContent = err.message;
+        error.classList.remove('hidden');
+    }
+    btn.disabled = false;
+}
+
+loadProfile();
+</script>
+{% endblock %}

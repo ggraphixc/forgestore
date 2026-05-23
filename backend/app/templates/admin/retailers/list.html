@@ -1,0 +1,63 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Retailers — ForgeStore Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-heading font-bold text-stone-900">Retailers</h1>
+            <p class="text-sm text-stone-500 mt-1">{{ retailers|length }} artisan shop(s)</p>
+        </div>
+        <a href="/admin/retailers/new" class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-stone-800 to-stone-900 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:from-stone-900 hover:to-stone-950 transition-all shadow-md hover:shadow-lg cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Retailer
+        </a>
+    </div>
+
+    {% if retailers %}
+    <div class="grid gap-4">
+        {% for r in retailers %}
+        <div class="bg-white rounded-2xl border border-stone-200 p-5 hover:border-amber-200/50 hover:shadow-sm transition-all group">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-amber-50 to-stone-100 rounded-xl overflow-hidden flex-shrink-0 ring-1 ring-stone-200">
+                        {% if r.logo_url %}
+                        <img src="{{ r.logo_url }}" alt="" class="w-full h-full object-cover">
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center text-xl font-bold text-stone-400">{{ r.name[0] }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <a href="/admin/retailers/{{ r.slug }}" class="font-semibold text-stone-900 hover:text-amber-700 transition-colors">{{ r.name }}</a>
+                        <div class="flex items-center gap-3 mt-1">
+                            {% if r.location %}<span class="text-xs text-stone-400">{{ r.location }}</span>{% endif %}
+                            <span class="text-xs text-stone-400 bg-stone-50 px-2 py-0.5 rounded-full">{{ product_counts.get(r.id, 0) }} products</span>
+                            <span class="flex items-center gap-1 text-xs text-amber-700 font-medium">★ {{ "%.1f"|format(r.rating) }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <a href="/admin/retailers/{{ r.slug }}" class="px-3 py-1.5 text-xs font-medium text-stone-500 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-all">View</a>
+                    <a href="/admin/retailers/{{ r.slug }}/edit" class="px-3 py-1.5 text-xs font-medium text-stone-500 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-all">Edit</a>
+                    <button onclick="if(confirm('Delete this retailer?'))deleteRetailer('{{ r.id }}')" class="px-3 py-1.5 text-xs font-medium text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all cursor-pointer">Delete</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white rounded-2xl border border-stone-200 p-16 text-center">
+        <div class="w-16 h-16 bg-gradient-to-br from-stone-100 to-stone-200 rounded-2xl flex items-center justify-center mx-auto mb-4 ring-1 ring-stone-200">
+            <svg class="w-8 h-8 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-stone-900 mb-1">No retailers yet</h3>
+        <p class="text-sm text-stone-500 mb-6">Start by adding an artisan shop</p>
+        <a href="/admin/retailers/new" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-stone-800 to-stone-900 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:from-stone-900 hover:to-stone-950 transition-all shadow-md hover:shadow-lg cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Retailer
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

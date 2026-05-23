@@ -1,0 +1,97 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Catalog — ForgeStore Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-display font-black text-stone-900">Catalog</h1>
+            <p class="text-sm text-stone-500 mt-1">{{ products|length }} product(s) total</p>
+        </div>
+        <a href="/admin/catalog/new" class="inline-flex items-center gap-2 px-4 py-2.5 bg-stone-900 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-stone-800 transition-all duration-200 active:scale-[0.98] shadow-lg shadow-stone-900/10 cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Product
+        </a>
+    </div>
+
+    {% if products %}
+    <div class="bg-white rounded-xl border border-stone-200 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-stone-100 bg-stone-50/50">
+                        <th class="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Product</th>
+                        <th class="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 hidden md:table-cell">Category</th>
+                        <th class="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 hidden lg:table-cell">Retailer</th>
+                        <th class="text-right px-5 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Price</th>
+                        <th class="text-center px-5 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 hidden sm:table-cell">Stock</th>
+                        <th class="text-right px-5 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr class="border-b border-stone-50 hover:bg-amber-50/20 transition-colors duration-150">
+                        <td class="px-5 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-stone-100 rounded-lg overflow-hidden flex-shrink-0">
+                                    {% if product.images and product.images|length > 0 %}
+                                    <img src="{{ product.images[0] }}" alt="" class="w-full h-full object-cover">
+                                    {% else %}
+                                    <div class="w-full h-full flex items-center justify-center text-stone-300">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <a href="/admin/catalog/{{ product.id }}" class="font-medium text-stone-900 hover:text-amber-700 transition-colors">{{ product.name }}</a>
+                                    {% if product.brand %}<p class="text-[11px] text-stone-400">{{ product.brand }}</p>{% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-5 py-4 text-stone-500 hidden md:table-cell">{{ categories.get(product.category_id, '—') }}</td>
+                        <td class="px-5 py-4 text-stone-500 hidden lg:table-cell">{{ retailers.get(product.retailer_id, '—') }}</td>
+                        <td class="px-5 py-4 text-right font-medium text-stone-900">
+                            ₦{{ "{:,.2f}".format(product.price) }}
+                            {% if product.discount_price %}
+                            <span class="block text-[11px] text-red-500 line-through">₦{{ "{:,.2f}".format(product.discount_price) }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-4 text-center hidden sm:table-cell">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold
+                                {% if product.inventory > 10 %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                                {% elif product.inventory > 0 %}bg-amber-50 text-amber-700 border border-amber-200
+                                {% else %}bg-red-50 text-red-700 border border-red-200{% endif %}">
+                                {{ product.inventory }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-4 text-right">
+                            <div class="flex items-center justify-end gap-1">
+                                <a href="/admin/catalog/{{ product.id }}/edit" class="p-2 text-stone-400 hover:text-stone-900 hover:bg-stone-50 rounded-lg transition-all duration-150" title="Edit">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                </a>
+                                <button onclick="deleteProduct('{{ product.id }}')" class="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-150 cursor-pointer" title="Delete">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl border border-stone-200 p-12 text-center shadow-sm">
+        <div class="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-5">
+            <svg class="w-10 h-10 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        </div>
+        <h3 class="text-lg font-display font-bold text-stone-900 mb-1">No products yet</h3>
+        <p class="text-sm text-stone-500 mb-6">Get started by adding your first product</p>
+        <a href="/admin/catalog/new" class="inline-flex items-center gap-2 px-4 py-2.5 bg-stone-900 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-stone-800 transition-all duration-200 shadow-lg shadow-stone-900/10 cursor-pointer">
+            Add Product
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

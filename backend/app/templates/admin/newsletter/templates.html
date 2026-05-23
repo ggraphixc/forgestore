@@ -1,0 +1,172 @@
+{% extends "admin/base.html" %}
+{% block title %}Email Templates — ForgeStore Admin{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-heading font-bold text-stone-900">Email Templates</h1>
+            <p class="text-sm text-stone-500 mt-1">Create and manage reusable broadcast templates</p>
+        </div>
+        <button onclick="openCreateModal()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-stone-800 to-stone-900 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:from-stone-900 hover:to-stone-950 transition-all shadow-sm cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            New Template
+        </button>
+    </div>
+
+    <!-- Templates grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="templates-container">
+        {% for t in templates %}
+        <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow" id="template-card-{{ t.id }}">
+            <div class="p-5">
+                <div class="flex items-start justify-between mb-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-stone-900">{{ t.name }}</h3>
+                        <p class="text-xs text-stone-400 mt-0.5">{{ t.subject }}</p>
+                    </div>
+                    <div class="flex gap-1">
+                        <button onclick="openEditModal('{{ t.id }}', '{{ t.name|escapejs }}', '{{ t.subject|escapejs }}', '{{ t.content|escapejs }}')" class="p-1.5 text-stone-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all cursor-pointer" title="Edit">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                        </button>
+                        <button onclick="deleteTemplate('{{ t.id }}')" class="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer" title="Delete">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="text-xs text-stone-400 line-clamp-2 font-mono bg-stone-50 rounded-lg p-2.5 mb-3">{{ t.content[:150] }}{% if t.content|length > 150 %}...{% endif %}</div>
+                <div class="flex items-center justify-between text-[10px] text-stone-400">
+                    <span>Used in {{ t.campaign_count }} campaign(s)</span>
+                    <span>{{ t.updated_at.strftime('%b %d, %Y') if t.updated_at else '—' }}</span>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-span-full bg-white rounded-2xl border border-stone-200 shadow-sm p-16 text-center">
+            <div class="w-14 h-14 bg-gradient-to-br from-stone-100 to-stone-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <svg class="w-7 h-7 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+            </div>
+            <h3 class="text-sm font-bold text-stone-900 mb-1">No templates yet</h3>
+            <p class="text-sm text-stone-400">Create your first email template for quick reuse.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div id="template-modal" class="fixed inset-0 z-50 bg-black/40 hidden items-center justify-center p-4" onclick="if(event.target===this)closeModal()">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-stone-100">
+            <h3 class="text-sm font-bold text-stone-900" id="modal-title">Create Template</h3>
+            <button onclick="closeModal()" class="p-1 text-stone-400 hover:text-stone-600 transition-colors cursor-pointer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="p-6 space-y-4">
+            <input type="hidden" id="edit-template-id" value="">
+            <div>
+                <label class="block text-sm font-semibold text-stone-800 mb-1.5">Template Name *</label>
+                <input type="text" id="template-name" class="w-full px-4 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all" placeholder="e.g. Weekly Newsletter, Sale Announcement">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-stone-800 mb-1.5">Subject Line *</label>
+                <input type="text" id="template-subject" class="w-full px-4 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all" placeholder="e.g. New Collection Just Dropped!">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-stone-800 mb-1.5">HTML Content *</label>
+                <textarea id="template-content" rows="8" class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all resize-y" placeholder="<h1>Your email content here...</h1>"></textarea>
+            </div>
+        </div>
+        <div class="flex justify-end gap-2 px-6 py-4 border-t border-stone-100 bg-stone-50/50">
+            <button onclick="closeModal()" class="px-4 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-all cursor-pointer">Cancel</button>
+            <button onclick="saveTemplate()" id="save-template-btn" class="px-4 py-2 text-sm font-bold text-white bg-stone-800 rounded-xl hover:bg-stone-900 transition-all cursor-pointer">Save Template</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let editingTemplateId = null;
+
+function openCreateModal() {
+    editingTemplateId = null;
+    document.getElementById('edit-template-id').value = '';
+    document.getElementById('template-name').value = '';
+    document.getElementById('template-subject').value = '';
+    document.getElementById('template-content').value = '';
+    document.getElementById('modal-title').textContent = 'Create Template';
+    document.getElementById('save-template-btn').textContent = 'Save Template';
+    document.getElementById('template-modal').classList.remove('hidden');
+    document.getElementById('template-modal').classList.add('flex');
+}
+
+function openEditModal(id, name, subject, content) {
+    editingTemplateId = id;
+    document.getElementById('edit-template-id').value = id;
+    document.getElementById('template-name').value = name;
+    document.getElementById('template-subject').value = subject;
+    document.getElementById('template-content').value = content;
+    document.getElementById('modal-title').textContent = 'Edit Template';
+    document.getElementById('save-template-btn').textContent = 'Update Template';
+    document.getElementById('template-modal').classList.remove('hidden');
+    document.getElementById('template-modal').classList.add('flex');
+}
+
+function closeModal() {
+    document.getElementById('template-modal').classList.add('hidden');
+    document.getElementById('template-modal').classList.remove('flex');
+    editingTemplateId = null;
+}
+
+async function saveTemplate() {
+    const name = document.getElementById('template-name').value.trim();
+    const subject = document.getElementById('template-subject').value.trim();
+    const content = document.getElementById('template-content').value.trim();
+    if (!name || !subject || !content) {
+        showToast('All fields are required', 'warning');
+        return;
+    }
+    const btn = document.getElementById('save-template-btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    try {
+        const isEdit = !!editingTemplateId;
+        const url = isEdit ? '/api/admin/newsletter-templates/' + editingTemplateId : '/api/admin/newsletter-templates';
+        const res = await fetch(url, {
+            method: isEdit ? 'PUT' : 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name, subject, content}),
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(isEdit ? 'Template updated' : 'Template created', 'success');
+            closeModal();
+            setTimeout(() => location.reload(), 600);
+        } else {
+            showToast(data.detail || 'Failed to save', 'error');
+        }
+    } catch {
+        showToast('Network error', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = editingTemplateId ? 'Update Template' : 'Save Template';
+    }
+}
+
+async function deleteTemplate(id) {
+    if (!confirm('Delete this template? This cannot be undone.')) return;
+    try {
+        const res = await fetch('/api/admin/newsletter-templates/' + id, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            const card = document.getElementById('template-card-' + id);
+            if (card) card.remove();
+            showToast('Template deleted', 'success');
+        } else {
+            showToast(data.detail || 'Failed to delete', 'error');
+        }
+    } catch {
+        showToast('Network error', 'error');
+    }
+}
+</script>
+{% endblock %}

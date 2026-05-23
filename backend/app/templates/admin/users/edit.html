@@ -1,0 +1,78 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Edit Admin — ForgeStore{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center gap-4 mb-8">
+        <a href="/admin/admin-users" class="p-2 -ml-2 text-stone-400 hover:text-stone-900 hover:bg-stone-50 rounded-lg transition-all duration-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7"/></svg>
+        </a>
+        <div>
+            <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 mb-1 block">Admin Users</span>
+            <h1 class="text-3xl md:text-4xl font-display font-black text-stone-900">Edit <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Admin</span></h1>
+            <p class="text-sm text-stone-500 mt-1">{{ target_admin.email }}</p>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white rounded-2xl border border-stone-200 p-6 lg:p-8 shadow-sm">
+        <form method="POST" class="space-y-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1.5" for="name">Full Name</label>
+                    <input id="name" name="name" class="input-forge" value="{{ target_admin.name or '' }}">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1.5">Email</label>
+                    <input class="w-full px-4 py-3 border border-stone-200 rounded-xl text-sm bg-stone-50 text-stone-400 cursor-not-allowed" value="{{ target_admin.email }}" readonly>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-stone-700 mb-1.5" for="password">New Password <span class="text-stone-400 font-normal">(leave blank to keep current)</span></label>
+                <input id="password" name="password" type="password" class="input-forge" placeholder="Leave blank to keep current" minlength="6">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1.5" for="role">Role</label>
+                    <select id="role" name="role" class="select-forge" onchange="toggleVendorField()">
+                        <option value="DIR_ADMIN" {% if target_admin.role.value == 'DIR_ADMIN' %}selected{% endif %}>DIR_ADMIN</option>
+                        <option value="MANAGEMENT" {% if target_admin.role.value == 'MANAGEMENT' %}selected{% endif %}>MANAGEMENT</option>
+                        <option value="TECH_ADMIN" {% if target_admin.role.value == 'TECH_ADMIN' %}selected{% endif %}>TECH_ADMIN</option>
+                        <option value="RETAILER" {% if target_admin.role.value == 'RETAILER' %}selected{% endif %}>RETAILER</option>
+                        <option value="LOGISTICS" {% if target_admin.role.value == 'LOGISTICS' %}selected{% endif %}>LOGISTICS</option>
+                    </select>
+                </div>
+
+                <!-- Vendor/Linked Retailer -->
+                <div id="vendor-field" class="{% if target_admin.role.value != 'RETAILER' %}hidden{% endif %}">
+                    <label class="block text-sm font-medium text-stone-700 mb-1.5" for="vendor_id">Linked Retailer</label>
+                    <select id="vendor_id" name="vendor_id" class="select-forge">
+                        <option value="">— None —</option>
+                        {% for r in retailers %}
+                        <option value="{{ r.id }}" {% if target_admin.vendor_id == r.id %}selected{% endif %}>{{ r.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="text-xs text-stone-400 mt-1.5">RETAILER admins can only manage products for this shop.</p>
+                </div>
+            </div>
+
+            <div class="pt-4 flex items-center gap-3">
+                <button type="submit" class="btn-forge text-sm">Save Changes</button>
+                <a href="/admin/admin-users" class="btn-ghost text-sm">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleVendorField() {
+    const role = document.getElementById('role').value;
+    const field = document.getElementById('vendor-field');
+    field.classList.toggle('hidden', role !== 'RETAILER');
+}
+</script>
+{% endblock %}

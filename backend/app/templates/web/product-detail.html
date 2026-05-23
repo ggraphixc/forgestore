@@ -1,0 +1,312 @@
+{% extends "web/base.html" %}
+{% block title %}{{ product.name }} — ForgeStore{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-2 text-sm text-stone-400 dark:text-stone-500 mb-8 reveal" aria-label="Breadcrumb">
+        <a href="/shop" class="hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200">Home</a>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
+        {% if category %}
+        <a href="/shop/marketplace?category={{ category.slug }}" class="hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200">{{ category.name }}</a>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
+        {% endif %}
+        <span class="text-stone-600 dark:text-stone-300 font-medium">{{ product.name }}</span>
+    </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-14">
+        <!-- Images Gallery -->
+        <div class="reveal-left">
+            {% if product.images and product.images|length > 0 %}
+            <div class="aspect-square rounded-3xl overflow-hidden bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 mb-4 group relative shadow-card">
+                <img id="main-image" loading="lazy" src="{{ product.images[0] }}" alt="{{ product.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                {% if product.compare_at_price and product.compare_at_price > product.price %}
+                <span class="absolute top-4 left-4 badge-red">Sale</span>
+                {% endif %}
+            </div>
+            {% if product.images|length > 1 %}
+            <div class="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                {% for img in product.images %}
+                <button onclick="switchImage('{{ img }}', this)" class="w-16 sm:w-20 h-16 sm:h-20 rounded-xl overflow-hidden border-2 transition-all duration-200 flex-shrink-0 {% if loop.first %}border-amber-500 shadow-warm{% else %}border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500{% endif %}">
+                    <img loading="lazy" src="{{ img }}" alt="" class="w-full h-full object-cover">
+                </button>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="aspect-square rounded-3xl bg-gradient-to-br from-stone-50 to-stone-100 dark:from-stone-800 dark:to-stone-900 border border-stone-200 dark:border-stone-700 flex items-center justify-center">
+                <div class="text-center">
+                    <svg class="w-20 h-20 mx-auto text-stone-300 dark:text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    <p class="text-sm text-stone-300 dark:text-stone-600 mt-3">No image available</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Details -->
+        <div class="lg:sticky lg:top-24 lg:self-start reveal-right">
+            <div class="mb-6">
+                {% if retailer %}
+                <a href="/shop/shops/{{ retailer.slug }}" class="inline-flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors duration-200 mb-2 font-medium">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        {{ retailer.name }}
+                </a>
+                {% endif %}
+                <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Crafted with Care</span>
+                <h1 class="text-3xl md:text-5xl font-display font-black text-stone-900 dark:text-stone-100 mt-1 leading-[1.05]">{{ product.name }}</h1>
+                
+                <div class="flex items-center gap-4 mt-4">
+                    <span class="text-3xl md:text-4xl font-black text-stone-900 dark:text-stone-100 font-mono">{{ format_price(product.price, currency) }}</span>
+                    {% if product.compare_at_price and product.compare_at_price > product.price %}
+                    <span class="text-lg text-stone-400 dark:text-stone-500 line-through font-mono">{{ format_price(product.compare_at_price, currency) }}</span>
+                    <span class="badge-red">-{{ "%.0f"|format((1 - product.price / product.compare_at_price) * 100) }}%</span>
+                    {% endif %}
+                </div>
+
+                {% if product.rating %}
+                <div class="flex items-center gap-2 mt-4">
+                    <div class="flex gap-0.5">
+                        {% for i in range(5) %}
+                        <svg class="w-4 h-4 {% if i < product.rating|int %}text-amber-400{% else %}text-stone-200{% endif %}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        {% endfor %}
+                    </div>
+                    <span class="text-sm text-stone-400">({{ product.review_count or reviews|length }} reviews)</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Description -->
+            <div class="prose prose-sm prose-zinc max-w-none mb-8">
+                <p class="text-stone-600 leading-relaxed">{{ product.description or 'No description available.' }}</p>
+            </div>
+
+            <!-- Craftsmanship Details -->
+            {% if product.material or product.dimensions %}
+            <div class="grid grid-cols-2 gap-3 mb-8">
+                {% if product.material %}
+                <div class="bg-stone-50 rounded-xl p-4 border border-stone-100">
+                    <p class="text-xs text-stone-400 font-medium uppercase tracking-wider mb-1">Material</p>
+                    <p class="text-sm font-medium text-stone-900">{{ product.material }}</p>
+                </div>
+                {% endif %}
+                {% if product.dimensions %}
+                <div class="bg-stone-50 rounded-xl p-4 border border-stone-100">
+                    <p class="text-xs text-stone-400 font-medium uppercase tracking-wider mb-1">Dimensions</p>
+                    <p class="text-sm font-medium text-stone-900">{{ product.dimensions }}</p>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}                <!-- Wishlist + Add to Cart -->
+            <button onclick="toggleWishlist('{{ product.id }}', this)" class="wishlist-heart mb-4 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all duration-200 font-medium text-sm" data-product-id="{{ product.id }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                </svg>
+                <span class="wishlist-text">Add to Wishlist</span>
+            </button>
+            <div class="card-glass p-4 sm:p-6 reveal">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="flex items-center border border-stone-300 rounded-xl overflow-hidden bg-white">
+                        <button onclick="updateQty(-1)" class="px-4 py-2.5 text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all duration-150" aria-label="Decrease quantity">−</button>
+                        <span id="quantity" class="px-4 py-2.5 text-sm font-semibold text-stone-900 min-w-[3rem] text-center">1</span>
+                        <button onclick="updateQty(1)" class="px-4 py-2.5 text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all duration-150" aria-label="Increase quantity">+</button>
+                    </div>
+                    <button id="add-to-cart-btn" onclick="addToCart('{{ product.id }}')" class="flex-1 px-6 py-3 text-sm font-medium text-white bg-stone-900 hover:bg-stone-800 rounded-xl transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
+                        Add to Cart
+                    </button>
+                </div>
+                <div class="flex items-center justify-center gap-2 text-xs text-stone-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                    Free shipping on orders over ₦50,000
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Section -->
+    {% if reviews %}
+    <div class="mt-20 reveal">
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="text-2xl md:text-3xl font-display font-black text-stone-900 dark:text-stone-100">Customer <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Reviews</span></h2>
+            {% if product.rating %}
+            <div class="flex items-center gap-3">
+                <div class="flex gap-0.5">
+                    {% for i in range(5) %}
+                    <svg class="w-5 h-5 {% if i < product.rating|int %}text-amber-400{% else %}text-stone-200{% endif %}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                    {% endfor %}
+                </div>
+                <span class="text-lg font-semibold text-stone-900">{{ "%.1f"|format(product.rating) }}</span>
+            </div>
+            {% endif %}
+        </div>
+        <div class="space-y-4">
+            {% for review in reviews %}
+            <div class="card-artisan !p-6">
+                <div class="flex items-start justify-between mb-3">
+                    <div>
+                        <p class="text-sm font-semibold text-stone-900">{{ review.user_name or review.user_id[:8] or 'Anonymous' }}</p>
+                        <div class="flex gap-0.5 mt-1.5">
+                            {% for i in range(5) %}
+                            <svg class="w-4 h-4 {% if i < review.rating %}text-amber-400{% else %}text-stone-200{% endif %}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <span class="text-xs text-stone-400">{{ review.created_at.strftime('%b %d, %Y') if review.created_at else '' }}</span>
+                </div>
+                {% if review.comment %}
+                <p class="text-sm text-stone-600 leading-relaxed">{{ review.comment }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- AI Recommendations Section -->
+    <div id="ai-recommendations-section" class="mt-20 reveal hidden">
+        <div class="flex items-center gap-2 mb-8">
+            <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            <h2 class="text-2xl md:text-3xl font-display font-black text-stone-900 dark:text-stone-100">You Might Also <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Like</span></h2>
+            <span class="px-2 py-0.5 text-[10px] font-bold text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-900/30 rounded-full">AI PICK</span>
+        </div>
+        <div id="ai-recommendations-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <!-- AI recommendations loaded here -->
+        </div>
+        <div id="ai-recommendations-loading" class="flex items-center justify-center py-12">
+            <div class="flex items-center gap-3 text-stone-400">
+                <svg class="animate-spin w-5 h-5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                <span class="text-sm">Getting AI recommendations...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    {% if related %}
+    <div id="related-products-section" class="mt-20 reveal">
+        <h2 class="text-2xl md:text-3xl font-display font-black text-stone-900 dark:text-stone-100 mb-8">More from this <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">artisan</span></h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {% for p in related %}
+            <a href="/shop/products/{{ p.slug or p.id }}" class="card-product group !bg-transparent !border-0 !shadow-none">
+                <div class="aspect-square rounded-2xl overflow-hidden bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 mb-3 shadow-card hover:shadow-card-hover transition-shadow duration-300">
+                    {% if p.images and p.images|length > 0 %}
+                    <img loading="lazy" src="{{ p.images[0] }}" alt="" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center text-stone-200">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    </div>
+                    {% endif %}
+                </div>
+                <p class="text-sm font-display font-semibold text-stone-900 dark:text-stone-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-200">{{ p.name }}</p>
+                <p class="text-sm font-bold text-amber-600 dark:text-amber-400 mt-1 font-mono">{{ format_price(p.price, currency) }}</p>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function switchImage(src, btn) {
+    document.getElementById('main-image').src = src;
+    document.querySelectorAll('[onclick*="switchImage"]').forEach(b => {
+        b.classList.remove('border-amber-500', 'shadow-md');
+        b.classList.add('border-stone-200', 'hover:border-stone-400');
+    });
+    btn.classList.remove('border-stone-200', 'hover:border-stone-400');
+    btn.classList.add('border-amber-500', 'shadow-md');
+}
+
+function updateQty(delta) {
+    const el = document.getElementById('quantity');
+    const val = parseInt(el.textContent) + delta;
+    if (val >= 1 && val <= 99) el.textContent = val;
+}
+
+async function addToCart(productId) {
+    const qty = parseInt(document.getElementById('quantity').textContent);
+    const btn = document.getElementById('add-to-cart-btn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Adding...';
+
+    try {
+        const res = await fetch('/api/cart/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ product_id: productId, quantity: qty }),
+        });
+        if (!res.ok) throw new Error('Failed to add to cart');
+        btn.textContent = '✓ Added!';
+        btn.classList.remove('bg-stone-900', 'hover:bg-stone-800');
+        btn.classList.add('bg-emerald-600');
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.classList.remove('bg-emerald-600');
+            btn.classList.add('bg-stone-900', 'hover:bg-stone-800');
+            btn.disabled = false;
+        }, 2000);
+        // Update badge and show success
+        await updateCartBadge();
+
+        // Broadcast cart update so other pages (like cart page) can refresh
+        if (window.broadcastCartUpdate) {
+            window.broadcastCartUpdate();
+        }
+
+        showToast('Added to cart! 🛒', 'success');
+    } catch (err) {
+        btn.textContent = 'Error — try again';
+        setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 2000);
+    }
+}
+
+// Load AI recommendations after page render
+document.addEventListener('DOMContentLoaded', async function() {
+    const productId = '{{ product.id }}';
+    const section = document.getElementById('ai-recommendations-section');
+    const grid = document.getElementById('ai-recommendations-grid');
+    const loading = document.getElementById('ai-recommendations-loading');
+
+    try {
+        const res = await fetch('/api/ai/recommendations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ product_id: productId }),
+        });
+        const data = await res.json();
+
+        if (data.success && data.products && data.products.length > 0) {
+            grid.innerHTML = data.products.map(p => `
+                <a href="/shop/products/${p.slug}" class="card-product group !bg-transparent !border-0 !shadow-none reveal-scale">
+                    <div class="aspect-square rounded-2xl overflow-hidden bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 mb-3 shadow-card hover:shadow-card-hover transition-shadow duration-300 relative">
+                        ${p.images && p.images.length > 0
+                            ? `<img loading="lazy" src="${p.images[0]}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">`
+                            : `<div class="w-full h-full flex items-center justify-center text-stone-200"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>`
+                        }
+                        ${p.discount_price && p.discount_price < p.price
+                            ? `<span class="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold text-white bg-red-500 rounded-full">Sale</span>`
+                            : ''
+                        }
+                    </div>
+                    <p class="text-sm font-display font-semibold text-stone-900 dark:text-stone-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-200 line-clamp-1">${p.name}</p>
+                    <div class="flex items-center justify-between mt-1">
+                        <span class="text-sm font-bold text-amber-600 dark:text-amber-400 font-mono">${formatCurrency(p.price)}</span>
+                        ${p.rating && p.rating > 0
+                            ? `<span class="text-xs text-stone-400 flex items-center gap-1"><svg class="w-3.5 h-3.5 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg> ${parseFloat(p.rating).toFixed(1)}</span>`
+                            : ''
+                        }
+                    </div>
+                </a>
+            `).join('');
+            section.classList.remove('hidden');
+            loading.classList.add('hidden');
+        } else {
+            section.classList.add('hidden');
+        }
+    } catch {
+        // AI unavailable — hide the section gracefully
+        section.classList.add('hidden');
+    }
+});
+</script>
+{% endblock %}

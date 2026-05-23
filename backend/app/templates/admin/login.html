@@ -1,0 +1,101 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Login — ForgeStore{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gradient-to-br from-stone-50 via-white to-amber-50/30 flex flex-col items-center justify-center px-4">
+    <!-- Logo -->
+    <div class="mb-8 text-center">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-stone-900 to-stone-700 rounded-2xl mb-4 shadow-warm ring-2 ring-amber-500/20">
+            <span class="text-white text-2xl font-display font-bold">FS</span>
+        </div>
+        <h1 class="text-2xl font-display font-black text-stone-900">ForgeStore</h1>
+        <p class="text-sm text-stone-500 mt-1">Admin Panel — Sign in to continue</p>
+    </div>
+
+    <!-- Form -->
+    <div class="w-full max-w-sm">
+        <form id="login-form" class="bg-white/80 dark:bg-stone-800/80 backdrop-blur-md rounded-2xl border border-white/20 dark:border-stone-700/50 p-8 shadow-lg shadow-stone-900/5">
+            {% if error %}
+            <div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <div class="space-y-5">
+                <div>
+                    <label for="email" class="block text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500 mb-2">Email</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value="admin@forgestore.com"
+                        required
+                        class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+                        placeholder="admin@forgestore.com"
+                        autocomplete="email"
+                    >
+                </div>
+
+                <div>
+                    <label for="password" class="block text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500 mb-2">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        required
+                        class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <button
+                    type="submit"
+                    class="w-full px-5 py-3 bg-stone-900 text-white text-sm font-bold rounded-xl hover:bg-stone-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-[0.98] shadow-lg shadow-stone-900/10"
+                >
+                    Sign In to Dashboard
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <p class="mt-8 text-xs text-stone-400">
+        &copy; 2025 ForgeStore. All rights reserved.
+    </p>
+</div>
+
+<script>
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="inline-block animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></span> Signing in...';
+
+    const formData = new FormData(e.target);
+
+    try {
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: formData.get('email'),
+                password: formData.get('password'),
+            }),
+        });
+
+        if (res.ok) {
+            window.location.href = '/admin/dashboard';
+        } else {
+            const data = await res.json();
+            alert(data.detail || 'Invalid email or password');
+        }
+    } catch (err) {
+        alert('Connection error. Please try again.');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign In to Dashboard';
+    }
+});
+</script>
+{% endblock %}

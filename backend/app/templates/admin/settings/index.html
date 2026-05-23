@@ -1,0 +1,223 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Settings — ForgeStore Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-heading font-bold text-stone-900">Settings</h1>
+            <p class="text-sm text-stone-500 mt-1">Manage all site configuration, organized by category</p>
+        </div>
+        <button onclick="saveAllSettings()" id="save-all-btn" class="px-5 py-2.5 bg-gradient-to-r from-stone-800 to-stone-900 text-white text-sm font-bold rounded-xl hover:from-stone-900 hover:to-stone-950 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer inline-flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            Save All Changes
+        </button>
+    </div>
+
+    <!-- Category nav tabs -->
+    <div class="flex flex-wrap gap-2 mb-8 sticky top-20 z-30 bg-stone-50/90 backdrop-blur-sm py-3 -mx-4 px-4 rounded-2xl">
+        {% set categories_info = {
+            'global': {'icon': 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z', 'label': 'Global', 'color': 'bg-blue-100 text-blue-700'},
+            'design': {'icon': 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01', 'label': 'Design', 'color': 'bg-purple-100 text-purple-700'},
+            'technical': {'icon': 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z', 'label': 'Technical', 'color': 'bg-cyan-100 text-cyan-700'},
+            'optional': {'icon': 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z', 'label': 'Optional', 'color': 'bg-emerald-100 text-emerald-700'},
+            'developer': {'icon': 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4', 'label': 'Developer', 'color': 'bg-rose-100 text-rose-700'},
+            'logistics': {'icon': 'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0', 'label': 'Logistics', 'color': 'bg-amber-100 text-amber-700'},
+            'other': {'icon': 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4', 'label': 'Other', 'color': 'bg-stone-100 text-stone-700'},
+        } %}
+        {% for cat_id, cat_info in categories_info.items() %}
+        <a href="#section-{{ cat_id }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg {{ cat_info.color }} hover:opacity-80 transition-opacity">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ cat_info.icon }}"/></svg>
+            {{ cat_info.label }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <form id="settings-form">
+        {% set category_labels = {
+            'global': 'Global Settings',
+            'global_desc': 'Site identity, currency, and timezone configuration',
+            'design': 'Design & Branding',
+            'design_desc': 'Colors, themes, fonts, and visual identity',
+            'technical': 'Technical Settings',
+            'technical_desc': 'Performance, storage, and system configuration',
+            'optional': 'Optional Features',
+            'optional_desc': 'Toggle features like newsletter, reviews, wishlist',
+            'developer': 'Developer Settings',
+            'developer_desc': 'API keys, debug mode, webhooks, and CORS',
+            'logistics': 'Logistics & Shipping',
+            'logistics_desc': 'Shipping fees, taxes, return policies, and order limits',
+            'other': 'Other Settings',
+            'other_desc': 'Analytics, custom code, and misc configuration',
+        } %}
+
+        {% set category_icons = {
+            'global': 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z',
+            'design': 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01',
+            'technical': 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
+            'optional': 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z',
+            'developer': 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
+            'logistics': 'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0',
+            'other': 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4',
+        } %}
+
+        {% for cat_id, cat_settings in categorized_settings.items() %}
+        {% set is_disabled = not accessible_categories.get(cat_id, false) %}
+        {% set label_key = cat_id ~ '_desc' %}
+        <section id="section-{{ cat_id }}" class="scroll-mt-28 mb-8">
+            <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden hover:shadow-sm transition-shadow">
+                <!-- Section header -->
+                <div class="flex items-center gap-3 px-6 py-5 border-b border-stone-100 bg-stone-50/50">
+                    <div class="w-9 h-9 rounded-xl bg-stone-100 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ category_icons[cat_id] }}"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h2 class="text-sm font-bold text-stone-900">{{ category_labels.get(cat_id, cat_id|title) }}</h2>
+                        <p class="text-xs text-stone-400">{{ category_labels.get(label_key, '') }}</p>
+                    </div>
+                    <span class="text-xs text-stone-400 font-mono">{{ cat_settings|length }} settings</span>
+                </div>
+
+                <!-- Settings fields -->
+                <div class="divide-y divide-stone-100">
+                    {% for s in cat_settings %}
+                    <div class="px-6 py-5 hover:bg-stone-50/50 transition-colors {% if is_disabled %}opacity-60 pointer-events-none{% endif %}">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex-1 min-w-0">
+                                <label for="setting-{{ s.key }}" class="text-sm font-semibold text-stone-800">{{ s.label }}</label>
+                                {% if s.description %}
+                                <p class="text-xs text-stone-400 mt-0.5">{{ s.description }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="w-full max-w-xs flex-shrink-0">
+                                {% if s.type == 'select' and s.options %}
+                                <select id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" class="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all cursor-pointer">
+                                    {% for opt in s.options %}
+                                    <option value="{{ opt.value }}" {% if s.value == opt.value %}selected{% endif %}>{{ opt.label }}</option>
+                                    {% endfor %}
+                                </select>
+                                {% elif s.type == 'boolean' %}
+                                <div class="flex items-center justify-end">
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" class="sr-only peer" {% if s.value == 'true' or s.value == True %}checked{% endif %}>
+                                        <div class="w-11 h-6 bg-stone-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-amber-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+                                    </label>
+                                </div>
+                                {% elif s.type == 'password' %}
+                                <div class="relative">
+                                    <input type="password" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-mono" autocomplete="off">
+                                    <button type="button" onclick="togglePasswordVisibility('setting-{{ s.key }}')" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-stone-400 hover:text-stone-600 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    </button>
+                                </div>
+                                {% elif s.type == 'textarea' %}
+                                <textarea id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" rows="2" class="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-mono">{{ s.value }}</textarea>
+                                {% elif s.type == 'number' %}
+                                <input type="number" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-mono">
+                                {% else %}
+                                <input type="text" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all" {% if s.type == 'password' %}autocomplete="off"{% endif %}>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if s.type == 'password' %}
+                        <div class="mt-2 flex justify-end">
+                            <span class="text-[10px] text-stone-400{% if s.value %} text-emerald-500{% endif %}">
+                                {% if s.value %}🔒 Key is set{% else %}⚠️ Not configured{% endif %}
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Section save button -->
+                <div class="px-6 py-3 bg-stone-50/50 border-t border-stone-100 flex justify-end">
+                    <button type="button" onclick="saveSection('{{ cat_id }}')" class="px-4 py-2 text-xs font-semibold text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 hover:text-stone-800 transition-all cursor-pointer">
+                        Save {{ category_labels.get(cat_id, cat_id|title) }}
+                    </button>
+                </div>
+            </div>
+        </section>
+        {% endfor %}
+    </form>
+</div>
+
+<script>
+function togglePasswordVisibility(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+function getSettingValue(el) {
+    if (el.type === 'checkbox') return el.checked ? 'true' : 'false';
+    return el.value;
+}
+
+async function saveSection(category) {
+    const btn = event.currentTarget;
+    btn.disabled = true;
+    btn.innerHTML = 'Saving...';
+
+    const data = {};
+    document.querySelectorAll(`[data-setting]`).forEach(el => {
+        const key = el.getAttribute('data-setting');
+        // Determine which category this setting belongs to by finding its section
+        const section = el.closest('section');
+        if (section && section.id === `section-${category}`) {
+            data[key] = getSettingValue(el);
+        }
+    });
+
+    try {
+        const res = await fetch('/api/admin/settings/bulk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        const result = await res.json();
+        if (result.success) {
+            showToast(`${result.updated} setting(s) saved`, 'success');
+        } else {
+            showToast('Failed to save', 'error');
+        }
+    } catch {
+        showToast('Network error', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Save ' + category.charAt(0).toUpperCase() + category.slice(1);
+    }
+}
+
+async function saveAllSettings() {
+    const btn = document.getElementById('save-all-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="animate-spin w-4 h-4 mr-2" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Saving...';
+
+    const data = {};
+    document.querySelectorAll(`[data-setting]`).forEach(el => {
+        data[el.getAttribute('data-setting')] = getSettingValue(el);
+    });
+
+    try {
+        const res = await fetch('/api/admin/settings/bulk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        const result = await res.json();
+        if (result.success) {
+            showToast(`All ${result.updated} settings saved successfully!`, 'success');
+        } else {
+            showToast('Failed to save settings', 'error');
+        }
+    } catch {
+        showToast('Network error', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Save All Changes';
+    }
+}
+</script>
+{% endblock %}

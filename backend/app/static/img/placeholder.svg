@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500">
+  <rect width="400" height="500" fill="#f5f5f4"/>
+  <g transform="translate(200,220)" fill="none" stroke="#d6d3d1" stroke-width="2">
+    <rect x="-48" y="-60" width="96" height="72" rx="8"/>
+    <path d="M-48,-30 L-16,-8 L16,-30 L48,-8"/>
+    <path d="M-48,8 L-16,-14 L16,8 L48,-14"/>
+    <line x1="0" y1="-60" x2="0" y2="-80" stroke-width="1.5"/>
+    <line x1="-40" y1="-48" x2="-32" y2="-56"/>
+    <line x1="40" y1="-48" x2="32" y2="-56"/>
+  </g>
+  <text x="200" y="310" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" fill="#a8a29e">Product Image</text>
+</svg>

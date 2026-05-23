@@ -1,0 +1,243 @@
+{% extends "admin/base.html" %}
+{% block title %}Send Newsletter — ForgeStore Admin{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-heading font-bold text-stone-900">Send Newsletter</h1>
+            <p class="text-sm text-stone-500 mt-1">Compose and send an email campaign to your subscribers</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="/admin/newsletter/templates" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-stone-700 text-xs font-bold uppercase tracking-wider rounded-xl border border-stone-300 hover:bg-stone-50 transition-all duration-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Templates
+            </a>
+            <a href="/admin/newsletter/broadcast-analytics" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-stone-700 text-xs font-bold uppercase tracking-wider rounded-xl border border-stone-300 hover:bg-stone-50 transition-all duration-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                Analytics
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
+        <div class="px-6 py-5 border-b border-stone-100 bg-stone-50/50">
+            <h2 class="text-sm font-bold text-stone-900">Campaign Details</h2>
+            <p class="text-xs text-stone-400 mt-0.5">Your email will be wrapped in the branded ForgeStore template with open/click tracking</p>
+        </div>
+        <div class="p-6 space-y-5">
+            <!-- Template picker -->
+            <div>
+                <label for="template-select" class="block text-sm font-semibold text-stone-800 mb-1.5">Use a Template (optional)</label>
+                <select id="template-select" class="w-full px-4 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all cursor-pointer">
+                    <option value="">Start from scratch</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="subject" class="block text-sm font-semibold text-stone-800 mb-1.5">Subject Line *</label>
+                <input type="text" id="subject" class="w-full px-4 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all" placeholder="e.g. New Collection Just Dropped!">
+                <p class="text-xs text-stone-400 mt-1" id="subject-count">0 characters</p>
+            </div>
+
+            <div>
+                <label for="tag-filter" class="block text-sm font-semibold text-stone-800 mb-1.5">Send to Tag (optional)</label>
+                <select id="tag-filter" class="w-full px-4 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all cursor-pointer">
+                    <option value="">All confirmed subscribers</option>
+                    <option value="new">New subscribers</option>
+                    <option value="vip">VIP</option>
+                    <option value="repeat">Repeat buyers</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="content" class="block text-sm font-semibold text-stone-800 mb-1.5">Email Content (HTML) *</label>
+                <p class="text-xs text-stone-400 mb-2">Write HTML that will be placed inside the branded email wrapper. Links will be wrapped for click tracking.</p>
+                <textarea id="content" rows="12" class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all resize-y" placeholder="<h1>Hello there!</h1>&#10;<p>Your content goes here...</p>&#10;<div style=&quot;text-align:center;margin:24px 0;&quot;>&#10;  <a href=&quot;https://example.com/shop&quot;>Shop Now</a>&#10;</div>"></textarea>
+            </div>
+
+            <!-- Schedule picker -->
+            <div>
+                <label for="schedule-time" class="block text-sm font-semibold text-stone-800 mb-1.5">Schedule (optional)</label>
+                <input type="datetime-local" id="schedule-time" class="w-full px-4 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">
+                <p class="text-xs text-stone-400 mt-1">Leave empty to send immediately. Uses your local time.</p>
+            </div>
+
+            <!-- Preview pane -->
+            <div class="border border-stone-200 rounded-xl overflow-hidden">
+                <div class="px-4 py-2.5 bg-stone-50 border-b border-stone-200 flex items-center justify-between">
+                    <span class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Preview</span>
+                    <button type="button" onclick="updatePreview()" class="text-xs text-amber-600 hover:text-amber-800 font-semibold cursor-pointer">Refresh ↻</button>
+                </div>
+                <iframe id="preview-frame" class="w-full h-64 bg-white" sandbox="allow-same-origin" srcdoc=""></iframe>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-stone-100">
+                <div id="recipient-info" class="text-xs text-stone-400">
+                    <span id="recipient-count">—</span> confirmed subscriber(s) will receive this
+                </div>
+                <button onclick="sendBroadcast()" id="send-btn" class="px-6 py-2.5 bg-gradient-to-r from-stone-800 to-stone-900 text-white text-sm font-bold rounded-xl hover:from-stone-900 hover:to-stone-950 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer inline-flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                    <span id="send-btn-text">Send Now</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent broadcasts -->
+    <div class="mt-8 bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-stone-100">
+            <h2 class="text-sm font-bold text-stone-900">Recent Broadcasts</h2>
+        </div>
+        <div class="divide-y divide-stone-100" id="recent-broadcasts">
+            <div class="px-6 py-8 text-center text-sm text-stone-400">
+                No broadcasts sent yet. Send your first campaign above.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Load templates and subscriber count on page load
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const [subRes, tmplRes] = await Promise.all([
+            fetch('/api/admin/newsletter-subscribers'),
+            fetch('/api/admin/newsletter-templates'),
+        ]);
+        const subData = await subRes.json();
+        const tmplData = await tmplRes.json();
+        const confirmed = subData.subscribers.filter(s => s.confirmed);
+        document.getElementById('recipient-count').textContent = confirmed.length;
+
+        // Populate template selector
+        const select = document.getElementById('template-select');
+        tmplData.templates.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.id;
+            opt.textContent = t.name;
+            select.appendChild(opt);
+        });
+    } catch {}
+});
+
+// Template loader
+document.getElementById('template-select').addEventListener('change', async function() {
+    if (!this.value) return;
+    try {
+        const res = await fetch('/api/admin/newsletter-templates');
+        const data = await res.json();
+        const tmpl = data.templates.find(t => t.id === this.value);
+        if (tmpl) {
+            document.getElementById('subject').value = tmpl.subject;
+            document.getElementById('content').value = tmpl.content;
+            document.getElementById('subject-count').textContent = tmpl.subject.length + ' characters';
+            updatePreview();
+            showToast('Template loaded: ' + tmpl.name, 'success');
+        }
+    } catch {}
+});
+
+// Character counter
+document.getElementById('subject').addEventListener('input', function() {
+    document.getElementById('subject-count').textContent = this.value.length + ' characters';
+});
+
+// Live preview
+function updatePreview() {
+    const content = document.getElementById('content').value || '';
+    const subject = document.getElementById('subject').value || '(No subject)';
+    const previewSrc = `<html><head><style>body{margin:0;padding:24px;background:#f5f5f4;font-family:'Helvetica Neue',Arial,sans-serif}</style></head><body>
+        <div style="max-width:520px;margin:0 auto;padding:32px 24px;background:#fafaf9;border-radius:16px;">
+            <div style="text-align:center;margin-bottom:24px;">
+                <div style="display:inline-block;background:#1c1917;color:white;font-weight:800;font-size:20px;padding:10px 18px;border-radius:12px;">
+                    ForgeStore
+                </div>
+            </div>
+            <p style="font-size:11px;color:#a8a29e;text-align:center;margin-bottom:16px;">Subject: ${subject.replace(/</g,'&lt;')}</p>
+            ${content}
+            <div style="margin-top:32px;padding-top:20px;border-top:1px solid #e7e5e4;font-size:11px;color:#a8a29e;text-align:center;">
+                <p style="margin:0 0 6px 0;">You're receiving this because you subscribed.</p>
+                <a href="#" style="color:#a8a29e;text-decoration:underline;">Unsubscribe instantly</a>
+            </div>
+            <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" width="1" height="1" style="display:none;" />
+        </div>
+    </body></html>`;
+    document.getElementById('preview-frame').srcdoc = previewSrc;
+}
+
+// Auto-preview on input
+document.getElementById('content').addEventListener('input', updatePreview);
+
+// Schedule toggle handler
+document.getElementById('schedule-time').addEventListener('input', function() {
+    const btnText = document.getElementById('send-btn-text');
+    if (this.value) {
+        btnText.textContent = 'Schedule';
+    } else {
+        btnText.textContent = 'Send Now';
+    }
+});
+
+async function sendBroadcast() {
+    const subject = document.getElementById('subject').value.trim();
+    const content = document.getElementById('content').value.trim();
+    const tagFilter = document.getElementById('tag-filter').value;
+    const scheduleTime = document.getElementById('schedule-time').value;
+    const templateId = document.getElementById('template-select').value;
+
+    if (!subject || !content) {
+        showToast('Please enter both a subject and content', 'warning');
+        return;
+    }
+
+    const isScheduled = !!scheduleTime;
+    const confirmMsg = isScheduled
+        ? `Schedule "${subject}" for ${scheduleTime}?`
+        : `Send "${subject}" to all confirmed subscribers immediately? This cannot be undone.`;
+
+    if (!confirm(confirmMsg)) return;
+
+    // Convert local datetime to ISO for the server
+    let scheduledAt = null;
+    if (scheduleTime) {
+        scheduledAt = new Date(scheduleTime).toISOString();
+    }
+
+    const btn = document.getElementById('send-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> ' + (isScheduled ? 'Scheduling...' : 'Sending...');
+
+    try {
+        const res = await fetch('/api/admin/newsletter-subscribers/broadcast', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                subject,
+                content,
+                tag_filter: tagFilter || null,
+                scheduled_at: scheduledAt,
+                template_id: templateId || null,
+            }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(data.message, 'success');
+            btn.innerHTML = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> ' + (isScheduled ? 'Scheduled!' : 'Sent!');
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> <span id="send-btn-text">Send Another</span>';
+            }, 3000);
+        } else {
+            showToast(data.detail || 'Failed to ' + (isScheduled ? 'schedule' : 'send'), 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> <span id="send-btn-text">' + (isScheduled ? 'Schedule' : 'Send Now') + '</span>';
+        }
+    } catch {
+        showToast('Network error', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> <span id="send-btn-text">' + (isScheduled ? 'Schedule' : 'Send Now') + '</span>';
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,678 @@
+{% extends "admin/base.html" %}
+{% block title %}Newsletter Subscribers — ForgeStore Admin{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-heading font-bold text-stone-900">Newsletter Subscribers</h1>
+            <p class="text-sm text-stone-500 mt-1">{{ subscribers|length }} subscriber(s)</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="/admin/newsletter/broadcast" class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-stone-800 to-stone-900 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:from-stone-900 hover:to-stone-950 transition-all shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                Send Newsletter
+            </a>
+            <button onclick="openImportModal()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-stone-700 text-xs font-bold uppercase tracking-wider rounded-xl border border-stone-300 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition-all duration-200 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+                Import CSV
+            </button>
+            <button onclick="exportCSV()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-stone-700 text-xs font-bold uppercase tracking-wider rounded-xl border border-stone-300 hover:bg-stone-50 transition-all duration-200 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Export CSV
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white rounded-xl border border-stone-200 p-5 shadow-sm">
+            <p class="text-2xl font-bold text-stone-900">{{ subscribers|length }}</p>
+            <p class="text-xs text-stone-400 font-medium uppercase tracking-wider mt-1">Total</p>
+        </div>
+        <div class="bg-white rounded-xl border border-stone-200 p-5 shadow-sm">
+            <p class="text-2xl font-bold text-emerald-600">{{ confirmed_count }}</p>
+            <p class="text-xs text-stone-400 font-medium uppercase tracking-wider mt-1">Confirmed</p>
+        </div>
+        <div class="bg-white rounded-xl border border-stone-200 p-5 shadow-sm">
+            <p class="text-2xl font-bold text-amber-500">{{ pending_count }}</p>
+            <p class="text-xs text-stone-400 font-medium uppercase tracking-wider mt-1">Pending</p>
+        </div>
+        <div class="bg-white rounded-xl border border-stone-200 p-5 shadow-sm">
+            <p class="text-2xl font-bold {% if expired_count > 0 %}text-red-500{% else %}text-stone-400{% endif %}">{{ expired_count }}</p>
+            <p class="text-xs text-stone-400 font-medium uppercase tracking-wider mt-1">Expired</p>
+        </div>
+    </div>
+
+    <!-- Tab switcher -->
+    <div class="flex items-center gap-1 mb-4 bg-stone-100 rounded-xl p-1 w-fit">
+        <button onclick="switchTab('all')" id="tab-all" class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg bg-white text-stone-900 shadow-sm transition-all cursor-pointer">All Subscribers</button>
+        <button onclick="switchTab('pending')" id="tab-pending" class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg text-stone-500 hover:text-stone-900 transition-all cursor-pointer">
+            Pending Confirmations
+            {% if pending_count > 0 %}<span class="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-400 text-white text-[8px] font-bold">{{ pending_count }}</span>{% endif %}
+        </button>
+        {% if expired_count > 0 %}
+        <button onclick="cleanupExpired()" class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg text-red-500 hover:bg-red-50 transition-all cursor-pointer ml-2" title="Remove {{ expired_count }} expired unconfirmed subscribers">
+            Cleanup Expired ({{ expired_count }})
+        </button>
+        {% endif %}
+    </div>
+
+    <!-- All Subscribers table -->
+    <div id="view-all" class="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-stone-100 bg-stone-50/50">
+                        <th class="text-left px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Email</th>
+                        <th class="text-left px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Status</th>
+                        <th class="text-left px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 hidden md:table-cell">Tags</th>
+                        <th class="text-left px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 hidden sm:table-cell">Subscribed</th>
+                        <th class="text-right px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-50">
+                    {% for sub in subscribers %}
+                    <tr class="hover:bg-amber-50/20 transition-colors group" id="sub-row-{{ sub.id }}">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 {% if sub.confirmed %}bg-emerald-100{% else %}bg-stone-100{% endif %} rounded-full flex items-center justify-center text-sm font-bold {% if sub.confirmed %}text-emerald-700{% else %}text-stone-400{% endif %}">
+                                    {{ sub.email[0]|upper }}
+                                </div>
+                                <span class="text-sm font-medium text-stone-900">{{ sub.email }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if sub.confirmed %}
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                Confirmed
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                <span class="w-1.5 h-1.5 bg-amber-400 rounded-full"></span>
+                                Pending
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 hidden md:table-cell">
+                            <div class="flex flex-wrap gap-1">
+                                {% if sub.tags and sub.tags|length > 0 %}
+                                    {% for tag in sub.tags %}
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-stone-100 text-stone-600 border border-stone-200">{{ tag }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-[10px] text-stone-300 italic">—</span>
+                                {% endif %}
+                                <button onclick="editTags('{{ sub.id }}', '{{ sub.email }}')" class="p-0.5 text-stone-300 hover:text-amber-600 transition-colors" title="Edit tags">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-stone-400 hidden sm:table-cell">{{ sub.created_at.strftime('%b %d, %Y') if sub.created_at else '—' }}</td>
+                        <td class="px-6 py-4 text-right">
+                            <button onclick="deleteSubscriber('{{ sub.id }}')" class="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-150 cursor-pointer" title="Unsubscribe">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-16 text-center">
+                            <div class="w-12 h-12 bg-gradient-to-br from-stone-100 to-stone-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <svg class="w-6 h-6 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                            <p class="text-sm text-stone-400">No subscribers yet</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pending Confirmations view -->
+    <div id="view-pending" class="hidden">
+        <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
+            <div class="px-6 py-4 border-b border-stone-100 bg-amber-50/30">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-sm font-bold text-stone-900">Pending Confirmations</h2>
+                        <p class="text-xs text-stone-400 mt-0.5">These subscribers haven't confirmed their email yet</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        {% if expired_count > 0 %}
+                        <button onclick="cleanupExpired()" class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-all cursor-pointer">
+                            Cleanup Expired
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-stone-100 bg-stone-50/50">
+                            <th class="text-left px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Email</th>
+                            <th class="text-left px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Status</th>
+                            <th class="text-left px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 hidden sm:table-cell">Subscribed</th>
+                            <th class="text-left px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 hidden md:table-cell">Expires</th>
+                            <th class="text-right px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-stone-50">
+                        {% for sub in subscribers if not sub.confirmed %}
+                        <tr class="hover:bg-amber-50/20 transition-colors group" id="pending-row-{{ sub.id }}">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 bg-stone-100 rounded-full flex items-center justify-center text-sm font-bold text-stone-400">
+                                        {{ sub.email[0]|upper }}
+                                    </div>
+                                    <span class="text-sm font-medium text-stone-900">{{ sub.email }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                {% if sub.confirm_expires_at and sub.confirm_expires_at < now() %}
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-700 border border-red-200">
+                                    <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                                    Expired
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                    <span class="w-1.5 h-1.5 bg-amber-400 rounded-full"></span>
+                                    Waiting
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-stone-400 hidden sm:table-cell">{{ sub.created_at.strftime('%b %d, %Y') if sub.created_at else '—' }}</td>
+                            <td class="px-6 py-4 text-sm text-stone-400 hidden md:table-cell">{{ sub.confirm_expires_at.strftime('%b %d, %Y %H:%M') if sub.confirm_expires_at else '—' }}</td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex items-center justify-end gap-1">
+                                    <button onclick="resendConfirmation('{{ sub.id }}')" class="px-2.5 py-1.5 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-all cursor-pointer inline-flex items-center gap-1" title="Re-send confirmation email">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                        Re-send
+                                    </button>
+                                    <button onclick="deleteSubscriber('{{ sub.id }}')" class="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-150 cursor-pointer" title="Remove">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-16 text-center">
+                                <div class="w-12 h-12 bg-gradient-to-br from-amber-50 to-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <p class="text-sm font-medium text-stone-700">All caught up!</p>
+                                <p class="text-sm text-stone-400">No pending confirmations.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let editingSubscriberId = null;
+let currentTab = 'all';
+
+function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('view-all').classList.toggle('hidden', tab !== 'all');
+    document.getElementById('view-pending').classList.toggle('hidden', tab !== 'pending');
+    document.getElementById('tab-all').className = tab === 'all'
+        ? 'px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg bg-white text-stone-900 shadow-sm transition-all cursor-pointer'
+        : 'px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg text-stone-500 hover:text-stone-900 transition-all cursor-pointer';
+    document.getElementById('tab-pending').className = tab === 'pending'
+        ? 'px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg bg-white text-stone-900 shadow-sm transition-all cursor-pointer'
+        : 'px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg text-stone-500 hover:text-stone-900 transition-all cursor-pointer';
+}
+
+async function resendConfirmation(id) {
+    const btn = event.currentTarget;
+    btn.disabled = true;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<svg class="animate-spin w-3 h-3" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Sending...';
+    try {
+        const res = await fetch('/api/admin/newsletter/resend-confirmation', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({subscriber_id: id}),
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast('Confirmation re-sent', 'success');
+        } else {
+            showToast(data.detail || 'Failed to re-send', 'error');
+        }
+    } catch {
+        showToast('Network error', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+
+async function cleanupExpired() {
+    if (!confirm('Remove all expired unconfirmed subscribers? This cannot be undone.')) return;
+    const btn = event.currentTarget;
+    btn.disabled = true;
+    const original = btn.innerHTML;
+    btn.innerHTML = '<svg class="animate-spin w-3 h-3" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>';
+    try {
+        const res = await fetch('/api/admin/newsletter/cleanup-expired', { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            showToast('Cleaned up ' + data.cleaned + ' expired subscribers', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast('Failed to cleanup', 'error');
+        }
+    } catch {
+        showToast('Network error', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = original;
+    }
+}
+
+function editTags(id, email) {
+    editingSubscriberId = id;
+    const overlay = document.getElementById('tag-modal-overlay');
+    const input = document.getElementById('tag-input');
+    const title = document.getElementById('tag-modal-title');
+    title.textContent = 'Tags for ' + email;
+    
+    // Load current tags from the row
+    const row = document.getElementById('sub-row-' + id);
+    const tagSpans = row.querySelectorAll('.flex-wrap .text-stone-600');
+    const tags = Array.from(tagSpans).map(s => s.textContent.trim());
+    input.value = tags.join(', ');
+    
+    overlay.classList.remove('hidden');
+    overlay.classList.add('flex');
+    setTimeout(() => input.focus(), 100);
+}
+
+function closeTagModal() {
+    const overlay = document.getElementById('tag-modal-overlay');
+    overlay.classList.add('hidden');
+    overlay.classList.remove('flex');
+    editingSubscriberId = null;
+}
+
+async function saveTags() {
+    if (!editingSubscriberId) return;
+    const input = document.getElementById('tag-input');
+    const tags = input.value.split(',').map(t => t.trim()).filter(t => t);
+    
+    try {
+        const res = await fetch('/api/admin/newsletter-subscribers/' + editingSubscriberId + '/tags', {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({tags}),
+        });
+        const data = await res.json();
+        if (data.success) {
+            // Update the tags in the row
+            const row = document.getElementById('sub-row-' + editingSubscriberId);
+            const tagContainer = row.querySelector('.flex-wrap');
+            if (tags.length > 0) {
+                tagContainer.innerHTML = tags.map(t =>
+                    `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-stone-100 text-stone-600 border border-stone-200">${t}</span>`
+                ).join('') +
+                `<button onclick="editTags('${editingSubscriberId}', '')" class="p-0.5 text-stone-300 hover:text-amber-600 transition-colors" title="Edit tags">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                </button>`;
+            } else {
+                tagContainer.innerHTML = `<span class="text-[10px] text-stone-300 italic">—</span>
+                    <button onclick="editTags('${editingSubscriberId}', '')" class="p-0.5 text-stone-300 hover:text-amber-600 transition-colors" title="Edit tags">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    </button>`;
+            }
+            showToast('Tags updated', 'success');
+            closeTagModal();
+        } else {
+            showToast('Failed to update tags', 'error');
+        }
+    } catch {
+        showToast('Network error', 'error');
+    }
+}
+
+async function deleteSubscriber(id) {
+    if (!confirm('Unsubscribe this email? This action cannot be undone.')) return;
+    const btn = event.currentTarget;
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="animate-spin w-4 h-4 text-stone-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>';
+    try {
+        const res = await fetch('/api/admin/newsletter-subscribers/' + id, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            const row = document.getElementById('sub-row-' + id);
+            if (row) row.remove();
+            const countEl = document.querySelector('p.text-sm.text-stone-500.mt-1');
+            if (countEl) {
+                const remaining = parseInt(countEl.textContent) - 1;
+                countEl.textContent = remaining + ' subscriber(s)';
+            }
+            showToast('Subscriber removed', 'success');
+        } else {
+            showToast('Failed to remove', 'error');
+        }
+    } catch {
+        showToast('Network error', 'error');
+    } finally {
+        btn.disabled = false;
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'w-4 h-4');
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('stroke-linecap', 'round');
+        path.setAttribute('stroke-linejoin', 'round');
+        path.setAttribute('stroke-width', '1.5');
+        path.setAttribute('d', 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16');
+        btn.innerHTML = '';
+        btn.appendChild(svg);
+    }
+}
+
+async function exportCSV() {
+    try {
+        const res = await fetch('/api/admin/newsletter-subscribers/export');
+        if (!res.ok) throw new Error('Export failed');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'newsletter-subscribers-' + new Date().toISOString().slice(0, 10) + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('CSV exported successfully', 'success');
+    } catch {
+        showToast('Failed to export CSV', 'error');
+    }
+}
+
+// --- CSV Import ---
+function downloadSampleCSV() {
+    const csv = 'Email,Tags,Confirmed\r\n' +
+        'john@example.com,vip,Yes\r\n' +
+        'jane@example.com,new,No\r\n' +
+        'bob@example.com,"repeat, wholesale",Yes\r\n' +
+        'alice@example.com,,Yes\r\n' +
+        'sam@example.com,inactive,\r\n';
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'sample-newsletter-import.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Sample CSV downloaded', 'success');
+}
+
+function downloadErrorCSV() {
+    const csv = window.__importErrorCSV;
+    if (!csv) {
+        showToast('No error CSV data available', 'warning');
+        return;
+    }
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'import-errors-' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Error CSV downloaded', 'success');
+}
+
+function openImportModal() {
+    const overlay = document.getElementById('import-modal-overlay');
+    const fileInput = document.getElementById('import-file-input');
+    const dropZone = document.getElementById('import-dropzone');
+    const resultsEl = document.getElementById('import-results');
+    resultsEl.classList.add('hidden');
+    fileInput.value = '';
+    dropZone.classList.remove('border-amber-500', 'bg-amber-50');
+    dropZone.querySelector('p').textContent = 'Drop CSV file here or click to browse';
+    overlay.classList.remove('hidden');
+    overlay.classList.add('flex');
+}
+
+function closeImportModal() {
+    document.getElementById('import-modal-overlay').classList.add('hidden');
+    document.getElementById('import-modal-overlay').classList.remove('flex');
+}
+
+function handleImportDrop(e) {
+    e.preventDefault();
+    const dt = e.dataTransfer;
+    if (dt.files.length > 0) {
+        document.getElementById('import-file-input').files = dt.files;
+        updateImportDropzone(dt.files[0].name);
+    }
+}
+
+function updateImportDropzone(filename) {
+    const dz = document.getElementById('import-dropzone');
+    const p = dz.querySelector('p');
+    p.textContent = 'Selected: ' + filename;
+    dz.classList.add('border-amber-500', 'bg-amber-50');
+}
+
+function onImportFileInput() {
+    const input = document.getElementById('import-file-input');
+    if (input.files.length > 0) {
+        updateImportDropzone(input.files[0].name);
+    }
+}
+
+async function submitImport() {
+    const input = document.getElementById('import-file-input');
+    if (!input.files || input.files.length === 0) {
+        showToast('Please select a CSV file to import', 'warning');
+        return;
+    }
+
+    const btn = document.getElementById('import-submit-btn');
+    const spinner = document.getElementById('import-spinner');
+    btn.disabled = true;
+    spinner.classList.remove('hidden');
+
+    const formData = new FormData();
+    formData.append('file', input.files[0]);
+
+    try {
+        const res = await fetch('/api/admin/newsletter-subscribers/import', {
+            method: 'POST',
+            body: formData,
+        });
+        const data = await res.json();
+
+        const resultsEl = document.getElementById('import-results');
+        resultsEl.classList.remove('hidden');
+
+        if (data.detail) {
+            resultsEl.innerHTML = '<div class="p-4 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">' +
+                '<strong>Error:</strong> ' + data.detail + '</div>';
+            return;
+        }
+
+        const imported = data.imported || 0;
+        const duplicates = data.duplicates || 0;
+        const errors = data.errors || 0;
+        const total = data.total || 0;
+
+        let html = '<div class="space-y-3">';
+        html += '<div class="grid grid-cols-3 gap-3">';
+        html += '<div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-center">' +
+            '<p class="text-xl font-bold text-emerald-700">' + imported + '</p>' +
+            '<p class="text-[10px] font-semibold uppercase tracking-wider text-emerald-600">Imported</p></div>';
+        html += '<div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-center">' +
+            '<p class="text-xl font-bold text-amber-700">' + duplicates + '</p>' +
+            '<p class="text-[10px] font-semibold uppercase tracking-wider text-amber-600">Duplicates</p></div>';
+        html += '<div class="p-3 rounded-xl bg-red-50 border border-red-200 text-center">' +
+            '<p class="text-xl font-bold text-red-700">' + errors + '</p>' +
+            '<p class="text-[10px] font-semibold uppercase tracking-wider text-red-600">Errors</p></div>';
+        html += '</div>';
+        html += '<p class="text-xs text-stone-500 text-center">Processed ' + total + ' row(s) total</p>';
+
+        if (data.error_details && data.error_details.length > 0) {
+            html += '<div class="mt-2 p-3 rounded-xl bg-red-50 border border-red-200">' +
+                '<p class="text-[10px] font-bold uppercase tracking-wider text-red-600 mb-1">Errors</p>' +
+                '<ul class="text-xs text-red-700 space-y-0.5 list-disc list-inside">';
+            for (const err of data.error_details.slice(0, 10)) {
+                html += '<li>' + err + '</li>';
+            }
+            if (data.error_details.length > 10) {
+                html += '<li class="text-stone-400">...and ' + (data.error_details.length - 10) + ' more</li>';
+            }
+            html += '</ul></div>';
+        }
+
+        if (data.duplicate_emails && data.duplicate_emails.length > 0) {
+            html += '<div class="mt-2 p-3 rounded-xl bg-amber-50 border border-amber-200">' +
+                '<p class="text-[10px] font-bold uppercase tracking-wider text-amber-600 mb-1">Duplicates skipped</p>' +
+                '<div class="text-xs text-amber-700 max-h-24 overflow-y-auto space-y-0.5">';
+            for (const email of data.duplicate_emails.slice(0, 15)) {
+                html += '<div>' + email + '</div>';
+            }
+            if (data.duplicate_emails.length > 15) {
+                html += '<div class="text-stone-400">...and ' + (data.duplicate_emails.length - 15) + ' more</div>';
+            }
+            html += '</div></div>';
+        }
+
+        // Add Download Error CSV button if there are errors or duplicates
+        if (errors > 0 || duplicates > 0) {
+            if (data.downloadable_error_csv) {
+                html += '<div class="mt-3 text-center">' +
+                    '<button onclick="downloadErrorCSV()" class="inline-flex items-center gap-1.5 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-all cursor-pointer">' +
+                    '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>' +
+                    'Download Error CSV' +
+                    '</button></div>';
+                // Store the CSV data for download
+                window.__importErrorCSV = data.downloadable_error_csv;
+            }
+        }
+
+        html += '</div>';
+        resultsEl.innerHTML = html;
+
+        // If imports happened, refresh the page after a moment
+        if (imported > 0) {
+            showToast('Imported ' + imported + ' subscriber(s)', 'success');
+            setTimeout(() => location.reload(), 2000);
+        }
+    } catch (err) {
+        document.getElementById('import-results').innerHTML = '<div class="p-4 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">' +
+            '<strong>Network error:</strong> Could not reach the server</div>';
+        document.getElementById('import-results').classList.remove('hidden');
+    } finally {
+        btn.disabled = false;
+        spinner.classList.add('hidden');
+    }
+}
+
+function showToast(message, type) {
+    const existing = document.querySelector('.admin-toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.className = 'admin-toast fixed top-4 right-4 z-[100] px-5 py-3 rounded-xl shadow-xl text-sm font-medium text-white transform transition-all duration-300 opacity-0';
+    const colors = { success: 'bg-emerald-600', error: 'bg-red-600', warning: 'bg-amber-600' };
+    toast.className += ' ' + (colors[type] || 'bg-stone-700');
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.remove('opacity-0'));
+    setTimeout(() => {
+        toast.classList.add('opacity-0');
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+</script>
+
+<!-- CSV Import modal -->
+<div id="import-modal-overlay" class="fixed inset-0 z-50 bg-black/40 hidden items-center justify-center p-4" onclick="if(event.target===this)closeImportModal()">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-stone-900">Import Subscribers from CSV</h3>
+            <button onclick="closeImportModal()" class="p-1 text-stone-400 hover:text-stone-600 transition-colors cursor-pointer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <p class="text-xs text-stone-400 mb-3">Upload a CSV file with subscriber emails. Required column: <code class="text-amber-700 bg-amber-50 px-1 rounded">Email</code>. Optional: <code class="text-amber-700 bg-amber-50 px-1 rounded">Tags</code>, <code class="text-amber-700 bg-amber-50 px-1 rounded">Confirmed</code>. Duplicate emails are automatically skipped.</p>
+
+        <div class="flex items-center justify-between mb-4">
+            <button onclick="downloadSampleCSV()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-all cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Download Sample CSV
+            </button>
+            <p class="text-[10px] text-stone-400">Expected format: Email, Tags, Confirmed</p>
+        </div>
+
+        <div id="import-dropzone" class="border-2 border-dashed border-stone-300 rounded-xl p-8 text-center hover:border-amber-400 hover:bg-amber-50/30 transition-all cursor-pointer"
+             onclick="document.getElementById('import-file-input').click()"
+             ondragover="event.preventDefault(); this.classList.add('border-amber-500', 'bg-amber-50')"
+             ondragleave="event.preventDefault(); const f=document.getElementById('import-file-input'); if(!f.files||!f.files.length){this.classList.remove('border-amber-500','bg-amber-50'); this.querySelector('p').textContent='Drop CSV file here or click to browse';}"
+             ondrop="handleImportDrop(event)">
+            <svg class="w-10 h-10 text-stone-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+            </svg>
+            <p class="text-sm text-stone-500">Drop CSV file here or click to browse</p>
+            <p class="text-[10px] text-stone-300 mt-1">.csv files only</p>
+            <input id="import-file-input" type="file" accept=".csv" class="hidden" onchange="onImportFileInput()">
+        </div>
+
+        <div id="import-results" class="mt-4 hidden"></div>
+
+        <div class="flex justify-end gap-2 mt-4">
+            <button onclick="closeImportModal()" class="px-4 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-all cursor-pointer">Cancel</button>
+            <button id="import-submit-btn" onclick="submitImport()" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-stone-800 rounded-xl hover:bg-stone-900 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg id="import-spinner" class="hidden animate-spin w-4 h-4" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+                Import
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Tag edit modal -->
+<div id="tag-modal-overlay" class="fixed inset-0 z-50 bg-black/40 hidden items-center justify-center p-4" onclick="if(event.target===this)closeTagModal()">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-stone-900" id="tag-modal-title">Edit Tags</h3>
+            <button onclick="closeTagModal()" class="p-1 text-stone-400 hover:text-stone-600 transition-colors cursor-pointer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <p class="text-xs text-stone-400 mb-3">Enter comma-separated tags (e.g. <code class="text-amber-700 bg-amber-50 px-1 rounded">vip, repeat, new</code>)</p>
+        <input id="tag-input" type="text" class="w-full px-4 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all" placeholder="vip, repeat, new" onkeydown="if(event.key==='Enter')saveTags()">
+        <p class="text-[10px] text-stone-400 mt-1.5">Available tags: <span class="font-mono">new, vip, repeat, inactive</span></p>
+        <div class="flex justify-end gap-2 mt-4">
+            <button onclick="closeTagModal()" class="px-4 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-all cursor-pointer">Cancel</button>
+            <button onclick="saveTags()" class="px-4 py-2 text-sm font-bold text-white bg-stone-800 rounded-xl hover:bg-stone-900 transition-all cursor-pointer">Save Tags</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

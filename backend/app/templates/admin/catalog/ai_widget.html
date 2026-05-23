@@ -1,0 +1,98 @@
+<!-- AI Product Description Generator Widget -->
+<div class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-stone-800 dark:to-stone-900 rounded-2xl border border-amber-200 dark:border-stone-700 p-6 hover:shadow-sm transition-shadow mb-6">
+    <div class="flex items-center gap-2 mb-1">
+        <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+        <h2 class="text-sm font-bold text-stone-900 dark:text-stone-100">AI Description Generator</h2>
+    </div>
+    <p class="text-xs text-stone-500 dark:text-stone-400 mb-4 ml-6">Let AI write a compelling product description for you</p>
+    <div class="space-y-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+                <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-1.5">Category</label>
+                <select id="ai-category" class="w-full px-3 py-2.5 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all cursor-pointer">
+                    <option value="">Auto-detect</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.name }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-1.5">Tone</label>
+                <select id="ai-tone" class="w-full px-3 py-2.5 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all cursor-pointer">
+                    <option value="professional">Professional</option>
+                    <option value="casual">Casual & Friendly</option>
+                    <option value="luxury">Luxury & Premium</option>
+                    <option value="technical">Technical & Detailed</option>
+                </select>
+            </div>
+        </div>
+        <div>
+            <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-1.5">Keywords (optional, comma-separated)</label>
+            <input type="text" id="ai-keywords" placeholder="e.g. handmade, sustainable, gift" class="w-full px-3 py-2.5 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">
+        </div>
+        <button type="button" onclick="generateAIDescription()" id="ai-gen-btn" class="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer inline-flex items-center gap-2">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Generate Description
+        </button>
+        <div id="ai-result" class="hidden">
+            <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-1.5">Generated Description</label>
+            <div class="relative">
+                <textarea id="ai-description-output" rows="5" class="w-full px-3 py-2.5 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all resize-none" readonly></textarea>
+                <button type="button" onclick="useAIDescription()" class="absolute bottom-2 right-2 px-3 py-1.5 bg-stone-900 text-white text-[10px] font-bold rounded-lg hover:bg-stone-800 transition-all cursor-pointer">
+                    Use This Description
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function generateAIDescription() {
+    const name = document.querySelector('input[name="name"]')?.value;
+    if (!name) {
+        showToast('Please enter a product name first', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('ai-gen-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Generating...';
+
+    try {
+        const res = await fetch('/api/admin/ai/generate-description', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: name,
+                category: document.getElementById('ai-category')?.value || '',
+                keywords: document.getElementById('ai-keywords')?.value || '',
+                tone: document.getElementById('ai-tone')?.value || 'professional',
+            }),
+        });
+        const data = await res.json();
+        if (data.success && data.description) {
+            document.getElementById('ai-description-output').value = data.description;
+            document.getElementById('ai-result').classList.remove('hidden');
+        } else {
+            showToast(data.message || 'AI not configured. Set your OpenAI key in Developer Settings.', 'warning');
+        }
+    } catch {
+        showToast('Failed to generate description', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Generate Description';
+    }
+}
+
+function useAIDescription() {
+    const textarea = document.querySelector('textarea[name="description"]');
+    const aiOutput = document.getElementById('ai-description-output');
+    if (textarea && aiOutput) {
+        textarea.value = aiOutput.value;
+        document.getElementById('ai-result').classList.add('hidden');
+        showToast('Description applied!', 'success');
+    }
+}
+</script>
