@@ -4,7 +4,7 @@
 
 {% block body %}
 <div class="flex h-full min-h-screen bg-stone-50/50">
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-stone-200 transform -translate-x-full lg:translate-x-0 transition-transform duration-200 lg:relative lg:flex lg:flex-col shadow-lg shadow-stone-900/5">
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-screen max-w-full lg:w-64 bg-white border-r border-stone-200 transform -translate-x-full lg:translate-x-0 transition-transform duration-200 lg:relative lg:flex lg:flex-col shadow-lg shadow-stone-900/5">
         <div class="flex items-center gap-3 px-6 h-16 border-b border-stone-100">
             <div class="w-9 h-9 bg-stone-900 rounded-xl flex items-center justify-center shadow-sm">
                 <span class="text-white text-sm font-display font-black">FS</span>
@@ -110,7 +110,7 @@
             </a>
         </div>
     </aside>
-    <div id="sidebar-backdrop" class="fixed inset-0 bg-black/30 z-30 hidden lg:hidden transition-opacity duration-200"></div>
+    <div id="sidebar-backdrop" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 hidden lg:hidden transition-opacity duration-200"></div>
     <div class="flex-1 flex flex-col min-w-0">
         <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-stone-200 lg:hidden">
             <div class="flex items-center justify-between px-4 h-14">

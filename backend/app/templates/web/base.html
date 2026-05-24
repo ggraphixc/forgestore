@@ -82,9 +82,13 @@
 <!-- Backdrop -->
 <div id="mobile-backdrop" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-[60] hidden opacity-0 transition-opacity duration-300 pointer-events-none"></div>
 
-<!-- Slide-out panel -->
-<div id="mobile-menu" class="fixed top-0 left-0 h-full min-h-screen w-[300px] max-w-[85vw] bg-white dark:bg-stone-900 z-[70] shadow-2xl transform -translate-x-full transition-transform duration-300 ease-out overflow-y-auto">
-    <div class="flex items-center justify-between p-5 border-b border-stone-200 dark:border-stone-700">
+<!-- Bottom slide panel (full-width on mobile) -->
+<div id="mobile-menu" class="fixed bottom-0 left-0 right-0 max-h-[90vh] bg-white dark:bg-stone-900 z-[70] shadow-2xl rounded-t-2xl transform translate-y-full transition-transform duration-300 ease-out overflow-y-auto pb-6">
+    <!-- Drag handle -->
+    <div class="flex justify-center pt-3 pb-1">
+        <div class="w-10 h-1 rounded-full bg-stone-300 dark:bg-stone-600"></div>
+    </div>
+    <div class="flex items-center justify-between px-5 py-3 border-b border-stone-200 dark:border-stone-700">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-gradient-to-br from-stone-900 to-stone-700 dark:from-amber-600 dark:to-amber-700 rounded-xl flex items-center justify-center">
                 <span class="text-white text-sm font-black">FS</span>
@@ -443,7 +447,7 @@ function openMobileMenu() {
     const toggle = document.getElementById('mobile-menu-toggle');
     if (!menu || !backdrop) return;
 
-    menu.classList.remove('-translate-x-full');
+    menu.classList.remove('translate-y-full');
     backdrop.classList.remove('hidden', 'pointer-events-none');
     backdrop.classList.add('opacity-100');
     document.body.classList.add('overflow-hidden');
@@ -464,7 +468,7 @@ function closeMobileMenu() {
     const toggle = document.getElementById('mobile-menu-toggle');
     if (!menu || !backdrop) return;
 
-    menu.classList.add('-translate-x-full');
+    menu.classList.add('translate-y-full');
     backdrop.classList.remove('opacity-100');
     backdrop.classList.add('opacity-0');
     setTimeout(() => {
@@ -486,7 +490,7 @@ function toggleMobileMenu(event) {
     if (event) event.stopPropagation();
     const menu = document.getElementById('mobile-menu');
     if (!menu) return;
-    if (menu.classList.contains('-translate-x-full')) {
+    if (menu.classList.contains('translate-y-full')) {
         openMobileMenu();
     } else {
         closeMobileMenu();
@@ -523,7 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Close with Escape
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            if (mobileMenu && !mobileMenu.classList.contains('-translate-x-full')) {
+            if (mobileMenu && !mobileMenu.classList.contains('translate-y-full')) {
                 closeMobileMenu();
             }
         }
