@@ -417,6 +417,14 @@ def customer_list(request: Request, db: Session = Depends(get_db)):
 
     customers = db.query(User).order_by(desc(User.created_at)).all()
 
+    # Compute order count per customer (not stored in DB model)
+    order_counts = {}
+    for c in customers:
+        order_counts[c.id] = db.query(func.count(Order.id)).filter(
+            Order.customer_id == c.id
+        ).scalar() or 0
+        c.order_count = order_counts[c.id]
+
     return render_template("admin/customers/list.html", {
         "request": request,
         "admin": admin,
@@ -487,6 +495,12 @@ def newsletter_templates(request: Request, db: Session = Depends(get_db)):
         return RedirectResponse(url="/admin/login", status_code=302)
 
     templates = db.query(BroadcastTemplate).order_by(BroadcastTemplate.updated_at.desc()).all()
+    # Compute campaign_count for each template (not stored in DB)
+    for t in templates:
+        t.campaign_count = db.query(func.count(BroadcastCampaign.id)).filter(
+            BroadcastCampaign.template_id == t.id
+        ).scalar() or 0
+
     return render_template("admin/newsletter/templates.html", {
         "request": request,
         "admin": admin,
