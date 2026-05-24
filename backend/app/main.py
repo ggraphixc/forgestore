@@ -153,18 +153,17 @@ def health():
 
 
 @app.get("/api/debug/ip")
-async def debug_ip(request: Request):
-    """Debug endpoint to show the server's IP info (for Brevo SMTP authorization)."""
-    import socket
-    hostname = socket.gethostname()
+def debug_ip():
+    """Detect the server's public outbound IP (for Brevo SMTP authorization).
+    Makes an outbound HTTP request to api.ipify.org — this shows the
+    actual IP address that Brevo's SMTP server sees when we connect.
+    """
+    import requests
     try:
-        server_ip = socket.gethostbyname(hostname)
-    except Exception:
-        server_ip = "unknown"
+        outbound_ip = requests.get("https://api.ipify.org", timeout=5).text.strip()
+    except Exception as e:
+        outbound_ip = f"could not determine: {e}"
     return {
-        "hostname": hostname,
-        "server_ip": server_ip,
-        "client_ip": request.client.host if request.client else "unknown",
-        "x_forwarded_for": request.headers.get("x-forwarded-for", ""),
-        "x_real_ip": request.headers.get("x-real-ip", ""),
+        "outbound_ip": outbound_ip,
+        "note": "Authorize this IP in Brevo Dashboard → Settings → Security → Authorized IPs",
     }
