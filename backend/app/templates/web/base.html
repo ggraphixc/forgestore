@@ -533,6 +533,55 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Swipe down to close mobile menu
+    let touchStartY = 0;
+    let touchCurrentY = 0;
+    let isDragging = false;
+
+    if (mobileMenu) {
+        mobileMenu.addEventListener('touchstart', (e) => {
+            if (mobileMenu.classList.contains('translate-y-full')) return;
+            touchStartY = e.touches[0].clientY;
+            touchCurrentY = touchStartY;
+            isDragging = true;
+            mobileMenu.style.transition = 'none';
+        }, { passive: true });
+
+        mobileMenu.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            touchCurrentY = e.touches[0].clientY;
+            const diff = touchCurrentY - touchStartY;
+            if (diff > 0) {
+                // Only allow dragging downward
+                const translateY = diff;
+                mobileMenu.style.transform = `translateY(${translateY}px)`;
+                // Fade backdrop based on drag distance
+                if (mobileBackdrop) {
+                    const opacity = Math.max(0, 1 - (diff / 400));
+                    mobileBackdrop.style.opacity = opacity;
+                }
+            }
+        }, { passive: true });
+
+        mobileMenu.addEventListener('touchend', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            mobileMenu.style.transition = '';
+            mobileMenu.style.transform = '';
+            if (mobileBackdrop) {
+                mobileBackdrop.style.opacity = '';
+            }
+
+            // Use changedTouches for accurate final finger position
+            const endY = e.changedTouches[0].clientY;
+            const diff = endY - touchStartY;
+            // If swiped down more than 80px, close the menu
+            if (diff > 80) {
+                closeMobileMenu();
+            }
+        }, { passive: true });
+    }
+
     // Dark mode
     const themeToggle = document.getElementById('theme-toggle');
     const html = document.documentElement;
