@@ -35,6 +35,10 @@ Thumbs.db
 app/static/uploads/products/*
 !app/static/uploads/products/.gitkeep
 
+# Node
+node_modules/
+package-lock.json
+
 # Turbo/Claude
 .turbo/
 .claude/

@@ -4,8 +4,8 @@
 
 /* ===== Z-INDEX SYSTEM (CSS Custom Properties) ===== */
 :root {
-  --z-sticky:           10;
-  --z-sticky-header:    20;
+  --z-sticky:           100;
+  --z-sticky-header:    99;
   --z-settings-tabs:    25;
   --z-sidebar-backdrop: 30;
   --z-sidebar:          40;
@@ -14,7 +14,7 @@
   --z-mobile-menu:      70;
   --z-modal:            80;
   --z-tooltip:          90;
-  --z-toast:            100;
+  --z-toast:            92;
 }
 
 @layer base {
