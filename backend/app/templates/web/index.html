@@ -156,7 +156,7 @@
                         </div>
                         {% endif %}
                         <span class="absolute top-3 left-3 badge-glass">Flagship</span>
-                        {% if p.compare_at_price and p.compare_at_price > p.price %}
+                        {% if p.discount_price and p.discount_price < p.price %}
                         <span class="absolute top-3 right-3 badge-red">Sale</span>
                         {% endif %}
                     </div>

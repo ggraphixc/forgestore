@@ -19,7 +19,7 @@
             {% if product.images and product.images|length > 0 %}
             <div class="aspect-square rounded-3xl overflow-hidden bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 mb-4 group relative shadow-card">
                 <img id="main-image" loading="lazy" src="{{ product.images[0] }}" alt="{{ product.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                {% if product.compare_at_price and product.compare_at_price > product.price %}
+                {% if product.discount_price and product.discount_price < product.price %}
                 <span class="absolute top-4 left-4 badge-red">Sale</span>
                 {% endif %}
             </div>
@@ -55,10 +55,12 @@
                 <h1 class="text-3xl md:text-5xl font-display font-black text-stone-900 dark:text-stone-100 mt-1 leading-[1.05]">{{ product.name }}</h1>
                 
                 <div class="flex items-center gap-4 mt-4">
+                    {% if product.discount_price and product.discount_price < product.price %}
+                    <span class="text-3xl md:text-4xl font-black text-stone-900 dark:text-stone-100 font-mono">{{ format_price(product.discount_price, currency) }}</span>
+                    <span class="text-lg text-stone-400 dark:text-stone-500 line-through font-mono">{{ format_price(product.price, currency) }}</span>
+                    <span class="badge-red">-{{ "%.0f"|format((1 - product.discount_price / product.price) * 100) }}%</span>
+                    {% else %}
                     <span class="text-3xl md:text-4xl font-black text-stone-900 dark:text-stone-100 font-mono">{{ format_price(product.price, currency) }}</span>
-                    {% if product.compare_at_price and product.compare_at_price > product.price %}
-                    <span class="text-lg text-stone-400 dark:text-stone-500 line-through font-mono">{{ format_price(product.compare_at_price, currency) }}</span>
-                    <span class="badge-red">-{{ "%.0f"|format((1 - product.price / product.compare_at_price) * 100) }}%</span>
                     {% endif %}
                 </div>
 
@@ -80,18 +82,18 @@
             </div>
 
             <!-- Craftsmanship Details -->
-            {% if product.material or product.dimensions %}
+            {% if product.specifications %}
             <div class="grid grid-cols-2 gap-3 mb-8">
-                {% if product.material %}
+                {% if product.specifications.get('material') %}
                 <div class="bg-stone-50 rounded-xl p-4 border border-stone-100">
                     <p class="text-xs text-stone-400 font-medium uppercase tracking-wider mb-1">Material</p>
-                    <p class="text-sm font-medium text-stone-900">{{ product.material }}</p>
+                    <p class="text-sm font-medium text-stone-900">{{ product.specifications.get('material') }}</p>
                 </div>
                 {% endif %}
-                {% if product.dimensions %}
+                {% if product.specifications.get('dimensions') %}
                 <div class="bg-stone-50 rounded-xl p-4 border border-stone-100">
                     <p class="text-xs text-stone-400 font-medium uppercase tracking-wider mb-1">Dimensions</p>
-                    <p class="text-sm font-medium text-stone-900">{{ product.dimensions }}</p>
+                    <p class="text-sm font-medium text-stone-900">{{ product.specifications.get('dimensions') }}</p>
                 </div>
                 {% endif %}
             </div>
@@ -151,8 +153,8 @@
                     </div>
                     <span class="text-xs text-stone-400">{{ review.created_at.strftime('%b %d, %Y') if review.created_at else '' }}</span>
                 </div>
-                {% if review.comment %}
-                <p class="text-sm text-stone-600 leading-relaxed">{{ review.comment }}</p>
+                {% if review.content %}
+                <p class="text-sm text-stone-600 leading-relaxed">{{ review.content }}</p>
                 {% endif %}
             </div>
             {% endfor %}

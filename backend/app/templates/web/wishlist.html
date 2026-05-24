@@ -37,8 +37,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="card-product group reveal-scale relative wishlist-item-${p.id}">
                     <a href="/shop/products/${p.slug}">
                         <div class="aspect-[3/4] overflow-hidden bg-stone-50 dark:bg-stone-700 relative">
-                            ${p.image
-                                ? `<img loading="lazy" src="${p.image}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">`
+                            ${p.images && p.images.length > 0
+                                ? `<img loading="lazy" src="${p.images[0]}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">`
                                 : `<div class="w-full h-full flex items-center justify-center text-stone-300 dark:text-stone-500">
                                     <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                                    </div>`
