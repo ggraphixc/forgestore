@@ -851,6 +851,42 @@ def checkout(
 
 # --- SEARCH ---
 
+@router.get("/search/suggestions")
+def search_suggestions(
+    q: str = "",
+    db: Session = Depends(get_db),
+):
+    """Quick search suggestions for the live search dropdown (max 5 results)."""
+    if not q or len(q.strip()) < 2:
+        return {"suggestions": []}
+
+    search_term = f"%{q}%"
+    products = db.query(Product).filter(
+        or_(
+            Product.name.ilike(search_term),
+            Product.brand.ilike(search_term),
+        )
+    ).order_by(Product.rating.desc()).limit(5).all()
+
+    retailers = {r.id: r.name for r in db.query(Retailer).all()}
+
+    return {
+        "suggestions": [
+            {
+                "id": p.id,
+                "slug": p.slug,
+                "name": p.name,
+                "price": p.price,
+                "discount_price": p.discount_price,
+                "image": p.images[0] if p.images else None,
+                "retailer_name": retailers.get(p.retailer_id, ""),
+            }
+            for p in products
+        ],
+        "total": len(products),
+    }
+
+
 @router.get("/search")
 def search_products(
     q: str = "",

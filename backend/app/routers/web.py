@@ -33,10 +33,12 @@ def _render_page(template: str, request: Request, db: Session, context: dict = N
         context = {}
     customer = _get_current_customer(request, db)
     _cfg = get_settings()
+    categories = db.query(Category).order_by(Category.name).all()
     page_context = {
         "request": request,
         "settings": _site_settings(db),
         "user": customer,
+        "categories": categories,
         "paystack_public_key": _cfg.paystack_public_key,
     }
     page_context.update(context)
@@ -337,11 +339,13 @@ def account_dashboard(request: Request, db: Session = Depends(get_db)):
     ).order_by(Order.created_at.desc()).all()
 
     currency = get_currency(db)
+    categories = db.query(Category).order_by(Category.name).all()
 
     return render_template("web/account/dashboard.html", {
         "request": request,
         "settings": _site_settings(db),
         "user": customer,
+        "categories": categories,
         "orders": orders,
         "currency": currency,
         "format_price": format_price,
@@ -359,11 +363,13 @@ def account_orders(request: Request, db: Session = Depends(get_db)):
     ).order_by(Order.created_at.desc()).all()
 
     currency = get_currency(db)
+    categories = db.query(Category).order_by(Category.name).all()
 
     return render_template("web/account/orders.html", {
         "request": request,
         "settings": _site_settings(db),
         "user": customer,
+        "categories": categories,
         "orders": orders,
         "currency": currency,
         "format_price": format_price,
@@ -385,11 +391,13 @@ def account_order_detail(request: Request, order_id: str, db: Session = Depends(
 
     items = db.query(OrderItem).filter(OrderItem.order_id == order.id).all()
     currency = get_currency(db)
+    categories = db.query(Category).order_by(Category.name).all()
 
     return render_template("web/account/order-detail.html", {
         "request": request,
         "settings": _site_settings(db),
         "user": customer,
+        "categories": categories,
         "order": order,
         "items": items,
         "currency": currency,
@@ -409,14 +417,16 @@ def account_reviews(request: Request, db: Session = Depends(get_db)):
 
     # Get product names for each review
     product_ids = [r.product_id for r in reviews]
-    products = {p.id: p for p in db.query(Product).filter(Product.id.in_(product_ids)).all()}
+    products_map = {p.id: p for p in db.query(Product).filter(Product.id.in_(product_ids)).all()}
+    categories = db.query(Category).order_by(Category.name).all()
 
     return render_template("web/account/reviews.html", {
         "request": request,
         "settings": _site_settings(db),
         "user": customer,
+        "categories": categories,
         "reviews": reviews,
-        "products": products,
+        "products": products_map,
     })
 
 
@@ -426,10 +436,13 @@ def account_settings(request: Request, db: Session = Depends(get_db)):
     if not customer:
         return RedirectResponse(url="/shop/login", status_code=302)
 
+    categories = db.query(Category).order_by(Category.name).all()
+
     return render_template("web/account/settings.html", {
         "request": request,
         "settings": _site_settings(db),
         "user": customer,
+        "categories": categories,
     })
 
 
