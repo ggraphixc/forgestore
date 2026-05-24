@@ -69,8 +69,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.sidebar-link').forEach(link => {
         const href = link.getAttribute('href');
         if (href && currentPath.startsWith(href)) {
-            link.classList.add('bg-zinc-100', 'text-zinc-900');
-            link.classList.remove('text-zinc-500', 'hover:bg-zinc-50', 'hover:text-zinc-700');
+            link.classList.add('bg-amber-50', 'text-amber-800', 'dark:bg-amber-900/20', 'dark:text-amber-400');
+            link.classList.remove('text-stone-500', 'hover:bg-amber-50', 'hover:text-amber-800');
+            // Show the active dot
+            const dot = link.querySelector('.sidebar-active-dot');
+            if (dot) {
+                dot.classList.remove('opacity-0');
+                dot.classList.add('opacity-100');
+            }
         }
     });
 
