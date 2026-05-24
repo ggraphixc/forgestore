@@ -25,17 +25,17 @@
         </div>
         {% endif %}
 
-        <div class="flex flex-col sm:flex-row items-start sm:items-end gap-6 px-0 sm:px-8 {% if retailer.banner_url %}-translate-y-1/2 ml-4 sm:ml-0{% else %}mt-8{% endif %}">
-            <div class="relative {% if retailer.banner_url %}ring-4 ring-white dark:ring-stone-800 shadow-xl{% endif %} rounded-2xl overflow-hidden">
+        <div class="flex flex-col sm:flex-row items-start sm:items-end gap-4 sm:gap-6 px-0 sm:px-8 {% if retailer.banner_url %}-translate-y-[30%] sm:-translate-y-1/2 ml-4 sm:ml-0{% else %}mt-8{% endif %}">
+            <div class="relative {% if retailer.banner_url %}ring-4 ring-white dark:ring-stone-800 shadow-xl{% endif %} rounded-2xl overflow-hidden w-20 h-20 sm:w-28 sm:h-28 flex-shrink-0">
                 {% if retailer.logo_url %}
-                <img src="{{ retailer.logo_url }}" alt="{{ retailer.name }}" class="w-28 h-28 object-cover bg-white dark:bg-stone-800">
+                <img src="{{ retailer.logo_url }}" alt="{{ retailer.name }}" class="w-full h-full object-cover bg-white dark:bg-stone-800">
                 {% else %}
-                <div class="w-28 h-28 bg-gradient-to-br from-stone-800 to-stone-700 flex items-center justify-center text-white text-4xl font-bold">
+                <div class="w-20 h-20 sm:w-28 sm:h-28 bg-gradient-to-br from-stone-800 to-stone-700 flex items-center justify-center text-white text-2xl sm:text-4xl font-bold">
                     {{ retailer.name[0]|upper }}
                 </div>
                 {% endif %}
             </div>
-            <div class="pb-1">
+            <div class="pb-1 min-w-0 flex-1">
                 <h1 class="text-3xl md:text-4xl font-black text-stone-900 dark:text-stone-100 font-display">{{ retailer.name }}</h1>
                 <div class="flex items-center gap-4 mt-2 flex-wrap">
                     {% if retailer.rating and retailer.rating > 0 %}

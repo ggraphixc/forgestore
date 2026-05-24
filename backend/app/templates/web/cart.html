@@ -87,13 +87,13 @@ function renderCart(data) {
             </div>
             ${itemsHtml}
         </div>
-        <div class="flex items-center justify-between bg-gradient-to-br from-stone-50 to-amber-50/30 rounded-2xl border border-stone-200 p-6 shadow-sm">
-            <div>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-br from-stone-50 to-amber-50/30 rounded-2xl border border-stone-200 p-6 shadow-sm">
+            <div class="text-center sm:text-left">
                 <p class="text-xs text-stone-400 uppercase tracking-wider font-medium">Total</p>
                 <p class="text-3xl font-bold text-stone-900 mt-1">${formatCurrency(data.total)}</p>
                 <p class="text-xs text-stone-400 mt-1">Free shipping on orders over ₦50,000</p>
             </div>
-            <a href="/shop/checkout" class="px-8 py-3 text-sm font-medium text-white bg-stone-900 hover:bg-stone-800 rounded-xl transition-all duration-200 active:scale-[0.98] shadow-lg shadow-stone-900/10">
+            <a href="/shop/checkout" class="w-full sm:w-auto px-6 py-3.5 text-sm font-bold text-white bg-stone-900 hover:bg-stone-800 rounded-xl transition-all duration-200 active:scale-[0.98] shadow-lg shadow-stone-900/10 text-center">
                 Proceed to Checkout
                 <svg class="w-4 h-4 inline ml-1.5 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
             </a>

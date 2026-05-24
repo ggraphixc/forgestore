@@ -111,5 +111,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 toggleSidebar();
             }
         });
+
+        // Touch swipe-left to close sidebar
+        let touchStartX = 0;
+        let touchStartTime = 0;
+        let isDraggingSidebar = false;
+
+        sidebar.addEventListener('touchstart', (e) => {
+            if (sidebar.classList.contains('-translate-x-full')) return;
+            touchStartX = e.touches[0].clientX;
+            touchStartTime = Date.now();
+            isDraggingSidebar = true;
+            sidebar.style.transition = 'none';
+        }, { passive: true });
+
+        sidebar.addEventListener('touchmove', (e) => {
+            if (!isDraggingSidebar) return;
+            const currentX = e.touches[0].clientX;
+            const deltaX = currentX - touchStartX;
+            if (deltaX < 0) { // Only translate when dragging left
+                sidebar.style.transform = `translateX(${deltaX}px)`;
+                if (sidebarBackdrop) {
+                    const opacity = Math.max(0, 1 - (Math.abs(deltaX) / 280));
+                    sidebarBackdrop.style.opacity = opacity;
+                }
+            }
+        }, { passive: true });
+
+        sidebar.addEventListener('touchend', (e) => {
+            if (!isDraggingSidebar) return;
+            isDraggingSidebar = false;
+            sidebar.style.transition = '';
+            sidebar.style.transform = '';
+            if (sidebarBackdrop) {
+                sidebarBackdrop.style.opacity = '';
+            }
+
+            const endX = e.changedTouches[0].clientX;
+            const deltaX = endX - touchStartX;
+            const elapsed = Date.now() - touchStartTime;
+            const velocity = Math.abs(deltaX) / elapsed;
+
+            if (deltaX < -80 || (velocity > 0.5 && deltaX < -20)) {
+                sidebar.classList.add('-translate-x-full');
+                sidebarBackdrop.classList.add('hidden');
+                sidebarToggle.setAttribute('aria-expanded', 'false');
+            }
+        }, { passive: true });
     }
 });

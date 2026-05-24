@@ -112,13 +112,30 @@
     </aside>
     <div id="sidebar-backdrop" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 hidden lg:hidden transition-opacity duration-200"></div>
     <div class="flex-1 flex flex-col min-w-0">
-        <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-stone-200 lg:hidden">
-            <div class="flex items-center justify-between px-4 h-14">
-                <button id="sidebar-toggle" class="p-2 -ml-2 text-stone-500 hover:text-stone-900 rounded-lg hover:bg-stone-50 transition-all" aria-label="Toggle sidebar" aria-expanded="false">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                </button>
-                <span class="text-sm font-display font-bold text-stone-900">ForgeStore Admin</span>
-                <div class="w-10"></div>
+        <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-stone-200 shadow-sm lg:hidden">
+            <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-amber-500/0 via-amber-500/20 to-amber-500/0"></div>
+            <div class="flex items-center justify-between px-3 h-14">
+                <div class="flex items-center gap-2">
+                    <button id="sidebar-toggle" class="p-2.5 min-w-[44px] min-h-[44px] -ml-2 text-stone-500 hover:text-amber-600 transition-all rounded-xl hover:bg-amber-50 flex items-center justify-center" aria-label="Toggle sidebar" aria-expanded="false">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                    <!-- Brand indicator dot -->
+                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 bg-stone-900 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
+                        <span class="text-white text-[10px] font-display font-black">FS</span>
+                    </div>
+                    <span class="text-sm font-display font-extrabold text-stone-900 tracking-tight">ForgeStore<span class="text-amber-600"> Admin</span></span>
+                </div>
+                <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold ring-2 ring-offset-1 ring-offset-white ring-amber-500/30 flex-shrink-0 shadow-sm
+                    {% if admin.role.value == 'DIR_ADMIN' %}bg-purple-600
+                    {% elif admin.role.value == 'MANAGEMENT' %}bg-blue-600
+                    {% elif admin.role.value == 'TECH_ADMIN' %}bg-cyan-600
+                    {% elif admin.role.value == 'RETAILER' %}bg-amber-600
+                    {% else %}bg-emerald-600{% endif %}">
+                    {{ admin.name[0]|upper if admin and admin.name else "A" }}
+                </div>
             </div>
         </header>
         <main class="flex-1 p-4 md:p-6 lg:p-8">

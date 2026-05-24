@@ -41,8 +41,18 @@
     </div>
 
     <div class="flex flex-col lg:flex-row gap-10">
+        <!-- Mobile filter toggle -->
+        <div class="lg:hidden">
+            <button id="filter-toggle" onclick="toggleFilters()" class="w-full flex items-center justify-between px-4 py-3 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-sm font-medium text-stone-700 dark:text-stone-300 shadow-sm hover:bg-stone-50 dark:hover:bg-stone-750 transition-all duration-200 cursor-pointer" aria-expanded="false">
+                <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                    Filters &amp; Sort
+                </span>
+                <svg id="filter-chevron" class="w-4 h-4 text-stone-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+        </div>
         <!-- Filters sidebar -->
-        <aside class="w-full lg:w-56 flex-shrink-0">
+        <aside id="filter-sidebar" class="w-full lg:w-56 flex-shrink-0 max-lg:hidden max-lg:space-y-4">
             <div class="sticky top-28">
                 <h3 class="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400 dark:text-stone-500 mb-5">Categories</h3>
                 <div class="flex flex-wrap lg:flex-col gap-2">
@@ -249,6 +259,17 @@ async function quickAddToCart(productId, btn) {
         btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>';
         showToast('Failed to add item', 'error');
     }
+}
+// Mobile filter toggle
+function toggleFilters() {
+    const sidebar = document.getElementById('filter-sidebar');
+    const chevron = document.getElementById('filter-chevron');
+    const toggleBtn = document.getElementById('filter-toggle');
+    if (!sidebar) return;
+    const isHidden = sidebar.classList.contains('max-lg:hidden');
+    sidebar.classList.toggle('max-lg:hidden');
+    if (chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+    if (toggleBtn) toggleBtn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
 }
 </script>
 {% endblock %}

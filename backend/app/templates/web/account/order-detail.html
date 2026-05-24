@@ -26,21 +26,23 @@
             </span>
         </div>
         {% set steps = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED'] %}
-        <div class="grid grid-cols-4 gap-4 text-center text-[11px] uppercase tracking-[0.24em] text-stone-500">
-            {% for step in steps %}
-                {% set completed = (steps.index(step) <= steps.index(status_value)) if status_value in steps else false %}
-                <div class="flex flex-col items-center gap-3">
-                    <div class="relative flex items-center justify-center">
-                        <div class="w-9 h-9 rounded-full border flex items-center justify-center {% if completed %}bg-amber-500 border-amber-500 text-white{% else %}bg-white border-stone-200 text-stone-400{% endif %}">
-                            <span class="text-xs font-semibold">{{ loop.index }}</span>
+        <div class="overflow-x-auto -mx-6 px-6 pb-2 scrollbar-hide">
+            <div class="flex items-start justify-between gap-0 min-w-[360px] text-center text-[11px] uppercase tracking-[0.24em] text-stone-500">
+                {% for step in steps %}
+                    {% set completed = (steps.index(step) <= steps.index(status_value)) if status_value in steps else false %}
+                    <div class="flex flex-col items-center gap-3 flex-1 relative">
+                        <div class="relative flex items-center justify-center w-full">
+                            <div class="w-9 h-9 rounded-full border flex items-center justify-center z-10 {% if completed %}bg-amber-500 border-amber-500 text-white{% else %}bg-white border-stone-200 text-stone-400{% endif %}">
+                                <span class="text-xs font-semibold">{{ loop.index }}</span>
+                            </div>
+                            {% if not loop.last %}
+                                <span class="absolute left-[calc(50%+18px)] top-1/2 right-[calc(-50%+18px)] h-[2px] {% if completed and steps.index(steps[loop.index]) <= steps.index(status_value) %}bg-amber-500{% else %}bg-stone-200{% endif %}" style="transform: translateY(-50%);"></span>
+                            {% endif %}
                         </div>
-                        {% if not loop.last %}
-                            <span class="absolute left-full top-1/2 w-16 h-[2px] bg-stone-200 {% if completed and steps.index(steps[loop.index]) <= steps.index(status_value) %}bg-amber-500{% endif %}" style="transform: translateY(-50%);"></span>
-                        {% endif %}
+                        <span class="block max-w-[70px] leading-tight {% if completed %}text-stone-900{% endif %}">{{ step|lower|title }}</span>
                     </div>
-                    <span class="block max-w-[70px] leading-tight {% if completed %}text-stone-900{% endif %}">{{ step|lower|title }}</span>
-                </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
     </div>
 

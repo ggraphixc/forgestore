@@ -83,7 +83,7 @@
 <div id="mobile-backdrop" class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-[60] hidden opacity-0 transition-opacity duration-300 pointer-events-none"></div>
 
 <!-- Bottom slide panel (full-width on mobile) -->
-<div id="mobile-menu" class="fixed bottom-0 left-0 right-0 max-h-[90vh] bg-white dark:bg-stone-900 z-[70] shadow-2xl rounded-t-2xl transform translate-y-full transition-transform duration-300 ease-out overflow-y-auto pb-6">
+<div id="mobile-menu" class="fixed bottom-0 left-0 right-0 h-full bg-white dark:bg-stone-900 z-[70] shadow-2xl transform translate-y-full transition-transform duration-300 ease-out overflow-y-auto" style="padding-bottom: env(safe-area-inset-bottom, 32px)">
     <!-- Drag handle -->
     <div class="flex justify-center pt-3 pb-1">
         <div class="w-10 h-1 rounded-full bg-stone-300 dark:bg-stone-600"></div>
@@ -537,12 +537,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let touchStartY = 0;
     let touchCurrentY = 0;
     let isDragging = false;
+    let touchStartTime = 0;
 
     if (mobileMenu) {
         mobileMenu.addEventListener('touchstart', (e) => {
             if (mobileMenu.classList.contains('translate-y-full')) return;
             touchStartY = e.touches[0].clientY;
             touchCurrentY = touchStartY;
+            touchStartTime = Date.now();
             isDragging = true;
             mobileMenu.style.transition = 'none';
         }, { passive: true });
@@ -575,8 +577,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // Use changedTouches for accurate final finger position
             const endY = e.changedTouches[0].clientY;
             const diff = endY - touchStartY;
-            // If swiped down more than 80px, close the menu
-            if (diff > 80) {
+            const elapsed = Date.now() - touchStartTime;
+            const velocity = diff / elapsed;
+
+            // If swiped down more than 80px, or fast flick down (>0.5px/ms and moved >20px), close the menu
+            if (diff > 80 || (velocity > 0.5 && diff > 20)) {
                 closeMobileMenu();
             }
         }, { passive: true });
