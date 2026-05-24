@@ -1,11 +1,16 @@
 """
 Email service for sending transactional emails.
-Uses SMTP with environment-based configuration. Falls back to console printing.
+Uses Brevo REST API (preferred) or SMTP with environment-based configuration.
+Falls back to console printing if neither is configured.
 
-SMTP configuration is resolved from three sources (highest priority first):
-1. Admin Settings panel (DB settings table)
-2. .env file (via pydantic-settings)
-3. Hard-coded defaults
+Email sending priority:
+1. Brevo API (if BREVO_API_KEY is set) — no IP authorization needed
+2. SMTP (if SMTP_HOST is configured in DB settings or .env)
+3. Console printing (fallback)
+
+Brevo API key is resolved from:
+- Environment variable BREVO_API_KEY
+- .env file (via pydantic-settings)
 """
 import smtplib
 import logging
@@ -21,6 +26,67 @@ from app.config import get_settings
 logger = logging.getLogger("forgestore.email")
 
 settings = get_settings()
+
+
+def send_email_via_brevo(
+    to_email: str,
+    subject: str,
+    html_body: str,
+    text_body: Optional[str] = None,
+    from_email: Optional[str] = None,
+    from_name: Optional[str] = None,
+) -> bool:
+    """
+    Send an email using the Brevo REST API (v3).
+    This bypasses SMTP IP authorization issues on cloud platforms (Render, Railway).
+    
+    Requires BREVO_API_KEY to be set in environment or .env.
+    """
+    api_key = settings.brevo_api_key
+    if not api_key:
+        logger.warning("BREVO_API_KEY not set — cannot send via Brevo API")
+        return False
+
+    try:
+        import brevo_python
+        from brevo_python.rest import ApiException
+
+        configuration = brevo_python.Configuration()
+        configuration.api_key["api-key"] = api_key
+
+        api_instance = brevo_python.TransactionalEmailsApi(
+            brevo_python.ApiClient(configuration)
+        )
+
+        send_email = brevo_python.SendSmtpEmail(
+            sender={
+                "name": from_name or settings.site_name or "ForgeStore",
+                "email": from_email or settings.from_email or "noreply@forgestore.com",
+            },
+            to=[{"email": to_email}],
+            subject=subject,
+            html_content=html_body,
+            text_content=text_body or html_body.replace("<br>", "\n").replace("<p>", "").replace("</p>", "\n\n"),
+        )
+
+        api_response = api_instance.send_transac_email(send_email)
+        logger.info(f"Email sent via Brevo API: {subject} -> {to_email} (message_id: {api_response.message_id})")
+        return True
+
+    except ImportError:
+        logger.error("brevo-python package not installed. Run: pip install brevo-python")
+        return False
+    except ApiException as e:
+        logger.error(f"Brevo API error sending to {to_email}: {e}")
+        _safe_print(f"\n{'='*60}")
+        _safe_print(f"  BREVO API ERROR — {to_email}")
+        _safe_print(f"  SUBJECT: {subject}")
+        _safe_print(f"  ERROR: {e}")
+        _safe_print(f"{'='*60}\n")
+        return False
+    except Exception as e:
+        logger.error(f"Unexpected Brevo API error sending to {to_email}: {e}")
+        return False
 
 
 def _safe_print(text: str):
@@ -89,6 +155,19 @@ def send_email(
     smtp_password = smtp["password"]
     from_email = smtp["from_email"]
 
+    # Try Brevo API first (bypasses IP authorization issues)
+    if settings.brevo_api_key:
+        brevo_result = send_email_via_brevo(
+            to_email=to_email,
+            subject=subject,
+            html_body=html_body,
+            text_body=text_body,
+            from_email=from_email,
+        )
+        if brevo_result:
+            return True
+        logger.warning("Brevo API failed, falling back to SMTP")
+
     # If SMTP is not configured, print to console
     if not smtp_host or not smtp_port:
         base_url = settings.site_base_url.rstrip("/")
@@ -98,17 +177,12 @@ def send_email(
         _safe_print(f"{'='*60}")
         _safe_print(f"  {html_body}")
         _safe_print(f"{'='*60}")
-        _safe_print(f"  -- SMTP not configured --")
-        _safe_print(f"  To send real emails, configure SMTP in:")
-        _safe_print(f"  Admin > Settings > Developer Settings")
-        _safe_print(f"  Or add to your .env file:")
-        _safe_print(f"  SMTP_HOST=smtp.gmail.com")
-        _safe_print(f"  SMTP_PORT=587")
-        _safe_print(f"  SMTP_USER=your@email.com")
-        _safe_print(f"  SMTP_PASSWORD=your-app-password")
-        _safe_print(f"  FROM_EMAIL=noreply@forgestore.com")
+        _safe_print(f"  -- Email not configured --")
+        _safe_print(f"  To send real emails, configure either:")
+        _safe_print(f"  1) BREVO_API_KEY (recommended) — Get from Brevo Dashboard > Settings > SMTP & API > API Keys")
+        _safe_print(f"  2) SMTP settings — Admin > Settings > Developer Settings")
         _safe_print(f"{'='*60}\n")
-        logger.info(f"Email simulated (no SMTP configured): {subject} -> {to_email}")
+        logger.info(f"Email simulated (no Brevo API key or SMTP): {subject} -> {to_email}")
         return True
 
     try:

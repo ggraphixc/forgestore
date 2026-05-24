@@ -2,54 +2,56 @@
 
 {% block body %}
 <!-- Navigation -->
-<header class="fixed top-4 inset-x-4 z-50 max-w-7xl mx-auto lg:left-4 lg:right-4">
-    <nav class="glass-strong rounded-2xl shadow-glass max-w-7xl mx-auto px-4 sm:px-6">
-        <div class="flex items-center justify-between h-16">
+<header class="fixed top-4 inset-x-4 z-50 max-w-7xl mx-auto lg:left-4 lg:right-4 xl:left-8 xl:right-8 2xl:left-auto 2xl:right-auto">
+    <nav class="glass-strong rounded-2xl shadow-glass max-w-7xl mx-auto px-3 sm:px-5 lg:px-6 xl:px-8">
+        <div class="flex items-center justify-between h-14 sm:h-16">
             <!-- Logo -->
-            <a href="/shop" class="flex items-center gap-3 group">
-                <div class="w-10 h-10 bg-gradient-to-br from-stone-900 to-stone-700 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-amber-500/20 transition-shadow duration-300 dark:from-amber-600 dark:to-amber-700 relative overflow-hidden">
+            <a href="/shop" class="flex items-center gap-2 sm:gap-3 group min-h-[44px]">
+                <div class="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-stone-900 to-stone-700 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-amber-500/20 transition-shadow duration-300 dark:from-amber-600 dark:to-amber-700 relative overflow-hidden flex-shrink-0">
                     <div class="absolute inset-0 bg-gradient-to-br from-amber-400/0 to-amber-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <span class="text-white text-sm font-black tracking-tight relative z-10">FS</span>
+                    <span class="text-white text-xs sm:text-sm font-black tracking-tight relative z-10">FS</span>
                 </div>
-                <div class="hidden sm:block">
-                    <span class="text-lg font-bold text-stone-900 font-display dark:text-stone-100">{{ settings.site_name|default('ForgeStore') }}</span>
-                    <span class="block text-[10px] font-medium text-amber-600 uppercase tracking-[0.2em] -mt-0.5 dark:text-amber-400 font-handwriting text-base lowercase normal-case tracking-normal">{{ settings.site_tagline|default('Your One-Stop Marketplace') }}</span>
+                <div class="hidden sm:hidden md:block">
+                    <span class="text-base sm:text-lg font-bold text-stone-900 font-display dark:text-stone-100 truncate max-w-[120px] sm:max-w-none">{{ settings.site_name|default('ForgeStore') }}</span>
+                    <span class="block text-[9px] sm:text-[10px] font-medium text-amber-600 uppercase tracking-[0.2em] -mt-0.5 dark:text-amber-400">{{ settings.site_tagline|default('Your One-Stop Marketplace') }}</span>
                 </div>
             </a>
 
-            <!-- Desktop Nav -->
-            <nav class="hidden md:flex items-center gap-1">
-                <a href="/shop" class="nav-link px-3 py-2 {% if request.url.path == '/shop' %}active{% endif %}">Home</a>
-                <a href="/shop/marketplace" class="nav-link px-3 py-2 {% if request.url.path.startswith('/shop/marketplace') %}active{% endif %}">Marketplace</a>
-                <a href="/shop/shops" class="nav-link px-3 py-2 {% if request.url.path.startswith('/shop/shops') %}active{% endif %}">Artisans</a>
+            <!-- Desktop Nav (visible md+) -->
+            <nav class="hidden md:flex items-center gap-0.5 lg:gap-1">
+                <a href="/shop" class="nav-link px-2.5 lg:px-3 py-2 text-xs lg:text-sm whitespace-nowrap {% if request.url.path == '/shop' %}active{% endif %}">Home</a>
+                <a href="/shop/marketplace" class="nav-link px-2.5 lg:px-3 py-2 text-xs lg:text-sm whitespace-nowrap {% if request.url.path.startswith('/shop/marketplace') %}active{% endif %}">Marketplace</a>
+                <a href="/shop/shops" class="nav-link px-2.5 lg:px-3 py-2 text-xs lg:text-sm whitespace-nowrap {% if request.url.path.startswith('/shop/shops') %}active{% endif %}">Artisans</a>
+                <!-- Extra nav for larger screens (xl+) -->
+                <a href="/shop/wishlist" class="hidden xl:inline-flex nav-link px-3 py-2 text-xs lg:text-sm whitespace-nowrap {% if request.url.path.startswith('/shop/wishlist') %}active{% endif %}">Wishlist</a>
             </nav>
 
             <!-- Actions -->
-            <div class="flex items-center gap-1">
-                <!-- Wishlist (desktop) -->
-                <a href="/shop/wishlist" class="hidden md:flex p-2.5 text-stone-500 hover:text-rose-500 dark:text-stone-400 dark:hover:text-rose-400 transition-colors duration-200 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800" aria-label="Wishlist">
+            <div class="flex items-center gap-0.5 sm:gap-1">
+                <!-- Search (larger screens only) -->
+                <a href="/shop/marketplace" class="hidden xl:flex p-2.5 text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 transition-colors duration-200 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800" aria-label="Search">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
                 </a>
 
                 <!-- Cart (link to cart page) -->
-                <a href="/shop/cart" class="relative p-2.5 text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 transition-colors duration-200 group rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800" aria-label="Shopping Cart">
+                <a href="/shop/cart" class="relative p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 transition-colors duration-200 group rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800" aria-label="Shopping Cart">
                     <svg class="w-5 h-5 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                     </svg>
-                    <span class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-amber-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center cart-count hidden shadow-sm ring-2 ring-white dark:ring-stone-800">0</span>
+                    <span class="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 bg-amber-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center cart-count hidden shadow-sm ring-2 ring-white dark:ring-stone-800">0</span>
                 </a>
 
-                <!-- Account -->
-                <a href="{{ '/shop/account' if user else '/shop/login' }}" class="hidden md:flex p-2.5 text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 transition-colors duration-200 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800" aria-label="My Account">
+                <!-- Account (desktop) -->
+                <a href="{{ '/shop/account' if user else '/shop/login' }}" class="hidden md:flex p-2.5 min-w-[44px] min-h-[44px] items-center justify-center text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 transition-colors duration-200 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800" aria-label="My Account">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                     </svg>
                 </a>
 
                 <!-- Dark Mode Toggle -->
-                <button id="theme-toggle" class="p-2.5 text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 transition-colors duration-200 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 relative" aria-label="Toggle dark mode">
+                <button id="theme-toggle" class="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 transition-colors duration-200 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 relative" aria-label="Toggle dark mode">
                     <svg class="theme-toggle-icon sun w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
                     </svg>
@@ -59,7 +61,7 @@
                 </button>
 
                 <!-- Mobile menu toggle -->
-                <button id="mobile-menu-toggle" class="md:hidden p-2.5 text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 transition-colors rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 relative" aria-label="Toggle menu" aria-expanded="false">
+                <button id="mobile-menu-toggle" onclick="toggleMobileMenu(event)" class="md:hidden p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 transition-colors rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 relative" aria-label="Toggle menu" aria-expanded="false">
                     <svg id="menu-icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
@@ -478,17 +480,29 @@ function closeMobileMenu() {
     if (toggle) toggle.setAttribute('aria-expanded', 'false');
 }
 
+// Inline toggle handler (also bound via onclick on toggle button)
+function toggleMobileMenu(event) {
+    if (event) event.stopPropagation();
+    const menu = document.getElementById('mobile-menu');
+    if (!menu) return;
+    if (menu.classList.contains('-translate-x-full')) {
+        openMobileMenu();
+    } else {
+        closeMobileMenu();
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Mobile menu toggle
+    // Mobile menu toggle (inline onclick handler already covers this,
+    // but we also bind via JS in case onclick is blocked by CSP)
     const mobileToggle = document.getElementById('mobile-menu-toggle');
     const mobileMenu = document.getElementById('mobile-menu');
     const mobileBackdrop = document.getElementById('mobile-backdrop');
     const mobileCloseBtn = document.getElementById('mobile-close-btn');
 
-    if (mobileToggle) {
-        mobileToggle.addEventListener('click', () => {
-            mobileMenu.classList.contains('-translate-x-full') ? openMobileMenu() : closeMobileMenu();
-        });
+    if (mobileToggle && !mobileToggle.hasAttribute('data-js-bound')) {
+        mobileToggle.setAttribute('data-js-bound', 'true');
+        mobileToggle.addEventListener('click', toggleMobileMenu);
     }
     if (mobileBackdrop) {
         mobileBackdrop.addEventListener('click', closeMobileMenu);
@@ -497,7 +511,12 @@ document.addEventListener('DOMContentLoaded', () => {
         mobileCloseBtn.addEventListener('click', closeMobileMenu);
     }
     if (mobileMenu) {
-        mobileMenu.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMobileMenu));
+        mobileMenu.querySelectorAll('a').forEach(link => {
+            if (!link.hasAttribute('data-js-bound')) {
+                link.setAttribute('data-js-bound', 'true');
+                link.addEventListener('click', closeMobileMenu);
+            }
+        });
     }
 
     // Close with Escape

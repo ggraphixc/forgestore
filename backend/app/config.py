@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     # Base URL for the site (used in emails, etc.)
     site_base_url: str = "http://127.0.0.1:8000"
 
+    # Brevo API (replaces SMTP for sending transactional emails)
+    # Generate an API v3 key from Brevo Dashboard → Settings → SMTP & API → API Keys
+    brevo_api_key: str = ""
+
     # Paystack payment gateway
     paystack_secret_key: str = ""
     paystack_public_key: str = ""
@@ -57,6 +61,8 @@ class Settings(BaseSettings):
             warnings.append("SMTP is not configured — transactional emails will print to console only")
         if not self.site_base_url or "127.0.0.1" in self.site_base_url:
             warnings.append("SITE_BASE_URL is set to localhost — update for production")
+        if not self.brevo_api_key:
+            warnings.append("BREVO_API_KEY is not set — transactional emails will use SMTP or fall back to console")
         if not self.paystack_secret_key:
             warnings.append("PAYSTACK_SECRET_KEY is not set — payment gateway will be unavailable")
         if not self.paystack_public_key:
