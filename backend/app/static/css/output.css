@@ -4432,16 +4432,16 @@ body {
 /* ===== Z-INDEX SYSTEM (CSS Custom Properties) ===== */
 
 :root {
-  --z-sticky:           100;
-  --z-sticky-header:    99;
+  --z-sticky:           0;
+  --z-sticky-header:    45;
   --z-settings-tabs:    25;
-  --z-sidebar-backdrop: 30;
+  --z-sidebar-backdrop: 42;
   --z-sidebar:          40;
-  --z-header:           50;
-  --z-mobile-backdrop:  60;
-  --z-mobile-menu:      70;
+  --z-header:           40;
+  --z-mobile-backdrop:  42;
+  --z-mobile-menu:      45;
   --z-modal:            80;
-  --z-tooltip:          90;
+  --z-tooltip:          29;
   --z-toast:            92;
 }
 
