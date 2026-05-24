@@ -15,7 +15,8 @@
     {% block body %}{% endblock %}
 
     <!-- Toast Container -->
-    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3"></div>
+    <div id="toast-container" class="fixed bottom-6 right-6 flex flex-col gap-3" style="z-index: var(--z-toast);"></div>
+    <!-- Z-index system: defined in input.css :root { --z-header:50; --z-backdrop:60; --z-mobile-menu:70; --z-toast:100; --z-sidebar:40; ... } -->
 
     <script src="/static/js/main.js"></script>
     {% block extra_scripts %}{% endblock %}
