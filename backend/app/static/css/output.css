@@ -4433,15 +4433,15 @@ body {
 
 :root {
   --z-sticky:           0;
-  --z-sticky-header:    45;
+  --z-sticky-header:    46;
   --z-settings-tabs:    25;
   --z-sidebar-backdrop: 42;
   --z-sidebar:          40;
-  --z-header:           40;
-  --z-mobile-backdrop:  42;
-  --z-mobile-menu:      45;
+  --z-header:           50;
+  --z-mobile-backdrop:  52;
+  --z-mobile-menu:      55;
   --z-modal:            80;
-  --z-tooltip:          29;
+  --z-tooltip:          56;
   --z-toast:            92;
 }
 
