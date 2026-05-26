@@ -308,6 +308,115 @@
     background: linear-gradient(90deg, transparent, rgb(251 146 60 / 0.5), transparent);
   }
 
+  /* ===== SIDEBAR COLLAPSED STATE ===== */
+  .sidebar-collapsed {
+    width: 72px !important;
+    min-width: 72px !important;
+  }
+
+  .sidebar-collapsed .sidebar-link {
+    justify-content: center;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .sidebar-collapsed .sidebar-link svg {
+    margin: 0;
+  }
+
+  .sidebar-collapsed .sidebar-link span:not(.sidebar-active-dot) {
+    display: none;
+  }
+
+  .sidebar-collapsed .sidebar-link .ml-auto {
+    display: none;
+  }
+
+  .sidebar-collapsed .sidebar-link-text-hidden {
+    display: none !important;
+  }
+
+  .sidebar-collapsed .mx-3.mt-3 .flex.items-center.gap-3 .min-w-0 {
+    display: none;
+  }
+
+  .sidebar-collapsed .mx-3.mt-3 .flex.items-center.gap-3 {
+    justify-content: center;
+  }
+
+  .sidebar-collapsed .mx-3.mt-3 .w-10.h-10 {
+    margin: 0;
+  }
+
+  .sidebar-collapse-toggle .rotated .sidebar-collapse-icon {
+    transform: rotate(180deg);
+  }
+
+  #sidebar-collapse-toggle.rotated .sidebar-collapse-icon {
+    transform: rotate(180deg);
+  }
+
+  .sidebar-collapsed .space-y-0\.5 > div:not(.sidebar-nav-section) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .sidebar-collapsed .sidebar-header-text {
+    display: none !important;
+  }
+
+  .sidebar-collapsed .sidebar-accent-dot {
+    display: none !important;
+  }
+
+  .sidebar-collapsed .sidebar-nav-label {
+    display: none !important;
+  }
+
+  .sidebar-collapsed .pt-5 {
+    padding-top: 0.75rem;
+  }
+
+  .sidebar-collapsed .pt-5.pb-1\.5 {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .sidebar-collapsed .pt-5 .flex-1.h-px {
+    display: none;
+  }
+
+  .sidebar-collapsed .pt-5 span.text-\[10px\] {
+    display: none;
+  }
+
+  .sidebar-collapsed nav > :not(.sidebar-header) {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+
+  /* Transition for sidebar width change */
+  #sidebar {
+    transition: width 0.25s ease, min-width 0.25s ease, transform 0.2s ease;
+  }
+
+  /* ===== SEARCH OVERLAY ===== */
+  #search-overlay:not(.hidden) {
+    animation: searchSlideDown 0.15s ease-out;
+  }
+
+  @keyframes searchSlideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   /* ===== NAV LINKS ===== */
   .nav-link {
     @apply relative text-sm font-medium text-stone-500 hover:text-stone-900 transition-colors duration-200;
@@ -321,15 +430,17 @@
     content: '';
     position: absolute;
     bottom: -2px;
-    left: 0;
+    left: 50%;
     width: 0;
-    height: 2px;
+    height: 1.5px;
     background: rgb(251 146 60);
-    transition: width 0.3s ease;
+    transition: width 0.3s ease, left 0.3s ease;
+    transform: translateX(-50%);
+    border-radius: 2px;
   }
 
   .nav-link:hover::after {
-    width: 100%;
+    width: 80%;
   }
 
   .nav-link.active {
@@ -337,11 +448,11 @@
   }
 
   .dark .nav-link.active {
-    @apply text-stone-200;
+    @apply text-stone-100 font-semibold;
   }
 
   .nav-link.active::after {
-    width: 100%;
+    width: 80%;
   }
 
   /* ===== SKELETON LOADING ===== */

@@ -3,20 +3,27 @@
 {% block title %}{{ title|default("Admin") }} &mdash; ForgeStore{% endblock %}
 
 {% block body %}
+<script>!function(){var e="sidebar-collapsed",t=localStorage.getItem(e)==="true";if(t){var n=document.getElementById("sidebar");n&&n.classList.add("sidebar-collapsed")}}()</script>
 <div class="flex h-full min-h-screen bg-stone-50/50">
     <aside id="sidebar" class="fixed inset-y-0 left-0 w-screen max-w-full lg:w-64 bg-gradient-to-b from-white to-stone-50/80 dark:from-stone-900 dark:to-stone-950 border-r border-stone-200 dark:border-stone-800 transform -translate-x-full translate-x-0 transition-transform duration-200 relative flex flex-col shadow-xl shadow-stone-900/10" style="z-index: var(--z-sidebar);">
         <!-- Premium header with gradient accent -->
-        <div class="relative flex items-center gap-3 px-6 h-16 border-b border-stone-100 dark:border-stone-800 overflow-hidden">
+        <div class="relative flex items-center gap-3 px-6 h-16 border-b border-stone-100 dark:border-stone-800 overflow-hidden sidebar-header">
             <div class="absolute inset-0 bg-gradient-to-r from-amber-50/30 to-transparent dark:from-amber-900/10"></div>
-            <div class="w-9 h-9 bg-gradient-to-br from-stone-900 to-stone-700 dark:from-amber-600 dark:to-amber-700 rounded-xl flex items-center justify-center shadow-sm relative z-10">
+            <div class="w-9 h-9 bg-gradient-to-br from-stone-900 to-stone-700 dark:from-amber-600 dark:to-amber-700 rounded-xl flex items-center justify-center shadow-sm relative z-10 flex-shrink-0">
                 <span class="text-white text-sm font-display font-black">FS</span>
             </div>
-            <div class="relative z-10">
-                <span class="text-sm font-display font-black text-stone-900 dark:text-stone-100">ForgeStore</span>
-                <span class="block text-[10px] font-medium text-amber-600 dark:text-amber-400 uppercase tracking-[0.15em]">Admin Panel</span>
+            <div class="relative z-10 sidebar-header-text min-w-0">
+                <span class="text-sm font-display font-black text-stone-900 dark:text-stone-100 truncate block">ForgeStore</span>
+                <span class="block text-[10px] font-medium text-amber-600 dark:text-amber-400 uppercase tracking-[0.15em] truncate">Admin Panel</span>
             </div>
+            <!-- Collapse toggle (visible lg+) -->
+            <button id="sidebar-collapse-toggle" class="hidden lg:flex ml-auto p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-all flex-shrink-0 relative z-10" aria-label="Collapse sidebar" aria-expanded="true">
+                <svg class="w-4 h-4 sidebar-collapse-icon transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+                </svg>
+            </button>
             <!-- Subtle accent dot -->
-            <span class="absolute top-3 right-6 w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+            <span class="absolute top-3 right-6 w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse sidebar-accent-dot"></span>
         </div>
         
         <!-- Admin Profile Card -->
@@ -46,10 +53,11 @@
             </div>
         </div>
 
-        <div class="flex justify-between items-start mb-3">
-            <button id="sidebar-close" class="p-2 text-stone-500 hover:text-stone-700 hover:bg-stone-50/50 rounded-lg" aria-label="Close sidebar">
+        <div class="flex justify-between items-start mb-3 px-3">
+            <button id="sidebar-close" class="p-2 text-stone-500 hover:text-stone-700 hover:bg-stone-50/50 rounded-lg lg:hidden" aria-label="Close sidebar">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
+            <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 ml-auto sidebar-nav-label">Navigation</span>
         </div>
         <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto scrollbar-thin">
             <a href="/admin/dashboard" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
@@ -165,29 +173,37 @@
     </aside>
     <div id="sidebar-backdrop" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden lg:hidden transition-opacity duration-200" style="z-index: var(--z-sidebar-backdrop);"></div>
     <div class="flex-1 flex flex-col min-w-0">
-        <header class="sticky top-0 bg-white/80 backdrop-blur-md border-b border-stone-200 shadow-sm lg:hidden" style="z-index: var(--z-sticky-header);">
+        <header class="sticky top-0 bg-white/90 dark:bg-stone-900/90 backdrop-blur-xl border-b border-stone-200 dark:border-stone-800 shadow-sm lg:hidden" style="z-index: var(--z-sticky-header);">
             <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-amber-500/0 via-amber-500/20 to-amber-500/0"></div>
             <div class="flex items-center justify-between px-3 h-14">
                 <div class="flex items-center gap-2">
-                    <button id="sidebar-toggle" class="p-2.5 min-w-[44px] min-h-[44px] -ml-2 text-stone-500 hover:text-amber-600 transition-all rounded-xl hover:bg-amber-50 flex items-center justify-center" aria-label="Toggle sidebar" aria-expanded="false">
+                    <button id="sidebar-toggle" class="p-2.5 min-w-[44px] min-h-[44px] -ml-2 text-stone-500 hover:text-amber-600 transition-all rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center justify-center" aria-label="Toggle sidebar" aria-expanded="false">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
                     </button>
-                    <!-- Brand indicator dot -->
-                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse flex-shrink-0"></div>
                 </div>
-                <div class="flex items-center gap-2.5">
-                    <div class="w-7 h-7 bg-stone-900 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
+                <!-- Center: page title / breadcrumb placeholder -->
+                <div class="flex items-center gap-2.5 min-w-0 flex-1 justify-center px-2">
+                    <div class="w-7 h-7 bg-gradient-to-br from-stone-900 to-stone-700 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
                         <span class="text-white text-[10px] font-display font-black">FS</span>
                     </div>
-                    <span class="text-sm font-display font-extrabold text-stone-900 tracking-tight">ForgeStore<span class="text-amber-600"> Admin</span></span>
+                    <span class="text-sm font-display font-extrabold text-stone-900 dark:text-stone-100 tracking-tight truncate">ForgeStore<span class="text-amber-600"> Admin</span></span>
                 </div>
-                <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold ring-2 ring-offset-1 ring-offset-white ring-amber-500/30 flex-shrink-0 shadow-sm
-                    {% if admin.role.value == 'DIR_ADMIN' %}bg-purple-600
-                    {% elif admin.role.value == 'MANAGEMENT' %}bg-blue-600
-                    {% elif admin.role.value == 'TECH_ADMIN' %}bg-cyan-600
-                    {% elif admin.role.value == 'RETAILER' %}bg-amber-600
-                    {% else %}bg-emerald-600{% endif %}">
-                    {{ admin.name[0]|upper if admin and admin.name else "A" }}
+                <div class="flex items-center gap-1.5">
+                    <!-- Notifications quick link -->
+                    <a href="/admin/notifications" class="relative p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-500 hover:text-amber-600 transition-all rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/20" aria-label="Notifications">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                        <span id="mobile-notif-badge" class="absolute top-1 right-1 min-w-[16px] h-[16px] px-0.5 rounded-full text-[8px] font-bold bg-amber-500 text-white hidden flex items-center justify-center ring-2 ring-white"></span>
+                    </a>
+                    <!-- Avatar -->
+                    <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold ring-2 ring-offset-1 ring-offset-white dark:ring-offset-stone-900 flex-shrink-0 shadow-sm cursor-pointer transition-transform hover:scale-105
+                        {% if admin.role.value == 'DIR_ADMIN' %}bg-purple-600 ring-purple-400/30
+                        {% elif admin.role.value == 'MANAGEMENT' %}bg-blue-600 ring-blue-400/30
+                        {% elif admin.role.value == 'TECH_ADMIN' %}bg-cyan-600 ring-cyan-400/30
+                        {% elif admin.role.value == 'RETAILER' %}bg-amber-600 ring-amber-400/30
+                        {% else %}bg-emerald-600 ring-emerald-400/30{% endif %}">
+                        {{ admin.name[0]|upper if admin and admin.name else "A" }}
+                    </div>
                 </div>
             </div>
         </header>
@@ -244,6 +260,50 @@ document.addEventListener('DOMContentLoaded', function() {
 setInterval(fetchUnreadCount, 120000);
 </script>
 <script>
+// Sidebar collapse toggle for desktop view
+let sidebarCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+
+function applyCollapseState() {
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.getElementById('sidebar-collapse-toggle');
+    const headerTexts = document.querySelectorAll('.sidebar-header-text');
+    const navLabels = document.querySelectorAll('.sidebar-nav-label');
+    const accentDots = document.querySelectorAll('.sidebar-accent-dot');
+    const profileCard = document.querySelector('.mx-3.mt-3'); // admin profile card
+    
+    if (!sidebar) return;
+    
+    if (sidebarCollapsed) {
+        sidebar.classList.add('sidebar-collapsed');
+        if (toggle) toggle.classList.add('rotated');
+        // Hide text elements
+        headerTexts.forEach(el => { if (el) el.style.display = 'none'; });
+        navLabels.forEach(el => { if (el) el.style.display = 'none'; });
+        accentDots.forEach(el => { if (el) el.style.display = 'none'; });
+        if (profileCard) {
+            profileCard.querySelector('.min-w-0')?.classList.add('hidden');
+        }
+        // Add a title attribute to show full text on hover
+        document.querySelectorAll('.sidebar-link span:not(.sidebar-active-dot)').forEach(el => {
+            if (el.textContent.trim()) {
+                el.classList.add('sidebar-link-text-hidden');
+            }
+        });
+    } else {
+        sidebar.classList.remove('sidebar-collapsed');
+        if (toggle) toggle.classList.remove('rotated');
+        headerTexts.forEach(el => { if (el) el.style.display = ''; });
+        navLabels.forEach(el => { if (el) el.style.display = ''; });
+        accentDots.forEach(el => { if (el) el.style.display = ''; });
+        if (profileCard) {
+            profileCard.querySelector('.min-w-0')?.classList.remove('hidden');
+        }
+        document.querySelectorAll('.sidebar-link span:not(.sidebar-active-dot)').forEach(el => {
+            el.classList.remove('sidebar-link-text-hidden');
+        });
+    }
+}
+
 // Sidebar toggle functionality for mobile view
 function openSidebar() {
     const sidebar = document.getElementById('sidebar');
@@ -294,6 +354,7 @@ function toggleSidebar(event) {
 document.addEventListener('DOMContentLoaded', function() {
     const sidebarToggle = document.getElementById('sidebar-toggle');
     const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+    const collapseToggle = document.getElementById('sidebar-collapse-toggle');
     
     if (sidebarToggle) {
         sidebarToggle.addEventListener('click', toggleSidebar);
@@ -302,6 +363,48 @@ document.addEventListener('DOMContentLoaded', function() {
     if (sidebarBackdrop) {
         sidebarBackdrop.addEventListener('click', closeSidebar);
     }
+    
+    if (collapseToggle) {
+        collapseToggle.addEventListener('click', function() {
+            sidebarCollapsed = !sidebarCollapsed;
+            localStorage.setItem('sidebar-collapsed', sidebarCollapsed);
+            applyCollapseState();
+            collapseToggle.setAttribute('aria-label', sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar');
+            collapseToggle.setAttribute('aria-expanded', String(!sidebarCollapsed));
+        });
+    }
+    
+    // Apply saved collapse state on load
+    applyCollapseState();
+    
+    // Sync mobile notification badge after page load
+    function syncMobileNotifBadge() {
+        const sidebarBadge = document.getElementById('sidebar-notif-badge');
+        const mobileBadge = document.getElementById('mobile-notif-badge');
+        if (sidebarBadge && mobileBadge) {
+            if (!sidebarBadge.classList.contains('hidden')) {
+                mobileBadge.textContent = sidebarBadge.textContent;
+                mobileBadge.classList.remove('hidden');
+            } else {
+                mobileBadge.classList.add('hidden');
+            }
+        }
+    }
+    
+    // Set initial collapse toggle aria-label based on saved state
+    if (collapseToggle) {
+        collapseToggle.setAttribute('aria-label', sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar');
+        collapseToggle.setAttribute('aria-expanded', String(!sidebarCollapsed));
+    }
+    
+    // Override fetchUnreadCount to also update mobile badge
+    const origFetch = fetchUnreadCount;
+    fetchUnreadCount = function() {
+        return origFetch.apply(this, arguments).then(function() {
+            setTimeout(syncMobileNotifBadge, 50);
+        }).catch(function() {});
+    };
+    setTimeout(syncMobileNotifBadge, 200);
 });
 </script>
 <script src="/static/js/admin.js"></script>
