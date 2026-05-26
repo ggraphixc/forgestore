@@ -4,17 +4,17 @@
 
 /* ===== Z-INDEX SYSTEM (CSS Custom Properties) ===== */
 :root {
-  --z-sticky:           0;
-  --z-sticky-header:    46;
+  --z-sticky:           10;
+  --z-sticky-header:    20;
   --z-settings-tabs:    25;
-  --z-sidebar-backdrop: 39;
+  --z-sidebar-backdrop: 30;
   --z-sidebar:          40;
   --z-header:           50;
-  --z-mobile-backdrop:  52;
-  --z-mobile-menu:      55;
+  --z-tooltip:          55;
+  --z-mobile-backdrop:  57;
+  --z-mobile-menu:      60;
   --z-modal:            80;
-  --z-tooltip:          56;
-  --z-toast:            92;
+  --z-toast:            100;
 }
 
 @layer base {
