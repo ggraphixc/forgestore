@@ -833,7 +833,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 closeMobileMenu();
             }
         }, { passive: true });
-    }
+
         // Handle touchcancel to clean up swipe state
         mobileMenu.addEventListener('touchcancel', () => {
             if (!isDragging) return;
@@ -844,6 +844,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 mobileBackdrop.style.opacity = '';
             }
         }, { passive: true });
+    }
 
     // Dark mode
     const themeToggle = document.getElementById('theme-toggle');
