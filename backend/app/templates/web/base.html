@@ -118,33 +118,6 @@
         <div class="w-12 h-1.5 rounded-full bg-stone-300 dark:bg-stone-600"></div>
     </div>
 
-    <!-- Search Bar (live suggestions) -->
-    <div class="px-4 pt-3 pb-2" id="mobile-search-wrapper">
-        <div class="relative">
-            <div class="flex items-center gap-2 px-4 py-2.5 bg-stone-100 dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 focus-within:border-amber-300 dark:focus-within:border-amber-700/50 focus-within:ring-2 focus-within:ring-amber-500/20 transition-all">
-                <svg class="w-4.5 h-4.5 flex-shrink-0 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-                <input
-                    id="mobile-search-input"
-                    type="text"
-                    placeholder="Search products..."
-                    autocomplete="off"
-                    class="flex-1 bg-transparent text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none"
-                />
-                <button id="mobile-search-clear" class="hidden p-0.5 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors" aria-label="Clear search">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-            <!-- Suggestions dropdown -->
-            <div id="mobile-search-suggestions" class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 shadow-xl shadow-stone-900/10 z-30 hidden overflow-hidden"></div>
-        </div>
-        <!-- Keybinding hint on desktop -->
-
-    </div>
-
     <!-- Account Section -->
     <div class="mx-4 mb-4 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-stone-800 dark:to-stone-800/50 border border-amber-200/50 dark:border-stone-700 overflow-hidden shadow-sm">
         {% if user %}
@@ -628,6 +601,13 @@ function openMobileMenu() {
     backdrop.classList.remove('hidden', 'pointer-events-none');
     backdrop.classList.add('opacity-100');
     document.body.classList.add('overflow-hidden');
+    // Close search overlay if open
+    const mobileSearchOverlay = document.getElementById('search-overlay');
+    const mobileSearchOverlaySuggestions = document.getElementById('search-overlay-suggestions');
+    if (mobileSearchOverlay && !mobileSearchOverlay.classList.contains('hidden')) {
+        mobileSearchOverlay.classList.add('hidden');
+        if (mobileSearchOverlaySuggestions) mobileSearchOverlaySuggestions.classList.add('hidden');
+    }
 
     // Update hamburger icon
     const iconOpen = document.getElementById('menu-icon-open');
@@ -705,108 +685,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
-
-    // Mobile search with live suggestions
-    const searchInput = document.getElementById('mobile-search-input');
-    const searchSuggestions = document.getElementById('mobile-search-suggestions');
-    const searchClear = document.getElementById('mobile-search-clear');
-    let searchTimeout = null;
-
-    if (searchInput && searchSuggestions) {
-        // Focus search on '/' keypress
-        document.addEventListener('keydown', (e) => {
-            if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
-                e.preventDefault();
-                searchInput.focus();
-            }
-        });
-
-        searchInput.addEventListener('input', () => {
-            const q = searchInput.value.trim();
-            searchClear.classList.toggle('hidden', !q);
-
-            if (searchTimeout) clearTimeout(searchTimeout);
-
-            if (q.length < 2) {
-                searchSuggestions.classList.add('hidden');
-                return;
-            }
-
-            searchTimeout = setTimeout(async () => {
-                try {
-                    const res = await fetch(`/api/search/suggestions?q=${encodeURIComponent(q)}`);
-                    const data = await res.json();
-                    renderSearchSuggestions(data.suggestions || []);
-                } catch {
-                    searchSuggestions.classList.add('hidden');
-                }
-            }, 250);
-        });
-
-        searchInput.addEventListener('focus', () => {
-            if (searchInput.value.trim().length >= 2) {
-                // Re-trigger search if already has text
-                const inputEvent = new Event('input');
-                searchInput.dispatchEvent(inputEvent);
-            }
-        });
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            const wrapper = document.getElementById('mobile-search-wrapper');
-            if (wrapper && !wrapper.contains(e.target)) {
-                searchSuggestions.classList.add('hidden');
-            }
-        });
-
-        // Clear button
-        if (searchClear) {
-            searchClear.addEventListener('click', () => {
-                searchInput.value = '';
-                searchClear.classList.add('hidden');
-                searchSuggestions.classList.add('hidden');
-                searchInput.focus();
-            });
-        }
-
-        // Navigate to marketplace on Enter
-        searchInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                const q = searchInput.value.trim();
-                if (q) {
-                    window.location.href = `/shop/marketplace?q=${encodeURIComponent(q)}`;
-                }
-            }
-        });
-    }
-
-    function renderSearchSuggestions(items) {
-        if (!searchSuggestions) return;
-
-        if (!items || items.length === 0) {
-            searchSuggestions.classList.add('hidden');
-            return;
-        }
-
-        searchSuggestions.innerHTML = items.map(p => {
-            const price = p.discount_price || p.price;
-            const img = p.image || '/static/img/placeholder.svg';
-            return `<a href="/shop/products/${p.slug}" class="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors border-b border-stone-100 dark:border-stone-800 last:border-0" onclick="closeMobileMenu()">
-                <div class="w-10 h-10 rounded-lg bg-stone-100 dark:bg-stone-700 flex-shrink-0 overflow-hidden">
-                    <img src="${img}" alt="${p.name}" class="w-full h-full object-cover" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\"w-full h-full flex items-center justify-center text-stone-400\"><svg class=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2v12a2 2 0 002 2z\"/></svg></div>';">
-                </div>
-                <div class="min-w-0 flex-1">
-                    <p class="text-sm font-medium text-stone-800 dark:text-stone-200 truncate">${p.name}</p>
-                    <p class="text-xs text-stone-500 dark:text-stone-400">
-                        ${p.retailer_name ? p.retailer_name + ' · ' : ''}${formatCurrency(price, '')}
-                    </p>
-                </div>
-                <svg class="w-4 h-4 text-stone-300 dark:text-stone-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            </a>`;
-        }).join('');
-
-        searchSuggestions.classList.remove('hidden');
-    }
 
     // Swipe down to close mobile menu
     let touchStartY = 0;
