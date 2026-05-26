@@ -1,11 +1,11 @@
 {% extends "web/base.html" %}
 {% block title %}My Wishlist — ForgeStore{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
     <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 reveal">
         <div>
             <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Saved Items</span>
-            <h1 class="text-4xl md:text-5xl font-black text-stone-900 dark:text-stone-100 font-display">
+            <h1 class="text-2xl sm:text-3xl md:text-4xl xl:text-5xl font-black text-stone-900 dark:text-stone-100 font-display">
                 My <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Wishlist</span>
             </h1>
             <p class="text-stone-500 dark:text-stone-400 mt-2" id="wishlist-count">Loading your saved pieces...</p>
@@ -13,7 +13,7 @@
     </div>
 
     <!-- Wishlist Grid -->
-    <div id="wishlist-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+    <div id="wishlist-grid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
         <div class="col-span-full text-center py-20">
             <div class="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full mx-auto mb-4"></div>
             <p class="text-sm text-stone-400">Loading wishlist...</p>

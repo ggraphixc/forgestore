@@ -1,7 +1,7 @@
 {% extends "web/base.html" %}
 {% block title %}Create Account — ForgeStore{% endblock %}
 {% block content %}
-<div class="relative min-h-[70vh] flex items-center justify-center px-4 py-16 overflow-hidden">
+<div class="relative min-h-[80vh] sm:min-h-[70vh] flex items-center justify-center px-4 py-12 sm:py-16 overflow-hidden">
     <!-- Decorative background blobs -->
     <div class="absolute inset-0 bg-gradient-to-br from-stone-50 via-white to-amber-50/30"></div>
     <div class="absolute top-10 right-1/4 w-[350px] h-[350px] bg-gradient-to-br from-amber-400/10 to-amber-500/5 rounded-full blur-[100px] blob-morph animate-drift"></div>
@@ -13,7 +13,7 @@
             <div class="w-16 h-16 bg-gradient-to-br from-stone-900 to-stone-700 dark:from-amber-600 dark:to-amber-700 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-warm ring-2 ring-amber-500/10">
                 <span class="text-white text-2xl font-display font-black">FS</span>
             </div>
-            <h1 class="text-3xl font-display font-black text-stone-900">Create your <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">account</span></h1>
+            <h1 class="text-2xl sm:text-3xl font-display font-black text-stone-900">Create your <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">account</span></h1>
             <p class="text-sm text-stone-500 mt-2">Join the ForgeStore community of artisans and collectors</p>
         </div>
 
@@ -59,7 +59,7 @@
                     </div>
                 </div>
                 <button type="submit" id="signup-btn"
-                    class="btn-forge w-full justify-center text-sm">
+                    class="btn-forge min-h-[44px] w-full justify-center text-sm">
                     Create Account
                 </button>
             </form>

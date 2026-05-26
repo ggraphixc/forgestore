@@ -3,15 +3,15 @@
 {% block title %}Artisan Shops — ForgeStore{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
     <div class="text-center mb-14 reveal">
         <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Our Community</span>
-        <h1 class="text-4xl md:text-6xl font-black text-stone-900 dark:text-stone-100 font-display mb-3">Artisan <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Shops</span></h1>
+        <h1 class="text-3xl sm:text-4xl md:text-6xl font-black text-stone-900 dark:text-stone-100 font-display mb-3">Artisan <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Shops</span></h1>
         <p class="text-stone-500 dark:text-stone-400 max-w-xl mx-auto">{{ retailers|length }} master workshops, each with a unique story and craft</p>
     </div>
 
     {% if retailers %}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {% for r in retailers %}
         <a href="/shop/shops/{{ r.slug }}" class="card-artisan group reveal" data-delay="{{ (loop.index0 * 80) + 100 }}">
             <div class="flex items-center gap-5 mb-5">

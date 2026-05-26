@@ -5,14 +5,14 @@
     <div class="flex items-center justify-between mb-8 reveal">
         <div>
             <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Dashboard</span>
-            <h1 class="text-3xl md:text-4xl font-display font-black text-stone-900 dark:text-stone-100">My <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Account</span></h1>
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-display font-black text-stone-900 dark:text-stone-100">My <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Account</span></h1>
             <p class="text-sm text-stone-500 dark:text-stone-400 mt-2">Welcome back{% if user %}, <span class="font-medium text-stone-700 dark:text-stone-300">{{ user.name }}</span>{% endif %}</p>
         </div>
         <a href="/shop/logout" class="px-4 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 rounded-xl transition-all duration-200 border border-transparent hover:border-red-100">Sign Out</a>
     </div>
 
     <!-- Quick Links Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8 reveal" style="animation-delay: 100ms;">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8 reveal" style="animation-delay: 100ms;">
         <a href="/shop/account/orders" class="group relative bg-white rounded-2xl border border-stone-200 p-6 hover:shadow-lg hover:border-stone-300 transition-all duration-300 overflow-hidden">
             <div class="absolute inset-0 bg-gradient-to-br from-amber-50/0 to-amber-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <div class="relative">
@@ -57,30 +57,30 @@
 
     <!-- Recent Orders -->
     <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
-        <div class="px-6 py-4 border-b border-stone-100 flex items-center justify-between">
+        <div class="px-4 sm:px-6 py-4 border-b border-stone-100 flex items-center justify-between">
             <h2 class="text-sm font-bold text-stone-900 uppercase tracking-wider">Recent Orders</h2>
             <a href="/shop/account/orders" class="text-xs font-medium text-amber-700 hover:text-amber-800 transition-colors duration-200">View all →</a>
         </div>
         {% if orders and orders|length > 0 %}
-        <div class="overflow-x-auto">
-            <table class="w-full">
+        <div class="overflow-x-auto -mx-4 sm:mx-0">
+            <table class="w-full min-w-[400px] sm:min-w-0">
                 <thead>
                     <tr class="border-b border-stone-50">
-                        <th class="text-left px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-stone-400">Order</th>
-                        <th class="text-left px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-stone-400">Date</th>
-                        <th class="text-left px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-stone-400">Status</th>
-                        <th class="text-right px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-stone-400">Total</th>
+                        <th class="text-left px-4 sm:px-6 py-3 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-stone-400">Order</th>
+                        <th class="text-left px-4 sm:px-6 py-3 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-stone-400 hidden sm:table-cell">Date</th>
+                        <th class="text-left px-4 sm:px-6 py-3 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-stone-400">Status</th>
+                        <th class="text-right px-4 sm:px-6 py-3 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-stone-400">Total</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-stone-50">
                     {% for order in orders[:5] %}
                     <tr class="hover:bg-amber-50/20 transition-colors duration-150 cursor-pointer" onclick="window.location='/shop/account/orders/{{ order.id }}'">
-                        <td class="px-6 py-3 text-sm font-medium text-stone-900">#{{ order.id[:10] }}...</td>
-                        <td class="px-6 py-3 text-sm text-stone-400">{{ order.created_at.strftime('%b %d, %Y') if order.created_at else '—' }}</td>
-                        <td class="px-6 py-3">
-                            <span class="px-2.5 py-1 text-xs font-medium rounded-full {% if order.status == 'PENDING' %}bg-amber-50 text-amber-700 border border-amber-200{% elif order.status == 'DELIVERED' %}bg-emerald-50 text-emerald-700 border border-emerald-200{% elif order.status == 'CANCELLED' %}bg-red-50 text-red-700 border border-red-200{% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">{{ order.status }}</span>
+                        <td class="px-4 sm:px-6 py-3 text-sm font-medium text-stone-900">#{{ order.id[:8] }}...</td>
+                        <td class="px-4 sm:px-6 py-3 text-sm text-stone-400 hidden sm:table-cell">{{ order.created_at.strftime('%b %d, %Y') if order.created_at else '—' }}</td>
+                        <td class="px-4 sm:px-6 py-3">
+                            <span class="px-2.5 py-1 text-[10px] sm:text-xs font-medium rounded-full {% if order.status == 'PENDING' %}bg-amber-50 text-amber-700 border border-amber-200{% elif order.status == 'DELIVERED' %}bg-emerald-50 text-emerald-700 border border-emerald-200{% elif order.status == 'CANCELLED' %}bg-red-50 text-red-700 border border-red-200{% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">{{ order.status }}</span>
                         </td>
-                        <td class="px-6 py-3 text-sm font-semibold text-stone-900 text-right">₦{{ "%.2f"|format(order.total_amount or 0) }}</td>
+                        <td class="px-4 sm:px-6 py-3 text-sm font-semibold text-stone-900 text-right">₦{{ "%.2f"|format(order.total_amount or 0) }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

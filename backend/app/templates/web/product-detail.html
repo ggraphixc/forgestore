@@ -1,7 +1,7 @@
 {% extends "web/base.html" %}
 {% block title %}{{ product.name }} — ForgeStore{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
     <!-- Breadcrumb -->
     <nav class="flex items-center gap-2 text-sm text-stone-400 dark:text-stone-500 mb-8 reveal" aria-label="Breadcrumb">
         <a href="/shop" class="hover:text-amber-600 dark:hover:text-amber-400 transition-colors duration-200">Home</a>
@@ -13,7 +13,7 @@
         <span class="text-stone-600 dark:text-stone-300 font-medium">{{ product.name }}</span>
     </nav>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-14">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 lg:gap-14">
         <!-- Images Gallery -->
         <div class="reveal-left">
             {% if product.images and product.images|length > 0 %}
@@ -24,7 +24,7 @@
                 {% endif %}
             </div>
             {% if product.images|length > 1 %}
-            <div class="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            <div class="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
                 {% for img in product.images %}
                 <button onclick="switchImage('{{ img }}', this)" class="w-16 sm:w-20 h-16 sm:h-20 rounded-xl overflow-hidden border-2 transition-all duration-200 flex-shrink-0 {% if loop.first %}border-amber-500 shadow-warm{% else %}border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500{% endif %}">
                     <img loading="lazy" src="{{ img }}" alt="" class="w-full h-full object-cover">
@@ -52,7 +52,7 @@
                 </a>
                 {% endif %}
                 <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Crafted with Care</span>
-                <h1 class="text-3xl md:text-5xl font-display font-black text-stone-900 dark:text-stone-100 mt-1 leading-[1.05]">{{ product.name }}</h1>
+                <h1 class="text-2xl sm:text-3xl md:text-5xl font-display font-black text-stone-900 dark:text-stone-100 mt-1 leading-[1.1] sm:leading-[1.05]">{{ product.name }}</h1>
                 
                 <div class="flex items-center gap-4 mt-4">
                     {% if product.discount_price and product.discount_price < product.price %}
@@ -78,7 +78,7 @@
 
             <!-- Description -->
             <div class="prose prose-sm prose-zinc max-w-none mb-8">
-                <p class="text-stone-600 leading-relaxed">{{ product.description or 'No description available.' }}</p>
+                <p class="text-sm sm:text-base text-stone-600 leading-relaxed">{{ product.description or 'No description available.' }}</p>
             </div>
 
             <!-- Craftsmanship Details -->
@@ -125,9 +125,9 @@
 
     <!-- Reviews Section -->
     {% if reviews %}
-    <div class="mt-20 reveal">
-        <div class="flex items-center justify-between mb-8">
-            <h2 class="text-2xl md:text-3xl font-display font-black text-stone-900 dark:text-stone-100">Customer <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Reviews</span></h2>
+    <div class="mt-12 sm:mt-20 reveal">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6 sm:mb-8">
+            <h2 class="text-xl sm:text-2xl md:text-3xl font-display font-black text-stone-900 dark:text-stone-100">Customer <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Reviews</span></h2>
             {% if product.rating %}
             <div class="flex items-center gap-3">
                 <div class="flex gap-0.5">
@@ -168,7 +168,7 @@
             <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
-            <h2 class="text-2xl md:text-3xl font-display font-black text-stone-900 dark:text-stone-100">You Might Also <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Like</span></h2>
+            <h2 class="text-xl sm:text-2xl md:text-3xl font-display font-black text-stone-900 dark:text-stone-100">You Might Also <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Like</span></h2>
             <span class="px-2 py-0.5 text-[10px] font-bold text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-900/30 rounded-full">AI PICK</span>
         </div>
         <div id="ai-recommendations-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -185,8 +185,8 @@
     <!-- Related Products -->
     {% if related %}
     <div id="related-products-section" class="mt-20 reveal">
-        <h2 class="text-2xl md:text-3xl font-display font-black text-stone-900 dark:text-stone-100 mb-8">More from this <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">artisan</span></h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <h2 class="text-xl sm:text-2xl md:text-3xl font-display font-black text-stone-900 dark:text-stone-100 mb-6 sm:mb-8">More from this <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">artisan</span></h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
             {% for p in related %}
             <a href="/shop/products/{{ p.slug or p.id }}" class="card-product group !bg-transparent !border-0 !shadow-none">
                 <div class="aspect-square rounded-2xl overflow-hidden bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 mb-3 shadow-card hover:shadow-card-hover transition-shadow duration-300">

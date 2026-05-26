@@ -4,7 +4,7 @@
 {% endblock %}
 {% block content %}
 {% set is_confirmation = checkout_order_id and order %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
     <!-- Steps indicator -->
     <div class="flex items-center justify-center gap-2 mb-10">
         <div class="flex items-center gap-2">
@@ -56,7 +56,7 @@
                     </div>
                     <div class="absolute inset-0 rounded-full bg-emerald-400/20 animate-ping"></div>
                 </div>
-                <h1 class="text-3xl md:text-5xl font-display font-black text-stone-900 mb-3">
+                <h1 class="text-2xl sm:text-3xl md:text-5xl font-display font-black text-stone-900 mb-3">
                     Order <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-emerald-400">Placed</span> Successfully!
                 </h1>
                 <p class="text-lg text-stone-600 mb-1 max-w-lg mx-auto">
@@ -88,7 +88,7 @@
             </div>
 
             <!-- Order Details -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-10">
                 <div class="lg:col-span-2">
                     <div class="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
                         <div class="flex items-center justify-between mb-6">
@@ -201,7 +201,7 @@
                         </svg>
                     </div>
                 </div>
-                <h1 class="text-3xl md:text-5xl font-display font-black text-stone-900 mb-3">
+                <h1 class="text-2xl sm:text-3xl md:text-5xl font-display font-black text-stone-900 mb-3">
                     Payment <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-amber-400">Pending</span>
                 </h1>
                 <p class="text-stone-500 mb-1 max-w-md mx-auto">Your order has been placed but we're waiting for payment confirmation.</p>
@@ -231,7 +231,7 @@
                         </svg>
                     </div>
                 </div>
-                <h1 class="text-3xl md:text-5xl font-display font-black text-stone-900 mb-3">
+                <h1 class="text-2xl sm:text-3xl md:text-5xl font-display font-black text-stone-900 mb-3">
                     Payment <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-400">Failed</span>
                 </h1>
                 <p class="text-stone-500 mb-1 max-w-md mx-auto" id="failure-message">Your payment could not be processed. Please try again.</p>
@@ -392,8 +392,8 @@ async function loadCheckout() {
         document.getElementById('checkout-content').innerHTML = `
             <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
                 <div class="lg:col-span-3">
-                    <div class="bg-white rounded-2xl border border-stone-200 p-6 lg:p-8 shadow-sm">
-                        <h2 class="text-lg font-display font-bold text-stone-900 mb-6">Shipping Details</h2>
+                    <div class="bg-white rounded-2xl border border-stone-200 p-5 sm:p-6 lg:p-8 shadow-sm">
+                        <h2 class="text-base sm:text-lg font-display font-bold text-stone-900 mb-5 sm:mb-6">Shipping Details</h2>
                         <form id="checkout-form" class="space-y-5" onsubmit="event.preventDefault(); placeOrder()">
                             <div>
                                 <label class="block text-sm font-medium text-stone-700 mb-1.5" for="name">Full Name</label>
@@ -423,7 +423,7 @@ async function loadCheckout() {
                     </div>
                 </div>
                 <div class="lg:col-span-2">
-                    <div class="bg-gradient-to-br from-stone-50 to-amber-50/30 rounded-2xl border border-stone-200 p-5 sm:p-6 lg:p-8 sticky top-24 shadow-sm">
+                    <div class="bg-gradient-to-br from-stone-50 to-amber-50/30 rounded-2xl border border-stone-200 p-4 sm:p-6 lg:p-8 sticky top-24 shadow-sm">
                         <h2 class="text-sm font-bold text-stone-900 uppercase tracking-wider mb-6">Order Summary</h2>
                         ${itemsHtml}
                         <div class="flex justify-between pt-4 mt-4 border-t border-stone-200">

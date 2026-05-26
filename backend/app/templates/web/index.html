@@ -4,7 +4,7 @@
 
 {% block content %}
 <!-- ===== HERO SECTION ===== -->
-<section class="relative bg-stone-900 text-white overflow-hidden min-h-[90vh] flex items-center">
+<section class="relative bg-stone-900 text-white overflow-hidden min-h-[80vh] sm:min-h-[90vh] flex items-center">
     <!-- Animated gradient mesh background -->
     <div class="absolute inset-0 bg-gradient-to-br from-stone-900 via-stone-800 to-amber-950"></div>
     
@@ -24,7 +24,7 @@
     <div class="absolute bottom-1/3 left-[10%] w-2 h-2 bg-amber-300/30 rounded-full animate-pulse-soft" style="animation-delay: -2s;"></div>
     <div class="absolute top-1/2 right-[20%] w-4 h-4 border border-amber-500/20 rounded-full animate-float-slow" style="animation-delay: -3s;"></div>
 
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 w-full">
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 md:py-32 w-full">
         <div class="max-w-3xl animate-fade-in">
             <!-- Pill badge -->
             <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 backdrop-blur-md rounded-full text-xs font-medium text-amber-300 border border-white/10 mb-8 reveal" style="animation-delay: 100ms;">
@@ -33,14 +33,14 @@
             </div>
 
             <!-- Main headline -->
-            <h1 class="text-5xl md:text-7xl lg:text-8xl font-bold leading-[0.92] mb-8 text-balance reveal" style="animation-delay: 200ms;">
+            <h1 class="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold leading-[0.92] mb-6 sm:mb-8 text-balance reveal" style="animation-delay: 200ms;">
                 Where the<br>
-                <span class="font-handwriting text-6xl md:text-8xl lg:text-9xl text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500">Workshop</span><br>
+                <span class="font-handwriting text-4xl sm:text-6xl md:text-8xl lg:text-9xl text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500">Workshop</span><br>
                 <span class="text-stone-300">Meets the World</span>
             </h1>
 
             <!-- Subtitle -->
-            <p class="text-lg md:text-xl text-stone-400 leading-relaxed max-w-xl mb-12 reveal" style="animation-delay: 300ms;">
+            <p class="text-sm sm:text-lg md:text-xl text-stone-400 leading-relaxed max-w-xl mb-8 sm:mb-12 reveal" style="animation-delay: 300ms;">
                 Explore handcrafted treasures from master artisans. Each piece tells a story of skill, passion, and tradition passed down through generations.
             </p>
 
@@ -57,18 +57,18 @@
             </div>
 
             <!-- Stats row -->
-            <div class="flex items-center gap-8 md:gap-12 mt-16 pt-10 border-t border-white/5 reveal" style="animation-delay: 500ms;">
-                <div>
-                    <p class="text-2xl md:text-3xl font-bold text-white">50+</p>
-                    <p class="text-xs text-stone-400 mt-1">Master Artisans</p>
+            <div class="flex flex-wrap items-center gap-6 sm:gap-8 md:gap-12 mt-12 sm:mt-16 pt-8 sm:pt-10 border-t border-white/5 reveal" style="animation-delay: 500ms;">
+                <div class="min-w-[80px]">
+                    <p class="text-xl sm:text-2xl md:text-3xl font-bold text-white">50+</p>
+                    <p class="text-[10px] sm:text-xs text-stone-400 mt-1">Master Artisans</p>
                 </div>
-                <div>
-                    <p class="text-2xl md:text-3xl font-bold text-white">200+</p>
-                    <p class="text-xs text-stone-400 mt-1">Unique Pieces</p>
+                <div class="min-w-[80px]">
+                    <p class="text-xl sm:text-2xl md:text-3xl font-bold text-white">200+</p>
+                    <p class="text-[10px] sm:text-xs text-stone-400 mt-1">Unique Pieces</p>
                 </div>
-                <div>
-                    <p class="text-2xl md:text-3xl font-bold text-white">100%</p>
-                    <p class="text-xs text-stone-400 mt-1">Handcrafted</p>
+                <div class="min-w-[80px]">
+                    <p class="text-xl sm:text-2xl md:text-3xl font-bold text-white">100%</p>
+                    <p class="text-[10px] sm:text-xs text-stone-400 mt-1">Handcrafted</p>
                 </div>
             </div>
         </div>
@@ -82,8 +82,8 @@
         <div class="flex flex-col md:flex-row md:items-end justify-between mb-14 reveal">
             <div>
                 <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Master Craftspeople</span>
-                <h2 class="text-4xl md:text-5xl font-black text-stone-900 dark:text-stone-100 font-display">Featured <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Artisans</span></h2>
-                <p class="text-stone-500 dark:text-stone-400 mt-3 max-w-lg">Master craftspeople who bring passion to every piece they create</p>
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-black text-stone-900 dark:text-stone-100 font-display">Featured <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Artisans</span></h2>
+                <p class="text-sm sm:text-base text-stone-500 dark:text-stone-400 mt-2 sm:mt-3 max-w-lg">Master craftspeople who bring passion to every piece they create</p>
             </div>
             <a href="/shop/shops" class="btn-ghost mt-4 md:mt-0">
                 View All Artisans
@@ -131,10 +131,10 @@
 {% if flagship_products %}
 <section class="section-divider bg-stone-50 dark:bg-stone-800/50 overflow-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-14 reveal">
-            <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Curated Selection</span>
-            <h2 class="text-4xl md:text-5xl font-black text-stone-900 dark:text-stone-100 font-display">Flagship <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Collection</span></h2>
-            <p class="text-stone-500 dark:text-stone-400 mt-3 max-w-lg mx-auto">Our most extraordinary pieces, curated for those who appreciate the finest craftsmanship</p>
+        <div class="text-center mb-10 sm:mb-14 reveal">
+            <span class="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Curated Selection</span>
+            <h2 class="text-3xl sm:text-4xl md:text-5xl font-black text-stone-900 dark:text-stone-100 font-display">Flagship <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Collection</span></h2>
+            <p class="text-sm sm:text-base text-stone-500 dark:text-stone-400 mt-2 sm:mt-3 max-w-lg mx-auto">Our most extraordinary pieces, curated for those who appreciate the finest craftsmanship</p>
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
@@ -175,11 +175,11 @@
 <!-- ===== MARKET SECTION ===== -->
 <section class="section-divider bg-white dark:bg-stone-900 overflow-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-col md:flex-row md:items-end justify-between mb-14 reveal">
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-14 reveal">
             <div>
-                <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Discover</span>
-                <h2 class="text-4xl md:text-5xl font-black text-stone-900 dark:text-stone-100 font-display">The <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Market</span></h2>
-                <p class="text-stone-500 dark:text-stone-400 mt-3 max-w-lg">Discover unique products from our community of master artisans</p>
+                <span class="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Discover</span>
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-black text-stone-900 dark:text-stone-100 font-display">The <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Market</span></h2>
+                <p class="text-sm sm:text-base text-stone-500 dark:text-stone-400 mt-2 sm:mt-3 max-w-lg">Discover unique products from our community of master artisans</p>
             </div>
             <a href="/shop/marketplace" class="btn-ghost mt-4 md:mt-0">
                 View All Products
@@ -225,7 +225,7 @@
         </div>
         {% endif %}
 
-        <div class="text-center mt-12 reveal">
+        <div class="text-center mt-8 sm:mt-12 reveal">
             <a href="/shop/marketplace" class="btn-forge group text-base">
                 Browse Full Marketplace
                 <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
@@ -235,7 +235,7 @@
 </section>
 
 <!-- ===== CTA SECTION ===== -->
-<section class="relative bg-stone-900 text-white overflow-hidden py-24 md:py-32">
+<section class="relative bg-stone-900 text-white overflow-hidden py-16 sm:py-24 md:py-32">
     <div class="absolute inset-0 bg-gradient-to-br from-stone-800 via-stone-900 to-amber-950"></div>
     <div class="grain-overlay absolute inset-0"></div>
     
@@ -247,11 +247,11 @@
         <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 backdrop-blur-md rounded-full text-xs font-medium text-amber-300 border border-white/10 mb-8 reveal">
             Join the Collective
         </div>
-        <h2 class="text-4xl md:text-6xl font-black font-display leading-tight mb-6 reveal" style="animation-delay: 100ms;">
+        <h2 class="text-3xl sm:text-4xl md:text-6xl font-black font-display leading-tight mb-4 sm:mb-6 reveal" style="animation-delay: 100ms;">
             Become Part of<br>
-            <span class="font-handwriting text-5xl md:text-7xl text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500">Something Handcrafted</span>
+            <span class="font-handwriting text-4xl sm:text-5xl md:text-7xl text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500">Something Handcrafted</span>
         </h2>
-        <p class="text-lg text-stone-400 mb-12 max-w-2xl mx-auto leading-relaxed reveal" style="animation-delay: 200ms;">
+        <p class="text-sm sm:text-lg text-stone-400 mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed reveal" style="animation-delay: 200ms;">
             Whether you're a collector seeking the extraordinary or an artisan ready to share your craft with the world, there's a place for you at the forge.
         </p>
         <div class="flex flex-wrap justify-center gap-4 reveal" style="animation-delay: 300ms;">

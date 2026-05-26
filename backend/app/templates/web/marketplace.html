@@ -3,12 +3,12 @@
 {% block title %}Marketplace — ForgeStore{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 reveal">
         <div>
             <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Browse</span>
-            <h1 class="text-4xl md:text-5xl font-black text-stone-900 dark:text-stone-100 font-display">
+            <h1 class="text-2xl sm:text-3xl md:text-4xl xl:text-5xl font-black text-stone-900 dark:text-stone-100 font-display">
                 <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Market</span>place
             </h1>
             <p class="text-stone-500 dark:text-stone-400 mt-2">{{ products|length }} handcrafted piece(s) available</p>
@@ -17,7 +17,7 @@
 
     <!-- AI Search Assistant -->
     <div id="ai-search-section" class="mb-10 reveal">
-        <div class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-stone-800 dark:to-stone-900 rounded-2xl border border-amber-200 dark:border-stone-700 p-6">
+        <div class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-stone-800 dark:to-stone-900 rounded-2xl border border-amber-200 dark:border-stone-700 p-4 sm:p-6">
             <div class="flex items-center gap-2 mb-3">
                 <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
@@ -26,9 +26,9 @@
                 <span class="px-2 py-0.5 text-[10px] font-bold text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-900/30 rounded-full">BETA</span>
             </div>
             <p class="text-xs text-stone-500 dark:text-stone-400 mb-4">Ask naturally — "gift under 20k", "modern furniture", "best selling accessories"</p>
-            <div class="flex gap-2">
-                <input type="text" id="ai-search-input" placeholder="What are you looking for?" class="flex-1 px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">
-                <button onclick="aiSearch()" id="ai-search-btn" class="px-5 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-bold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer inline-flex items-center gap-2">
+            <div class="flex flex-col sm:flex-row gap-2">
+                <input type="text" id="ai-search-input" placeholder="What are you looking for?" class="flex-1 w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">
+                <button onclick="aiSearch()" id="ai-search-btn" class="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-bold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer inline-flex items-center justify-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     Search
                 </button>
@@ -38,9 +38,7 @@
                 <div id="ai-search-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
             </div>
         </div>
-    </div>
-
-    <div class="flex flex-col lg:flex-row gap-10">
+    </div>        <div class="flex flex-col lg:flex-row gap-6 lg:gap-10">
         <!-- Mobile filter toggle -->
         <div class="lg:hidden">
             <button id="filter-toggle" onclick="toggleFilters()" class="w-full flex items-center justify-between px-4 py-3 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-sm font-medium text-stone-700 dark:text-stone-300 shadow-sm hover:bg-stone-50 dark:hover:bg-stone-750 transition-all duration-200 cursor-pointer" aria-expanded="false">
@@ -52,8 +50,8 @@
             </button>
         </div>
         <!-- Filters sidebar -->
-        <aside id="filter-sidebar" class="w-full lg:w-56 flex-shrink-0 max-lg:hidden max-lg:space-y-4">
-            <div class="sticky top-28">
+        <aside id="filter-sidebar" class="w-full lg:w-56 flex-shrink-0 max-lg:hidden max-lg:space-y-3">
+            <div class="sticky top-28 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
                 <h3 class="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400 dark:text-stone-500 mb-5">Categories</h3>
                 <div class="flex flex-wrap lg:flex-col gap-2">
                     <a href="/shop/marketplace" class="inline-flex items-center px-4 py-2 text-sm rounded-xl transition-all duration-200 {% if not request.query_params.get('category') %}bg-stone-900 text-white font-semibold shadow-lg shadow-stone-900/20{% else %}glass text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-stone-200{% endif %}">
@@ -84,7 +82,7 @@
         <!-- Product grid -->
         <div class="flex-1">
             {% if products %}
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+            <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                 {% for p in products %}
                 <div class="card-product group reveal-scale relative" style="animation-delay: {{ (loop.index0 % 6) * 80 }}ms;">
                     <!-- Wishlist heart -->
@@ -109,11 +107,11 @@
                             <span class="absolute top-3 right-3 badge-blue">New</span>
                             {% endif %}
                         </div>
-                        <div class="p-3 sm:p-4">
-                            <h3 class="text-xs sm:text-sm font-semibold text-stone-900 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors line-clamp-1">{{ p.name }}</h3>
-                            <p class="text-xs text-stone-400 dark:text-stone-500 mt-0.5">{{ retailers.get(p.retailer_id, '') }}</p>
-                            <div class="flex items-center justify-between mt-1.5 sm:mt-2">
-                                <span class="text-sm font-bold text-stone-900 dark:text-stone-100 font-mono">{{ format_price(p.price, currency) }}</span>
+                        <div class="p-2.5 sm:p-3 md:p-4">
+                            <h3 class="text-[11px] sm:text-xs md:text-sm font-semibold text-stone-900 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors line-clamp-1">{{ p.name }}</h3>
+                            <p class="text-[10px] sm:text-xs text-stone-400 dark:text-stone-500 mt-0.5 truncate">{{ retailers.get(p.retailer_id, '') }}</p>
+                            <div class="flex items-center justify-between mt-1 sm:mt-2">
+                                <span class="text-xs sm:text-sm font-bold text-stone-900 dark:text-stone-100 font-mono">{{ format_price(p.price, currency) }}</span>
                                 {% if p.rating and p.rating > 0 %}
                                 <span class="text-xs text-stone-400 dark:text-stone-500 flex items-center gap-1">
                                     <svg class="w-3 h-3 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
@@ -124,7 +122,7 @@
                         </div>
                     </a>
                     <!-- Quick Add button -->
-                    <button onclick="quickAddToCart('{{ p.id }}', this)" class="absolute bottom-20 right-3 w-9 h-9 bg-white dark:bg-stone-800 rounded-full shadow-lg border border-stone-200 dark:border-stone-600 flex items-center justify-center text-amber-600 dark:text-amber-400 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all duration-200 md:opacity-0 md:group-hover:opacity-100 translate-y-2 md:group-hover:translate-y-0" aria-label="Quick add to cart" title="Add to Cart">
+                    <button onclick="quickAddToCart('{{ p.id }}', this)" class="absolute bottom-16 sm:bottom-20 right-2 sm:right-3 w-8 h-8 sm:w-9 sm:h-9 bg-white dark:bg-stone-800 rounded-full shadow-lg border border-stone-200 dark:border-stone-600 flex items-center justify-center text-amber-600 dark:text-amber-400 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all duration-200 md:opacity-0 md:group-hover:opacity-100 translate-y-2 md:group-hover:translate-y-0" aria-label="Quick add to cart" title="Add to Cart">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     </button>
                 </div>

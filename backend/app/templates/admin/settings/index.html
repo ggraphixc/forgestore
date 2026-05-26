@@ -6,7 +6,7 @@
 <div class="max-w-4xl mx-auto">
     <div class="flex items-center justify-between mb-8">
         <div>
-            <h1 class="text-2xl md:text-3xl font-heading font-bold text-stone-900">Settings</h1>
+            <h1 class="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-stone-900">Settings</h1>
             <p class="text-sm text-stone-500 mt-1">Manage all site configuration, organized by category</p>
         </div>
         <button onclick="saveAllSettings()" id="save-all-btn" class="px-5 py-2.5 bg-gradient-to-r from-stone-800 to-stone-900 text-white text-sm font-bold rounded-xl hover:from-stone-900 hover:to-stone-950 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer inline-flex items-center gap-2">
@@ -16,7 +16,7 @@
     </div>
 
     <!-- Category nav tabs -->
-    <div class="flex flex-wrap gap-2 mb-8 sticky top-20 bg-stone-50/90 backdrop-blur-sm py-3 -mx-4 px-4 rounded-2xl" style="z-index: var(--z-settings-tabs);">
+    <div class="flex flex-wrap gap-1.5 sm:gap-2 mb-8 sticky top-20 bg-stone-50/90 backdrop-blur-sm py-3 -mx-4 px-4 rounded-2xl overflow-x-auto" style="z-index: var(--z-settings-tabs);">
         {% set categories_info = {
             'global': {'icon': 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z', 'label': 'Global', 'color': 'bg-blue-100 text-blue-700'},
             'design': {'icon': 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01', 'label': 'Design', 'color': 'bg-purple-100 text-purple-700'},
@@ -27,7 +27,7 @@
             'other': {'icon': 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4', 'label': 'Other', 'color': 'bg-stone-100 text-stone-700'},
         } %}
         {% for cat_id, cat_info in categories_info.items() %}
-        <a href="#section-{{ cat_id }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg {{ cat_info.color }} hover:opacity-80 transition-opacity">
+        <a href="#section-{{ cat_id }}" class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-[10px] sm:text-xs font-semibold rounded-lg {{ cat_info.color }} hover:opacity-80 transition-opacity whitespace-nowrap">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ cat_info.icon }}"/></svg>
             {{ cat_info.label }}
         </a>
@@ -68,7 +68,7 @@
         <section id="section-{{ cat_id }}" class="scroll-mt-28 mb-8">
             <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden hover:shadow-sm transition-shadow">
                 <!-- Section header -->
-                <div class="flex items-center gap-3 px-6 py-5 border-b border-stone-100 bg-stone-50/50">
+                <div class="flex items-center gap-3 px-4 sm:px-6 py-4 sm:py-5 border-b border-stone-100 bg-stone-50/50">
                     <div class="w-9 h-9 rounded-xl bg-stone-100 flex items-center justify-center flex-shrink-0">
                         <svg class="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ category_icons[cat_id] }}"/></svg>
                     </div>
@@ -82,7 +82,7 @@
                 <!-- Settings fields -->
                 <div class="divide-y divide-stone-100">
                     {% for s in cat_settings %}
-                    <div class="px-6 py-5 hover:bg-stone-50/50 transition-colors {% if is_disabled %}opacity-60 pointer-events-none{% endif %}">
+                    <div class="px-4 sm:px-6 py-4 sm:py-5 hover:bg-stone-50/50 transition-colors {% if is_disabled %}opacity-60 pointer-events-none{% endif %}">
                         <div class="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
                             <div class="flex-1 min-w-0 w-full sm:w-auto">
                                 <label for="setting-{{ s.key }}" class="text-sm font-semibold text-stone-800">{{ s.label }}</label>
@@ -132,7 +132,7 @@
                 </div>
 
                 <!-- Section save button -->
-                <div class="px-6 py-3 bg-stone-50/50 border-t border-stone-100 flex justify-end">
+                <div class="px-4 sm:px-6 py-3 bg-stone-50/50 border-t border-stone-100 flex justify-end">
                     <button type="button" onclick="saveSection('{{ cat_id }}')" class="px-4 py-2 text-xs font-semibold text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 hover:text-stone-800 transition-all cursor-pointer">
                         Save {{ category_labels.get(cat_id, cat_id|title) }}
                     </button>

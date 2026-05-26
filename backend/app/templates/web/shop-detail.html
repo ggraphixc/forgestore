@@ -1,7 +1,7 @@
 {% extends "web/base.html" %}
 {% block title %}{{ retailer.name }} — ForgeStore{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
     <!-- Breadcrumb -->
     <nav class="flex items-center gap-2 text-sm text-stone-400 dark:text-stone-500 mb-8 reveal" aria-label="Breadcrumb">
         <a href="/shop" class="hover:text-stone-600 dark:hover:text-stone-300 transition-colors">Home</a>
@@ -14,12 +14,12 @@
     <!-- Shop Header -->
     <div class="relative mb-16 reveal">
         {% if retailer.banner_url %}
-        <div class="h-64 md:h-80 rounded-3xl overflow-hidden bg-stone-100 dark:bg-stone-800 shadow-inner relative">
+        <div class="h-48 sm:h-64 md:h-80 rounded-2xl sm:rounded-3xl overflow-hidden bg-stone-100 dark:bg-stone-800 shadow-inner relative">
             <img loading="lazy" src="{{ retailer.banner_url }}" alt="{{ retailer.name }} workshop" class="w-full h-full object-cover">
             <div class="absolute inset-0 bg-gradient-to-t from-stone-900/60 via-stone-900/20 to-transparent"></div>
         </div>
         {% else %}
-        <div class="h-48 md:h-64 rounded-3xl bg-gradient-to-br from-stone-900 via-stone-800 to-amber-900 relative overflow-hidden">
+        <div class="h-36 sm:h-48 md:h-64 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-stone-900 via-stone-800 to-amber-900 relative overflow-hidden">
             <div class="absolute inset-0 bg-grid opacity-10"></div>
             <div class="grain-overlay absolute inset-0"></div>
         </div>
@@ -36,7 +36,7 @@
                 {% endif %}
             </div>
             <div class="pb-1 min-w-0 flex-1">
-                <h1 class="text-3xl md:text-4xl font-black text-stone-900 dark:text-stone-100 font-display">{{ retailer.name }}</h1>
+                <h1 class="text-2xl sm:text-3xl md:text-4xl font-black text-stone-900 dark:text-stone-100 font-display">{{ retailer.name }}</h1>
                 <div class="flex items-center gap-4 mt-2 flex-wrap">
                     {% if retailer.rating and retailer.rating > 0 %}
                     <div class="flex items-center gap-1.5">
@@ -79,7 +79,7 @@
         </div>
 
         {% if products %}
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             {% for product in products %}
             <a href="/shop/products/{{ product.slug or product.id }}" class="card-product group reveal-scale" style="animation-delay: {{ (loop.index0 % 4) * 80 }}ms;">
                 <div class="aspect-square overflow-hidden bg-stone-50 dark:bg-stone-700">

@@ -3,18 +3,16 @@
 {% block body %}
 <!-- Navigation -->
 <header class="fixed top-0 inset-x-0" style="z-index: var(--z-header);">
-    <!-- Inline Search Overlay (phone/tablet, slides down) -->
-    <div id="search-overlay" class="hidden absolute top-full inset-x-0 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border-b border-stone-200 dark:border-stone-700 shadow-lg transition-all duration-200">
-        <div class="px-4 py-3">
-            <div class="flex items-center gap-3">
-                <div class="flex-1 flex items-center gap-3 px-4 py-2.5 bg-stone-100 dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 focus-within:border-amber-300 dark:focus-within:border-amber-700/50 focus-within:ring-2 focus-within:ring-amber-500/20 transition-all">
+    <!-- Inline Search Overlay (phone/tablet, slides down) -->        <div id="search-overlay" class="hidden absolute top-full inset-x-0 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border-b border-stone-200 dark:border-stone-700 shadow-lg transition-all duration-200">
+            <div class="px-3 sm:px-4 py-3">
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <div class="flex-1 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 bg-stone-100 dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 focus-within:border-amber-300 dark:focus-within:border-amber-700/50 focus-within:ring-2 focus-within:ring-amber-500/20 transition-all">
                     <svg class="w-5 h-5 flex-shrink-0 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
                     <input id="search-overlay-input" type="text" placeholder="Search products..." autocomplete="off" class="flex-1 bg-transparent text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none"/>
                     <kbd class="hidden sm:inline-flex px-1.5 py-0.5 text-[10px] font-mono text-stone-400 bg-stone-200 dark:bg-stone-700 rounded">esc</kbd>
-                </div>
-                <button id="search-overlay-close" class="p-2 text-stone-500 hover:text-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-all" aria-label="Close search">
+                </div>                    <button id="search-overlay-close" class="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-500 hover:text-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-all" aria-label="Close search">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -22,27 +20,27 @@
         </div>
     </div>
     <nav class="w-full">
-        <div class="relative glass-strong shadow-glass px-4 sm:px-6 lg:px-8">
+        <div class="relative glass-strong shadow-glass px-3 sm:px-5 md:px-6 lg:px-8">
             <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/15 to-transparent"></div>
-            <div class="flex items-center justify-between h-14 md:h-16 lg:h-18">
+            <div class="flex items-center justify-between h-14 md:h-16 lg:h-[72px]">
                 <!-- Logo -->
-                <a href="/shop" class="flex items-center gap-2 md:gap-3 group min-h-[44px]">
+                <a href="/shop" class="flex items-center gap-2 md:gap-3 group min-h-[44px] min-w-[44px]">
                     <div class="w-9 h-9 md:w-10 md:h-10 lg:w-11 lg:h-11 bg-gradient-to-br from-stone-900 to-stone-700 dark:from-amber-600 dark:to-amber-700 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-amber-500/20 transition-shadow duration-300 relative overflow-hidden flex-shrink-0">
                         <div class="absolute inset-0 bg-gradient-to-br from-amber-400/0 to-amber-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         <span class="text-white text-sm md:text-base lg:text-lg font-black tracking-tight relative z-10">FS</span>
                     </div>
-                    <div class="hidden md:block">
-                        <span class="text-sm md:text-base lg:text-lg font-bold text-stone-900 font-display dark:text-stone-100 truncate max-w-[140px] lg:max-w-none">{{ settings.site_name|default('ForgeStore') }}</span>
+                    <div class="hidden sm:block">
+                        <span class="text-sm md:text-base lg:text-lg font-bold text-stone-900 font-display dark:text-stone-100 truncate max-w-[120px] md:max-w-[200px] lg:max-w-none">{{ settings.site_name|default('ForgeStore') }}</span>
                         <span class="hidden lg:block text-[9px] lg:text-[10px] font-medium text-amber-600 uppercase tracking-[0.2em] -mt-0.5 dark:text-amber-400">{{ settings.site_tagline|default('Your One-Stop Marketplace') }}</span>
                     </div>
                 </a>
 
                 <!-- Desktop Nav (visible lg+) -->
                 <nav class="hidden lg:flex items-center gap-0.5 xl:gap-1">
-                    <a href="/shop" class="nav-link px-2.5 xl:px-3.5 py-2 text-xs xl:text-sm whitespace-nowrap {% if request.url.path == '/shop' %}active{% endif %}">Home</a>
-                    <a href="/shop/marketplace" class="nav-link px-2.5 xl:px-3.5 py-2 text-xs xl:text-sm whitespace-nowrap {% if request.url.path.startswith('/shop/marketplace') %}active{% endif %}">Marketplace</a>
-                    <a href="/shop/shops" class="nav-link px-2.5 xl:px-3.5 py-2 text-xs xl:text-sm whitespace-nowrap {% if request.url.path.startswith('/shop/shops') %}active{% endif %}">Artisans</a>
-                    <a href="/shop/wishlist" class="nav-link px-2.5 xl:px-3.5 py-2 text-xs xl:text-sm whitespace-nowrap {% if request.url.path.startswith('/shop/wishlist') %}active{% endif %}">Wishlist</a>
+                    <a href="/shop" class="nav-link px-2.5 xl:px-4 py-2 text-xs xl:text-sm whitespace-nowrap {% if request.url.path == '/shop' %}active{% endif %}">Home</a>
+                    <a href="/shop/marketplace" class="nav-link px-2.5 xl:px-4 py-2 text-xs xl:text-sm whitespace-nowrap {% if request.url.path.startswith('/shop/marketplace') %}active{% endif %}">Marketplace</a>
+                    <a href="/shop/shops" class="nav-link px-2.5 xl:px-4 py-2 text-xs xl:text-sm whitespace-nowrap {% if request.url.path.startswith('/shop/shops') %}active{% endif %}">Artisans</a>
+                    <a href="/shop/wishlist" class="nav-link px-2.5 xl:px-4 py-2 text-xs xl:text-sm whitespace-nowrap {% if request.url.path.startswith('/shop/wishlist') %}active{% endif %}">Wishlist</a>
                 </nav>
 
                 <!-- Desktop Inline Search (visible lg+) -->
@@ -81,8 +79,8 @@
                         </svg>
                     </a>
 
-                    <!-- Dark Mode Toggle -->
-                    <button id="theme-toggle" class="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 transition-colors duration-200 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 relative" aria-label="Toggle dark mode">
+                    <!-- Dark Mode Toggle (md+) -->
+                    <button id="theme-toggle" class="hidden md:flex p-2.5 min-w-[44px] min-h-[44px] items-center justify-center text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 transition-colors duration-200 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 relative" aria-label="Toggle dark mode">
                         <svg class="theme-toggle-icon sun w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
                         </svg>
@@ -111,7 +109,7 @@
 <!-- Backdrop -->
 <div id="mobile-backdrop" class="fixed inset-0 bg-stone-900/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-300 pointer-events-none" style="z-index: var(--z-mobile-backdrop);"></div>
 
-<div id="mobile-menu" class="fixed inset-y-0 right-0 w-80 max-w-[85vw] pointer-events-none bg-gradient-to-b from-white to-stone-50/90 dark:from-stone-900 dark:to-stone-950 shadow-2xl overflow-y-auto overscroll-contain translate-x-full transition-transform duration-300 ease-out" style="z-index: var(--z-mobile-menu); padding-bottom: env(safe-area-inset-bottom, 32px);">
+<div id="mobile-menu" class="fixed inset-y-0 right-0 w-80 max-w-[85vw] pointer-events-none bg-gradient-to-b from-white to-stone-50/90 dark:from-stone-900 dark:to-stone-950 shadow-2xl overflow-y-auto overscroll-contain translate-x-full transition-transform duration-300 ease-out" style="z-index: var(--z-mobile-menu); padding-bottom: env(safe-area-inset-bottom, 24px);">
     <!-- Close button -->
     <div class="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-white/80 dark:from-stone-900/80 backdrop-blur-md border-b border-stone-100 dark:border-stone-800 pointer-events-auto">
         <span class="text-xs font-bold text-stone-500 uppercase tracking-[0.15em]">Menu</span>
@@ -353,10 +351,10 @@ document.addEventListener('scroll', function() {
 </script>
 
 <!-- Spacer for fixed navbar -->
-<div class="h-14 md:h-16 lg:h-[4.5rem]"></div>
+<div class="h-14 md:h-16 lg:h-[72px]"></div>
 
 <!-- Main Content -->
-<main class="min-h-[60vh]">
+<main class="min-h-[60vh] max-w-full overflow-x-hidden">
     {% block content %}{% endblock %}
 </main>
 
@@ -367,9 +365,9 @@ document.addEventListener('scroll', function() {
     <!-- Decorative top gradient line -->
     <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent"></div>
 
-    <div class="relative px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+    <div class="relative px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
         <!-- Newsletter Section -->
-        <div class="mb-10 sm:mb-14 p-6 sm:p-8 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
+        <div class="mb-8 sm:mb-14 p-4 sm:p-6 md:p-8 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
             <div class="max-w-xl mx-auto text-center">
                 <h3 class="text-white text-sm font-bold uppercase tracking-[0.15em] mb-2">Stay in the Loop</h3>
                 <p class="text-stone-400 text-sm mb-5">Get exclusive artisan stories, new arrivals, and member-only offers.</p>
@@ -385,7 +383,7 @@ document.addEventListener('scroll', function() {
             </div>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 lg:gap-12">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-5 sm:gap-6 lg:gap-12">
             <!-- Brand -->
             <div class="col-span-2 md:col-span-1">
                 <div class="flex items-center gap-3 mb-4">

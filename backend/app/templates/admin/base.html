@@ -4,8 +4,8 @@
 
 {% block body %}
 <script>!function(){var e="sidebar-collapsed",t=localStorage.getItem(e)==="true";if(t&&window.innerWidth>=1024){var n=document.getElementById("sidebar");n&&n.classList.add("sidebar-collapsed")}}()</script>
-<div class="flex h-full min-h-screen bg-stone-50/50 overflow-x-hidden">
-    <aside id="sidebar" class="fixed lg:relative inset-y-0 left-0 w-80 max-w-[85vw] lg:w-64 bg-gradient-to-b from-white to-stone-50/80 dark:from-stone-900 dark:to-stone-950 border-r border-stone-200 dark:border-stone-800 transform -translate-x-full lg:translate-x-0 transition-all duration-300 ease-out flex flex-col shadow-2xl shadow-stone-900/15" style="z-index: var(--z-sidebar);">
+<div class="flex h-full min-h-screen bg-stone-50/50 overflow-x-clip">
+    <aside id="sidebar" class="fixed lg:relative inset-y-0 left-0 w-80 max-w-[85vw] lg:w-64 bg-gradient-to-b from-white to-stone-50/80 dark:from-stone-900 dark:to-stone-950 border-r border-stone-200 dark:border-stone-800 transform -translate-x-full lg:translate-x-0 transition-all duration-300 ease-out flex flex-col shadow-2xl shadow-stone-900/15 overflow-y-auto" style="z-index: var(--z-sidebar);">
         <!-- Premium header with gradient accent -->
         <div class="relative flex items-center gap-3 px-6 h-16 border-b border-stone-100 dark:border-stone-800 overflow-hidden sidebar-header">
             <div class="absolute inset-0 bg-gradient-to-r from-amber-50/30 to-transparent dark:from-amber-900/10"></div>
@@ -59,11 +59,10 @@
 
         <!-- Mobile close & Section label -->
         <div class="flex justify-between items-center mb-3 px-3">
-            <button id="sidebar-close" onclick="closeSidebar()" class="p-2 text-stone-500 hover:text-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg lg:hidden transition-all duration-150" aria-label="Close sidebar">
+            <button id="sidebar-close" onclick="closeSidebar()" class="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-500 hover:text-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg lg:hidden transition-all duration-150" aria-label="Close sidebar">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
             <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 sidebar-nav-label">Navigation</span>
-            <!-- Spacer to balance flex justify-between on desktop -->
             <span class="hidden lg:block w-8"></span>
         </div>
         <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto scrollbar-thin">
@@ -186,11 +185,11 @@
     </button>
     <div id="sidebar-backdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden lg:hidden opacity-0 transition-opacity duration-300 ease-out" style="z-index: var(--z-sidebar-backdrop);"></div>
     <div class="flex-1 flex flex-col min-w-0">
-        <header class="sticky top-0 bg-white/90 dark:bg-stone-900/90 backdrop-blur-xl border-b border-stone-200 dark:border-stone-800 shadow-sm lg:hidden" style="z-index: var(--z-sticky-header);">
+        <header class="sticky top-0 bg-white/90 dark:bg-stone-900/90 backdrop-blur-xl border-b border-stone-200 dark:border-stone-800 shadow-sm lg:hidden safe-top" style="z-index: var(--z-sticky-header);">
             <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-amber-500/0 via-amber-500/20 to-amber-500/0"></div>
             <div class="flex items-center justify-between px-3 h-14">
                 <div class="flex items-center gap-2">
-                    <button id="sidebar-toggle" onclick="toggleSidebar(event)" class="p-2.5 min-w-[44px] min-h-[44px] -ml-2 text-stone-500 hover:text-amber-600 transition-all rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center justify-center" aria-label="Toggle sidebar" aria-expanded="false">
+                    <button id="sidebar-toggle" onclick="toggleSidebar(event)" class="p-2.5 min-w-[44px] min-h-[44px] -ml-1 sm:-ml-2 text-stone-500 hover:text-amber-600 transition-all rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center justify-center" aria-label="Toggle sidebar" aria-expanded="false">
                         <svg id="sidebar-toggle-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
                         <svg id="sidebar-toggle-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
@@ -205,23 +204,26 @@
                 </div>
                 <div class="flex items-center gap-1.5">
                     <!-- Notifications quick link -->
-                    <a href="/admin/notifications" class="relative p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-500 hover:text-amber-600 transition-all rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/20" aria-label="Notifications">
+                    <a href="/admin/notifications" class="relative p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-500 hover:text-amber-600 transition-all rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/20" aria-label="Notifications">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                         <span id="mobile-notif-badge" class="absolute top-1 right-1 min-w-[16px] h-[16px] px-0.5 rounded-full text-[8px] font-bold bg-amber-500 text-white hidden flex items-center justify-center ring-2 ring-white"></span>
                     </a>
-                    <!-- Avatar -->
-                    <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold ring-2 ring-offset-1 ring-offset-white dark:ring-offset-stone-900 flex-shrink-0 shadow-sm cursor-pointer transition-transform hover:scale-105
-                        {% if admin.role.value == 'DIR_ADMIN' %}bg-purple-600 ring-purple-400/30
-                        {% elif admin.role.value == 'MANAGEMENT' %}bg-blue-600 ring-blue-400/30
-                        {% elif admin.role.value == 'TECH_ADMIN' %}bg-cyan-600 ring-cyan-400/30
-                        {% elif admin.role.value == 'RETAILER' %}bg-amber-600 ring-amber-400/30
-                        {% else %}bg-emerald-600 ring-emerald-400/30{% endif %}">
-                        {{ admin.name[0]|upper if admin and admin.name else "A" }}
-                    </div>
+                    <!-- Avatar touch target -->
+                    <a href="/admin/me" class="block">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold ring-2 ring-offset-1 ring-offset-white dark:ring-offset-stone-900 flex-shrink-0 shadow-sm transition-transform hover:scale-105 active:scale-95
+                            {% if admin.role.value == 'DIR_ADMIN' %}bg-purple-600 ring-purple-400/30
+                            {% elif admin.role.value == 'MANAGEMENT' %}bg-blue-600 ring-blue-400/30
+                            {% elif admin.role.value == 'TECH_ADMIN' %}bg-cyan-600 ring-cyan-400/30
+                            {% elif admin.role.value == 'RETAILER' %}bg-amber-600 ring-amber-400/30
+                            {% else %}bg-emerald-600 ring-emerald-400/30{% endif %}">
+                            {{ admin.name[0]|upper if admin and admin.name else "A" }}
+                        </div>
+                    </a>
                 </div>
             </div>
         </header>
-        <main class="flex-1 p-4 md:p-6 lg:p-8">
+        <!-- Main content: responsive padding that adjusts for sidebar state -->
+        <main class="flex-1 p-3 sm:p-5 md:p-6 lg:p-8 xl:p-10 max-w-full overflow-x-hidden">
             {% block content %}{% endblock %}
         </main>
     </div>

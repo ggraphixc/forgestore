@@ -1,10 +1,10 @@
 {% extends "web/base.html" %}
 {% block title %}Shopping Cart — ForgeStore{% endblock %}
 {% block content %}
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
     <div class="reveal">
         <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Review</span>
-        <h1 class="text-3xl md:text-4xl font-display font-black text-stone-900 dark:text-stone-100">Shopping <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Cart</span></h1>
+        <h1 class="text-2xl sm:text-3xl md:text-4xl font-display font-black text-stone-900 dark:text-stone-100">Shopping <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Cart</span></h1>
     </div>
 
     <div id="cart-content" class="mt-8">
@@ -80,20 +80,20 @@ function renderCart(data) {
     });
 
     document.getElementById('cart-content').innerHTML = `
-        <div class="bg-white rounded-2xl border border-stone-200 p-6 mb-6 shadow-sm">
+        <div class="bg-white rounded-2xl border border-stone-200 p-4 sm:p-6 mb-6 shadow-sm">
             <div class="flex items-center justify-between mb-4">
                 <p class="text-sm font-bold text-stone-900 uppercase tracking-wider">${data.items.length} ${data.items.length === 1 ? 'item' : 'items'}</p>
                 <button onclick="clearCart()" class="text-xs text-stone-400 hover:text-red-500 transition-colors duration-200">Clear all</button>
             </div>
             ${itemsHtml}
         </div>
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-br from-stone-50 to-amber-50/30 rounded-2xl border border-stone-200 p-6 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-br from-stone-50 to-amber-50/30 rounded-2xl border border-stone-200 p-5 sm:p-6 shadow-sm">
             <div class="text-center sm:text-left">
                 <p class="text-xs text-stone-400 uppercase tracking-wider font-medium">Total</p>
-                <p class="text-3xl font-bold text-stone-900 mt-1">${formatCurrency(data.total)}</p>
+                <p class="text-2xl sm:text-3xl font-bold text-stone-900 mt-1">${formatCurrency(data.total)}</p>
                 <p class="text-xs text-stone-400 mt-1">Free shipping on orders over ₦50,000</p>
             </div>
-            <a href="/shop/checkout" class="w-full sm:w-auto px-6 py-3.5 text-sm font-bold text-white bg-stone-900 hover:bg-stone-800 rounded-xl transition-all duration-200 active:scale-[0.98] shadow-lg shadow-stone-900/10 text-center">
+            <a href="/shop/checkout" class="w-full sm:w-auto px-5 sm:px-6 py-3.5 text-sm font-bold text-white bg-stone-900 hover:bg-stone-800 rounded-xl transition-all duration-200 active:scale-[0.98] shadow-lg shadow-stone-900/10 text-center">
                 Proceed to Checkout
                 <svg class="w-4 h-4 inline ml-1.5 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
             </a>
