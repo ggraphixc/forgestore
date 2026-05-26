@@ -175,7 +175,7 @@
         </div>
     </aside>
     <!-- External expand button (outside sidebar, visible lg+ when collapsed) -->
-    <button id="sidebar-expand-button" class="hidden lg:hidden fixed top-1/2 -translate-y-1/2 z-50 w-7 h-14 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-r-lg shadow-lg hover:shadow-xl hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all duration-200 flex items-center justify-center cursor-pointer group" aria-label="Expand sidebar" style="left: 72px;">
+    <button id="sidebar-expand-button" class="hidden lg:hidden fixed top-1/2 -translate-y-1/2 z-50 w-7 h-14 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-r-lg shadow-lg hover:shadow-xl hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all duration-200 flex items-center justify-center cursor-pointer group" aria-label="Expand sidebar" title="Expand sidebar" style="left: 72px;">
         <svg class="w-4 h-4 text-stone-400 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
         </svg>
@@ -270,6 +270,18 @@ document.addEventListener('DOMContentLoaded', function() {
 setInterval(fetchUnreadCount, 120000);
 </script>
 <script>
+// ===== Password visibility toggle =====
+function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input || !btn) return;
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    btn.querySelector('.eye-open')?.classList.toggle('hidden');
+    btn.querySelector('.eye-closed')?.classList.toggle('hidden');
+    btn.style.transform = 'scale(0.9)';
+    setTimeout(() => btn.style.transform = '', 150);
+}
+
 // Sidebar collapse toggle for desktop view
 let sidebarCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
 
@@ -445,6 +457,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Apply saved collapse state on load
     applyCollapseState();
+    
+    // Re-apply collapse state on window resize (handles mobile ↔ desktop transition)
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(applyCollapseState, 150);
+    });
     
     // Sync mobile notification badge after page load
     function syncMobileNotifBadge() {

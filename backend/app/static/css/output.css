@@ -2654,6 +2654,10 @@ body {
   resize: vertical;
 }
 
+.resize {
+  resize: both;
+}
+
 .scroll-mt-28 {
   scroll-margin-top: 7rem;
 }
@@ -3887,6 +3891,10 @@ body {
 
 .pl-9 {
   padding-left: 2.25rem;
+}
+
+.pr-11 {
+  padding-right: 2.75rem;
 }
 
 .pr-7 {
