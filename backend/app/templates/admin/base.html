@@ -26,9 +26,9 @@
             <span class="absolute top-3 right-6 w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse sidebar-accent-dot"></span>
         </div>
         
-        <!-- Admin Profile Card -->
-        <div class="relative mx-3 mt-3 mb-2 rounded-xl bg-gradient-to-br from-stone-50 to-stone-100/50 dark:from-stone-800 dark:to-stone-800/50 border border-stone-200 dark:border-stone-700 p-3.5 overflow-hidden">
-            <div class="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+        <!-- Admin Profile Card (clickable → /admin/me) -->
+        <a href="/admin/me" class="relative mx-3 mt-3 mb-2 rounded-xl bg-gradient-to-br from-stone-50 to-stone-100/50 dark:from-stone-800 dark:to-stone-800/50 border border-stone-200 dark:border-stone-700 p-3.5 overflow-hidden hover:shadow-md hover:border-amber-200 dark:hover:border-amber-700 transition-all duration-200 cursor-pointer group block">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-amber-500/10 transition-colors duration-200"></div>
             <div class="flex items-center gap-3 relative">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ring-2 ring-offset-1 ring-offset-white dark:ring-offset-stone-900 shadow-sm
                     {% if admin.role.value == 'DIR_ADMIN' %}bg-purple-600 ring-purple-400/30
@@ -50,8 +50,12 @@
                         {{ admin.role.value }}
                     </span>
                 </div>
+                <!-- Chevron indicator -->
+                <svg class="w-4 h-4 text-stone-300 group-hover:text-amber-500 transition-colors duration-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
             </div>
-        </div>
+        </a>
 
         <!-- Mobile close & Section label -->
         <div class="flex justify-between items-center mb-3 px-3">

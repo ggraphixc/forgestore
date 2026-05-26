@@ -694,6 +694,31 @@ def notifications_page(request: Request, db: Session = Depends(get_db)):
 
 
 # --- Logout ---
+# --- Profile / Me ---
+@router.get("/me", response_class=HTMLResponse)
+def admin_profile(request: Request, db: Session = Depends(get_db)):
+    admin = get_current_user_from_cookie(request, db)
+    if not admin:
+        return RedirectResponse(url="/admin/login", status_code=302)
+
+    # Compute additional context
+    product_count = db.query(func.count(Product.id)).filter(
+        Product.retailer_id == admin.vendor_id
+    ).scalar() if admin.vendor_id else 0
+
+    from datetime import datetime as dt
+    days_active = (dt.utcnow() - admin.created_at).days if admin.created_at else 0
+
+    return render_template("admin/me.html", {
+        "request": request,
+        "admin": admin,
+        "product_count": product_count,
+        "days_active": days_active,
+        "get_role_badge": get_role_badge,
+        "has_permission": has_permission,
+    })
+
+
 @router.get("/logout")
 def admin_logout():
     resp = RedirectResponse(url="/admin/login", status_code=302)

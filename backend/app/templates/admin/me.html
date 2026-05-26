@@ -1,0 +1,220 @@
+{% extends "admin/base.html" %}
+
+{% block title %}My Profile &mdash; ForgeStore Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 mb-2 block">Account</span>
+        <h1 class="text-3xl md:text-4xl font-display font-black text-stone-900">My <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Profile</span></h1>
+        <p class="text-sm text-stone-500 mt-2">Your admin account details and permissions</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column: Avatar & Role Card -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+                <!-- Gradient header strip -->
+                <div class="h-20 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.3)_0%,transparent_60%)]"></div>
+                    <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
+                </div>
+
+                <!-- Avatar -->
+                <div class="px-6 pb-6 -mt-12 relative">
+                    <div class="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl font-bold ring-4 ring-white shadow-lg mx-auto
+                        {% if admin.role.value == 'DIR_ADMIN' %}bg-purple-600 ring-purple-100
+                        {% elif admin.role.value == 'MANAGEMENT' %}bg-blue-600 ring-blue-100
+                        {% elif admin.role.value == 'TECH_ADMIN' %}bg-cyan-600 ring-cyan-100
+                        {% elif admin.role.value == 'RETAILER' %}bg-amber-600 ring-amber-100
+                        {% else %}bg-emerald-600 ring-emerald-100{% endif %}">
+                        {{ admin.name[0]|upper if admin and admin.name else "A" }}
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <h2 class="text-lg font-bold text-stone-900">{{ admin.name if admin.name else "Admin" }}</h2>
+                        <p class="text-sm text-stone-500">{{ admin.email }}</p>
+                    </div>
+
+                    <!-- Role badge -->
+                    <div class="mt-4 flex justify-center">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border
+                            {% if admin.role.value == 'DIR_ADMIN' %}bg-purple-50 text-purple-700 border-purple-200
+                            {% elif admin.role.value == 'MANAGEMENT' %}bg-blue-50 text-blue-700 border-blue-200
+                            {% elif admin.role.value == 'TECH_ADMIN' %}bg-cyan-50 text-cyan-700 border-cyan-200
+                            {% elif admin.role.value == 'RETAILER' %}bg-amber-50 text-amber-700 border-amber-200
+                            {% else %}bg-emerald-50 text-emerald-700 border-emerald-200{% endif %}">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                            {{ admin.role.value }}
+                        </span>
+                    </div>
+
+                    <!-- Account age -->
+                    <div class="mt-4 pt-4 border-t border-stone-100">
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-stone-500">Account age</span>
+                            <span class="font-medium text-stone-900">
+                                {% if days_active < 1 %}Today
+                                {% elif days_active == 1 %}1 day
+                                {% elif days_active < 30 %}{{ days_active }} days
+                                {% elif days_active < 365 %}{{ (days_active / 30)|round(0)|int }} months
+                                {% else %}{{ (days_active / 365)|round(1) }} years{% endif %}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm mt-2">
+                            <span class="text-stone-500">Member since</span>
+                            <span class="font-medium text-stone-900">{{ admin.created_at.strftime('%b %d, %Y') if admin.created_at else 'N/A' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats Card -->
+            <div class="mt-4 bg-white rounded-2xl border border-stone-200 p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <h3 class="text-xs font-bold uppercase tracking-[0.15em] text-stone-400 mb-3">Quick Stats</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-sm text-stone-600">
+                            <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                            <span>Products</span>
+                        </div>
+                        <span class="font-semibold text-stone-900">{{ product_count }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-sm text-stone-600">
+                            <svg class="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                            <span>Orders managed</span>
+                        </div>
+                        <span class="font-semibold text-stone-900">&mdash;</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Details -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Account Details Card -->
+            <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div class="px-6 py-4 border-b border-stone-100 flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-stone-900 uppercase tracking-wider">Account Details</h2>
+                    <svg class="w-5 h-5 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                </div>
+                <div class="px-6 py-4 divide-y divide-stone-50">
+                    <div class="flex items-center justify-between py-3">
+                        <div>
+                            <p class="text-sm font-medium text-stone-900">Admin ID</p>
+                            <p class="text-xs text-stone-400">Internal identifier</p>
+                        </div>
+                        <code class="text-xs font-mono bg-stone-50 text-stone-600 px-2.5 py-1 rounded-lg border border-stone-100">{{ admin.id[:8] }}...</code>
+                    </div>
+                    <div class="flex items-center justify-between py-3">
+                        <div>
+                            <p class="text-sm font-medium text-stone-900">Full Name</p>
+                            <p class="text-xs text-stone-400">Display name shown across admin</p>
+                        </div>
+                        <span class="text-sm font-medium text-stone-900">{{ admin.name if admin.name else "—" }}</span>
+                    </div>
+                    <div class="flex items-center justify-between py-3">
+                        <div>
+                            <p class="text-sm font-medium text-stone-900">Email Address</p>
+                            <p class="text-xs text-stone-400">Used for login & notifications</p>
+                        </div>
+                        <span class="text-sm font-medium text-stone-900">{{ admin.email }}</span>
+                    </div>
+                    <div class="flex items-center justify-between py-3">
+                        <div>
+                            <p class="text-sm font-medium text-stone-900">Role</p>
+                            <p class="text-xs text-stone-400">Permission level & access scope</p>
+                        </div>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border
+                            {% if admin.role.value == 'DIR_ADMIN' %}bg-purple-50 text-purple-700 border-purple-200
+                            {% elif admin.role.value == 'MANAGEMENT' %}bg-blue-50 text-blue-700 border-blue-200
+                            {% elif admin.role.value == 'TECH_ADMIN' %}bg-cyan-50 text-cyan-700 border-cyan-200
+                            {% elif admin.role.value == 'RETAILER' %}bg-amber-50 text-amber-700 border-amber-200
+                            {% else %}bg-emerald-50 text-emerald-700 border-emerald-200{% endif %}">
+                            {{ admin.role.value }}
+                        </span>
+                    </div>
+                    {% if admin.vendor_id %}
+                    <div class="flex items-center justify-between py-3">
+                        <div>
+                            <p class="text-sm font-medium text-stone-900">Vendor ID</p>
+                            <p class="text-xs text-stone-400">Linked retailer/vendor reference</p>
+                        </div>
+                        <code class="text-xs font-mono bg-stone-50 text-stone-600 px-2.5 py-1 rounded-lg border border-stone-100">{{ admin.vendor_id[:8] }}...</code>
+                    </div>
+                    {% endif %}
+                    <div class="flex items-center justify-between py-3">
+                        <div>
+                            <p class="text-sm font-medium text-stone-900">Created</p>
+                            <p class="text-xs text-stone-400">Account creation date</p>
+                        </div>
+                        <span class="text-sm text-stone-600">{{ admin.created_at.strftime('%B %d, %Y at %I:%M %p') if admin.created_at else 'N/A' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Permissions Card -->
+            <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div class="px-6 py-4 border-b border-stone-100 flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-stone-900 uppercase tracking-wider">Permissions</h2>
+                    <svg class="w-5 h-5 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                </div>
+                <div class="px-6 py-4">
+                    <p class="text-sm text-stone-600 mb-4">
+                        Based on the <span class="font-semibold text-stone-900">{{ admin.role.value }}</span> role, you have access to:
+                    </p>
+                    <div class="grid grid-cols-2 gap-2">
+                        {% set perm_labels = {
+                            'dashboard': 'Dashboard', 'catalog': 'Catalog', 'categories': 'Categories',
+                            'retailers': 'Retailers', 'orders': 'Orders', 'customers': 'Customers',
+                            'settings': 'Settings', 'admin_users': 'Admin Users'
+                        } %}
+                        {% for perm, label in perm_labels.items() %}
+                        {% set allowed = has_permission(admin, perm) if has_permission is defined else True %}
+                        <div class="flex items-center gap-2 px-3 py-2 rounded-lg {% if allowed %}bg-emerald-50 text-emerald-700{% else %}bg-stone-50 text-stone-400{% endif %}">
+                            {% if allowed %}
+                            <svg class="w-4 h-4 flex-shrink-0 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            {% else %}
+                            <svg class="w-4 h-4 flex-shrink-0 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            {% endif %}
+                            <span class="text-xs font-medium">{{ label }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <h2 class="text-sm font-bold text-stone-900 uppercase tracking-wider mb-4">Quick Actions</h2>
+                <div class="flex flex-wrap gap-3">
+                    <a href="/admin/settings" class="inline-flex items-center gap-2 px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-sm font-medium transition-all duration-150 hover:-translate-y-0.5 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        Settings
+                    </a>
+                    <a href="/admin/admin-users" class="inline-flex items-center gap-2 px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-sm font-medium transition-all duration-150 hover:-translate-y-0.5 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/></svg>
+                        Manage Team
+                    </a>
+                    <a href="/admin/dashboard" class="inline-flex items-center gap-2 px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-sm font-medium transition-all duration-150 hover:-translate-y-0.5 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 001 1h3m1-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                        Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
