@@ -10,7 +10,7 @@ from typing import Optional, List, Union
 
 from jose import JWTError, jwt
 import bcrypt as _bcrypt
-from fastapi import Depends, HTTPException, status, Request
+from fastapi import Depends, HTTPException, status, Request, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
