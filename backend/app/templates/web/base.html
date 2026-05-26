@@ -109,8 +109,9 @@
 
 <!-- ===== MOBILE MENU (premium bottom slide panel) ===== -->
 <!-- Backdrop -->
-<div id="mobile-backdrop" class="fixed inset-0 bg-stone-900/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-300 pointer-events-none" style="z-index: var(--z-mobile-backdrop);">
-    <div id="mobile-menu" class="fixed bottom-0 left-0 right-0 bg-gradient-to-b from-white to-stone-50/90 dark:from-stone-900 dark:to-stone-950 shadow-2xl transform translate-y-full transition-transform duration-300 ease-out overflow-y-auto overscroll-contain" style="height: 100vh; height: 100dvh; z-index: var(--z-mobile-menu); padding-bottom: env(safe-area-inset-bottom, 32px);">
+<div id="mobile-backdrop" class="fixed inset-0 bg-stone-900/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-300 pointer-events-none" style="z-index: var(--z-mobile-backdrop);"></div>
+
+<div id="mobile-menu" class="fixed bottom-0 left-0 right-0 bg-gradient-to-b from-white to-stone-50/90 dark:from-stone-900 dark:to-stone-950 shadow-2xl transform translate-y-full transition-transform duration-300 ease-out overflow-y-auto overscroll-contain" style="height: 100vh; height: 100dvh; z-index: var(--z-mobile-menu); padding-bottom: env(safe-area-inset-bottom, 32px);">
     <!-- Drag handle -->
     <div class="sticky top-0 bg-white/90 dark:bg-stone-900/90 backdrop-blur-md z-20 flex justify-center pt-3 pb-2 border-b border-stone-100/80 dark:border-stone-800/80">
         <div class="w-12 h-1.5 rounded-full bg-stone-300 dark:bg-stone-600"></div>
@@ -319,7 +320,6 @@
             </div>
         </div>
     </div>
-</div>
 </div>
 
 <!-- Bottom slide panel (full-screen, premium e-commerce design) -->
@@ -601,6 +601,8 @@ function openMobileMenu() {
 
     menu.classList.remove('translate-y-full');
     backdrop.classList.remove('hidden', 'pointer-events-none');
+    // Force reflow so browser registers opacity-0 before transitioning to opacity-100
+    void backdrop.offsetHeight;
     backdrop.classList.add('opacity-100');
     document.body.classList.add('overflow-hidden');
     // Close search overlay if open
@@ -632,6 +634,8 @@ function closeMobileMenu() {
     backdrop.classList.add('opacity-0');
     setTimeout(() => {
         backdrop.classList.add('hidden', 'pointer-events-none');
+        // Clean up inline styles set by swipe handler
+        backdrop.style.opacity = '';
         document.body.classList.remove('overflow-hidden');
     }, 300);
 
