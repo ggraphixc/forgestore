@@ -1683,6 +1683,10 @@ body {
   pointer-events: none;
 }
 
+.pointer-events-auto {
+  pointer-events: auto;
+}
+
 .visible {
   visibility: visible;
 }
@@ -1957,6 +1961,10 @@ body {
 
 .-ml-2 {
   margin-left: -0.5rem;
+}
+
+.-mr-1 {
+  margin-right: -0.25rem;
 }
 
 .-mt-0\.5 {
@@ -5538,6 +5546,12 @@ body {
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 
+.dark\:from-stone-900\/80:is(.dark *) {
+  --tw-gradient-from: rgb(28 25 23 / 0.8) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(28 25 23 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
 .dark\:from-stone-950:is(.dark *) {
   --tw-gradient-from: #0c0a09 var(--tw-gradient-from-position);
   --tw-gradient-to: rgb(12 10 9 / 0) var(--tw-gradient-to-position);
@@ -5734,6 +5748,11 @@ body {
 .dark\:hover\:text-amber-400:hover:is(.dark *) {
   --tw-text-opacity: 1;
   color: rgb(251 191 36 / var(--tw-text-opacity, 1));
+}
+
+.dark\:hover\:text-stone-100:hover:is(.dark *) {
+  --tw-text-opacity: 1;
+  color: rgb(245 245 244 / var(--tw-text-opacity, 1));
 }
 
 .dark\:hover\:text-stone-200:hover:is(.dark *) {

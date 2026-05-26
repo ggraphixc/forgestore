@@ -146,13 +146,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 4000);
     });
 
-    // Mobile sidebar toggle (admin)
-    const sidebarToggle = document.getElementById('sidebar-toggle');
-    const sidebar = document.getElementById('sidebar');
-    if (sidebarToggle && sidebar) {
-        sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('-translate-x-full');
-            document.getElementById('sidebar-backdrop')?.classList.toggle('hidden');
-        });
-    }
+    // Mobile sidebar toggle is handled by inline onclick in admin/base.html
 });

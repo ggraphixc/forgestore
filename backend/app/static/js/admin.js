@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// ---- SIDEBAR ACTIVE STATE & MOBILE TOGGLE ----
+// ---- SIDEBAR ACTIVE STATE ----
 document.addEventListener('DOMContentLoaded', () => {
     // Set active sidebar link
     const currentPath = window.location.pathname;
@@ -79,90 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
-
-    // Mobile sidebar toggle
-    const sidebarToggle = document.getElementById('sidebar-toggle');
-    const sidebar = document.getElementById('sidebar');
-    const sidebarBackdrop = document.getElementById('sidebar-backdrop');
-
-    if (sidebarToggle && sidebar && sidebarBackdrop) {
-        const toggleSidebar = () => {
-            const isOpen = !sidebar.classList.contains('-translate-x-full');
-            sidebar.classList.toggle('-translate-x-full');
-            sidebarBackdrop.classList.toggle('hidden');
-            sidebarToggle.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
-        };
-
-        sidebarToggle.addEventListener('click', toggleSidebar);
-
-        // Close sidebar when clicking backdrop
-        sidebarBackdrop.addEventListener('click', () => {
-            sidebar.classList.add('-translate-x-full');
-            sidebarBackdrop.classList.add('hidden');
-            sidebarToggle.setAttribute('aria-expanded', 'false');
-        });
-
-        // Close sidebar when clicking a link
-        sidebar.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                sidebar.classList.add('-translate-x-full');
-                sidebarBackdrop.classList.add('hidden');
-                sidebarToggle.setAttribute('aria-expanded', 'false');
-            });
-        });
-
-        // Close sidebar with Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && !sidebar.classList.contains('-translate-x-full')) {
-                toggleSidebar();
-            }
-        });
-
-        // Touch swipe-left to close sidebar
-        let touchStartX = 0;
-        let touchStartTime = 0;
-        let isDraggingSidebar = false;
-
-        sidebar.addEventListener('touchstart', (e) => {
-            if (sidebar.classList.contains('-translate-x-full')) return;
-            touchStartX = e.touches[0].clientX;
-            touchStartTime = Date.now();
-            isDraggingSidebar = true;
-            sidebar.style.transition = 'none';
-        }, { passive: true });
-
-        sidebar.addEventListener('touchmove', (e) => {
-            if (!isDraggingSidebar) return;
-            const currentX = e.touches[0].clientX;
-            const deltaX = currentX - touchStartX;
-            if (deltaX < 0) { // Only translate when dragging left
-                sidebar.style.transform = `translateX(${deltaX}px)`;
-                if (sidebarBackdrop) {
-                    const opacity = Math.max(0, 1 - (Math.abs(deltaX) / 280));
-                    sidebarBackdrop.style.opacity = opacity;
-                }
-            }
-        }, { passive: true });
-
-        sidebar.addEventListener('touchend', (e) => {
-            if (!isDraggingSidebar) return;
-            isDraggingSidebar = false;
-            sidebar.style.transition = '';
-            sidebar.style.transform = '';
-            if (sidebarBackdrop) {
-                sidebarBackdrop.style.opacity = '';
-            }
-
-            const endX = e.changedTouches[0].clientX;
-            const deltaX = endX - touchStartX;
-            const elapsed = Date.now() - touchStartTime;
-            const velocity = Math.abs(deltaX) / elapsed;
-
-            if (deltaX < -80 || (velocity > 0.5 && deltaX < -20)) {
-                sidebar.classList.add('-translate-x-full');
-                sidebarBackdrop.classList.add('hidden');
-                sidebarToggle.setAttribute('aria-expanded', 'false');
-            }
-        }, { passive: true });
-    }
 });
+
+// ---- MOBILE SIDEBAR TOGGLE (handled by inline onclick on the button) ----
+// Sidebar toggle, backdrop click, link close, escape key, and swipe gestures
+// are managed by the inline script in admin/base.html via:
+//   - onclick="toggleSidebar(event)" on #sidebar-toggle
+//   - onclick="closeSidebar()" on #sidebar-close
+//   - addEventListener in the template's DOMContentLoaded handler

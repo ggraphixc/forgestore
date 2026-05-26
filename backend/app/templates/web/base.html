@@ -111,8 +111,19 @@
 <!-- Backdrop -->
 <div id="mobile-backdrop" class="fixed inset-0 bg-stone-900/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-300 pointer-events-none" style="z-index: var(--z-mobile-backdrop);"></div>
 
-<div id="mobile-menu" class="hidden fixed inset-0 bg-gradient-to-b from-white to-stone-50/90 dark:from-stone-900 dark:to-stone-950 shadow-2xl overflow-y-auto overscroll-contain" style="z-index: var(--z-mobile-menu); padding-bottom: env(safe-area-inset-bottom, 32px);">
-
+<div id="mobile-menu" class="hidden fixed inset-0 pointer-events-none bg-gradient-to-b from-white to-stone-50/90 dark:from-stone-900 dark:to-stone-950 shadow-2xl overflow-y-auto overscroll-contain" style="z-index: var(--z-mobile-menu); padding-bottom: env(safe-area-inset-bottom, 32px);">
+    <!-- Close button -->
+    <div class="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-white/80 dark:from-stone-900/80 backdrop-blur-md border-b border-stone-100 dark:border-stone-800 pointer-events-auto">
+        <span class="text-xs font-bold text-stone-500 uppercase tracking-[0.15em]">Menu</span>
+        <button onclick="closeMobileMenu()" class="p-2 -mr-1 text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-all duration-200" aria-label="Close menu">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    </div>
+    <!-- Content wrapper with click-through disabled so backdrop can be clicked -->
+    <div class="pointer-events-auto">
+    
     <!-- Account Section -->
     <div class="mx-4 mb-4 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-stone-800 dark:to-stone-800/50 border border-amber-200/50 dark:border-stone-700 overflow-hidden shadow-sm">
         {% if user %}
@@ -316,6 +327,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <!-- ===== Back to Top Button ===== -->
@@ -625,7 +637,6 @@ function closeMobileMenu() {
     menu.classList.add('hidden');
     backdrop.classList.remove('opacity-100');
     backdrop.classList.add('opacity-0', 'pointer-events-none');
-    backdrop.style.opacity = '';
     document.body.classList.remove('overflow-hidden');
 
     const iconOpen = document.getElementById('menu-icon-open');
@@ -649,10 +660,8 @@ function toggleMobileMenu(event) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Mobile menu toggle — handled by onclick on the button element.
-    // JS listener is not added to prevent double-fire. If CSP blocks
-    // inline onclick, the fallback can be enabled by removing the onclick
-    // attribute and relying on this binding instead.
+    // Backdrop click and menu link clicks are bound via JS;
+    // the main toggle uses onclick="toggleMobileMenu(event)" on the button.
     const mobileMenu = document.getElementById('mobile-menu');
     const mobileBackdrop = document.getElementById('mobile-backdrop');
     const mobileToggle = document.getElementById('mobile-menu-toggle');

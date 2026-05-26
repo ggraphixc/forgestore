@@ -53,11 +53,14 @@
             </div>
         </div>
 
-        <div class="flex justify-between items-start mb-3 px-3">
-            <button id="sidebar-close" class="p-2 text-stone-500 hover:text-stone-700 hover:bg-stone-50/50 rounded-lg lg:hidden" aria-label="Close sidebar">
+        <!-- Mobile close & Section label -->
+        <div class="flex justify-between items-center mb-3 px-3">
+            <button id="sidebar-close" onclick="closeSidebar()" class="p-2 text-stone-500 hover:text-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg lg:hidden transition-all duration-150" aria-label="Close sidebar">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
-            <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 ml-auto sidebar-nav-label">Navigation</span>
+            <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 sidebar-nav-label">Navigation</span>
+            <!-- Spacer to balance flex justify-between on desktop -->
+            <span class="hidden lg:block w-8"></span>
         </div>
         <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto scrollbar-thin">
             <a href="/admin/dashboard" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
@@ -177,7 +180,7 @@
             <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-amber-500/0 via-amber-500/20 to-amber-500/0"></div>
             <div class="flex items-center justify-between px-3 h-14">
                 <div class="flex items-center gap-2">
-                    <button id="sidebar-toggle" class="p-2.5 min-w-[44px] min-h-[44px] -ml-2 text-stone-500 hover:text-amber-600 transition-all rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center justify-center" aria-label="Toggle sidebar" aria-expanded="false">
+                    <button id="sidebar-toggle" onclick="toggleSidebar(event)" class="p-2.5 min-w-[44px] min-h-[44px] -ml-2 text-stone-500 hover:text-amber-600 transition-all rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center justify-center" aria-label="Toggle sidebar" aria-expanded="false">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
                     </button>
                     <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse flex-shrink-0"></div>
@@ -356,13 +359,33 @@ document.addEventListener('DOMContentLoaded', function() {
     const sidebarBackdrop = document.getElementById('sidebar-backdrop');
     const collapseToggle = document.getElementById('sidebar-collapse-toggle');
     
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', toggleSidebar);
-    }
+        // Sidebar toggle uses onclick="toggleSidebar(event)" on the button.
+    // No addEventListener is bound here to prevent double-fire.
     
-    if (sidebarBackdrop) {
+        if (sidebarBackdrop) {
         sidebarBackdrop.addEventListener('click', closeSidebar);
     }
+    
+    // Close sidebar with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+                closeSidebar();
+            }
+        }
+    });
+    
+    // Close sidebar on link click (mobile only)
+    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+    sidebarLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar && sidebar.classList.contains('-translate-x-full') === false) {
+                closeSidebar();
+            }
+        });
+    });
     
     if (collapseToggle) {
         collapseToggle.addEventListener('click', function() {
