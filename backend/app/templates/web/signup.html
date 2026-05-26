@@ -36,7 +36,8 @@
                     <div class="relative">
                         <input id="password" name="password" type="password" required minlength="6" autocomplete="new-password"
                             class="input-forge pr-11"
-                            placeholder="At least 6 characters">
+                            placeholder="At least 6 characters"
+                            oninput="checkPasswordStrength(this.value)">
                         <button type="button" onclick="togglePasswordVisibility('password', this)"
                             class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
                             aria-label="Toggle password visibility" tabindex="-1">
@@ -49,7 +50,13 @@
                             </svg>
                         </button>
                     </div>
-                    <p class="text-xs text-stone-400 dark:text-stone-500 mt-1.5">Must be at least 6 characters</p>
+                    <!-- Password strength indicator -->
+                    <div class="mt-2 space-y-1">
+                        <div class="h-1 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
+                            <div id="pw-strength-bar" class="pw-strength-bar" style="width: 0;"></div>
+                        </div>
+                        <p id="pw-strength-text" class="text-[11px] text-stone-400 dark:text-stone-500">Type a password</p>
+                    </div>
                 </div>
                 <button type="submit" id="signup-btn"
                     class="btn-forge w-full justify-center text-sm">
@@ -70,6 +77,47 @@
 </div>
 
 <script>
+// ===== Password Strength Checker =====
+function checkPasswordStrength(password) {
+    const bar = document.getElementById('pw-strength-bar');
+    const text = document.getElementById('pw-strength-text');
+    if (!bar || !text) return;
+    
+    if (!password) {
+        bar.className = 'pw-strength-bar';
+        bar.style.removeProperty('width');
+        text.className = 'text-[11px] text-stone-400 dark:text-stone-500';
+        text.textContent = 'Type a password';
+        return;
+    }
+    
+    let score = 0;
+    if (password.length >= 6) score++;
+    if (password.length >= 8) score++;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+    if (/\d/.test(password)) score++;
+    if (/[^a-zA-Z0-9]/.test(password)) score++;
+    
+    // Remove any lingering inline width before applying class-based width
+    bar.style.removeProperty('width');
+    bar.className = 'pw-strength-bar';
+    text.className = 'text-[11px]';
+    
+    if (score <= 1) {
+        bar.classList.add('weak');
+        text.classList.add('weak');
+        text.textContent = 'Weak — try adding more characters';
+    } else if (score <= 3) {
+        bar.classList.add('medium');
+        text.classList.add('medium');
+        text.textContent = 'Medium — add a number or symbol to strengthen';
+    } else {
+        bar.classList.add('strong');
+        text.classList.add('strong');
+        text.textContent = 'Strong password!';
+    }
+}
+
 async function submitSignup() {
     const btn = document.getElementById('signup-btn');
     const error = document.getElementById('signup-error');

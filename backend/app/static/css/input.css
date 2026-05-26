@@ -677,6 +677,42 @@
     display: none;
   }
 
+  /* ===== PASSWORD STRENGTH ===== */
+  .pw-strength-bar {
+    @apply h-1 rounded-full transition-all duration-300 ease-out;
+  }
+
+  .pw-strength-bar.weak {
+    @apply bg-red-500;
+    width: 33.333%;
+  }
+
+  .pw-strength-bar.medium {
+    @apply bg-amber-500;
+    width: 66.666%;
+  }
+
+  .pw-strength-bar.strong {
+    @apply bg-emerald-500;
+    width: 100%;
+  }
+
+  .pw-strength-text {
+    @apply text-[11px] font-medium transition-colors duration-300;
+  }
+
+  .pw-strength-text.weak {
+    @apply text-red-500;
+  }
+
+  .pw-strength-text.medium {
+    @apply text-amber-600;
+  }
+
+  .pw-strength-text.strong {
+    @apply text-emerald-600;
+  }
+
   .bg-grid {
     background-size: 40px 40px;
     background-image: 
