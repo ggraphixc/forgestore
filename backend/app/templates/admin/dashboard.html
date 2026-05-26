@@ -20,7 +20,7 @@
                 </div>
             </div>
             <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Products</p>
-            <p class="text-2xl md:text-3xl font-bold text-stone-900 mt-1">{{ stats.total_products }}</p>
+            <p class="text-xl md:text-2xl lg:text-3xl font-bold text-stone-900 mt-1 truncate">{{ stats.total_products }}</p>
         </div>
         <div class="bg-white rounded-xl border border-stone-200 p-4 md:p-5 hover:shadow-md hover:border-stone-300 transition-all duration-200">
             <div class="flex items-center gap-2 mb-2">
@@ -29,7 +29,7 @@
                 </div>
             </div>
             <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Categories</p>
-            <p class="text-2xl md:text-3xl font-bold text-stone-900 mt-1">{{ stats.total_categories }}</p>
+            <p class="text-xl md:text-2xl lg:text-3xl font-bold text-stone-900 mt-1 truncate">{{ stats.total_categories }}</p>
         </div>
         <div class="bg-white rounded-xl border border-stone-200 p-4 md:p-5 hover:shadow-md hover:border-stone-300 transition-all duration-200">
             <div class="flex items-center gap-2 mb-2">
@@ -38,7 +38,7 @@
                 </div>
             </div>
             <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Retailers</p>
-            <p class="text-2xl md:text-3xl font-bold text-stone-900 mt-1">{{ stats.total_retailers }}</p>
+            <p class="text-xl md:text-2xl lg:text-3xl font-bold text-stone-900 mt-1 truncate">{{ stats.total_retailers }}</p>
         </div>
         <div class="bg-white rounded-xl border border-stone-200 p-4 md:p-5 hover:shadow-md hover:border-stone-300 transition-all duration-200">
             <div class="flex items-center gap-2 mb-2">
@@ -47,7 +47,7 @@
                 </div>
             </div>
             <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Orders</p>
-            <p class="text-2xl md:text-3xl font-bold text-stone-900 mt-1">{{ stats.total_orders }}</p>
+            <p class="text-xl md:text-2xl lg:text-3xl font-bold text-stone-900 mt-1 truncate">{{ stats.total_orders }}</p>
         </div>
         <div class="bg-white rounded-xl border border-stone-200 p-4 md:p-5 hover:shadow-md hover:border-stone-300 transition-all duration-200">
             <div class="flex items-center gap-2 mb-2">
@@ -56,7 +56,7 @@
                 </div>
             </div>
             <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Customers</p>
-            <p class="text-2xl md:text-3xl font-bold text-stone-900 mt-1">{{ stats.total_customers }}</p>
+            <p class="text-xl md:text-2xl lg:text-3xl font-bold text-stone-900 mt-1 truncate">{{ stats.total_customers }}</p>
         </div>
         <div class="bg-white rounded-xl border border-stone-200 p-4 md:p-5 hover:shadow-md hover:border-stone-300 transition-all duration-200 bg-gradient-to-br from-stone-50 to-amber-50/30">
             <div class="flex items-center gap-2 mb-2">
@@ -65,7 +65,7 @@
                 </div>
             </div>
             <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Revenue</p>
-            <p class="text-2xl md:text-3xl font-bold text-stone-900 mt-1">₦{{ "{:,.2f}".format(stats.total_revenue) }}</p>
+            <p class="text-sm md:text-lg lg:text-xl font-bold text-stone-900 mt-1 truncate">₦{{ "{:,.2f}".format(stats.total_revenue) }}</p>
         </div>
     </div>
 
