@@ -21,8 +21,15 @@ from app.core.security import (
     create_access_token,
     decode_token,
 
+    # ── Cookie helpers ──
+    set_auth_cookie,
+    delete_auth_cookie,
+    COOKIE_MAX_AGE_DAYS,
+
     # ── Dependencies ──
     get_current_admin,
+    get_current_user,
+    get_current_user_optional,
     get_current_user_from_cookie,
     get_current_customer_from_cookie,
 

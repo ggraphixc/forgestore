@@ -6,7 +6,7 @@ thin re‑export shim so that existing import paths keep working.
 """
 
 from datetime import datetime, timedelta
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from jose import JWTError, jwt
 import bcrypt as _bcrypt
@@ -234,6 +234,88 @@ def get_current_customer_from_cookie(
         return None
 
     return db.query(User).filter(User.id == user_id).first()
+
+
+# ==============================================================================
+# COOKIE HELPERS
+# ==============================================================================
+
+COOKIE_MAX_AGE_DAYS = 30
+"""Unified cookie lifetime — 30 days for both admin and customer tokens."""
+
+
+def set_auth_cookie(
+    response: Response,
+    token: str,
+    cookie_name: str = "access_token",
+    max_age_days: int = COOKIE_MAX_AGE_DAYS,
+) -> None:
+    """Set an httpOnly JWT cookie with secure production defaults.
+
+    ``secure=True`` is controlled by ``settings.secure_cookies`` — it is
+    automatically ``True`` in production (when HTTPS is active) and ``False``
+    for local development over plain HTTP.
+    """
+    response.set_cookie(
+        key=cookie_name,
+        value=token,
+        httponly=True,
+        max_age=max_age_days * 86_400,
+        secure=settings.secure_cookies,
+        samesite="lax",
+    )
+
+
+def delete_auth_cookie(response: Response, cookie_name: str = "access_token") -> None:
+    """Safely delete an auth cookie."""
+    response.delete_cookie(cookie_name)
+
+
+# ==============================================================================
+# UNIFIED AUTH DEPENDENCY
+# ==============================================================================
+
+
+def get_current_user(
+    request: Request,
+    db: Session = Depends(get_db),
+) -> Union[AdminUser, User]:
+    """FastAPI dependency — try admin auth first, then customer auth.
+
+    Reads tokens from cookies (not the ``Authorization`` header) so this
+    works correctly when called directly without FastAPI DI resolution for
+    the ``get_current_admin`` dependency.
+
+    Raises **401** when neither token is present or valid.
+    """
+    # 1) Try admin (access_token cookie)
+    admin = get_current_user_from_cookie(request, db)
+    if admin:
+        return admin
+
+    # 2) Try customer (customer_token cookie)
+    customer = get_current_customer_from_cookie(request, db)
+    if customer:
+        return customer
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Not authenticated",
+    )
+
+
+def get_current_user_optional(
+    request: Request,
+    db: Session = Depends(get_db),
+) -> Optional[Union[AdminUser, User]]:
+    """Like ``get_current_user`` but returns ``None`` instead of raising.
+
+    Useful for public pages that show personalised content when logged in.
+    """
+    try:
+        return get_current_user(request, db)
+    except HTTPException:
+        return None
 
 
 # ==============================================================================

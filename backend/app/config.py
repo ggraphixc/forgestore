@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     # Debug mode (set to "true" in development for detailed logging)
     debug: bool = False
 
+    # Secure cookies: set to "true" in production (requires HTTPS)
+    secure_cookies: bool = False
+
     # CORS: comma-separated allowed origins
     cors_origins: str = "http://127.0.0.1:8000,http://localhost:8000"
 

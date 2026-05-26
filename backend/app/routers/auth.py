@@ -9,7 +9,7 @@ from slowapi.util import get_remote_address
 from app.database import get_db
 from app.models import AdminUser, User
 from app.schemas import LoginRequest
-from app.auth import verify_password, hash_password, create_access_token, get_current_admin
+from app.auth import verify_password, hash_password, create_access_token, get_current_admin, get_current_user, set_auth_cookie, delete_auth_cookie
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 security = HTTPBearer(auto_error=False)
@@ -28,14 +28,7 @@ def login(request: Request, data: LoginRequest, response: Response, db: Session 
             "role": admin.role.value if hasattr(admin.role, 'value') else admin.role,
             "type": "admin",
         })
-        response.set_cookie(
-            key="access_token",
-            value=token,
-            httponly=True,
-            max_age=86400,
-            secure=False,
-            samesite="lax",
-        )
+        set_auth_cookie(response, token, "access_token")
         return {
             "access_token": token,
             "user": {
@@ -56,14 +49,7 @@ def login(request: Request, data: LoginRequest, response: Response, db: Session 
             "name": customer.name,
             "type": "customer",
         }, expires_delta=timedelta(days=30))
-        response.set_cookie(
-            key="customer_token",
-            value=token,
-            httponly=True,
-            max_age=86400 * 30,
-            secure=False,
-            samesite="lax",
-        )
+        set_auth_cookie(response, token, "customer_token")
         return {
             "access_token": token,
             "user": {
@@ -128,14 +114,7 @@ def signup(request: Request, data: LoginRequest, response: Response, db: Session
         "name": customer.name,
         "type": "customer",
     }, expires_delta=timedelta(days=30))
-    response.set_cookie(
-        key="customer_token",
-        value=token,
-        httponly=True,
-        max_age=86400 * 30,
-        secure=False,
-        samesite="lax",
-    )
+    set_auth_cookie(response, token, "customer_token")
 
     return {
         "access_token": token,
@@ -149,34 +128,27 @@ def signup(request: Request, data: LoginRequest, response: Response, db: Session
 
 @router.post("/logout")
 def logout(response: Response):
-    response.delete_cookie("access_token")
-    response.delete_cookie("customer_token")
+    delete_auth_cookie(response, "access_token")
+    delete_auth_cookie(response, "customer_token")
     return {"message": "Logged out"}
 
 
 @router.get("/me")
-def get_me(request: Request, db: Session = Depends(get_db)):
-    from app.auth import get_current_user_from_cookie, get_current_customer_from_cookie
-    # Try admin first
-    admin = get_current_user_from_cookie(request, db)
-    if admin:
+def get_me(user: User = Depends(get_current_user)):
+    if isinstance(user, AdminUser):
         return {
-            "id": admin.id,
-            "email": admin.email,
-            "name": admin.name,
-            "role": admin.role.value if hasattr(admin.role, 'value') else admin.role,
+            "id": user.id,
+            "email": user.email,
+            "name": user.name,
+            "role": user.role.value if hasattr(user.role, 'value') else user.role,
             "type": "admin",
         }
-    # Then try customer
-    customer = get_current_customer_from_cookie(request, db)
-    if customer:
-        return {
-            "id": customer.id,
-            "email": customer.email,
-            "name": customer.name,
-            "type": "customer",
-        }
-    raise HTTPException(status_code=401, detail="Not authenticated")
+    return {
+        "id": user.id,
+        "email": user.email,
+        "name": user.name,
+        "type": "customer",
+    }
 
 
 # ===== Password Reset =====
