@@ -155,41 +155,4 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('sidebar-backdrop')?.classList.toggle('hidden');
         });
     }
-
-    // Web mobile menu toggle
-    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
-    const mobileMenu = document.getElementById('mobile-menu');
-    const mobileBackdrop = document.getElementById('mobile-backdrop');
-    const menuIconOpen = document.getElementById('menu-icon-open');
-    const menuIconClose = document.getElementById('menu-icon-close');
-
-    if (mobileMenuToggle && mobileMenu && mobileBackdrop) {
-        const toggleMenu = () => {
-            const isOpen = !mobileMenu.classList.contains('hidden');
-            mobileMenu.classList.toggle('hidden');
-            mobileBackdrop.classList.toggle('hidden');
-            mobileBackdrop.classList.toggle('opacity-0');
-            mobileBackdrop.classList.toggle('pointer-events-none');
-            menuIconOpen?.classList.toggle('hidden');
-            menuIconClose?.classList.toggle('hidden');
-            mobileMenuToggle.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
-        };
-
-        mobileMenuToggle.addEventListener('click', toggleMenu);
-
-        // Close menu when clicking backdrop
-        mobileBackdrop.addEventListener('click', toggleMenu);
-
-        // Close menu when clicking menu links
-        mobileMenu.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', toggleMenu);
-        });
-
-        // Close menu with Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
-                toggleMenu();
-            }
-        });
-    }
 });
