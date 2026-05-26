@@ -17,7 +17,7 @@ from app.schemas import (
     ProductCreate, ProductUpdate, CategoryCreate, CategoryUpdate,
     RetailerCreate, RetailerUpdate, DashboardStats
 )
-from app.auth import hash_password, get_current_user_from_cookie, has_permission, AdminRole, log_admin_action
+from app.auth import hash_password, verify_password, get_current_user_from_cookie, has_permission, AdminRole, log_admin_action
 from app.config import get_settings
 from app.templates_shared import render_template
 
@@ -716,7 +716,64 @@ def admin_profile(request: Request, db: Session = Depends(get_db)):
         "days_active": days_active,
         "get_role_badge": get_role_badge,
         "has_permission": has_permission,
+        "success": request.query_params.get("success"),
+        "error": None,
     })
+
+
+@router.post("/me")
+async def admin_profile_update(request: Request, db: Session = Depends(get_db)):
+    admin = get_current_user_from_cookie(request, db)
+    if not admin:
+        return RedirectResponse(url="/admin/login", status_code=302)
+
+    form = await request.form()
+    name = form.get("name", "").strip()
+    current_password = form.get("current_password", "")
+    new_password = form.get("new_password", "")
+    confirm_password = form.get("confirm_password", "")
+
+    product_count = db.query(func.count(Product.id)).filter(
+        Product.retailer_id == admin.vendor_id
+    ).scalar() if admin.vendor_id else 0
+
+    from datetime import datetime as dt
+    days_active = (dt.utcnow() - admin.created_at).days if admin.created_at else 0
+
+    ctx = {
+        "request": request,
+        "admin": admin,
+        "product_count": product_count,
+        "days_active": days_active,
+        "get_role_badge": get_role_badge,
+        "has_permission": has_permission,
+        "success": None,
+        "error": None,
+    }
+
+    # Update name if provided
+    if name and name != admin.name:
+        admin.name = name
+
+    # Update password if provided
+    if new_password:
+        if not current_password:
+            ctx["error"] = "Please enter your current password to set a new one."
+            return render_template("admin/me.html", ctx)
+        if not verify_password(current_password, admin.password):
+            ctx["error"] = "Current password is incorrect."
+            return render_template("admin/me.html", ctx)
+        if len(new_password) < 6:
+            ctx["error"] = "New password must be at least 6 characters."
+            return render_template("admin/me.html", ctx)
+        if new_password != confirm_password:
+            ctx["error"] = "New passwords do not match."
+            return render_template("admin/me.html", ctx)
+        admin.password = hash_password(new_password)
+
+    db.commit()
+
+    return RedirectResponse(url="/admin/me?success=Profile+updated+successfully.", status_code=302)
 
 
 @router.get("/logout")
