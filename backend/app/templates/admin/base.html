@@ -3,9 +3,9 @@
 {% block title %}{{ title|default("Admin") }} &mdash; ForgeStore{% endblock %}
 
 {% block body %}
-<script>!function(){var e="sidebar-collapsed",t=localStorage.getItem(e)==="true";if(t){var n=document.getElementById("sidebar");n&&n.classList.add("sidebar-collapsed")}}()</script>
+<script>!function(){var e="sidebar-collapsed",t=localStorage.getItem(e)==="true";if(t&&window.innerWidth>=1024){var n=document.getElementById("sidebar");n&&n.classList.add("sidebar-collapsed")}}()</script>
 <div class="flex h-full min-h-screen bg-stone-50/50">
-    <aside id="sidebar" class="fixed inset-y-0 left-0 w-screen max-w-full lg:w-64 bg-gradient-to-b from-white to-stone-50/80 dark:from-stone-900 dark:to-stone-950 border-r border-stone-200 dark:border-stone-800 transform -translate-x-full translate-x-0 transition-transform duration-200 relative flex flex-col shadow-xl shadow-stone-900/10" style="z-index: var(--z-sidebar);">
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-80 max-w-[85vw] lg:w-64 bg-gradient-to-b from-white to-stone-50/80 dark:from-stone-900 dark:to-stone-950 border-r border-stone-200 dark:border-stone-800 transform -translate-x-full lg:translate-x-0 transition-all duration-300 ease-out relative flex flex-col shadow-2xl shadow-stone-900/15" style="z-index: var(--z-sidebar);">
         <!-- Premium header with gradient accent -->
         <div class="relative flex items-center gap-3 px-6 h-16 border-b border-stone-100 dark:border-stone-800 overflow-hidden sidebar-header">
             <div class="absolute inset-0 bg-gradient-to-r from-amber-50/30 to-transparent dark:from-amber-900/10"></div>
@@ -18,8 +18,11 @@
             </div>
             <!-- Collapse toggle (visible lg+) -->
             <button id="sidebar-collapse-toggle" class="hidden lg:flex ml-auto p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-all flex-shrink-0 relative z-10" aria-label="Collapse sidebar" aria-expanded="true">
-                <svg class="w-4 h-4 sidebar-collapse-icon transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg id="sidebar-collapse-icon-open" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+                </svg>
+                <svg id="sidebar-collapse-icon-close" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
                 </svg>
             </button>
             <!-- Subtle accent dot -->
@@ -174,14 +177,15 @@
             </a>
         </div>
     </aside>
-    <div id="sidebar-backdrop" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden lg:hidden transition-opacity duration-200" style="z-index: var(--z-sidebar-backdrop);"></div>
+    <div id="sidebar-backdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden lg:hidden opacity-0 transition-opacity duration-300 ease-out" style="z-index: var(--z-sidebar-backdrop);"></div>
     <div class="flex-1 flex flex-col min-w-0">
         <header class="sticky top-0 bg-white/90 dark:bg-stone-900/90 backdrop-blur-xl border-b border-stone-200 dark:border-stone-800 shadow-sm lg:hidden" style="z-index: var(--z-sticky-header);">
             <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-amber-500/0 via-amber-500/20 to-amber-500/0"></div>
             <div class="flex items-center justify-between px-3 h-14">
                 <div class="flex items-center gap-2">
                     <button id="sidebar-toggle" onclick="toggleSidebar(event)" class="p-2.5 min-w-[44px] min-h-[44px] -ml-2 text-stone-500 hover:text-amber-600 transition-all rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center justify-center" aria-label="Toggle sidebar" aria-expanded="false">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        <svg id="sidebar-toggle-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        <svg id="sidebar-toggle-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                     <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse flex-shrink-0"></div>
                 </div>
@@ -276,9 +280,27 @@ function applyCollapseState() {
     
     if (!sidebar) return;
     
+    // Only apply collapse state on desktop (lg+)
+    if (window.innerWidth < 1024) {
+        sidebar.classList.remove('sidebar-collapsed');
+        // Swap collapse icon back: >> → <<
+        document.getElementById('sidebar-collapse-icon-open')?.classList.remove('hidden');
+        document.getElementById('sidebar-collapse-icon-close')?.classList.add('hidden');
+        headerTexts.forEach(el => { if (el) el.style.display = ''; });
+        navLabels.forEach(el => { if (el) el.style.display = ''; });
+        accentDots.forEach(el => { if (el) el.style.display = ''; });
+        if (profileCard) profileCard.querySelector('.min-w-0')?.classList.remove('hidden');
+        document.querySelectorAll('.sidebar-link span:not(.sidebar-active-dot)').forEach(el => {
+            el.classList.remove('sidebar-link-text-hidden');
+        });
+        return;
+    }
+    
     if (sidebarCollapsed) {
         sidebar.classList.add('sidebar-collapsed');
-        if (toggle) toggle.classList.add('rotated');
+        // Swap collapse icon: << → >>
+        document.getElementById('sidebar-collapse-icon-open')?.classList.add('hidden');
+        document.getElementById('sidebar-collapse-icon-close')?.classList.remove('hidden');
         // Hide text elements
         headerTexts.forEach(el => { if (el) el.style.display = 'none'; });
         navLabels.forEach(el => { if (el) el.style.display = 'none'; });
@@ -294,7 +316,9 @@ function applyCollapseState() {
         });
     } else {
         sidebar.classList.remove('sidebar-collapsed');
-        if (toggle) toggle.classList.remove('rotated');
+        // Swap collapse icon: >> → <<
+        document.getElementById('sidebar-collapse-icon-open')?.classList.remove('hidden');
+        document.getElementById('sidebar-collapse-icon-close')?.classList.add('hidden');
         headerTexts.forEach(el => { if (el) el.style.display = ''; });
         navLabels.forEach(el => { if (el) el.style.display = ''; });
         accentDots.forEach(el => { if (el) el.style.display = ''; });
@@ -322,7 +346,12 @@ function openSidebar() {
     backdrop.classList.add('opacity-100');
     document.body.classList.add('overflow-hidden');
     
-    if (toggle) toggle.setAttribute('aria-expanded', 'true');
+    if (toggle) {
+        toggle.setAttribute('aria-expanded', 'true');
+        // Swap icon: hamburger → X
+        document.getElementById('sidebar-toggle-open')?.classList.add('hidden');
+        document.getElementById('sidebar-toggle-close')?.classList.remove('hidden');
+    }
 }
 
 function closeSidebar() {
@@ -340,7 +369,12 @@ function closeSidebar() {
         document.body.classList.remove('overflow-hidden');
     }, 200); // Match transition duration
     
-    if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    if (toggle) {
+        toggle.setAttribute('aria-expanded', 'false');
+        // Swap icon: X → hamburger
+        document.getElementById('sidebar-toggle-open')?.classList.remove('hidden');
+        document.getElementById('sidebar-toggle-close')?.classList.add('hidden');
+    }
 }
 
 function toggleSidebar(event) {

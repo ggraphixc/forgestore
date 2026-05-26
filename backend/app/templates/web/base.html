@@ -111,7 +111,7 @@
 <!-- Backdrop -->
 <div id="mobile-backdrop" class="fixed inset-0 bg-stone-900/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-300 pointer-events-none" style="z-index: var(--z-mobile-backdrop);"></div>
 
-<div id="mobile-menu" class="hidden fixed inset-0 pointer-events-none bg-gradient-to-b from-white to-stone-50/90 dark:from-stone-900 dark:to-stone-950 shadow-2xl overflow-y-auto overscroll-contain" style="z-index: var(--z-mobile-menu); padding-bottom: env(safe-area-inset-bottom, 32px);">
+<div id="mobile-menu" class="fixed inset-y-0 right-0 w-80 max-w-[85vw] pointer-events-none bg-gradient-to-b from-white to-stone-50/90 dark:from-stone-900 dark:to-stone-950 shadow-2xl overflow-y-auto overscroll-contain translate-x-full transition-transform duration-300 ease-out" style="z-index: var(--z-mobile-menu); padding-bottom: env(safe-area-inset-bottom, 32px);">
     <!-- Close button -->
     <div class="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-white/80 dark:from-stone-900/80 backdrop-blur-md border-b border-stone-100 dark:border-stone-800 pointer-events-auto">
         <span class="text-xs font-bold text-stone-500 uppercase tracking-[0.15em]">Menu</span>
@@ -604,7 +604,8 @@ function openMobileMenu() {
     const toggle = document.getElementById('mobile-menu-toggle');
     if (!menu || !backdrop) return;
 
-    menu.classList.remove('hidden');
+    menu.classList.remove('translate-x-full');
+    menu.classList.add('translate-x-0');
     backdrop.classList.remove('hidden', 'pointer-events-none');
     void backdrop.offsetHeight;
     backdrop.classList.add('opacity-100');
@@ -634,7 +635,8 @@ function closeMobileMenu() {
     const toggle = document.getElementById('mobile-menu-toggle');
     if (!menu || !backdrop) return;
 
-    menu.classList.add('hidden');
+    menu.classList.add('translate-x-full');
+    menu.classList.remove('translate-x-0');
     backdrop.classList.remove('opacity-100');
     backdrop.classList.add('opacity-0', 'pointer-events-none');
     document.body.classList.remove('overflow-hidden');
@@ -652,7 +654,7 @@ function toggleMobileMenu(event) {
     if (event) event.stopPropagation();
     const menu = document.getElementById('mobile-menu');
     if (!menu) return;
-    if (menu.classList.contains('hidden')) {
+    if (menu.classList.contains('translate-x-full')) {
         openMobileMenu();
     } else {
         closeMobileMenu();
@@ -680,7 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Close with Escape
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+            if (mobileMenu && !mobileMenu.classList.contains('translate-x-full')) {
                 closeMobileMenu();
             }
         }
@@ -762,7 +764,7 @@ document.addEventListener('DOMContentLoaded', () => {
         searchToggle.addEventListener('click', function() {
             searchOverlay.classList.remove('hidden');
             setTimeout(() => searchOverlayInput.focus(), 100);
-            if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+            if (mobileMenu && !mobileMenu.classList.contains('translate-x-full')) {
                 closeMobileMenu();
             }
         });
