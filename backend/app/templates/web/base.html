@@ -107,15 +107,11 @@
     </nav>
 </header>
 
-<!-- ===== MOBILE MENU (premium bottom slide panel) ===== -->
+<!-- ===== MOBILE MENU (fullscreen overlay) ===== -->
 <!-- Backdrop -->
 <div id="mobile-backdrop" class="fixed inset-0 bg-stone-900/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-300 pointer-events-none" style="z-index: var(--z-mobile-backdrop);"></div>
 
-<div id="mobile-menu" class="fixed bottom-0 left-0 right-0 bg-gradient-to-b from-white to-stone-50/90 dark:from-stone-900 dark:to-stone-950 shadow-2xl transform translate-y-full transition-transform duration-300 ease-out overflow-y-auto overscroll-contain" style="height: 100vh; height: 100dvh; z-index: var(--z-mobile-menu); padding-bottom: env(safe-area-inset-bottom, 32px);">
-    <!-- Drag handle -->
-    <div class="sticky top-0 bg-white/90 dark:bg-stone-900/90 backdrop-blur-md z-20 flex justify-center pt-3 pb-2 border-b border-stone-100/80 dark:border-stone-800/80">
-        <div class="w-12 h-1.5 rounded-full bg-stone-300 dark:bg-stone-600"></div>
-    </div>
+<div id="mobile-menu" class="hidden fixed inset-0 bg-gradient-to-b from-white to-stone-50/90 dark:from-stone-900 dark:to-stone-950 shadow-2xl overflow-y-auto overscroll-contain" style="z-index: var(--z-mobile-menu); padding-bottom: env(safe-area-inset-bottom, 32px);">
 
     <!-- Account Section -->
     <div class="mx-4 mb-4 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-stone-800 dark:to-stone-800/50 border border-amber-200/50 dark:border-stone-700 overflow-hidden shadow-sm">
@@ -321,9 +317,6 @@
         </div>
     </div>
 </div>
-
-<!-- Bottom slide panel (full-screen, premium e-commerce design) -->
-
 
 <!-- ===== Back to Top Button ===== -->
 <button id="back-to-top" onclick="window.scrollTo({top: document.documentElement.scrollHeight, behavior: 'smooth'});" class="fixed bottom-3 right-8 w-12 h-12 bg-stone-900 dark:bg-amber-600 text-white dark:text-stone-950 rounded-2xl shadow-lg shadow-stone-900/20 dark:shadow-amber-500/20 flex items-center justify-center opacity-0 translate-y-4 pointer-events-none transition-all duration-300 hover:scale-110 active:scale-95" style="z-index: var(--z-tooltip);" aria-label="Back to top">
@@ -599,18 +592,18 @@ function openMobileMenu() {
     const toggle = document.getElementById('mobile-menu-toggle');
     if (!menu || !backdrop) return;
 
-    menu.classList.remove('translate-y-full');
+    menu.classList.remove('hidden');
     backdrop.classList.remove('hidden', 'pointer-events-none');
-    // Force reflow so browser registers opacity-0 before transitioning to opacity-100
     void backdrop.offsetHeight;
     backdrop.classList.add('opacity-100');
     document.body.classList.add('overflow-hidden');
+
     // Close search overlay if open
-    const mobileSearchOverlay = document.getElementById('search-overlay');
-    const mobileSearchOverlaySuggestions = document.getElementById('search-overlay-suggestions');
-    if (mobileSearchOverlay && !mobileSearchOverlay.classList.contains('hidden')) {
-        mobileSearchOverlay.classList.add('hidden');
-        if (mobileSearchOverlaySuggestions) mobileSearchOverlaySuggestions.classList.add('hidden');
+    const overlay = document.getElementById('search-overlay');
+    const overlaySuggestions = document.getElementById('search-overlay-suggestions');
+    if (overlay && !overlay.classList.contains('hidden')) {
+        overlay.classList.add('hidden');
+        if (overlaySuggestions) overlaySuggestions.classList.add('hidden');
     }
 
     // Update hamburger icon
@@ -629,15 +622,11 @@ function closeMobileMenu() {
     const toggle = document.getElementById('mobile-menu-toggle');
     if (!menu || !backdrop) return;
 
-    menu.classList.add('translate-y-full');
+    menu.classList.add('hidden');
     backdrop.classList.remove('opacity-100');
-    backdrop.classList.add('opacity-0');
-    setTimeout(() => {
-        backdrop.classList.add('hidden', 'pointer-events-none');
-        // Clean up inline styles set by swipe handler
-        backdrop.style.opacity = '';
-        document.body.classList.remove('overflow-hidden');
-    }, 300);
+    backdrop.classList.add('opacity-0', 'pointer-events-none');
+    backdrop.style.opacity = '';
+    document.body.classList.remove('overflow-hidden');
 
     const iconOpen = document.getElementById('menu-icon-open');
     const iconClose = document.getElementById('menu-icon-close');
@@ -648,12 +637,11 @@ function closeMobileMenu() {
     if (toggle) toggle.setAttribute('aria-expanded', 'false');
 }
 
-// Inline toggle handler (also bound via onclick on toggle button)
 function toggleMobileMenu(event) {
     if (event) event.stopPropagation();
     const menu = document.getElementById('mobile-menu');
     if (!menu) return;
-    if (menu.classList.contains('translate-y-full')) {
+    if (menu.classList.contains('hidden')) {
         openMobileMenu();
     } else {
         closeMobileMenu();
@@ -686,76 +674,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Close with Escape
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            if (mobileMenu && !mobileMenu.classList.contains('translate-y-full')) {
+            if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
                 closeMobileMenu();
             }
         }
     });
-
-    // Swipe down to close mobile menu
-    let touchStartY = 0;
-    let touchCurrentY = 0;
-    let isDragging = false;
-    let touchStartTime = 0;
-
-    if (mobileMenu) {
-        mobileMenu.addEventListener('touchstart', (e) => {
-            if (mobileMenu.classList.contains('translate-y-full')) return;
-            touchStartY = e.touches[0].clientY;
-            touchCurrentY = touchStartY;
-            touchStartTime = Date.now();
-            isDragging = true;
-            mobileMenu.style.transition = 'none';
-        }, { passive: true });
-
-        mobileMenu.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-            touchCurrentY = e.touches[0].clientY;
-            const diff = touchCurrentY - touchStartY;
-            if (diff > 0) {
-                // Only allow dragging downward
-                const translateY = diff;
-                mobileMenu.style.transform = `translateY(${translateY}px)`;
-                // Fade backdrop based on drag distance
-                if (mobileBackdrop) {
-                    const opacity = Math.max(0, 1 - (diff / 400));
-                    mobileBackdrop.style.opacity = opacity;
-                }
-            }
-        }, { passive: true });
-
-        mobileMenu.addEventListener('touchend', (e) => {
-            if (!isDragging) return;
-            isDragging = false;
-            mobileMenu.style.transition = '';
-            mobileMenu.style.transform = '';
-            if (mobileBackdrop) {
-                mobileBackdrop.style.opacity = '';
-            }
-
-            // Use changedTouches for accurate final finger position
-            const endY = e.changedTouches[0].clientY;
-            const diff = endY - touchStartY;
-            const elapsed = Date.now() - touchStartTime;
-            const velocity = diff / elapsed;
-
-            // If swiped down more than 80px, or fast flick down (>0.5px/ms and moved >20px), close the menu
-            if (diff > 80 || (velocity > 0.5 && diff > 20)) {
-                closeMobileMenu();
-            }
-        }, { passive: true });
-
-        // Handle touchcancel to clean up swipe state
-        mobileMenu.addEventListener('touchcancel', () => {
-            if (!isDragging) return;
-            isDragging = false;
-            mobileMenu.style.transition = '';
-            mobileMenu.style.transform = '';
-            if (mobileBackdrop) {
-                mobileBackdrop.style.opacity = '';
-            }
-        }, { passive: true });
-    }
 
     // Dark mode
     const themeToggle = document.getElementById('theme-toggle');
@@ -833,7 +756,7 @@ document.addEventListener('DOMContentLoaded', () => {
         searchToggle.addEventListener('click', function() {
             searchOverlay.classList.remove('hidden');
             setTimeout(() => searchOverlayInput.focus(), 100);
-            if (mobileMenu && !mobileMenu.classList.contains('translate-y-full')) {
+            if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
                 closeMobileMenu();
             }
         });
