@@ -1,0 +1,119 @@
+{% extends "admin/base.html" %}
+{% block title %}Affiliates &mdash; ForgeStore Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-stone-500 mb-1">
+                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Marketing
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black text-stone-900 dark:text-stone-100 font-display">Affiliate & <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Referrals</span></h1>
+            <p class="text-stone-500 dark:text-stone-400 mt-1 text-sm">Manage affiliates, referral links, commissions, and payouts</p>
+        </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
+            <p class="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Total Affiliates</p>
+            <p id="total-affiliates" class="text-2xl font-black text-stone-900 dark:text-stone-100">—</p>
+        </div>
+        <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
+            <p class="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Active</p>
+            <p id="active-affiliates" class="text-2xl font-black text-emerald-600">—</p>
+        </div>
+        <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
+            <p class="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Total Earned</p>
+            <p id="total-earned" class="text-2xl font-black text-amber-600">—</p>
+        </div>
+        <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
+            <p class="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Total Conversions</p>
+            <p id="total-conversions" class="text-2xl font-black text-stone-900 dark:text-stone-100">—</p>
+        </div>
+    </div>
+
+    <!-- Affiliates Table -->
+    <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-stone-100 dark:border-stone-700">
+                        <th class="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-stone-400">Code</th>
+                        <th class="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-stone-400 hidden sm:table-cell">Name</th>
+                        <th class="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-stone-400">Status</th>
+                        <th class="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-stone-400 hidden md:table-cell">Earned</th>
+                        <th class="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-stone-400 hidden lg:table-cell">Conversions</th>
+                        <th class="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-stone-400 hidden lg:table-cell">Wallet</th>
+                        <th class="text-right px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-stone-400">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="affiliates-body">
+                    <tr>
+                        <td colspan="7" class="px-5 py-12 text-center text-stone-400">
+                            <svg class="w-5 h-5 animate-spin mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            Loading affiliates...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+async function loadAffiliates() {
+    try {
+        const res = await fetch('/api/admin/affiliates');
+        const data = await res.json();
+        const tbody = document.getElementById('affiliates-body');
+        
+        if (data.affiliates?.length) {
+            let totalEarned = 0, totalConversions = 0, active = 0;
+            
+            tbody.innerHTML = data.affiliates.map(a => {
+                totalEarned += a.total_earned || 0;
+                totalConversions += a.total_conversions || 0;
+                if (a.status === 'ACTIVE') active++;
+                
+                return `<tr class="border-b border-stone-50 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-800/30 transition-colors">
+                    <td class="px-5 py-4">
+                        <span class="font-mono text-sm font-bold text-amber-600 dark:text-amber-400">${a.code}</span>
+                    </td>
+                    <td class="px-5 py-4 text-stone-600 dark:text-stone-400 hidden sm:table-cell">${a.name || '—'}</td>
+                    <td class="px-5 py-4">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            a.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' :
+                            a.status === 'SUSPENDED' ? 'bg-red-100 text-red-700' :
+                            'bg-stone-100 text-stone-600'
+                        }">${a.status}</span>
+                    </td>
+                    <td class="px-5 py-4 text-stone-600 dark:text-stone-400 hidden md:table-cell">₦${(a.total_earned || 0).toLocaleString()}</td>
+                    <td class="px-5 py-4 text-stone-600 dark:text-stone-400 hidden lg:table-cell">${a.total_conversions || 0}</td>
+                    <td class="px-5 py-4 text-stone-600 dark:text-stone-400 hidden lg:table-cell">₦${(a.wallet_balance || 0).toLocaleString()}</td>
+                    <td class="px-5 py-4 text-right">
+                        <button onclick="viewAffiliate('${a.id}')" class="px-3 py-1.5 text-xs font-medium bg-stone-100 hover:bg-amber-50 hover:text-amber-700 rounded-lg transition-all">View</button>
+                    </td>
+                </tr>`;
+            }).join('');
+            
+            document.getElementById('total-affiliates').textContent = data.affiliates.length;
+            document.getElementById('active-affiliates').textContent = active;
+            document.getElementById('total-earned').textContent = `₦${totalEarned.toLocaleString()}`;
+            document.getElementById('total-conversions').textContent = totalConversions;
+        } else {
+            tbody.innerHTML = '<tr><td colspan="7" class="px-5 py-12 text-center text-stone-400">No affiliates found</td></tr>';
+        }
+    } catch(e) {
+        document.getElementById('affiliates-body').innerHTML = '<tr><td colspan="7" class="px-5 py-12 text-center text-red-400">Failed to load affiliates</td></tr>';
+    }
+}
+
+function viewAffiliate(id) {
+    alert(`View affiliate ${id} — detailed view coming soon`);
+}
+
+document.addEventListener('DOMContentLoaded', loadAffiliates);
+</script>
+{% endblock %}

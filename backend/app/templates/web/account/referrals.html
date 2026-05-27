@@ -1,0 +1,171 @@
+{% extends "web/base.html" %}
+{% block title %}Referrals — ForgeStore{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex items-center gap-4 mb-8">
+        <a href="/shop/account" class="p-2 -ml-2 text-stone-400 hover:text-stone-900 transition-all duration-200 hover:bg-stone-50 rounded-lg">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7"/></svg>
+        </a>
+        <div>
+            <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-1 block">Referrals</span>
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-display font-black text-stone-900 dark:text-stone-100">Refer &amp; <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Earn</span></h1>
+            <p class="text-sm text-stone-500 mt-1">Share your referral link and earn rewards</p>
+        </div>
+    </div>
+
+    <!-- Earnings Card -->
+    <div class="bg-gradient-to-br from-amber-600 to-amber-500 rounded-2xl p-6 lg:p-8 shadow-xl mb-6">
+        <div class="flex items-start justify-between mb-6">
+            <div>
+                <p class="text-xs font-medium text-amber-100 uppercase tracking-wider mb-1">Total Earnings</p>
+                <p class="text-3xl sm:text-4xl font-black text-white font-display" id="total-earnings">₦0.00</p>
+            </div>
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-white/10 rounded-xl p-3 backdrop-blur-sm">
+                <p class="text-xs text-amber-100">Pending</p>
+                <p class="text-lg font-bold text-white" id="pending-earnings">₦0.00</p>
+            </div>
+            <div class="bg-white/10 rounded-xl p-3 backdrop-blur-sm">
+                <p class="text-xs text-amber-100">Referrals</p>
+                <p class="text-lg font-bold text-white" id="total-referrals">0</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Referral Link -->
+    <div class="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm mb-6">
+        <h2 class="text-sm font-bold text-stone-900 uppercase tracking-wider mb-3">Your Referral Link</h2>
+        <div class="flex gap-2">
+            <input id="referral-link" type="text" class="flex-1 px-4 py-3 border border-stone-300 rounded-xl bg-stone-50 text-sm font-mono text-stone-600" readonly>
+            <button onclick="copyReferralLink()" class="px-4 py-3 text-sm font-medium text-white bg-stone-900 hover:bg-stone-800 rounded-xl transition-all duration-200 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                Copy
+            </button>
+        </div>
+    </div>
+
+    <!-- Share Buttons -->
+    <div class="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm mb-6">
+        <h2 class="text-sm font-bold text-stone-900 uppercase tracking-wider mb-4">Share &amp; Earn</h2>
+        <div class="flex flex-wrap gap-3">
+            <a id="share-whatsapp" href="#" target="_blank" class="px-4 py-2.5 text-sm font-medium text-white bg-green-600 hover:bg-green-500 rounded-xl transition-all flex items-center gap-2">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                WhatsApp
+            </a>
+            <a id="share-twitter" href="#" target="_blank" class="px-4 py-2.5 text-sm font-medium text-white bg-sky-600 hover:bg-sky-500 rounded-xl transition-all flex items-center gap-2">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                X (Twitter)
+            </a>
+            <a id="share-facebook" href="#" target="_blank" class="px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 rounded-xl transition-all flex items-center gap-2">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                Facebook
+            </a>
+        </div>
+    </div>
+
+    <!-- Withdraw Card -->
+    <div class="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm mb-6">
+        <h2 class="text-sm font-bold text-stone-900 uppercase tracking-wider mb-4">Withdraw Earnings</h2>
+        <form id="withdraw-form" onsubmit="event.preventDefault(); withdrawEarnings()" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-stone-700 mb-1.5">Amount (₦)</label>
+                <input id="withdraw-amount" type="number" min="1000" step="100" class="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all text-sm" placeholder="Minimum: ₦1,000" required>
+            </div>
+            <button type="submit" id="withdraw-btn" class="w-full py-3 text-sm font-medium text-white bg-stone-900 hover:bg-stone-800 rounded-xl transition-all duration-200 active:scale-[0.98]">Withdraw to Wallet</button>
+        </form>
+        <div id="withdraw-error" class="mt-3 text-sm text-red-500 hidden"></div>
+        <div id="withdraw-success" class="mt-3 text-sm text-emerald-500 hidden"></div>
+    </div>
+
+    <!-- Referral History -->
+    <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
+        <div class="px-4 sm:px-6 py-4 border-b border-stone-100">
+            <h2 class="text-sm font-bold text-stone-900 uppercase tracking-wider">Referral History</h2>
+        </div>
+        <div class="divide-y divide-stone-50" id="referral-history">
+            <div class="px-6 py-8 text-center text-sm text-stone-400">Loading...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+let affiliateCode = '';
+
+async function loadAffiliate() {
+    try {
+        const res = await fetch('/api/referrals/stats');
+        if (res.status === 401) { window.location.href = '/shop/login'; return; }
+        const data = await res.json();
+        
+        document.getElementById('total-earnings').textContent = '₦' + (data.total_earnings || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('pending-earnings').textContent = '₦' + (data.pending_earnings || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('total-referrals').textContent = data.total_referrals || 0;
+
+        affiliateCode = data.referral_code || '';
+        const baseUrl = window.location.origin;
+        const link = baseUrl + '/shop?ref=' + affiliateCode;
+        document.getElementById('referral-link').value = link;
+
+        // Set share URLs
+        const shareText = encodeURIComponent('Shop at ForgeStore! Use my referral link: ' + link);
+        document.getElementById('share-whatsapp').href = 'https://wa.me/?text=' + shareText;
+        document.getElementById('share-twitter').href = 'https://twitter.com/intent/tweet?text=' + shareText;
+        document.getElementById('share-facebook').href = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(link);
+
+        // Create referral if needed
+        if (!affiliateCode) {
+            await fetch('/api/referrals/create', { method: 'POST' });
+            loadAffiliate();
+        }
+    } catch (e) {
+        document.querySelector('#referral-history').innerHTML = '<div class="px-6 py-8 text-center text-sm text-stone-400">Failed to load affiliate data</div>';
+    }
+}
+
+function copyReferralLink() {
+    const input = document.getElementById('referral-link');
+    input.select();
+    navigator.clipboard.writeText(input.value);
+    const btn = event.currentTarget;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/></svg> Copied!';
+    setTimeout(() => btn.innerHTML = originalText, 2000);
+}
+
+async function withdrawEarnings() {
+    const btn = document.getElementById('withdraw-btn');
+    const errEl = document.getElementById('withdraw-error');
+    const successEl = document.getElementById('withdraw-success');
+    const amount = parseFloat(document.getElementById('withdraw-amount').value);
+    errEl.classList.add('hidden');
+    successEl.classList.add('hidden');
+    btn.disabled = true;
+
+    try {
+        const res = await fetch('/api/referrals/withdraw', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount, payment_method: 'wallet' }),
+        });
+        if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.detail || 'Withdrawal failed');
+        }
+        successEl.textContent = '✓ Withdrawal initiated successfully!';
+        successEl.classList.remove('hidden');
+        document.getElementById('withdraw-amount').value = '';
+        setTimeout(() => successEl.classList.add('hidden'), 4000);
+    } catch (e) {
+        errEl.textContent = e.message;
+        errEl.classList.remove('hidden');
+    }
+    btn.disabled = false;
+}
+
+loadAffiliate();
+</script>
+{% endblock %}

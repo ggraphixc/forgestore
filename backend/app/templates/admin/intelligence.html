@@ -1,0 +1,230 @@
+{% extends "admin/base.html" %}
+{% block title %}Intelligence &mdash; ForgeStore Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-stone-500 mb-1">
+                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                Business Intelligence
+            </div>
+            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black text-stone-900 dark:text-stone-100 font-display">Commerce <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Intelligence</span></h1>
+            <p class="text-stone-500 dark:text-stone-400 mt-1 text-sm">AI-powered insights, forecasts, and predictive analytics</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <select id="period-select" class="px-3 py-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-sm font-medium text-stone-700 dark:text-stone-300 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all min-h-[44px]">
+                <option value="7">Last 7 days</option>
+                <option value="30" selected>Last 30 days</option>
+                <option value="90">Last 90 days</option>
+                <option value="365">Last year</option>
+            </select>
+            <button onclick="refreshAnalytics()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-bold transition-all duration-150 min-h-[44px]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- AI Insights -->
+    <div class="bg-gradient-to-br from-amber-50 to-amber-50/50 dark:from-amber-900/10 dark:to-stone-900 border border-amber-200 dark:border-amber-800 rounded-2xl p-5 sm:p-6 mb-8">
+        <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+            </div>
+            <h2 class="text-base font-bold text-stone-900 dark:text-stone-100">AI-Generated Insights</h2>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded-full">Live</span>
+        </div>
+        <div id="insights-container" class="space-y-3">
+            <div class="flex items-center justify-center py-8 text-stone-400">
+                <svg class="w-5 h-5 animate-spin mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Loading insights...
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
+            <p class="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Total Revenue</p>
+            <p id="stat-revenue" class="text-2xl sm:text-3xl font-black text-stone-900 dark:text-stone-100">—</p>
+            <p id="stat-revenue-change" class="text-xs mt-1 text-stone-400">Loading...</p>
+        </div>
+        <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
+            <p class="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Total Orders</p>
+            <p id="stat-orders" class="text-2xl sm:text-3xl font-black text-stone-900 dark:text-stone-100">—</p>
+            <p id="stat-orders-change" class="text-xs mt-1 text-stone-400">Loading...</p>
+        </div>
+        <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
+            <p class="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Avg Order Value</p>
+            <p id="stat-aov" class="text-2xl sm:text-3xl font-black text-stone-900 dark:text-stone-100">—</p>
+            <p id="stat-aov-change" class="text-xs mt-1 text-stone-400">Loading...</p>
+        </div>
+        <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
+            <p class="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Total Customers</p>
+            <p id="stat-customers" class="text-2xl sm:text-3xl font-black text-stone-900 dark:text-stone-100">—</p>
+            <p id="stat-customers-change" class="text-xs mt-1 text-stone-400">Loading...</p>
+        </div>
+    </div>
+
+    <!-- Revenue Forecast & Fraud Detection -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Revenue Forecast -->
+        <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 overflow-hidden shadow-sm">
+            <div class="px-5 py-4 border-b border-stone-100 dark:border-stone-700 flex items-center justify-between">
+                <h3 class="text-sm font-bold text-stone-900 dark:text-stone-100">Revenue Forecast (30 Days)</h3>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-full">Predictive</span>
+            </div>
+            <div id="forecast-container" class="p-5">
+                <div class="flex items-center justify-center py-12 text-stone-400">
+                    <svg class="w-5 h-5 animate-spin mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    Loading forecast...
+                </div>
+            </div>
+        </div>
+
+        <!-- Fraud Detection -->
+        <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 overflow-hidden shadow-sm">
+            <div class="px-5 py-4 border-b border-stone-100 dark:border-stone-700 flex items-center justify-between">
+                <h3 class="text-sm font-bold text-stone-900 dark:text-stone-100">Fraud Detection</h3>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full">Security</span>
+            </div>
+            <div id="fraud-container" class="p-5">
+                <div class="flex items-center justify-center py-12 text-stone-400">
+                    <svg class="w-5 h-5 animate-spin mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    Loading alerts...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cohort Analysis -->
+    <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 overflow-hidden shadow-sm">
+        <div class="px-5 py-4 border-b border-stone-100 dark:border-stone-700 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <h3 class="text-sm font-bold text-stone-900 dark:text-stone-100">Customer Cohort Analysis</h3>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-full">RFM</span>
+            </div>
+        </div>
+        <div id="cohort-container" class="p-5">
+            <div class="flex items-center justify-center py-12 text-stone-400">
+                <svg class="w-5 h-5 animate-spin mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Loading cohort data...
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function refreshAnalytics() {
+    const period = document.getElementById('period-select')?.value || 30;
+    
+    // Fetch all analytics endpoints in parallel
+    const [predictiveRes, forecastRes, insightsRes, fraudRes] = await Promise.all([
+        fetch(`/api/admin/analytics/predictive?days=${period}`).catch(() => null),
+        fetch(`/api/admin/analytics/forecast?days_ahead=30`).catch(() => null),
+        fetch('/api/admin/analytics/insights').catch(() => null),
+        fetch('/api/admin/analytics/fraud').catch(() => null),
+    ]);
+
+    // Update stats
+    if (predictiveRes?.ok) {
+        const data = await predictiveRes.json();
+        document.getElementById('stat-revenue').textContent = `₦${(data.revenue?.total_revenue || 0).toLocaleString()}`;
+        document.getElementById('stat-orders').textContent = (data.revenue?.total_orders || 0).toLocaleString();
+        document.getElementById('stat-aov').textContent = `₦${(data.revenue?.avg_order_value || 0).toLocaleString()}`;
+        document.getElementById('stat-customers').textContent = (data.customers?.repeat_customers || 0).toLocaleString();
+    }
+
+    // Update insights
+    if (insightsRes?.ok) {
+        const data = await insightsRes.json();
+        const container = document.getElementById('insights-container');
+        if (data.insights?.length) {
+            container.innerHTML = data.insights.map(i => `
+                <div class="flex items-start gap-3 p-3 rounded-xl bg-white dark:bg-stone-800/50 border border-stone-100 dark:border-stone-700">
+                    <div class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                        i.severity === 'positive' ? 'bg-emerald-500' :
+                        i.severity === 'warning' ? 'bg-amber-500' :
+                        i.severity === 'negative' ? 'bg-red-500' : 'bg-blue-500'
+                    }"></div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">${i.title}</p>
+                        <p class="text-sm text-stone-500 dark:text-stone-400">${i.message}</p>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = '<p class="text-sm text-stone-400 text-center py-4">No insights available yet. Data is being collected.</p>';
+        }
+    }
+
+    // Update forecast (simple list view)
+    if (forecastRes?.ok) {
+        const data = await forecastRes.json();
+        const container = document.getElementById('forecast-container');
+        if (data.forecasts?.length) {
+            const total = data.forecasts.reduce((s, f) => s + f.predicted, 0);
+            const avg = total / data.forecasts.length;
+            container.innerHTML = `
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <p class="text-xs text-stone-400">30-Day Projected Revenue</p>
+                        <p class="text-xl font-black text-stone-900 dark:text-stone-100">₦${total.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-stone-400">Daily Average</p>
+                        <p class="text-xl font-black text-stone-900 dark:text-stone-100">₦${avg.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
+                    </div>
+                </div>
+                <div class="space-y-1.5 max-h-48 overflow-y-auto">
+                    ${data.forecasts.slice(0, 14).map(f => `
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-stone-500">${new Date(f.date).toLocaleDateString()}</span>
+                            <span class="font-medium text-stone-900 dark:text-stone-100">₦${f.predicted.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+                            <span class="text-xs text-stone-400">${(f.confidence * 100).toFixed(0)}% conf</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } else {
+            container.innerHTML = '<p class="text-sm text-stone-400 text-center py-4">No forecast data available.</p>';
+        }
+    }
+
+    // Update fraud alerts
+    if (fraudRes?.ok) {
+        const data = await fraudRes.json();
+        const container = document.getElementById('fraud-container');
+        if (data.events?.length) {
+            container.innerHTML = `
+                <div class="space-y-2 max-h-64 overflow-y-auto">
+                    ${data.events.map(e => `
+                        <div class="flex items-start gap-3 p-3 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-800/30">
+                            <div class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                                e.score > 0.7 ? 'bg-red-500' :
+                                e.score > 0.4 ? 'bg-amber-500' : 'bg-yellow-500'
+                            }"></div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">${e.event_type}</p>
+                                <p class="text-xs text-stone-500">Score: ${(e.score * 100).toFixed(0)}% | Action: ${e.action_taken || 'pending'}</p>
+                            </div>
+                            <span class="text-[10px] text-stone-400">${new Date(e.created_at).toLocaleDateString()}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } else {
+            container.innerHTML = '<div class="flex items-center justify-center py-8 text-emerald-600"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>No fraud events detected</div>';
+        }
+    }
+}
+
+// Auto-refresh on load
+document.addEventListener('DOMContentLoaded', refreshAnalytics);
+
+// Refresh on period change
+document.getElementById('period-select')?.addEventListener('change', refreshAnalytics);
+</script>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends "web/base.html" %}
+{% block title %}My Wallet — ForgeStore{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex items-center gap-4 mb-8">
+        <a href="/shop/account" class="p-2 -ml-2 text-stone-400 hover:text-stone-900 transition-all duration-200 hover:bg-stone-50 rounded-lg">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7"/></svg>
+        </a>
+        <div>
+            <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-1 block">Wallet</span>
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-display font-black text-stone-900 dark:text-stone-100">My <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Wallet</span></h1>
+            <p class="text-sm text-stone-500 mt-1">Manage your balance and transactions</p>
+        </div>
+    </div>
+
+    <!-- Balance Card -->
+    <div class="bg-gradient-to-br from-stone-900 to-stone-800 rounded-2xl p-6 lg:p-8 shadow-xl mb-6">
+        <p class="text-xs font-medium text-stone-400 uppercase tracking-wider mb-2">Available Balance</p>
+        <p class="text-3xl sm:text-4xl font-black text-white font-display mb-1" id="wallet-balance">₦0.00</p>
+        <p class="text-xs text-stone-500" id="wallet-pending">Pending: ₦0.00</p>
+        <div class="flex gap-3 mt-6">
+            <button onclick="fundWallet()" class="px-5 py-2.5 text-sm font-medium text-white bg-amber-600 hover:bg-amber-500 rounded-xl transition-all duration-200 active:scale-[0.98] shadow-lg shadow-amber-600/20">Fund Wallet</button>
+            <a href="/shop/account/referrals" class="px-5 py-2.5 text-sm font-medium text-stone-300 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-200 backdrop-blur-sm">Earn Referrals</a>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-3 gap-3 sm:gap-4 mb-6">
+        <div class="bg-white rounded-xl border border-stone-200 p-4 text-center">
+            <p class="text-lg font-bold text-stone-900" id="total-deposits">₦0</p>
+            <p class="text-[10px] font-medium text-stone-400 uppercase tracking-wider mt-1">Deposits</p>
+        </div>
+        <div class="bg-white rounded-xl border border-stone-200 p-4 text-center">
+            <p class="text-lg font-bold text-stone-900" id="total-spent">₦0</p>
+            <p class="text-[10px] font-medium text-stone-400 uppercase tracking-wider mt-1">Spent</p>
+        </div>
+        <div class="bg-white rounded-xl border border-stone-200 p-4 text-center">
+            <p class="text-lg font-bold text-stone-900" id="total-earned">₦0</p>
+            <p class="text-[10px] font-medium text-stone-400 uppercase tracking-wider mt-1">Earned</p>
+        </div>
+    </div>
+
+    <!-- Fund Modal -->
+    <div id="fund-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-stone-900">Fund Wallet</h3>
+                <button onclick="closeFundModal()" class="p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-lg transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form id="fund-form" onsubmit="event.preventDefault(); processFunding()">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-stone-700 mb-1.5">Amount (₦)</label>
+                    <input id="fund-amount" type="number" min="100" step="100" class="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all text-sm" placeholder="Enter amount" required>
+                </div>
+                <p class="text-xs text-stone-400 mb-4">Minimum: ₦100</p>
+                <button type="submit" id="fund-btn" class="w-full py-3 text-sm font-medium text-white bg-stone-900 hover:bg-stone-800 rounded-xl transition-all duration-200 active:scale-[0.98]">Proceed to Payment</button>
+            </form>
+            <div id="fund-error" class="mt-3 text-sm text-red-500 hidden"></div>
+        </div>
+    </div>
+
+    <!-- Transaction History -->
+    <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
+        <div class="px-4 sm:px-6 py-4 border-b border-stone-100">
+            <h2 class="text-sm font-bold text-stone-900 uppercase tracking-wider">Transaction History</h2>
+        </div>
+        <div class="divide-y divide-stone-50" id="transactions-list">
+            <div class="px-6 py-8 text-center text-sm text-stone-400">
+                <div class="w-12 h-12 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                Loading transactions...
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let walletData = null;
+
+async function loadWallet() {
+    try {
+        const res = await fetch('/api/wallet/balance');
+        if (res.status === 401) { window.location.href = '/shop/login'; return; }
+        walletData = await res.json();
+        document.getElementById('wallet-balance').textContent = '₦' + (walletData.balance || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('wallet-pending').textContent = 'Pending: ₦' + (walletData.pending_balance || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
+    } catch (e) {}
+}
+
+function fundWallet() {
+    document.getElementById('fund-modal').classList.remove('hidden');
+    document.getElementById('fund-modal').classList.add('flex');
+}
+
+function closeFundModal() {
+    document.getElementById('fund-modal').classList.add('hidden');
+    document.getElementById('fund-modal').classList.remove('flex');
+}
+
+async function processFunding() {
+    const btn = document.getElementById('fund-btn');
+    const errEl = document.getElementById('fund-error');
+    const amount = parseFloat(document.getElementById('fund-amount').value);
+    errEl.classList.add('hidden');
+    btn.disabled = true;
+    btn.textContent = 'Processing...';
+
+    try {
+        const res = await fetch('/api/wallet/fund', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount, provider: 'paystack' }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Funding failed');
+
+        if (data.authorization_url) {
+            window.location.href = data.authorization_url;
+        } else {
+            closeFundModal();
+            loadWallet();
+        }
+    } catch (e) {
+        errEl.textContent = e.message;
+        errEl.classList.remove('hidden');
+    }
+    btn.disabled = false;
+    btn.textContent = 'Proceed to Payment';
+}
+
+// Close modal on backdrop click
+document.getElementById('fund-modal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeFundModal();
+});
+
+loadWallet();
+</script>
+{% endblock %}

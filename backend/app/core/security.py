@@ -319,6 +319,32 @@ def get_current_user_optional(
 
 
 # ==============================================================================
+# ADMIN ROLE CHECK (used by extended API routers)
+# ==============================================================================
+
+
+def require_admin_role(*roles: AdminRole):
+    """FastAPI dependency factory — validates the authenticated admin has
+    **one of** the given *roles*.
+
+    Usage::
+
+        @router.get("/admin/sensitive")
+        def sensitive(admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT))):
+            ...
+    """
+    def role_checker(admin: AdminUser = Depends(get_current_admin)) -> AdminUser:
+        if admin.role not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient role permissions",
+            )
+        return admin
+    return role_checker
+
+
+
+# ==============================================================================
 # AUDIT LOGGING
 # ==============================================================================
 

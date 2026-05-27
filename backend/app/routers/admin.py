@@ -11,7 +11,9 @@ from app.database import get_db
 from app.models import (
     AdminUser, Product, Category, Retailer, Order, OrderItem,
     User, Settings, OrderStatus, NewsletterSubscriber,
-    BroadcastCampaign, BroadcastTemplate
+    BroadcastCampaign, BroadcastTemplate,
+    Shipment, ShipmentEvent, DeliveryAgent, Affiliate, AffiliateCommission,
+    VendorAnalytics, VendorPayout, NotificationQueue
 )
 from app.schemas import (
     ProductCreate, ProductUpdate, CategoryCreate, CategoryUpdate,
@@ -690,6 +692,51 @@ def notifications_page(request: Request, db: Session = Depends(get_db)):
     return render_template("admin/notifications.html", {
         "request": request,
         "admin": admin,
+    })
+
+
+# --- Intelligence Dashboard ---
+@router.get("/intelligence", response_class=HTMLResponse)
+def intelligence_dashboard(request: Request, db: Session = Depends(get_db)):
+    admin = get_current_user_from_cookie(request, db)
+    if not admin or not has_permission(admin, "admin"):
+        return RedirectResponse(url="/admin/login", status_code=302)
+
+    return render_template("admin/intelligence.html", {
+        "request": request,
+        "admin": admin,
+    })
+
+
+# --- Shipments ---
+@router.get("/shipments", response_class=HTMLResponse)
+def shipment_list(request: Request, db: Session = Depends(get_db)):
+    admin = get_current_user_from_cookie(request, db)
+    if not admin or not has_permission(admin, "orders"):
+        return RedirectResponse(url="/admin/login", status_code=302)
+
+    shipments = db.query(Shipment).order_by(Shipment.created_at.desc()).all()
+    
+    return render_template("admin/shipments.html", {
+        "request": request,
+        "admin": admin,
+        "shipments": shipments,
+    })
+
+
+# --- Affiliates ---
+@router.get("/affiliates", response_class=HTMLResponse)
+def affiliate_list(request: Request, db: Session = Depends(get_db)):
+    admin = get_current_user_from_cookie(request, db)
+    if not admin or not has_permission(admin, "settings"):
+        return RedirectResponse(url="/admin/login", status_code=302)
+
+    affiliates = db.query(Affiliate).order_by(Affiliate.created_at.desc()).all()
+    
+    return render_template("admin/affiliates.html", {
+        "request": request,
+        "admin": admin,
+        "affiliates": affiliates,
     })
 
 

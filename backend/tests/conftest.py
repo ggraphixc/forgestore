@@ -16,11 +16,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from fastapi.testclient import TestClient
 
 # Override DATABASE_URL before any app imports
-# Use a file-based database to avoid thread-safety issues with :memory:
-_test_db = Path(__file__).resolve().parent / "test_forgestore.db"
-# Remove any leftover test database
-if _test_db.exists():
-    _test_db.unlink()
+# Use a temporary file with a unique name to avoid locking conflicts
+import tempfile
+_tmp_db = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
+_tmp_db.close()
+_test_db = Path(_tmp_db.name)
 os.environ["DATABASE_URL"] = f"sqlite:///{_test_db.as_posix()}"
 
 from app.database import Base, init_db, SessionLocal, get_db

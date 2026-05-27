@@ -87,6 +87,7 @@ def get_db():
 def init_db():
     """Create all tables."""
     from app.models import (  # noqa: F401 — import to register models
+        # Existing models
         AdminUser,
         Category,
         Product,
@@ -105,5 +106,57 @@ def init_db():
         BroadcastCampaign,
         BroadcastEvent,
         BroadcastTemplate,
+        # System 1: Real-time Order Tracking
+        Shipment,
+        ShipmentEvent,
+        DeliveryAgent,
+        DeliveryLocationLog,
+        # System 2: Advanced Vendor Dashboard
+        VendorAnalytics,
+        VendorPayout,
+        VendorActivityLog,
+        VendorPerformanceCache,
+        # System 3: AI Shopping Assistant
+        AIConversation,
+        AIMessage,
+        UserPreferenceVector,
+        RecommendationCache,
+        # System 4: Affiliate & Referral
+        Affiliate,
+        AffiliateCommission,
+        ReferralEvent,
+        AffiliatePayout,
+        # System 5: Multi-Payment & Wallet
+        Wallet,
+        WalletTransaction,
+        PaymentProvider,
+        PaymentLog,
+        EscrowTransaction,
+        PaymentSplit,
+        # System 6: Advanced Cart
+        PersistentCart,
+        CartActivity,
+        AbandonedCart,
+        CartRecommendation,
+        # System 7: AI-Powered Smart Search
+        SearchHistory,
+        SearchTrend,
+        SearchEmbedding,
+        SearchClickAnalytics,
+        # System 8: Modern Product Review
+        ReviewMedia,
+        ReviewReaction,
+        ReviewSentiment,
+        ReviewModeration,
+        # System 9: Notification Infrastructure
+        NotificationQueue,
+        PushSubscription,
+        UserNotificationPreferences,
+        NotificationDeliveryLog,
+        # System 10: Enterprise Commerce Intelligence
+        AnalyticsSnapshot,
+        CustomerLifetimeValue,
+        FraudDetectionEvent,
+        PredictiveForecast,
     )
     Base.metadata.create_all(bind=get_engine())

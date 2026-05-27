@@ -14,3 +14,12 @@ pydantic-settings==2.7.0
 python-dotenv==1.0.1
 requests==2.32.3
 slowapi==0.1.9
+
+# --- New Infrastructure ---
+redis==5.2.1
+celery==5.4.0
+websockets==14.1
+openai==1.55.0
+anthropic>=0.49.0
+pgvector>=0.3.0
+async-timeout>=5.0.0

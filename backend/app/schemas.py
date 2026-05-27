@@ -205,3 +205,269 @@ class DashboardStats(BaseModel):
     total_customers: int
     total_revenue: float
     recent_orders: List[dict] = []
+
+
+# ===== ENTERPRISE SYSTEM SCHEMAS =====
+
+# --- 1. Shipment / Order Tracking ---
+class ShipmentCreate(BaseModel):
+    order_id: str
+    carrier: str
+    tracking_number: str
+    estimated_delivery: Optional[datetime] = None
+    origin: str = ""
+    destination: str = ""
+
+
+class ShipmentStatusUpdate(BaseModel):
+    status: str
+    location: Optional[str] = None
+    description: Optional[str] = None
+
+
+class ShipmentResponse(BaseModel):
+    id: str
+    order_id: str
+    carrier: str
+    tracking_number: str
+    status: str
+    estimated_delivery: Optional[datetime] = None
+    origin: str = ""
+    destination: str = ""
+    delivery_agent_id: Optional[str] = None
+    created_at: Optional[datetime] = None
+    events: List[dict] = []
+
+    class Config:
+        from_attributes = True
+
+
+class DeliveryAgentCreate(BaseModel):
+    name: str
+    phone: str
+    email: Optional[str] = None
+    vehicle_type: Optional[str] = None
+    service_zone: Optional[str] = None
+
+
+class DeliveryAgentResponse(BaseModel):
+    id: str
+    name: str
+    phone: str
+    email: Optional[str] = None
+    vehicle_type: Optional[str] = None
+    service_zone: Optional[str] = None
+    is_available: bool = True
+    active_deliveries: int = 0
+    rating: float = 0.0
+
+    class Config:
+        from_attributes = True
+
+
+# --- 2. Vendor Dashboard ---
+class VendorAnalyticsResponse(BaseModel):
+    total_revenue: float = 0.0
+    total_orders: int = 0
+    total_products: int = 0
+    total_customers: int = 0
+    avg_order_value: float = 0.0
+    conversion_rate: float = 0.0
+    revenue_growth: float = 0.0
+    period: str = "30d"
+
+
+class VendorPayoutResponse(BaseModel):
+    id: str
+    amount: float
+    status: str
+    period_start: datetime
+    period_end: datetime
+    paid_at: Optional[datetime] = None
+    transaction_reference: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+# --- 3. AI Shopping Assistant ---
+class AIChatRequest(BaseModel):
+    message: str
+    conversation_id: Optional[str] = None
+    session_id: Optional[str] = None
+
+
+class AIChatResponse(BaseModel):
+    message: str
+    conversation_id: str
+    suggestions: List[str] = []
+    products: List[dict] = []
+
+
+class AICompareRequest(BaseModel):
+    product_ids: List[str]
+    query: Optional[str] = None
+
+
+# --- 4. Affiliate & Referral ---
+class AffiliateCreate(BaseModel):
+    user_id: str
+    referral_code: Optional[str] = None
+
+
+class AffiliateResponse(BaseModel):
+    id: str
+    user_id: str
+    referral_code: str
+    total_earnings: float = 0.0
+    pending_earnings: float = 0.0
+    total_referrals: int = 0
+    status: str = "ACTIVE"
+
+    class Config:
+        from_attributes = True
+
+
+class ReferralWithdrawRequest(BaseModel):
+    amount: float
+    payment_method: str = "wallet"
+
+
+# --- 5. Wallet & Multi-Payment ---
+class WalletFundRequest(BaseModel):
+    amount: float
+    provider: str = "paystack"
+
+
+class WalletResponse(BaseModel):
+    id: str
+    user_id: str
+    balance: float = 0.0
+    pending_balance: float = 0.0
+    currency: str = "NGN"
+
+    class Config:
+        from_attributes = True
+
+
+class PaymentInitializeRequest(BaseModel):
+    amount: float
+    provider: str = "paystack"
+    metadata: Optional[dict] = None
+
+
+class PaymentVerifyRequest(BaseModel):
+    reference: str
+    provider: str = "paystack"
+
+
+class EscrowCreateRequest(BaseModel):
+    order_id: str
+    amount: float
+    release_on: Optional[str] = None
+
+
+# --- 6. Cart Infrastructure ---
+class CartSyncRequest(BaseModel):
+    items: List[dict]
+    user_id: Optional[str] = None
+    session_id: Optional[str] = None
+
+
+class CartMergeRequest(BaseModel):
+    session_id: str
+    user_id: str
+
+
+class CartRecoveryResponse(BaseModel):
+    cart_id: str
+    items: List[dict]
+    total: float
+
+
+# --- 7. AI Smart Search ---
+class SmartSearchRequest(BaseModel):
+    query: str
+    filters: Optional[dict] = None
+    page: int = 1
+    page_size: int = 20
+    personalized: bool = True
+
+
+class SmartSearchResponse(BaseModel):
+    results: List[dict]
+    total: int
+    suggestions: List[str] = []
+    corrected_query: Optional[str] = None
+    trending: List[str] = []
+
+
+class SearchFeedbackRequest(BaseModel):
+    query: str
+    clicked_product_id: str
+    position: int
+    relevant: Optional[bool] = None
+
+
+# --- 8. Review System ---
+class ReviewMediaUpload(BaseModel):
+    review_id: str
+    media_type: str = "image"  # image | video
+    url: str
+
+
+class ReviewReactionRequest(BaseModel):
+    review_id: str
+    reaction: str  # like | helpful | funny | insightful
+
+
+class ReviewReplyRequest(BaseModel):
+    review_id: str
+    content: str
+    retailer_id: Optional[str] = None
+
+
+class ReviewFilterParams(BaseModel):
+    product_id: Optional[str] = None
+    rating: Optional[int] = None
+    verified_only: bool = False
+    media_only: bool = False
+    sort_by: str = "recent"  # recent | helpful | highest | lowest
+    page: int = 1
+    page_size: int = 10
+
+
+# --- 9. Notification System ---
+class NotificationPreferences(BaseModel):
+    email_notifications: bool = True
+    push_notifications: bool = True
+    sms_notifications: bool = False
+    order_updates: bool = True
+    promotion_alerts: bool = False
+    shipment_alerts: bool = True
+    weekly_digest: bool = False
+
+
+class PushSubscriptionRequest(BaseModel):
+    endpoint: str
+    keys: dict
+    user_agent: Optional[str] = None
+
+
+# --- 10. Enterprise Intelligence ---
+class PredictiveAnalyticsResponse(BaseModel):
+    revenue_forecast: List[dict] = []
+    demand_forecast: List[dict] = []
+    confidence_score: float = 0.0
+    period: str = "30d"
+
+
+class CohortAnalysisResponse(BaseModel):
+    cohorts: List[dict] = []
+    retention_rates: List[float] = []
+    avg_lifetime_value: float = 0.0
+
+
+class InsightResponse(BaseModel):
+    insights: List[dict] = []
+    generated_at: datetime = None

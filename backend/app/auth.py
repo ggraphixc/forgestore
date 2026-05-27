@@ -12,6 +12,7 @@ from app.core.security import (
     ROLE_PERMISSIONS,
     has_permission,
     require_role,
+    require_admin_role,
 
     # ── Password helpers ──
     verify_password,

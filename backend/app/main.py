@@ -112,6 +112,25 @@ app.include_router(web.router)
 app.include_router(web_api.router)
 app.include_router(paystack_webhook.router)
 
+# New enterprise system routers
+from app.routers.api_admin_ext import router as api_admin_ext_router
+from app.routers.api_web_ext import router as api_web_ext_router
+from app.routers.api_shipment import router as api_shipment_router
+
+app.include_router(api_admin_ext_router)
+app.include_router(api_web_ext_router)
+app.include_router(api_shipment_router)
+
+
+@app.get("/ws", include_in_schema=False)
+async def websocket_endpoint(request: Request):
+    """WebSocket endpoint for real-time updates.
+    Use the WebSocket URL: ws://host/ws?channel=CHANNEL_NAME
+    """
+    from fastapi.responses import HTMLResponse
+    # SSO-based WebSocket handshake handled via app/core/websocket_manager.py
+    return HTMLResponse("WebSocket endpoint active — use WebSocket protocol")
+
 
 @app.on_event("startup")
 def on_startup():
@@ -136,6 +155,25 @@ def _cleanup_abandoned_carts():
         db.close()
     except Exception as e:
         logger.warning("Cart cleanup failed: %s", e)
+
+
+# ===== WebSocket Event Handler =====
+from app.core.websocket_manager import ws_manager
+
+
+@app.websocket("/ws/{channel:path}")
+async def websocket_route(websocket, channel: str = ""):
+    """WebSocket endpoint for real-time event streaming.
+    
+    Channels:
+        - admin:orders    — Order status updates
+        - admin:shipments — Shipment tracking updates
+        - admin:alerts    — Admin dashboard alerts
+        - order:{id}      — Specific order tracking (customer)
+        - shipment:{id}   — Specific shipment tracking
+    """
+    from fastapi import WebSocket
+    await ws_manager.connect(websocket, channel)
 
 
 @app.get("/", response_class=HTMLResponse)
