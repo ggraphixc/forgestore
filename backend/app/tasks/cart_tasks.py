@@ -78,7 +78,6 @@ def cleanup_old_carts():
     db = SessionLocal()
     try:
         from app.models import CartActivity, AbandonedCart
-        from datetime import timedelta
 
         cutoff = utcnow() - timedelta(days=30)
 

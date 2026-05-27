@@ -38,8 +38,9 @@ def process_notification_queue(self):
         try:
             notification_service = NotificationService(db)
             # Process pending notifications
-            pending = db.query(type("cls", (), {}).__class__).filter(
-                # Filter logic here
+            from app.models import NotificationQueue
+            pending = db.query(NotificationQueue).filter(
+                NotificationQueue.status == "PENDING"
             ).all()
             logger.info(f"Processing {len(pending)} pending notifications")
         finally:

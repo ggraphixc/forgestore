@@ -1,9 +1,8 @@
 """Celery tasks for analytics, forecasting, and insight generation."""
 import logging
-from datetime import datetime
 from datetime import timedelta
 from app.utils import utcnow
-from app.utils import utcnow
+from sqlalchemy import func
 
 from app.core.celery_app import celery_app
 from app.database import SessionLocal
@@ -187,5 +186,3 @@ def update_product_embeddings():
             db.close()
     except Exception as e:
         logger.error(f"Failed to update product embeddings: {e}")
-
-from sqlalchemy import func

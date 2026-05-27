@@ -29,8 +29,6 @@ admin_dep = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT
 @router.get("/shipments")
 def list_shipments(status: Optional[str] = None, db: Session = Depends(get_db), admin: AdminUser = admin_dep):
     """List all shipments, optionally filtered by status."""
-    service = ShipmentService(db)
-    query = db.query(service.db.query(type("_", (), {}).__class__))
     # Simplified: return all shipments
     from app.models import Shipment
     q = db.query(Shipment)
