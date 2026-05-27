@@ -1,7 +1,8 @@
 """Multi-Payment & Wallet System — System 5"""
 import logging
 import uuid
-from datetime import datetime, timedelta
+from datetime import timedelta
+from app.utils import utcnow
 from typing import Optional, Protocol, Any
 from abc import ABC, abstractmethod
 from sqlalchemy.orm import Session
@@ -238,7 +239,7 @@ class EscrowService:
             payee_id=payee_id,
             status="HELD",
             release_condition=release_condition,
-            auto_release_at=datetime.utcnow() + timedelta(days=auto_release_days) if release_condition == "auto_release_date" else None,
+            auto_release_at=utcnow() + timedelta(days=auto_release_days) if release_condition == "auto_release_date" else None,
         )
         self.db.add(escrow)
         self.db.commit()
@@ -252,7 +253,7 @@ class EscrowService:
             return False
 
         escrow.status = "RELEASED"
-        escrow.released_at = datetime.utcnow()
+        escrow.released_at = utcnow()
         self.db.commit()
 
         # Credit the payee's wallet

@@ -1,7 +1,10 @@
 """Advanced Cart Infrastructure — System 6"""
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
+from app.utils import utcnow
+from app.utils import utcnow
 from typing import Optional, Any
 from sqlalchemy.orm import Session
 
@@ -56,11 +59,11 @@ class CartSyncService:
             items.append({
                 "product_id": product_id,
                 "quantity": quantity,
-                "added_at": datetime.utcnow().isoformat(),
+                "added_at": utcnow().isoformat(),
             })
 
         cart["items"] = items
-        cart["updated_at"] = datetime.utcnow().isoformat()
+        cart["updated_at"] = utcnow().isoformat()
         self.set_cart(cart_token, cart)
 
         # Persist to DB
@@ -73,7 +76,7 @@ class CartSyncService:
                 db.add(persistent)
             else:
                 persistent.items = items
-                persistent.updated_at = datetime.utcnow()
+                persistent.updated_at = utcnow()
             db.commit()
 
             # Log activity
@@ -93,7 +96,7 @@ class CartSyncService:
         cart = self.get_cart(cart_token)
         items = cart.get("items", [])
         cart["items"] = [i for i in items if i["product_id"] != product_id]
-        cart["updated_at"] = datetime.utcnow().isoformat()
+        cart["updated_at"] = utcnow().isoformat()
         self.set_cart(cart_token, cart)
 
         if db:
@@ -102,7 +105,7 @@ class CartSyncService:
             ).first()
             if persistent:
                 persistent.items = cart["items"]
-                persistent.updated_at = datetime.utcnow()
+                persistent.updated_at = utcnow()
                 db.commit()
 
             activity = CartActivity(
@@ -128,7 +131,7 @@ class CartSyncService:
                 break
 
         cart["items"] = items
-        cart["updated_at"] = datetime.utcnow().isoformat()
+        cart["updated_at"] = utcnow().isoformat()
         self.set_cart(cart_token, cart)
 
         if db:
@@ -137,7 +140,7 @@ class CartSyncService:
             ).first()
             if persistent:
                 persistent.items = cart["items"]
-                persistent.updated_at = datetime.utcnow()
+                persistent.updated_at = utcnow()
                 db.commit()
 
             activity = CartActivity(
@@ -162,7 +165,7 @@ class CartSyncService:
             ).first()
             if persistent:
                 persistent.items = []
-                persistent.updated_at = datetime.utcnow()
+                persistent.updated_at = utcnow()
                 db.commit()
 
             activity = CartActivity(
@@ -189,11 +192,11 @@ class CartSyncService:
             else:
                 merged[pid] = qty
 
-        items = [{"product_id": pid, "quantity": qty, "added_at": datetime.utcnow().isoformat()}
+        items = [{"product_id": pid, "quantity": qty, "added_at": utcnow().isoformat()}
                  for pid, qty in merged.items()]
 
         target_cart["items"] = items
-        target_cart["updated_at"] = datetime.utcnow().isoformat()
+        target_cart["updated_at"] = utcnow().isoformat()
         self.set_cart(target_token, target_cart)
         self.clear_cart(source_token, db)
 
@@ -203,7 +206,7 @@ class CartSyncService:
             ).first()
             if persistent:
                 persistent.items = items
-                persistent.updated_at = datetime.utcnow()
+                persistent.updated_at = utcnow()
                 db.commit()
 
             activity = CartActivity(
@@ -245,7 +248,7 @@ class CartRecoveryService:
             email=email,
             items=items,
             total_value=total_value,
-            abandoned_at=datetime.utcnow(),
+            abandoned_at=utcnow(),
         )
         self.db.add(abandoned)
         self.db.commit()
@@ -263,7 +266,7 @@ class CartRecoveryService:
 
         cart.reminder_sent = True
         cart.reminder_count += 1
-        cart.last_reminder_at = datetime.utcnow()
+        cart.last_reminder_at = utcnow()
         self.db.commit()
         return True
 
@@ -277,7 +280,7 @@ class CartRecoveryService:
 
         cart.recovered = True
         cart.recovery_order_id = order_id
-        cart.recovered_at = datetime.utcnow()
+        cart.recovered_at = utcnow()
         self.db.commit()
 
         # Log recovery activity

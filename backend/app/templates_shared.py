@@ -10,6 +10,24 @@ env = Environment(
 )
 
 
+def _escapejs(value):
+    """Escape a string for JavaScript string literal inclusion (safe for single/double quoted strings)."""
+    if value is None:
+        return ''
+    value = str(value)
+    value = value.replace('\\', '\\\\')
+    value = value.replace("'", "\\'")
+    value = value.replace('"', '\\"')
+    value = value.replace('\n', '\\n')
+    value = value.replace('\r', '\\r')
+    value = value.replace('\t', '\\t')
+    value = value.replace('</', '<\\/')
+    return value
+
+
+env.filters['escapejs'] = _escapejs
+
+
 def render_template(template_name: str, context: Optional[Dict[str, Any]] = None, status_code: int = 200, **kwargs):
     """Render a Jinja2 template and return an HTMLResponse.
     

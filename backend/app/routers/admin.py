@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request, Form, Up
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
-from datetime import datetime
+from app.utils import utcnow
 import json
 import os
 import uuid
@@ -175,7 +175,7 @@ async def product_create(
         os.makedirs(upload_dir, exist_ok=True)
         for file in files:
             ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
-            unique_name = f"{int(datetime.utcnow().timestamp())}-{uuid.uuid4().hex[:8]}.{ext}"
+            unique_name = f"{int(utcnow().timestamp())}-{uuid.uuid4().hex[:8]}.{ext}"
             file_path = os.path.join(upload_dir, unique_name)
             content = await file.read()
             with open(file_path, "wb") as f:
@@ -521,7 +521,7 @@ def newsletter_subscribers(request: Request, db: Session = Depends(get_db)):
     pending_count = db.query(NewsletterSubscriber).filter(NewsletterSubscriber.confirmed == False).count()
 
     # Check for expired confirmations
-    now = datetime.utcnow()
+    now = utcnow()
     expired_count = db.query(NewsletterSubscriber).filter(
         NewsletterSubscriber.confirmed == False,
         NewsletterSubscriber.confirm_expires_at != None,
@@ -535,7 +535,7 @@ def newsletter_subscribers(request: Request, db: Session = Depends(get_db)):
         "confirmed_count": confirmed_count,
         "pending_count": pending_count,
         "expired_count": expired_count,
-        "now": datetime.utcnow,
+        "now": utcnow,
     })
 
 
@@ -753,8 +753,7 @@ def admin_profile(request: Request, db: Session = Depends(get_db)):
         Product.retailer_id == admin.vendor_id
     ).scalar() if admin.vendor_id else 0
 
-    from datetime import datetime as dt
-    days_active = (dt.utcnow() - admin.created_at).days if admin.created_at else 0
+    days_active = (utcnow() - admin.created_at).days if admin.created_at else 0
 
     return render_template("admin/me.html", {
         "request": request,
@@ -784,8 +783,7 @@ async def admin_profile_update(request: Request, db: Session = Depends(get_db)):
         Product.retailer_id == admin.vendor_id
     ).scalar() if admin.vendor_id else 0
 
-    from datetime import datetime as dt
-    days_active = (dt.utcnow() - admin.created_at).days if admin.created_at else 0
+    days_active = (utcnow() - admin.created_at).days if admin.created_at else 0
 
     ctx = {
         "request": request,

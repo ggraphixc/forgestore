@@ -5,7 +5,10 @@ Every function that was in ``app.auth`` lives here now.  ``app.auth`` is a
 thin re‑export shim so that existing import paths keep working.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
+from app.utils import utcnow
+from app.utils import utcnow
 from typing import Optional, List, Union
 
 from jose import JWTError, jwt
@@ -114,7 +117,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     ``settings.access_token_expire_minutes``.
     """
     to_encode = data.copy()
-    expire = datetime.utcnow() + (
+    expire = utcnow() + (
         expires_delta or timedelta(minutes=settings.access_token_expire_minutes)
     )
     to_encode.update({"exp": expire})

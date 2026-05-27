@@ -1,6 +1,7 @@
 """Real-time Notification Infrastructure — System 9"""
 import logging
 from datetime import datetime
+from app.utils import utcnow
 from typing import Optional
 from sqlalchemy.orm import Session
 
@@ -90,7 +91,7 @@ class NotificationService:
             delivery_log.status = "failed"
             delivery_log.error_message = str(e)
 
-        delivery_log.delivered_at = datetime.utcnow()
+        delivery_log.delivered_at = utcnow()
         self.db.add(delivery_log)
         self.db.commit()
 
@@ -99,7 +100,7 @@ class NotificationService:
         notification = self.db.query(NotificationQueue).filter(NotificationQueue.id == notification_id).first()
         if not notification:
             return False
-        notification.read_at = datetime.utcnow()
+        notification.read_at = utcnow()
         self.db.commit()
         return True
 
@@ -188,7 +189,7 @@ class RealtimeEventService:
             "order_id": order_id,
             "status": status,
             "data": data or {},
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": utcnow().isoformat(),
         }
         await ws_manager.broadcast(f"order:{order_id}", event)
         await ws_manager.broadcast("admin:orders", event)
@@ -202,7 +203,7 @@ class RealtimeEventService:
             "tracking_number": tracking_number,
             "status": status,
             "data": data or {},
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": utcnow().isoformat(),
         }
         await ws_manager.broadcast(f"shipment:{shipment_id}", event)
         await ws_manager.broadcast("admin:shipments", event)
@@ -216,6 +217,6 @@ class RealtimeEventService:
             "title": title,
             "message": message,
             "data": data or {},
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": utcnow().isoformat(),
         }
         await ws_manager.broadcast("admin:alerts", event)

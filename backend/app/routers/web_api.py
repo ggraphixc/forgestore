@@ -11,6 +11,7 @@ import uuid
 import random
 import string
 from datetime import datetime
+from app.utils import utcnow
 from urllib.parse import quote, unquote
 
 logger = logging.getLogger("forgestore.checkout")
@@ -24,7 +25,7 @@ from app.models import (
 from app.schemas import CartAddRequest, CartUpdateRequest, CheckoutRequest, ReviewCreateRequest
 from app.auth import get_current_customer_from_cookie
 from app.services.ai_service import ai_search_assistant, get_ai_recommendations
-from app.services.paystack_service import initialize_payment
+from app.services.payment_provider import get_payment_provider
 
 router = APIRouter(prefix="/api", tags=["web-api"])
 
@@ -253,7 +254,7 @@ def remove_from_wishlist(
 
 def generate_order_number():
     """Generate a unique order number like: FS-20250315-A7K2"""
-    date_part = datetime.utcnow().strftime("%Y%m%d")
+    date_part = utcnow().strftime("%Y%m%d")
     random_part = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
     return f"FS-{date_part}-{random_part}"
 
@@ -380,7 +381,7 @@ def newsletter_subscribe(data: dict, db: Session = Depends(get_db)):
         email=email,
         confirmed=False,
         confirm_token=token,
-        confirm_expires_at=datetime.utcnow() + timedelta(hours=48),
+        confirm_expires_at=utcnow() + timedelta(hours=48),
     )
     db.add(subscriber)
     db.commit()
@@ -473,7 +474,7 @@ def newsletter_tracking_open(
                 campaign_id=campaign_id,
                 subscriber_id=subscriber_id,
                 event_type="opened",
-                timestamp=datetime.utcnow(),
+                timestamp=utcnow(),
             )
             db.add(event)
             # Update campaign count
@@ -533,7 +534,7 @@ def newsletter_tracking_click(
                 subscriber_id=subscriber_id,
                 event_type="clicked",
                 extra_data={"url": decoded_url},
-                timestamp=datetime.utcnow(),
+                timestamp=utcnow(),
             )
             db.add(event)
             campaign.clicked_count = db.query(BroadcastEvent).filter(
@@ -811,41 +812,44 @@ def checkout(
     from app.services.email_service import send_order_confirmation_email
     send_order_confirmation_email(shipping.email, order.order_number, shipping.name)
 
-    # Initialize Paystack payment
+    # Initialize payment via abstraction layer
     from app.config import get_settings
     _settings = get_settings()
     base_url = _settings.site_base_url.rstrip("/")
     currency = get_currency(db)
-    paystack_result = initialize_payment(
+
+    provider_name = getattr(_settings, 'default_payment_provider', 'paystack') or 'paystack'
+    provider = get_payment_provider(provider_name)
+    payment_result = provider.initialize_payment(
         email=shipping.email,
         amount=total,
-        order_id=order.id,
-        order_number=order.order_number,
+        reference=order.order_number,
         callback_url=f"{base_url}/shop/checkout?order_id={order.id}&reference={order.order_number}",
         currency=currency,
+        metadata={"order_id": order.id, "order_number": order.order_number},
     )
 
-    if paystack_result["success"]:
+    if payment_result["success"]:
         return {
             "success": True,
             "order_id": order.id,
             "order_number": order.order_number,
-            "payment_url": paystack_result["authorization_url"],
-            "access_code": paystack_result.get("access_code", ""),
+            "payment_url": payment_result["authorization_url"],
+            "access_code": payment_result.get("access_code", ""),
         }
     else:
         logger.warning(
-            "Paystack init failed for order %s: %s",
+            "Payment init failed for order %s (provider=%s): %s",
             order.order_number,
-            paystack_result.get("message"),
+            provider_name,
+            payment_result.get("message"),
         )
-        # Return order created but payment not started
         return {
             "success": True,
             "order_id": order.id,
             "order_number": order.order_number,
             "payment_url": None,
-            "paystack_error": paystack_result.get("message"),
+            "paystack_error": payment_result.get("message"),
         }
 
 
@@ -1082,7 +1086,7 @@ def update_profile(request: Request, data: dict, db: Session = Depends(get_db)):
 
     if "name" in data:
         customer.name = data["name"]
-    customer.updated_at = datetime.utcnow()
+    customer.updated_at = utcnow()
     db.commit()
     return {"success": True}
 
@@ -1140,6 +1144,6 @@ def change_password(request: Request, data: dict, db: Session = Depends(get_db))
         raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
 
     customer.password = hash_password(new_pass)
-    customer.updated_at = datetime.utcnow()
+    customer.updated_at = utcnow()
     db.commit()
     return {"success": True}

@@ -2,7 +2,10 @@
 import json
 import logging
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
+from app.utils import utcnow
+from app.utils import utcnow
 from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func, desc
@@ -259,7 +262,7 @@ class TrendingService:
 
     def get_trending_searches(self, limit: int = 10) -> list[dict]:
         """Get currently trending search queries."""
-        today = datetime.utcnow().date()
+        today = utcnow().date()
         week_ago = today - timedelta(days=7)
 
         trends = self.db.query(
@@ -282,7 +285,7 @@ class TrendingService:
             return
 
         normalized = query.lower().strip()
-        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start = utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
 
         trend = self.db.query(SearchTrend).filter(
             SearchTrend.normalized_query == normalized,

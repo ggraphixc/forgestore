@@ -1,7 +1,10 @@
 """Affiliate & Referral System — System 4"""
 import logging
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
+from app.utils import utcnow
+from app.utils import utcnow
 from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -122,7 +125,7 @@ class AffiliateService:
         ).order_by(AffiliateCommission.created_at.desc()).limit(20).all()
 
         # Get clicks over time (last 30 days)
-        month_ago = datetime.utcnow() - timedelta(days=30)
+        month_ago = utcnow() - timedelta(days=30)
         clicks = self.db.query(ReferralEvent).filter(
             ReferralEvent.affiliate_id == affiliate_id,
             ReferralEvent.event_type == "click",
@@ -284,7 +287,7 @@ class ReferralService:
 
         payout.status = "COMPLETED"
         payout.payment_reference = payment_reference
-        payout.processed_at = datetime.utcnow()
+        payout.processed_at = utcnow()
         self.db.commit()
         return True
 

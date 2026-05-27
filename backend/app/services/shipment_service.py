@@ -1,11 +1,13 @@
 """Real-time Order Tracking System — System 1"""
 import logging
 import uuid
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.models import Shipment, ShipmentEvent, DeliveryAgent, DeliveryLocationLog, Order
+from app.utils import utcnow
+from app.core.websocket_manager import ws_manager
 
 logger = logging.getLogger("forgestore.shipment")
 
@@ -35,7 +37,7 @@ class ShipmentService:
     ) -> Shipment:
         """Create a new shipment for an order."""
         tracking_number = self._generate_tracking_number()
-        estimated_delivery = datetime.utcnow() + timedelta(days=estimated_delivery_days)
+        estimated_delivery = utcnow() + timedelta(days=estimated_delivery_days)
 
         shipment = Shipment(
             order_id=order_id,
@@ -55,6 +57,21 @@ class ShipmentService:
 
         # Create initial event
         self.add_event(shipment.id, "PENDING", description="Shipment created and pending pickup")
+
+        # Broadcast via WebSocket
+        try:
+            order = self.db.query(Order).filter(Order.id == order_id).first()
+            if order:
+                import asyncio
+                asyncio.ensure_future(ws_manager.broadcast_order_update(order_id, {
+                    "type": "shipment.created",
+                    "shipment_id": shipment.id,
+                    "tracking_number": tracking_number,
+                    "status": "PENDING",
+                }))
+        except Exception:
+            logger.warning("Failed to broadcast shipment creation", exc_info=True)
+
         return shipment
 
     def add_event(
@@ -95,11 +112,29 @@ class ShipmentService:
         shipment.status = status
 
         if status == "DELIVERED":
-            shipment.actual_delivery = datetime.utcnow()
+            shipment.actual_delivery = utcnow()
 
         self.db.commit()
 
         self.add_event(shipment_id, status, description=description or f"Status changed from {old_status} to {status}")
+
+        # Broadcast via WebSocket
+        try:
+            import asyncio
+            asyncio.ensure_future(ws_manager.broadcast_order_update(shipment.order_id, {
+                "type": "shipment.status_update",
+                "shipment_id": shipment.id,
+                "tracking_number": shipment.tracking_number,
+                "status": status,
+                "old_status": old_status,
+            }))
+            asyncio.ensure_future(ws_manager.broadcast(
+                f"shipment:{shipment.id}",
+                {"type": "status_update", "status": status, "old_status": old_status, "description": description or ""}
+            ))
+        except Exception:
+            logger.warning("Failed to broadcast shipment status update", exc_info=True)
+
         return shipment
 
     def assign_delivery_agent(self, shipment_id: str, agent_id: str) -> Shipment:
@@ -217,7 +252,7 @@ class DeliveryService:
 
         agent.current_latitude = latitude
         agent.current_longitude = longitude
-        agent.last_location_update = datetime.utcnow()
+        agent.last_location_update = utcnow()
         self.db.commit()
 
         # Log the location
@@ -247,7 +282,7 @@ class DeliveryService:
 
     def get_agent_location_history(self, agent_id: str, hours: int = 24) -> list[DeliveryLocationLog]:
         """Get location history for an agent."""
-        cutoff = datetime.utcnow() - timedelta(hours=hours)
+        cutoff = utcnow() - timedelta(hours=hours)
         return self.db.query(DeliveryLocationLog).filter(
             DeliveryLocationLog.agent_id == agent_id,
             DeliveryLocationLog.timestamp >= cutoff,

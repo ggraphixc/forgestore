@@ -1,6 +1,49 @@
 {% extends "web/base.html" %}
 {% block title %}Track Order — ForgeStore{% endblock %}
 {% block content %}
+<script>
+// Real-time tracking via WebSocket
+(function() {
+    const orderId = '{{ order_id|default("") }}';
+    const channel = 'order:' + orderId;
+
+    function connectWS() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = protocol + '//' + window.location.host + '/ws/' + channel;
+        const ws = new WebSocket(wsUrl);
+
+        ws.onmessage = function(e) {
+            try {
+                const data = JSON.parse(e.data);
+                if (data.type === 'shipment.status_update' || data.type === 'shipment.created') {
+                    const msg = (data.description || data.status || 'Status updated').replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+                    showNotification('Tracking Update: ' + msg);
+                    setTimeout(function() { location.reload(); }, 1500);
+                }
+            } catch(err) {
+                console.warn('WS parse error:', err);
+            }
+        };
+
+        ws.onclose = function() {
+            setTimeout(connectWS, 5000);
+        };
+    }
+
+    function showNotification(msg) {
+        var div = document.createElement('div');
+        div.className = 'fixed top-4 right-4 z-50 bg-amber-600 text-white px-6 py-3 rounded-xl shadow-lg text-sm font-medium animate-bounce';
+        div.textContent = msg;
+        document.body.appendChild(div);
+        setTimeout(function() { div.remove(); }, 4000);
+    }
+
+    if (orderId) {
+        connectWS();
+    }
+})();
+</script>
+
 <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex items-center gap-4 mb-8">
         <a href="/shop/account/orders" class="p-2 -ml-2 text-stone-400 hover:text-stone-900 transition-all duration-200 hover:bg-stone-50 rounded-lg">

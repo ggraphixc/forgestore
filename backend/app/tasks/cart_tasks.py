@@ -1,6 +1,7 @@
 """Celery tasks for cart recovery and abandoned cart processing."""
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
+from app.utils import utcnow
 
 from app.core.celery_app import celery_app
 from app.database import SessionLocal
@@ -29,7 +30,7 @@ def send_cart_recovery_email(self, abandoned_cart_id: str):
             # Log the reminder
             cart.reminder_sent = True
             cart.reminder_count = (cart.reminder_count or 0) + 1
-            cart.last_reminder_at = datetime.utcnow()
+            cart.last_reminder_at = utcnow()
             db.commit()
         finally:
             db.close()
@@ -47,7 +48,7 @@ def detect_abandoned_carts():
         from app.services.cart_sync_service import CartRecoveryService
 
         recovery_service = CartRecoveryService(db)
-        cutoff = datetime.utcnow() - timedelta(hours=6)
+        cutoff = utcnow() - timedelta(hours=6)
 
         # Find carts with no activity for 6+ hours
         stale_carts = db.query(
@@ -79,7 +80,7 @@ def cleanup_old_carts():
         from app.models import CartActivity, AbandonedCart
         from datetime import timedelta
 
-        cutoff = datetime.utcnow() - timedelta(days=30)
+        cutoff = utcnow() - timedelta(days=30)
 
         # Clean old activities
         deleted_activities = db.query(CartActivity).filter(
@@ -88,7 +89,7 @@ def cleanup_old_carts():
         db.commit()
 
         # Clean unrecovered abandoned carts older than 60 days
-        old_abandoned_cutoff = datetime.utcnow() - timedelta(days=60)
+        old_abandoned_cutoff = utcnow() - timedelta(days=60)
         deleted_abandoned = db.query(AbandonedCart).filter(
             AbandonedCart.abandoned_at < old_abandoned_cutoff,
             AbandonedCart.recovered == False,

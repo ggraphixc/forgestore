@@ -1,6 +1,9 @@
 """Advanced Vendor Dashboard — System 2"""
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
+from app.utils import utcnow
+from app.utils import utcnow
 from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, extract
@@ -21,7 +24,7 @@ class VendorAnalyticsService:
 
     def get_dashboard_data(self, retailer_id: str, days: int = 30) -> dict:
         """Get comprehensive dashboard data for a vendor."""
-        now = datetime.utcnow()
+        now = utcnow()
         period_start = now - timedelta(days=days)
 
         # Revenue metrics
@@ -51,7 +54,7 @@ class VendorAnalyticsService:
         avg_order_value = round(total_revenue / total_orders, 2) if total_orders else 0
 
         # Get previous period for comparison
-        prev_start = period_start - timedelta(days=(datetime.utcnow() - period_start).days)
+        prev_start = period_start - timedelta(days=(utcnow() - period_start).days)
         prev_items = self.db.query(OrderItem).join(Product).filter(
             Product.retailer_id == retailer_id,
             OrderItem.created_at >= prev_start,
@@ -172,7 +175,7 @@ class VendorAnalyticsService:
         forecasts = []
         for product in products:
             # Calculate sales velocity (7-day average)
-            week_ago = datetime.utcnow() - timedelta(days=7)
+            week_ago = utcnow() - timedelta(days=7)
             recent_sales = self.db.query(func.sum(OrderItem.quantity)).filter(
                 OrderItem.product_id == product.id,
                 OrderItem.created_at >= week_ago,
@@ -249,7 +252,7 @@ class VendorPayoutService:
         payout.status = "COMPLETED"
         payout.payment_method = payment_method
         payout.payment_reference = payment_reference
-        payout.processed_at = datetime.utcnow()
+        payout.processed_at = utcnow()
         self.db.commit()
         self.db.refresh(payout)
         return payout
@@ -296,7 +299,7 @@ class VendorMetricsService:
 
     def cache_performance(self, retailer_id: str, cache_key: str, data: dict, ttl_hours: int = 1):
         """Cache performance data with TTL."""
-        expires_at = datetime.utcnow() + timedelta(hours=ttl_hours)
+        expires_at = utcnow() + timedelta(hours=ttl_hours)
 
         cached = self.db.query(VendorPerformanceCache).filter(
             VendorPerformanceCache.retailer_id == retailer_id,
@@ -324,6 +327,6 @@ class VendorMetricsService:
             VendorPerformanceCache.cache_key == cache_key,
         ).first()
 
-        if cached and cached.expires_at and cached.expires_at > datetime.utcnow():
+        if cached and cached.expires_at and cached.expires_at > utcnow():
             return cached.cache_data
         return None

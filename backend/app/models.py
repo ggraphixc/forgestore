@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from app.utils import utcnow
 from sqlalchemy import (
     Column, String, Integer, Float, Boolean, DateTime, Text, JSON, Enum as SAEnum, ForeignKey
 )
@@ -45,8 +45,8 @@ class Retailer(Base):
     status = Column(String(20), default="ACTIVE")
     rating = Column(Float, nullable=False, default=0.0)
     review_count = Column(Integer, nullable=False, default=0)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     products = relationship("Product", back_populates="retailer")
 
@@ -59,8 +59,8 @@ class Category(Base):
     slug = Column(String(255), nullable=False, unique=True)
     description = Column(Text, nullable=True)
     image = Column(String, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     products = relationship("Product", back_populates="category")
 
@@ -86,8 +86,8 @@ class Product(Base):
     review_count = Column(Integer, nullable=False, default=0)
     is_new_arrival = Column(Boolean, nullable=False, default=False)
     is_flagship = Column(Boolean, nullable=False, default=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     category = relationship("Category", back_populates="products")
     retailer = relationship("Retailer", back_populates="products")
@@ -102,8 +102,8 @@ class User(Base):
     email = Column(String(255), nullable=False, unique=True)
     name = Column(String(255), nullable=True)
     password = Column(String(255), nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     orders = relationship("Order", back_populates="customer")
     reviews = relationship("Review", back_populates="user")
@@ -118,8 +118,8 @@ class Order(Base):
     total_amount = Column(Float, nullable=False)
     shipping_address = Column(JSON, nullable=False)
     customer_id = Column(String, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     customer = relationship("User", back_populates="orders")
     items = relationship("OrderItem", back_populates="order")
@@ -133,8 +133,8 @@ class OrderItem(Base):
     price = Column(Float, nullable=False)
     product_id = Column(String, ForeignKey("product.id", ondelete="CASCADE"), nullable=False)
     order_id = Column(String, ForeignKey("order.id", ondelete="CASCADE"), nullable=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     product = relationship("Product", back_populates="order_items")
     order = relationship("Order", back_populates="items")
@@ -151,8 +151,8 @@ class Review(Base):
     title = Column(String(255), nullable=True)
     content = Column(Text, nullable=True)
     helpful = Column(Integer, nullable=False, default=0)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     product = relationship("Product", back_populates="reviews")
     user = relationship("User", back_populates="reviews")
@@ -167,7 +167,7 @@ class AdminUser(Base):
     name = Column(String(255), nullable=True)
     role = Column(SAEnum(AdminRole), nullable=False, default=AdminRole.LOGISTICS)
     vendor_id = Column(String, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
 
 class WishlistItem(Base):
@@ -176,7 +176,7 @@ class WishlistItem(Base):
     id = Column(String, primary_key=True, default=_uuid)
     token = Column(String(255), nullable=False, index=True)
     product_id = Column(String, ForeignKey("product.id", ondelete="CASCADE"), nullable=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
     product = relationship("Product")
 
@@ -188,7 +188,7 @@ class CartItem(Base):
     cart_token = Column(String(255), nullable=False, index=True)
     product_id = Column(String, ForeignKey("product.id", ondelete="CASCADE"), nullable=False)
     quantity = Column(Integer, nullable=False, default=1)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
     product = relationship("Product")
 
@@ -204,7 +204,7 @@ class AdminAuditLog(Base):
     resource_id = Column(String, nullable=True)
     details = Column(Text, nullable=True)
     ip_address = Column(String(50), nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
 
 class PasswordResetToken(Base):
@@ -215,7 +215,7 @@ class PasswordResetToken(Base):
     token = Column(String(255), nullable=False, unique=True, index=True)
     used = Column(Boolean, nullable=False, default=False)
     expires_at = Column(DateTime, nullable=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
 
 class AdminNotification(Base):
@@ -227,7 +227,7 @@ class AdminNotification(Base):
     message = Column(Text, nullable=True)
     link = Column(String(500), nullable=True)
     read = Column(Boolean, nullable=False, default=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
 
 class SettingsCategory(str, enum.Enum):
@@ -251,7 +251,7 @@ class NewsletterSubscriber(Base):
     unsubscribe_token = Column(String(255), nullable=True)
     tags = Column(JSON, nullable=True, default=list)
     preferences = Column(JSON, nullable=True, default=dict)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
 
 class BroadcastCampaign(Base):
@@ -271,8 +271,8 @@ class BroadcastCampaign(Base):
     unsubscribed_count = Column(Integer, nullable=False, default=0)
     template_id = Column(String, ForeignKey("broadcast_template.id", ondelete="SET NULL"), nullable=True)
     created_by = Column(String, ForeignKey("admin_user.id", ondelete="SET NULL"), nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     template = relationship("BroadcastTemplate", back_populates="campaigns")
 
@@ -285,7 +285,7 @@ class BroadcastEvent(Base):
     subscriber_id = Column(String, ForeignKey("newsletter_subscriber.id", ondelete="CASCADE"), nullable=False)
     event_type = Column(String(20), nullable=False)  # sent, opened, clicked, unsubscribed, bounced
     extra_data = Column(JSON, nullable=True)  # e.g. {"url": "https://..."} for clicks
-    timestamp = Column(DateTime, nullable=False, default=datetime.utcnow)
+    timestamp = Column(DateTime, nullable=False, default=utcnow)
 
     campaign = relationship("BroadcastCampaign")
     subscriber = relationship("NewsletterSubscriber")
@@ -299,8 +299,8 @@ class BroadcastTemplate(Base):
     subject = Column(String(500), nullable=False)
     content = Column(Text, nullable=False)
     created_by = Column(String, ForeignKey("admin_user.id", ondelete="SET NULL"), nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     campaigns = relationship("BroadcastCampaign", back_populates="template")
 
@@ -316,7 +316,7 @@ class Settings(Base):
     label = Column(String(255), nullable=True)
     description = Column(Text, nullable=True)
     options = Column(JSON, nullable=True)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
 
 # ==============================================================================
@@ -349,8 +349,8 @@ class Shipment(Base):
     weight_kg = Column(Float, nullable=True)
     notes = Column(Text, nullable=True)
     delivery_agent_id = Column(String, ForeignKey("delivery_agent.id", ondelete="SET NULL"), nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     order = relationship("Order")
     events = relationship("ShipmentEvent", back_populates="shipment", cascade="all, delete-orphan")
@@ -367,8 +367,8 @@ class ShipmentEvent(Base):
     description = Column(Text, nullable=True)
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
-    timestamp = Column(DateTime, nullable=False, default=datetime.utcnow)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    timestamp = Column(DateTime, nullable=False, default=utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
     shipment = relationship("Shipment", back_populates="events")
 
@@ -388,8 +388,8 @@ class DeliveryAgent(Base):
     current_latitude = Column(Float, nullable=True)
     current_longitude = Column(Float, nullable=True)
     last_location_update = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     shipments = relationship("Shipment", back_populates="delivery_agent")
     location_logs = relationship("DeliveryLocationLog", back_populates="agent", cascade="all, delete-orphan")
@@ -404,7 +404,7 @@ class DeliveryLocationLog(Base):
     longitude = Column(Float, nullable=False)
     accuracy = Column(Float, nullable=True)
     shipment_id = Column(String, ForeignKey("shipment.id", ondelete="SET NULL"), nullable=True)
-    timestamp = Column(DateTime, nullable=False, default=datetime.utcnow)
+    timestamp = Column(DateTime, nullable=False, default=utcnow)
 
     agent = relationship("DeliveryAgent", back_populates="location_logs")
     shipment = relationship("Shipment")
@@ -430,7 +430,7 @@ class VendorAnalytics(Base):
     avg_order_value = Column(Float, nullable=False, default=0.0)
     conversion_rate = Column(Float, nullable=False, default=0.0)
     page_views = Column(Integer, nullable=False, default=0)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
     retailer = relationship("Retailer")
 
@@ -450,8 +450,8 @@ class VendorPayout(Base):
     period_end = Column(DateTime, nullable=True)
     notes = Column(Text, nullable=True)
     processed_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     retailer = relationship("Retailer")
 
@@ -465,7 +465,7 @@ class VendorActivityLog(Base):
     resource_type = Column(String(50), nullable=True)
     resource_id = Column(String, nullable=True)
     details = Column(JSON, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
     retailer = relationship("Retailer")
 
@@ -478,8 +478,8 @@ class VendorPerformanceCache(Base):
     cache_key = Column(String(255), nullable=False)
     cache_data = Column(JSON, nullable=False)
     expires_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     retailer = relationship("Retailer")
 
@@ -499,8 +499,8 @@ class AIConversation(Base):
     context = Column(JSON, nullable=True)  # Stores shopping context
     extra_data = Column(JSON, nullable=True)
     is_active = Column(Boolean, nullable=False, default=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     messages = relationship("AIMessage", back_populates="conversation", cascade="all, delete-orphan")
     user = relationship("User")
@@ -515,7 +515,7 @@ class AIMessage(Base):
     content = Column(Text, nullable=False)
     extra_data = Column(JSON, nullable=True)
     tokens_used = Column(Integer, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
     conversation = relationship("AIConversation", back_populates="messages")
 
@@ -532,7 +532,7 @@ class UserPreferenceVector(Base):
     purchased_categories = Column(JSON, nullable=True)
     search_terms = Column(JSON, nullable=True)  # [{term, count, last_searched}]
     embedding = Column(Text, nullable=True)  # JSON vector
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     user = relationship("User")
 
@@ -545,7 +545,7 @@ class RecommendationCache(Base):
     context_id = Column(String, nullable=False)
     recommendations = Column(JSON, nullable=False)  # [{product_id, score, reason}]
     expires_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
 
 # ==============================================================================
@@ -571,8 +571,8 @@ class Affiliate(Base):
     wallet_balance = Column(Float, nullable=False, default=0.0)
     payout_method = Column(String(50), nullable=True)
     payout_details = Column(JSON, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     user = relationship("User")
     commissions = relationship("AffiliateCommission", back_populates="affiliate", cascade="all, delete-orphan")
@@ -592,8 +592,8 @@ class AffiliateCommission(Base):
     status = Column(String(20), nullable=False, default="PENDING")  # PENDING, APPROVED, PAID, CANCELLED
     coupon_code = Column(String(50), nullable=True)
     referred_email = Column(String(255), nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     affiliate = relationship("Affiliate", back_populates="commissions")
     order = relationship("Order")
@@ -610,7 +610,7 @@ class ReferralEvent(Base):
     ip_address = Column(String(50), nullable=True)
     user_agent = Column(String(500), nullable=True)
     extra_data = Column(JSON, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
     affiliate = relationship("Affiliate")
 
@@ -628,8 +628,8 @@ class AffiliatePayout(Base):
     payment_reference = Column(String(255), nullable=True)
     notes = Column(Text, nullable=True)
     processed_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     affiliate = relationship("Affiliate", back_populates="payouts")
 
@@ -647,8 +647,8 @@ class Wallet(Base):
     balance = Column(Float, nullable=False, default=0.0)
     currency = Column(String(10), nullable=False, default="NGN")
     status = Column(String(20), nullable=False, default="ACTIVE")  # ACTIVE, FROZEN, CLOSED
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     user = relationship("User")
     transactions = relationship("WalletTransaction", back_populates="wallet", cascade="all, delete-orphan", foreign_keys="WalletTransaction.wallet_id")
@@ -668,7 +668,7 @@ class WalletTransaction(Base):
     description = Column(String(500), nullable=True)
     status = Column(String(20), nullable=False, default="COMPLETED")  # PENDING, COMPLETED, FAILED
     extra_data = Column(JSON, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
     wallet = relationship("Wallet", back_populates="transactions", foreign_keys=[wallet_id])
 
@@ -685,8 +685,8 @@ class PaymentProvider(Base):
     supported_currencies = Column(JSON, nullable=True)
     fee_percentage = Column(Float, nullable=False, default=0.0)
     fee_fixed = Column(Float, nullable=False, default=0.0)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
 
 class PaymentLog(Base):
@@ -704,7 +704,7 @@ class PaymentLog(Base):
     response_data = Column(JSON, nullable=True)
     error_message = Column(Text, nullable=True)
     ip_address = Column(String(50), nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
     order = relationship("Order")
 
@@ -723,8 +723,8 @@ class EscrowTransaction(Base):
     auto_release_at = Column(DateTime, nullable=True)
     released_at = Column(DateTime, nullable=True)
     notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     order = relationship("Order")
     payer = relationship("User", foreign_keys=[payer_id])
@@ -741,8 +741,8 @@ class PaymentSplit(Base):
     percentage = Column(Float, nullable=False)
     status = Column(String(20), nullable=False, default="PENDING")  # PENDING, PAID, FAILED
     payment_reference = Column(String(255), nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     order = relationship("Order")
     recipient = relationship("Retailer")
@@ -762,8 +762,8 @@ class PersistentCart(Base):
     items = Column(JSON, nullable=True, default=list)  # [{product_id, quantity, added_at}]
     extra_data = Column(JSON, nullable=True)
     expires_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     user = relationship("User")
     activities = relationship("CartActivity", back_populates="cart", cascade="all, delete-orphan",
@@ -781,7 +781,7 @@ class CartActivity(Base):
     product_id = Column(String, ForeignKey("product.id", ondelete="SET NULL"), nullable=True)
     quantity = Column(Integer, nullable=True)
     extra_data = Column(JSON, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
     cart = relationship("PersistentCart", back_populates="activities",
         primaryjoin="foreign(CartActivity.cart_token) == PersistentCart.cart_token")
@@ -803,9 +803,9 @@ class AbandonedCart(Base):
     recovered = Column(Boolean, nullable=False, default=False)
     recovery_order_id = Column(String, ForeignKey("order.id", ondelete="SET NULL"), nullable=True)
     recovered_at = Column(DateTime, nullable=True)
-    abandoned_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    abandoned_at = Column(DateTime, nullable=False, default=utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     user = relationship("User")
     recovery_order = relationship("Order")
@@ -821,7 +821,7 @@ class CartRecommendation(Base):
     score = Column(Float, nullable=False, default=0.0)
     shown = Column(Boolean, nullable=False, default=False)
     clicked = Column(Boolean, nullable=False, default=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
     cart = relationship("PersistentCart", back_populates="recommendations",
         primaryjoin="foreign(CartRecommendation.cart_token) == PersistentCart.cart_token")
@@ -845,7 +845,7 @@ class SearchHistory(Base):
     clicked_product_id = Column(String, nullable=True)
     search_type = Column(String(30), nullable=False, default="text")  # text, semantic, voice
     duration_ms = Column(Integer, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
     user = relationship("User")
 
@@ -861,7 +861,7 @@ class SearchTrend(Base):
     period = Column(String(20), nullable=False)  # daily, weekly, monthly
     period_start = Column(DateTime, nullable=False)
     period_end = Column(DateTime, nullable=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
 
 class SearchEmbedding(Base):
@@ -872,7 +872,7 @@ class SearchEmbedding(Base):
     embedding = Column(Text, nullable=False)  # JSON array of floats
     model = Column(String(100), nullable=False)  # Which embedding model was used
     chunk_text = Column(Text, nullable=True)  # The text that was embedded
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
     product = relationship("Product")
 
@@ -886,7 +886,7 @@ class SearchClickAnalytics(Base):
     position = Column(Integer, nullable=True)
     clicked = Column(Boolean, nullable=False, default=True)
     dwell_time_ms = Column(Integer, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
     search = relationship("SearchHistory")
     product = relationship("Product")
@@ -906,7 +906,7 @@ class ReviewMedia(Base):
     url = Column(String(500), nullable=False)
     thumbnail_url = Column(String(500), nullable=True)
     is_cover = Column(Boolean, nullable=False, default=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
     review = relationship("Review")
 
@@ -918,7 +918,7 @@ class ReviewReaction(Base):
     review_id = Column(String, ForeignKey("review.id", ondelete="CASCADE"), nullable=False)
     user_id = Column(String, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
     reaction_type = Column(String(20), nullable=False)  # helpful, funny, agree
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
     review = relationship("Review")
     user = relationship("User")
@@ -934,7 +934,7 @@ class ReviewSentiment(Base):
     keywords = Column(JSON, nullable=True)  # Top keywords from review
     categories = Column(JSON, nullable=True)  # Detected categories
     model = Column(String(100), nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
     review = relationship("Review")
 
@@ -950,8 +950,8 @@ class ReviewModeration(Base):
     reviewed_by = Column(String, ForeignKey("admin_user.id", ondelete="SET NULL"), nullable=True)
     reviewed_at = Column(DateTime, nullable=True)
     notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     review = relationship("Review")
     reviewer = relationship("AdminUser")
@@ -977,7 +977,7 @@ class NotificationQueue(Base):
     status = Column(String(20), nullable=False, default="PENDING")  # PENDING, SENT, FAILED
     sent_at = Column(DateTime, nullable=True)
     read_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
 
 class PushSubscription(Base):
@@ -989,8 +989,8 @@ class PushSubscription(Base):
     keys = Column(JSON, nullable=False)
     user_agent = Column(String(500), nullable=True)
     is_active = Column(Boolean, nullable=False, default=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     user = relationship("User")
 
@@ -1010,8 +1010,8 @@ class UserNotificationPreferences(Base):
     review_reminders = Column(Boolean, nullable=False, default=False)
     quiet_hours_start = Column(String(5), nullable=True)  # HH:MM
     quiet_hours_end = Column(String(5), nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     user = relationship("User")
 
@@ -1025,7 +1025,7 @@ class NotificationDeliveryLog(Base):
     status = Column(String(20), nullable=False)  # sent, delivered, failed, bounced
     error_message = Column(Text, nullable=True)
     delivered_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
     notification = relationship("NotificationQueue")
 
@@ -1043,7 +1043,7 @@ class AnalyticsSnapshot(Base):
     period_start = Column(DateTime, nullable=False)
     period_end = Column(DateTime, nullable=False)
     data = Column(JSON, nullable=False)
-    computed_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    computed_at = Column(DateTime, nullable=False, default=utcnow)
 
 
 class CustomerLifetimeValue(Base):
@@ -1059,7 +1059,7 @@ class CustomerLifetimeValue(Base):
     frequency = Column(Integer, nullable=False, default=0)  # Orders per month
     monetary_score = Column(Float, nullable=False, default=0.0)  # RFM score component
     segment = Column(String(30), nullable=True)  # champions, loyal, at_risk, etc.
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
     user = relationship("User")
 
@@ -1078,7 +1078,7 @@ class FraudDetectionEvent(Base):
     reviewed_by = Column(String, ForeignKey("admin_user.id", ondelete="SET NULL"), nullable=True)
     reviewed_at = Column(DateTime, nullable=True)
     notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
     order = relationship("Order")
     user = relationship("User")
@@ -1099,4 +1099,4 @@ class PredictiveForecast(Base):
     model = Column(String(100), nullable=True)  # Which model generated this
     features_used = Column(JSON, nullable=True)
     actual_value = Column(Float, nullable=True)  # Filled in later when actual data is available
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=utcnow)

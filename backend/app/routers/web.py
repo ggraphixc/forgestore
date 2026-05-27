@@ -1,4 +1,5 @@
 from datetime import datetime
+from app.utils import utcnow
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
@@ -48,7 +49,7 @@ def _render_page(template: str, request: Request, db: Session, context: dict = N
 def _require_customer(request: Request, db: Session):
     customer = _get_current_customer(request, db)
     if customer:
-        customer.updated_at = datetime.utcnow()
+        customer.updated_at = utcnow()
         db.commit()
         return customer
     next_url = request.url.path

@@ -1,6 +1,7 @@
 """Modern Product Review System — System 8"""
 import logging
 from datetime import datetime
+from app.utils import utcnow
 from typing import Optional
 from sqlalchemy.orm import Session
 
@@ -215,7 +216,7 @@ class ReviewModerationService:
         ).update({
             "status": "APPROVED",
             "reviewed_by": admin_id,
-            "reviewed_at": datetime.utcnow(),
+            "reviewed_at": utcnow(),
             "notes": notes,
         })
         self.db.commit()
@@ -228,7 +229,7 @@ class ReviewModerationService:
             "status": "REJECTED",
             "reason": reason,
             "reviewed_by": admin_id,
-            "reviewed_at": datetime.utcnow(),
+            "reviewed_at": utcnow(),
             "notes": notes,
         })
         self.db.commit()

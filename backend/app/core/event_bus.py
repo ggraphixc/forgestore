@@ -6,6 +6,7 @@ import json
 import logging
 from typing import Callable, Dict, List, Any, Optional
 from datetime import datetime
+from app.utils import utcnow
 
 logger = logging.getLogger("forgestore.events")
 
@@ -58,11 +59,11 @@ class EventBus:
             data = {}
 
         event = {
-            "id": f"{datetime.utcnow().timestamp()}-{hash(event_type) & 0xFFFF}",
+            "id": f"{utcnow().timestamp()}-{hash(event_type) & 0xFFFF}",
             "type": event_type,
             "data": data,
             "source": source,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": utcnow().isoformat(),
         }
 
         # Store in history (ring buffer)

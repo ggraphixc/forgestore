@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     paystack_secret_key: str = ""
     paystack_public_key: str = ""
 
+    # Flutterwave payment gateway (alternative to Paystack)
+    flutterwave_secret_key: str = ""
+    flutterwave_public_key: str = ""
+
     # Debug mode (set to "true" in development for detailed logging)
     debug: bool = False
 
@@ -70,6 +74,8 @@ class Settings(BaseSettings):
             warnings.append("PAYSTACK_SECRET_KEY is not set — payment gateway will be unavailable")
         if not self.paystack_public_key:
             warnings.append("PAYSTACK_PUBLIC_KEY is not set — payment checkout page may fail")
+        if not self.flutterwave_secret_key:
+            warnings.append("FLUTTERWAVE_SECRET_KEY is not set — Flutterwave payment gateway will be unavailable")
         return warnings
 
 

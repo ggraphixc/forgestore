@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from app.utils import utcnow
 
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from fastapi.security import HTTPBearer
@@ -156,7 +157,6 @@ def get_me(user: User = Depends(get_current_user)):
 @router.post("/forgot-password")
 def forgot_password(data: dict, db: Session = Depends(get_db)):
     """Send a password reset link to the user's email."""
-    from datetime import datetime, timedelta
     from app.models import PasswordResetToken
     from app.services.email_service import send_password_reset_email
     import secrets
@@ -171,7 +171,7 @@ def forgot_password(data: dict, db: Session = Depends(get_db)):
     reset_token = PasswordResetToken(
         user_id=user.id,
         token=token,
-        expires_at=datetime.utcnow() + timedelta(hours=1),
+        expires_at=utcnow() + timedelta(hours=1),
     )
     db.add(reset_token)
     db.commit()
@@ -188,7 +188,6 @@ def forgot_password(data: dict, db: Session = Depends(get_db)):
 @router.post("/reset-password")
 def reset_password(data: dict, db: Session = Depends(get_db)):
     """Reset password using a valid reset token."""
-    from datetime import datetime
     from app.models import PasswordResetToken
 
     token_str = data.get("token", "")
@@ -200,7 +199,7 @@ def reset_password(data: dict, db: Session = Depends(get_db)):
     reset_token = db.query(PasswordResetToken).filter(
         PasswordResetToken.token == token_str,
         PasswordResetToken.used == False,
-        PasswordResetToken.expires_at > datetime.utcnow(),
+        PasswordResetToken.expires_at > utcnow(),
     ).first()
 
     if not reset_token:

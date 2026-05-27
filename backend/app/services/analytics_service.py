@@ -1,7 +1,10 @@
 """Enterprise Commerce Intelligence Dashboard — System 10"""
 import logging
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
+from app.utils import utcnow
+from app.utils import utcnow
 from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, extract
@@ -22,7 +25,7 @@ class AnalyticsService:
 
     def compute_snapshot(self, snapshot_type: str = "daily") -> AnalyticsSnapshot:
         """Compute and store an analytics snapshot."""
-        now = datetime.utcnow()
+        now = utcnow()
         if snapshot_type == "daily":
             period_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
             period_end = period_start + timedelta(days=1)
@@ -89,7 +92,7 @@ class AnalyticsService:
 
     def get_revenue_metrics(self, days: int = 30) -> dict:
         """Get revenue metrics for the specified period."""
-        now = datetime.utcnow()
+        now = utcnow()
         start = now - timedelta(days=days)
 
         orders = self.db.query(Order).filter(
@@ -139,7 +142,7 @@ class ForecastService:
 
     def forecast_revenue(self, days_ahead: int = 30) -> list[dict]:
         """Generate revenue forecast using historical data and simple projection."""
-        now = datetime.utcnow()
+        now = utcnow()
         historical_days = max(days_ahead * 3, 90)
         start = now - timedelta(days=historical_days)
 
@@ -211,7 +214,7 @@ class FraudDetectionService:
         recent_orders = self.db.query(Order).filter(
             Order.customer_id == order.customer_id,
             Order.id != order_id,
-            Order.created_at >= datetime.utcnow() - timedelta(hours=1),
+            Order.created_at >= utcnow() - timedelta(hours=1),
         ).count()
         if recent_orders >= 3:
             indicators.append({
@@ -233,7 +236,7 @@ class FraudDetectionService:
         # Check 3: New customer with large order
         customer = self.db.query(User).filter(User.id == order.customer_id).first()
         if customer:
-            days_since_signup = (datetime.utcnow() - customer.created_at).days
+            days_since_signup = (utcnow() - customer.created_at).days
             if days_since_signup <= 1 and order.total_amount > 50000:
                 indicators.append({
                     "type": "new_account_large_order",
@@ -267,7 +270,7 @@ class InsightGenerationService:
 
     def generate_insights(self) -> list[dict]:
         """Generate AI insights from current analytics data."""
-        now = datetime.utcnow()
+        now = utcnow()
         insights = []
 
         # Insight 1: Revenue trend

@@ -1,6 +1,9 @@
 """Celery tasks for analytics, forecasting, and insight generation."""
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
+from app.utils import utcnow
+from app.utils import utcnow
 
 from app.core.celery_app import celery_app
 from app.database import SessionLocal
@@ -122,7 +125,7 @@ def detect_fraud_events():
             fraud = FraudDetectionService(db)
 
             # Check orders from the last 24 hours
-            cutoff = datetime.utcnow() - timedelta(hours=24)
+            cutoff = utcnow() - timedelta(hours=24)
             recent_orders = db.query(Order).filter(
                 Order.created_at >= cutoff,
             ).all()

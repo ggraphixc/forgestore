@@ -1,6 +1,7 @@
 """Celery tasks for notification delivery."""
 import logging
 from datetime import datetime
+from app.utils import utcnow
 
 from app.core.celery_app import celery_app
 from app.database import SessionLocal
@@ -54,7 +55,7 @@ def cleanup_expired_notifications():
     db = SessionLocal()
     try:
         from app.models import NotificationQueue
-        cutoff = datetime.utcnow()
+        cutoff = utcnow()
         deleted = db.query(NotificationQueue).filter(
             NotificationQueue.created_at < cutoff,
         ).delete()

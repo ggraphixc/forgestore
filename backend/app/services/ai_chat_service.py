@@ -3,6 +3,7 @@ import json
 import logging
 import uuid
 from datetime import datetime
+from app.utils import utcnow
 from typing import Optional
 from sqlalchemy.orm import Session
 
@@ -328,7 +329,7 @@ class RecommendationService:
             RecommendationCache.context_id == context_id,
         ).first()
 
-        if cached and cached.expires_at and cached.expires_at > datetime.utcnow():
+        if cached and cached.expires_at and cached.expires_at > utcnow():
             return cached.recommendations[:limit] if cached.recommendations else []
 
         # Generate recommendations
@@ -337,13 +338,13 @@ class RecommendationService:
         # Cache the results
         if cached:
             cached.recommendations = recommendations
-            cached.expires_at = datetime.utcnow()
+            cached.expires_at = utcnow()
         else:
             cached = RecommendationCache(
                 context_type=context_type,
                 context_id=context_id,
                 recommendations=recommendations,
-                expires_at=datetime.utcnow(),
+                expires_at=utcnow(),
             )
             self.db.add(cached)
         self.db.commit()

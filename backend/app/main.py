@@ -1,7 +1,8 @@
 import logging
 import logging.config
 import os
-from datetime import datetime, timedelta
+from datetime import timedelta
+from app.utils import utcnow
 
 import dotenv
 
@@ -145,7 +146,7 @@ def _cleanup_abandoned_carts():
     from app.models import CartItem
     try:
         db = SessionLocal()
-        cutoff = datetime.utcnow() - timedelta(days=30)
+        cutoff = utcnow() - timedelta(days=30)
         deleted = db.query(CartItem).filter(
             CartItem.created_at < cutoff
         ).delete()

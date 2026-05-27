@@ -8,6 +8,7 @@ import uuid
 import json
 import asyncio
 from datetime import datetime
+from app.utils import utcnow
 
 from app.database import get_db
 from app.models import Product, Category, Retailer, Order, OrderItem, OrderStatus, User
@@ -50,11 +51,10 @@ def _start_broadcast_scheduler():
         while True:
             try:
                 from app.database import SessionLocal
-                from datetime import datetime
                 from app.models import NewsletterSubscriber as NS
                 db = SessionLocal()
                 try:
-                    now = datetime.utcnow()
+                    now = utcnow()
                     pending = db.query(BroadcastCampaign).filter(
                         BroadcastCampaign.status == "scheduled",
                         BroadcastCampaign.scheduled_at != None,
@@ -107,12 +107,12 @@ def _start_broadcast_scheduler():
                                         campaign_id=camp_id,
                                         subscriber_id=s.id,
                                         event_type="sent",
-                                        timestamp=datetime.utcnow(),
+                                        timestamp=utcnow(),
                                     )
                                     bg_db.add(ev)
                                     sent += 1
                                 bg_campaign.sent_count = sent
-                                bg_campaign.sent_at = datetime.utcnow()
+                                bg_campaign.sent_at = utcnow()
                                 bg_campaign.status = "sent"
                                 bg_db.commit()
                             except Exception:
@@ -263,7 +263,7 @@ def update_product(
 
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(product, key, value)
-    product.updated_at = datetime.utcnow()
+    product.updated_at = utcnow()
 
     db.commit()
     log_admin_action(db, admin, "update", "product", product_id, f"Updated product '{product.name}'")
@@ -318,7 +318,7 @@ def update_category(
         raise HTTPException(status_code=404, detail="Category not found")
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(category, key, value)
-    category.updated_at = datetime.utcnow()
+    category.updated_at = utcnow()
     db.commit()
     log_admin_action(db, admin, "update", "category", category_id, f"Updated category '{category.name}'")
     return {"success": True}
@@ -368,7 +368,7 @@ def update_retailer(
         raise HTTPException(status_code=404, detail="Retailer not found")
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(retailer, key, value)
-    retailer.updated_at = datetime.utcnow()
+    retailer.updated_at = utcnow()
     db.commit()
     log_admin_action(db, admin, "update", "retailer", retailer_id, f"Updated retailer '{retailer.name}'")
     return {"success": True}
@@ -432,7 +432,7 @@ def update_order_status(
     except ValueError:
         raise HTTPException(status_code=400, detail=f"Invalid status: {status}")
     
-    order.updated_at = datetime.utcnow()
+    order.updated_at = utcnow()
     db.commit()
 
     # Send email on status change
@@ -886,7 +886,7 @@ def broadcast_newsletter(
         except (ValueError, TypeError):
             raise HTTPException(status_code=400, detail="Invalid scheduled_at format. Use ISO format (e.g. 2025-06-01T14:00:00)")
 
-    is_scheduled = scheduled_at is not None and scheduled_at > datetime.utcnow()
+    is_scheduled = scheduled_at is not None and scheduled_at > utcnow()
 
     # Generate unsubscribe tokens for any subscriber that doesn't have one
     for sub in subscribers:
@@ -937,12 +937,12 @@ def broadcast_newsletter(
                         campaign_id=camp_id,
                         subscriber_id=s.id,
                         event_type="sent",
-                        timestamp=datetime.utcnow(),
+                        timestamp=utcnow(),
                     )
                     bg_db.add(ev)
                     sent += 1
                 bg_campaign.sent_count = sent
-                bg_campaign.sent_at = datetime.utcnow()
+                bg_campaign.sent_at = utcnow()
                 bg_campaign.status = "sent"
                 bg_db.commit()
             except Exception:
@@ -1233,7 +1233,7 @@ def export_newsletter_subscribers(
         iter([csv_content]),
         media_type="text/csv",
         headers={
-            "Content-Disposition": f"attachment; filename=newsletter-subscribers-{datetime.utcnow().strftime('%Y-%m-%d')}.csv",
+            "Content-Disposition": f"attachment; filename=newsletter-subscribers-{utcnow().strftime('%Y-%m-%d')}.csv",
         },
     )
 
@@ -1421,7 +1421,7 @@ def update_broadcast_template(
         template.subject = data["subject"]
     if "content" in data:
         template.content = data["content"]
-    template.updated_at = datetime.utcnow()
+    template.updated_at = utcnow()
     db.commit()
     log_admin_action(db, admin, "update", "broadcast_template", template_id, f"Updated template '{template.name}'")
     return {"success": True}
@@ -1454,7 +1454,7 @@ def list_pending_confirmations(
         NewsletterSubscriber.confirmed == False
     ).order_by(NewsletterSubscriber.created_at.desc()).all()
 
-    now = datetime.utcnow()
+    now = utcnow()
     return {
         "pending": [
             {
@@ -1492,7 +1492,7 @@ def resend_confirmation_email(
     # Generate fresh token and expiry
     token = subscriber.confirm_token or secrets.token_urlsafe(24)
     subscriber.confirm_token = token
-    subscriber.confirm_expires_at = datetime.utcnow()  # will be patched below
+    subscriber.confirm_expires_at = utcnow()  # will be patched below
     db.commit()
 
     _settings = get_settings()
@@ -1513,7 +1513,7 @@ def cleanup_expired_confirmations(
     admin: AdminUser = Depends(require_role("settings")),
 ):
     """Delete expired unconfirmed subscribers."""
-    now = datetime.utcnow()
+    now = utcnow()
     expired = db.query(NewsletterSubscriber).filter(
         NewsletterSubscriber.confirmed == False,
         NewsletterSubscriber.confirm_expires_at != None,
@@ -1544,7 +1544,7 @@ async def upload_file(files: List[UploadFile] = File(...)):
     urls = []
     for file in files:
         ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
-        unique_name = f"{int(datetime.utcnow().timestamp())}-{uuid.uuid4().hex[:8]}.{ext}"
+        unique_name = f"{int(utcnow().timestamp())}-{uuid.uuid4().hex[:8]}.{ext}"
         file_path = os.path.join(upload_dir, unique_name)
 
         content = await file.read()
