@@ -1,0 +1,393 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title|default("Admin") }} &mdash; ForgeStore{% endblock %}
+
+{% block body %}
+<script>!function(){var e="sidebar-collapsed",t=localStorage.getItem(e)==="true";if(t&&window.innerWidth>=1024){var n=document.getElementById("sidebar");n&&n.classList.add("sidebar-collapsed")}}()</script>
+<div class="flex h-full min-h-screen bg-stone-50/50 overflow-x-clip">
+    <aside id="sidebar" class="fixed lg:relative inset-y-0 left-0 w-80 max-w-[85vw] lg:w-64 bg-gradient-to-b from-white to-stone-50/80 dark:from-stone-900 dark:to-stone-950 border-r border-stone-200 dark:border-stone-800 transform -translate-x-full lg:translate-x-0 transition-all duration-300 ease-out flex flex-col shadow-2xl shadow-stone-900/15 overflow-y-auto" style="z-index: var(--z-sidebar);">
+        <!-- Premium header with gradient accent -->
+        <div class="relative flex items-center gap-3 px-6 h-16 border-b border-stone-100 dark:border-stone-800 overflow-hidden sidebar-header">
+            <div class="absolute inset-0 bg-gradient-to-r from-amber-50/30 to-transparent dark:from-amber-900/10"></div>
+            <div class="w-9 h-9 bg-gradient-to-br from-stone-900 to-stone-700 dark:from-amber-600 dark:to-amber-700 rounded-xl flex items-center justify-center shadow-sm relative z-10 flex-shrink-0">
+                <span class="text-white text-sm font-display font-black">FS</span>
+            </div>
+            <div class="relative z-10 sidebar-header-text min-w-0">
+                <span class="text-sm font-display font-black text-stone-900 dark:text-stone-100 truncate block">ForgeStore</span>
+                <span class="block text-[10px] font-medium text-amber-600 dark:text-amber-400 uppercase tracking-[0.15em] truncate">Admin Panel</span>
+            </div>
+            <button id="sidebar-collapse-toggle" class="hidden lg:flex ml-auto p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-all flex-shrink-0 relative z-10" aria-label="Collapse sidebar" aria-expanded="true">
+                <svg id="sidebar-collapse-icon-open" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+                </svg>
+            </button>
+            <span class="absolute top-3 right-6 w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse sidebar-accent-dot"></span>
+        </div>
+        
+        <!-- Admin Profile Card -->
+        <a href="/admin/me" class="relative mx-3 mt-3 mb-2 rounded-xl bg-gradient-to-br from-stone-50 to-stone-100/50 dark:from-stone-800 dark:to-stone-800/50 border border-stone-200 dark:border-stone-700 p-3.5 overflow-hidden hover:shadow-md hover:border-amber-200 dark:hover:border-amber-700 transition-all duration-200 cursor-pointer group block">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-amber-500/10 transition-colors duration-200"></div>
+            <div class="flex items-center gap-3 relative">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ring-2 ring-offset-1 ring-offset-white dark:ring-offset-stone-900 shadow-sm
+                    {% if admin.role.value == 'DIR_ADMIN' %}bg-purple-600 ring-purple-400/30
+                    {% elif admin.role.value == 'MANAGEMENT' %}bg-blue-600 ring-blue-400/30
+                    {% elif admin.role.value == 'TECH_ADMIN' %}bg-cyan-600 ring-cyan-400/30
+                    {% elif admin.role.value == 'RETAILER' %}bg-amber-600 ring-amber-400/30
+                    {% else %}bg-emerald-600 ring-emerald-400/30{% endif %}">
+                    {{ admin.name[0]|upper if admin and admin.name else "A" }}
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-semibold text-stone-900 dark:text-stone-100 truncate">{{ admin.name if admin and admin.name else "Admin" }}</p>
+                    <p class="text-[11px] text-stone-500 dark:text-stone-400 truncate">{{ admin.email }}</p>
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider mt-0.5
+                        {% if admin.role.value == 'DIR_ADMIN' %}bg-purple-100 text-purple-700
+                        {% elif admin.role.value == 'MANAGEMENT' %}bg-blue-100 text-blue-700
+                        {% elif admin.role.value == 'TECH_ADMIN' %}bg-cyan-100 text-cyan-700
+                        {% elif admin.role.value == 'RETAILER' %}bg-amber-100 text-amber-700
+                        {% else %}bg-emerald-100 text-emerald-700{% endif %}">
+                        {{ admin.role.value }}
+                    </span>
+                </div>
+                <svg class="w-4 h-4 text-stone-300 group-hover:text-amber-500 transition-colors duration-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </div>
+        </a>
+
+        <!-- Mobile close & Section label -->
+        <div class="flex justify-between items-center mb-3 px-3">
+            <button id="sidebar-close" onclick="closeSidebar()" class="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-500 hover:text-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg lg:hidden transition-all duration-150" aria-label="Close sidebar">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 sidebar-nav-label">Navigation</span>
+            <span class="hidden lg:block w-8"></span>
+        </div>
+        <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto scrollbar-thin">
+            {% if has_permission(admin, 'dashboard') %}
+            <a href="/admin/dashboard" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
+                <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 001 1h3m1-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                <span>Dashboard</span>
+            </a>
+            {% endif %}
+
+            {# RETAILER: My Products / Inventory Control #}
+            {% if admin and admin.role == 'RETAILER' %}
+            <div class="pt-5 pb-1.5 px-3 flex items-center gap-2">
+                <div class="flex-1 h-px bg-stone-100 dark:bg-stone-800"></div>
+                <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Inventory</span>
+                <div class="flex-1 h-px bg-stone-100 dark:bg-stone-800"></div>
+            </div>
+            <a href="/admin/catalog" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
+                <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                <span>My Products</span>
+            </a>
+            {% endif %}
+
+            {# DIR_ADMIN / MANAGEMENT: Ad Campaigns / User Profiles #}
+            {% if admin and admin.role in ['DIR_ADMIN', 'MANAGEMENT'] %}
+            <a href="/admin/retailer/ads" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
+                <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+                <span>Ad Campaigns</span>
+            </a>
+            <a href="/admin/customers" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
+                <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span>User Profiles</span>
+            </a>
+            {% endif %}
+
+            {# DIR_ADMIN / TECH_ADMIN: System Audit Logs #}
+            {% if admin and admin.role in ['DIR_ADMIN', 'TECH_ADMIN'] %}
+            <div class="pt-5 pb-1.5 px-3 flex items-center gap-2">
+                <div class="flex-1 h-px bg-stone-100 dark:bg-stone-800"></div>
+                <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">System</span>
+                <div class="flex-1 h-px bg-stone-100 dark:bg-stone-800"></div>
+            </div>
+            <a href="/admin/settings" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
+                <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span>System Audit Logs</span>
+            </a>
+            {% endif %}
+
+            {# DIR_ADMIN: System Settings / Payment Toggles #}
+            {% if admin and admin.role == 'DIR_ADMIN' %}
+            <a href="/admin/settings/payment-provider" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
+                <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                <span>Payment Toggles</span>
+            </a>
+            {% endif %}
+
+            {# DIR_ADMIN / LOGISTICS: Logistics Matrix #}
+            {% if admin and admin.role in ['DIR_ADMIN', 'LOGISTICS'] %}
+            <div class="pt-5 pb-1.5 px-3 flex items-center gap-2">
+                <div class="flex-1 h-px bg-stone-100 dark:bg-stone-800"></div>
+                <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Logistics</span>
+                <div class="flex-1 h-px bg-stone-100 dark:bg-stone-800"></div>
+            </div>
+            <a href="/admin/shipments" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
+                <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                <span>Logistics Matrix</span>
+            </a>
+            {% endif %}
+
+            <!-- Notifications & Admin Users (visible to all authenticated) -->
+            <a href="/admin/notifications" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative" id="notification-link">
+                <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                <span>Notifications</span>
+                <span id="sidebar-notif-badge" class="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[9px] font-bold bg-amber-500 text-white hidden"></span>
+            </a>
+        </nav>
+        <div class="px-3 py-4 border-t border-stone-100 bg-gradient-to-r from-stone-50 to-transparent">
+            <a href="/admin/logout" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-150 group">
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                Sign Out
+            </a>
+        </div>
+    </aside>
+    <!-- External expand button -->
+    <button id="sidebar-expand-button" class="hidden lg:hidden fixed top-1/2 -translate-y-1/2 z-50 w-7 h-14 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-r-lg shadow-lg hover:shadow-xl hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all duration-200 flex items-center justify-center cursor-pointer group" aria-label="Expand sidebar" title="Expand sidebar" style="left: 72px;">
+        <svg class="w-4 h-4 text-stone-400 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+        </svg>
+    </button>
+    <div id="sidebar-backdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden lg:hidden opacity-0 transition-opacity duration-300 ease-out" style="z-index: var(--z-sidebar-backdrop);"></div>
+    <div class="flex-1 flex flex-col min-w-0">
+        <header class="sticky top-0 bg-white/90 dark:bg-stone-900/90 backdrop-blur-xl border-b border-stone-200 dark:border-stone-800 shadow-sm lg:hidden safe-top" style="z-index: var(--z-sticky-header);">
+            <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-amber-500/0 via-amber-500/20 to-amber-500/0"></div>
+            <div class="flex items-center justify-between px-3 h-14">
+                <div class="flex items-center gap-2">
+                    <button id="sidebar-toggle" onclick="toggleSidebar(event)" class="p-2.5 min-w-[44px] min-h-[44px] -ml-1 sm:-ml-2 text-stone-500 hover:text-amber-600 transition-all rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center justify-center" aria-label="Toggle sidebar" aria-expanded="false">
+                        <svg id="sidebar-toggle-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        <svg id="sidebar-toggle-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                    <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse flex-shrink-0"></div>
+                </div>
+                <div class="flex items-center gap-2.5 min-w-0 flex-1 justify-center px-2">
+                    <div class="w-7 h-7 bg-gradient-to-br from-stone-900 to-stone-700 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
+                        <span class="text-white text-[10px] font-display font-black">FS</span>
+                    </div>
+                    <span class="text-sm font-display font-extrabold text-stone-900 dark:text-stone-100 tracking-tight truncate">ForgeStore<span class="text-amber-600"> Admin</span></span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <a href="/admin/notifications" class="relative p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-500 hover:text-amber-600 transition-all rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/20" aria-label="Notifications">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                        <span id="mobile-notif-badge" class="absolute top-1 right-1 min-w-[16px] h-[16px] px-0.5 rounded-full text-[8px] font-bold bg-amber-500 text-white hidden flex items-center justify-center ring-2 ring-white"></span>
+                    </a>
+                    <a href="/admin/me" class="block">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold ring-2 ring-offset-1 ring-offset-white dark:ring-offset-stone-900 flex-shrink-0 shadow-sm transition-transform hover:scale-105 active:scale-95
+                            {% if admin.role.value == 'DIR_ADMIN' %}bg-purple-600 ring-purple-400/30
+                            {% elif admin.role.value == 'MANAGEMENT' %}bg-blue-600 ring-blue-400/30
+                            {% elif admin.role.value == 'TECH_ADMIN' %}bg-cyan-600 ring-cyan-400/30
+                            {% elif admin.role.value == 'RETAILER' %}bg-amber-600 ring-amber-400/30
+                            {% else %}bg-emerald-600 ring-emerald-400/30{% endif %}">
+                            {{ admin.name[0]|upper if admin and admin.name else "A" }}
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </header>
+        <main class="flex-1 p-3 sm:p-5 md:p-6 lg:p-8 xl:p-10 max-w-full overflow-x-hidden">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</div>
+<script>
+// Real-time notification badge via EventSource (SSE)
+let notifEventSource = null;
+async function fetchUnreadCount() {
+    try {
+        const res = await fetch('/api/admin/notifications/unread-count');
+        const data = await res.json();
+        const badge = document.getElementById('sidebar-notif-badge');
+        if (data.count > 0) {
+            badge.textContent = data.count > 99 ? '99+' : data.count;
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    } catch (e) {}
+}
+function connectNotifSSE() {
+    if (notifEventSource) {
+        notifEventSource.close();
+    }
+    notifEventSource = new EventSource('/api/admin/notifications/stream');
+    notifEventSource.addEventListener('connected', function(e) {});
+    notifEventSource.onmessage = function(e) { fetchUnreadCount(); };
+    notifEventSource.onerror = function() {
+        notifEventSource.close();
+        setTimeout(connectNotifSSE, 10000);
+    };
+}
+document.addEventListener('DOMContentLoaded', function() {
+    fetchUnreadCount();
+    connectNotifSSE();
+});
+setInterval(fetchUnreadCount, 120000);
+
+function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input || !btn) return;
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    btn.querySelector('.eye-open')?.classList.toggle('hidden');
+    btn.querySelector('.eye-closed')?.classList.toggle('hidden');
+    btn.style.transform = 'scale(0.9)';
+    setTimeout(() => btn.style.transform = '', 150);
+}
+let sidebarCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+function applyCollapseState() {
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.getElementById('sidebar-collapse-toggle');
+    const expandBtn = document.getElementById('sidebar-expand-button');
+    const headerTexts = document.querySelectorAll('.sidebar-header-text');
+    const navLabels = document.querySelectorAll('.sidebar-nav-label');
+    const accentDots = document.querySelectorAll('.sidebar-accent-dot');
+    const profileCard = document.querySelector('.mx-3.mt-3');
+    if (!sidebar) return;
+    if (window.innerWidth < 1024) {
+        sidebar.classList.remove('sidebar-collapsed');
+        if (expandBtn) expandBtn.classList.add('hidden');
+        document.getElementById('sidebar-collapse-icon-open')?.classList.remove('hidden');
+        headerTexts.forEach(el => { if (el) el.style.display = ''; });
+        navLabels.forEach(el => { if (el) el.style.display = ''; });
+        accentDots.forEach(el => { if (el) el.style.display = ''; });
+        if (profileCard) profileCard.querySelector('.min-w-0')?.classList.remove('hidden');
+        document.querySelectorAll('.sidebar-link span:not(.sidebar-active-dot)').forEach(el => {
+            el.classList.remove('sidebar-link-text-hidden');
+        });
+        return;
+    }
+    if (sidebarCollapsed) {
+        sidebar.classList.add('sidebar-collapsed');
+        if (toggle) toggle.classList.add('hidden');
+        if (expandBtn) expandBtn.classList.remove('hidden');
+        headerTexts.forEach(el => { if (el) el.style.display = 'none'; });
+        navLabels.forEach(el => { if (el) el.style.display = 'none'; });
+        accentDots.forEach(el => { if (el) el.style.display = 'none'; });
+        if (profileCard) profileCard.querySelector('.min-w-0')?.classList.add('hidden');
+        document.querySelectorAll('.sidebar-link span:not(.sidebar-active-dot)').forEach(el => {
+            if (el.textContent.trim()) el.classList.add('sidebar-link-text-hidden');
+        });
+    } else {
+        sidebar.classList.remove('sidebar-collapsed');
+        if (toggle) toggle.classList.remove('hidden');
+        if (expandBtn) expandBtn.classList.add('hidden');
+        headerTexts.forEach(el => { if (el) el.style.display = ''; });
+        navLabels.forEach(el => { if (el) el.style.display = ''; });
+        accentDots.forEach(el => { if (el) el.style.display = ''; });
+        if (profileCard) profileCard.querySelector('.min-w-0')?.classList.remove('hidden');
+        document.querySelectorAll('.sidebar-link span:not(.sidebar-active-dot)').forEach(el => {
+            el.classList.remove('sidebar-link-text-hidden');
+        });
+    }
+}
+function openSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    const toggle = document.getElementById('sidebar-toggle');
+    if (!sidebar || !backdrop) return;
+    sidebar.classList.remove('-translate-x-full');
+    sidebar.classList.add('translate-x-0');
+    backdrop.classList.remove('hidden');
+    void backdrop.offsetWidth;
+    backdrop.classList.add('opacity-100');
+    document.body.classList.add('overflow-hidden');
+    if (toggle) {
+        toggle.setAttribute('aria-expanded', 'true');
+        document.getElementById('sidebar-toggle-open')?.classList.add('hidden');
+        document.getElementById('sidebar-toggle-close')?.classList.remove('hidden');
+    }
+}
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    const toggle = document.getElementById('sidebar-toggle');
+    if (!sidebar || !backdrop) return;
+    sidebar.classList.add('-translate-x-full');
+    sidebar.classList.remove('translate-x-0');
+    backdrop.classList.remove('opacity-100');
+    setTimeout(() => {
+        backdrop.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }, 200);
+    if (toggle) {
+        toggle.setAttribute('aria-expanded', 'false');
+        document.getElementById('sidebar-toggle-open')?.classList.remove('hidden');
+        document.getElementById('sidebar-toggle-close')?.classList.add('hidden');
+    }
+}
+function toggleSidebar(event) {
+    if (event) event.stopPropagation();
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+    if (sidebar.classList.contains('-translate-x-full')) openSidebar();
+    else closeSidebar();
+}
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+    const collapseToggle = document.getElementById('sidebar-collapse-toggle');
+    if (sidebarBackdrop) sidebarBackdrop.addEventListener('click', closeSidebar);
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar && !sidebar.classList.contains('-translate-x-full')) closeSidebar();
+        }
+    });
+    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+    sidebarLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar && !sidebar.classList.contains('-translate-x-full')) closeSidebar();
+        });
+    });
+    if (collapseToggle) {
+        collapseToggle.addEventListener('click', function() {
+            sidebarCollapsed = true;
+            localStorage.setItem('sidebar-collapsed', 'true');
+            applyCollapseState();
+        });
+    }
+    const expandBtn = document.getElementById('sidebar-expand-button');
+    if (expandBtn) {
+        expandBtn.addEventListener('click', function() {
+            sidebarCollapsed = false;
+            localStorage.setItem('sidebar-collapsed', 'false');
+            applyCollapseState();
+        });
+    }
+    applyCollapseState();
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(applyCollapseState, 150);
+    });
+    function syncMobileNotifBadge() {
+        const sidebarBadge = document.getElementById('sidebar-notif-badge');
+        const mobileBadge = document.getElementById('mobile-notif-badge');
+        if (sidebarBadge && mobileBadge) {
+            if (!sidebarBadge.classList.contains('hidden')) {
+                mobileBadge.textContent = sidebarBadge.textContent;
+                mobileBadge.classList.remove('hidden');
+            } else {
+                mobileBadge.classList.add('hidden');
+            }
+        }
+    }
+    const origFetch = fetchUnreadCount;
+    fetchUnreadCount = function() {
+        return origFetch.apply(this, arguments).then(function() { setTimeout(syncMobileNotifBadge, 50); }).catch(function() {});
+    };
+    setTimeout(syncMobileNotifBadge, 200);
+});
+</script>
+<script src="/static/js/admin.js"></script>
+{% endblock %}
