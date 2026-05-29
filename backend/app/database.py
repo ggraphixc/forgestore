@@ -160,5 +160,7 @@ def init_db():
         CustomerLifetimeValue,
         FraudDetectionEvent,
         PredictiveForecast,
+        # System 11: Advertising Campaigns
+        AdCampaign,
     )
     Base.metadata.create_all(bind=get_engine())
