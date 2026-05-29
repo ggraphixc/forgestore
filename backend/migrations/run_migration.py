@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 MIGRATIONS = {
     "001": "migrations.001_add_retailer_bank_fields",
+    "002": "migrations.002_extend_ad_campaign",
 }
 
 
@@ -27,7 +28,7 @@ def run_migration(migration_id: str):
     import importlib
     mod = importlib.import_module(module_path)
     mod.upgrade()
-    print(f"✅ Migration {migration_id} applied successfully.")
+    print(f"Migration {migration_id} applied successfully.")
 
 
 def run_all():

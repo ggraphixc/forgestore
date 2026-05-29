@@ -72,6 +72,13 @@
                         <span class="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 bg-amber-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center cart-count hidden shadow-sm ring-2 ring-white dark:ring-stone-800">0</span>
                     </a>
 
+                    <!-- Global Logout (visible when any session exists) -->
+                    <button onclick="handleGlobalLogout()" id="global-logout-btn" class="hidden p-2.5 min-w-[44px] min-h-[44px] items-center justify-center text-red-500 hover:text-red-600 transition-colors duration-200 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20" aria-label="Sign Out" title="Sign Out">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                    </button>
+
                     <!-- Account (md+) -->
                     <a href="{{ '/shop/account' if user else '/shop/login' }}" class="hidden md:flex p-2.5 min-w-[44px] min-h-[44px] items-center justify-center text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 transition-colors duration-200 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800" aria-label="My Account">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -896,6 +903,31 @@ document.addEventListener('DOMContentLoaded', () => {
 // Initialize cart badge and wishlist status
     updateCartBadge();
     loadWishlistStatus();
+
+    // Global Logout Button Visibility & Handler
+    function checkAndShowLogout() {
+        const hasAdminSession = document.cookie.includes('access_token=');
+        const hasCustomerSession = document.cookie.includes('customer_token=');
+        const logoutBtn = document.getElementById('global-logout-btn');
+        if (logoutBtn && (hasAdminSession || hasCustomerSession)) {
+            logoutBtn.classList.remove('hidden');
+        }
+    }
+    window.handleGlobalLogout = async function() {
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            document.cookie.split(';').forEach(c => {
+                const name = c.trim().split('=')[0];
+                if (name === 'access_token' || name === 'customer_token') {
+                    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
+                }
+            });
+            window.location.href = '/shop';
+        } catch (e) {
+            window.location.href = '/shop';
+        }
+    };
+    checkAndShowLogout();
 
     // Newsletter subscription
     window.submitNewsletter = async function() {

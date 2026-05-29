@@ -38,39 +38,50 @@
         </div>
         {% endif %}
         
-        <div class="p-4 relative z-10">
-          <div class="flex items-center gap-2 mb-1.5">
-            <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full {% if ad.ad_type == 'PRODUCT' %}bg-amber-500/20 text-amber-300 border border-amber-400/20{% else %}bg-blue-500/20 text-blue-300 border border-blue-400/20{% endif %}">{{ ad.ad_type }}</span>
-            <span class="text-[9px] text-stone-500 dark:text-stone-400">Sponsored</span>
-          </div>
-          
-          {% if ad.ad_type == 'PRODUCT' and ad.product %}
-          <a href="/shop/products/{{ ad.product.slug }}" class="flex items-center justify-between">
-            <div class="min-w-0 flex-1">
-              <h4 class="text-sm font-bold text-stone-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors line-clamp-1">{{ ad.product.name }}</h4>
-              <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5 line-clamp-1">{{ ad.product.description|truncate(60) if ad.product.description else 'Featured product' }}</p>
-            </div>
-            <div class="flex-shrink-0 ml-3">
-              <span class="text-sm font-bold text-amber-600 dark:text-amber-400 font-mono">{{ format_price(ad.product.discount_price if ad.product.discount_price else ad.product.price, currency) }}</span>
-            </div>
-          </a>
-          {% else %}
-          <a href="/shop/shops/{{ ad.retailer.slug if ad.retailer else '#' }}" class="flex items-center justify-between">
-            <div class="min-w-0 flex-1">
-              <h4 class="text-sm font-bold text-stone-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors line-clamp-1">
-                {% if ad.retailer %}{{ ad.retailer.name }}{% else %}Featured Artisan{% endif %}
-              </h4>
-              <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5 line-clamp-1">
-                {% if ad.retailer and ad.retailer.bio %}{{ ad.retailer.bio|truncate(60) }}{% else %}Visit this artisan's shop{% endif %}
-              </p>
-            </div>
-            <span class="flex-shrink-0 text-xs font-semibold text-amber-600 dark:text-amber-400 ml-3 flex items-center gap-1 group-hover:gap-1.5 transition-all">
-              View
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            </span>
-          </a>
-          {% endif %}
-        </div>
+<div class="p-4 relative z-10">
+           <div class="flex items-center gap-2 mb-1.5">
+             <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full {% if ad.ad_type == 'PRODUCT' %}bg-amber-500/20 text-amber-300 border border-amber-400/20{% elif ad.ad_type == 'SYSTEM_PROMO' %}bg-purple-500/20 text-purple-300 border border-purple-400/20{% else %}bg-blue-500/20 text-blue-300 border border-blue-400/20{% endif %}">{{ ad.ad_type }}</span>
+             <span class="text-[9px] text-stone-500 dark:text-stone-400">Sponsored</span>
+           </div>
+           
+           {% if ad.ad_type == 'PRODUCT' and ad.product %}
+           <a href="/shop/products/{{ ad.product.slug }}" class="flex items-center justify-between">
+             <div class="min-w-0 flex-1">
+               <h4 class="text-sm font-bold text-stone-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors line-clamp-1">{{ ad.product.name }}</h4>
+               <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5 line-clamp-1">{{ ad.product.description|truncate(60) if ad.product.description else 'Featured product' }}</p>
+             </div>
+             <div class="flex-shrink-0 ml-3">
+               <span class="text-sm font-bold text-amber-600 dark:text-amber-400 font-mono">{{ format_price(ad.product.discount_price if ad.product.discount_price else ad.product.price, currency) }}</span>
+             </div>
+           </a>
+           {% elif ad.ad_type == 'SYSTEM_PROMO' %}
+           <a href="{{ ad.target_url or '/shop/marketplace' }}" class="flex items-center justify-between">
+             <div class="min-w-0 flex-1">
+               <h4 class="text-sm font-bold text-stone-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors line-clamp-1">Site Promotion</h4>
+               <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5 line-clamp-1">Check our latest offers</p>
+             </div>
+             <span class="flex-shrink-0 text-xs font-semibold text-purple-600 dark:text-purple-400 ml-3 flex items-center gap-1 group-hover:gap-1.5 transition-all">
+               Explore
+               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+             </span>
+           </a>
+           {% else %}
+           <a href="/shop/shops/{{ ad.retailer.slug if ad.retailer else '#' }}" class="flex items-center justify-between">
+             <div class="min-w-0 flex-1">
+               <h4 class="text-sm font-bold text-stone-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors line-clamp-1">
+                 {% if ad.retailer %}{{ ad.retailer.name }}{% else %}Featured Artisan{% endif %}
+               </h4>
+               <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5 line-clamp-1">
+                 {% if ad.retailer and ad.retailer.bio %}{{ ad.retailer.bio|truncate(60) }}{% else %}Visit this artisan's shop{% endif %}
+               </p>
+             </div>
+             <span class="flex-shrink-0 text-xs font-semibold text-amber-600 dark:text-amber-400 ml-3 flex items-center gap-1 group-hover:gap-1.5 transition-all">
+               View
+               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+             </span>
+           </a>
+           {% endif %}
+         </div>
       </div>
       {% endfor %}
     </div>

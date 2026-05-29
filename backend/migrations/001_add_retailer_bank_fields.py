@@ -41,27 +41,27 @@ def upgrade(force_sqlite: bool = False):
 def _upgrade_postgres(engine):
     """PostgreSQL: ALTER TABLE + CREATE TABLE via raw SQL wrapped in text()."""
     with engine.connect() as conn:
-        conn.execute(text("""
-            ALTER TABLE retailer
-              ADD COLUMN IF NOT EXISTS bank_name VARCHAR(255),
-              ADD COLUMN IF NOT EXISTS account_number VARCHAR(50),
-              ADD COLUMN IF NOT EXISTS bank_code VARCHAR(20),
-              ADD COLUMN IF NOT EXISTS account_name VARCHAR(255),
-              ADD COLUMN IF NOT EXISTS paystack_subaccount_code VARCHAR(100),
-              ADD COLUMN IF NOT EXISTS flutterwave_subaccount_id VARCHAR(100),
-              ADD COLUMN IF NOT EXISTS commission_rate FLOAT NOT NULL DEFAULT 10.0
-        """))
+        for col_name, col_type in [
+            ("bank_name", "VARCHAR(255)"),
+            ("account_number", "VARCHAR(50)"),
+            ("bank_code", "VARCHAR(20)"),
+            ("account_name", "VARCHAR(255)"),
+            ("paystack_subaccount_code", "VARCHAR(100)"),
+            ("flutterwave_subaccount_id", "VARCHAR(100)"),
+            ("commission_rate", "FLOAT DEFAULT 10.0"),
+        ]:
+            conn.execute(text(f"ALTER TABLE retailer ADD COLUMN IF NOT EXISTS {col_name} {col_type}"))
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS ad_campaign (
                 id VARCHAR PRIMARY KEY,
-                retailer_id VARCHAR NOT NULL REFERENCES retailer(id) ON DELETE CASCADE,
+                retailer_id VARCHAR REFERENCES retailer(id) ON DELETE CASCADE,
                 product_id VARCHAR REFERENCES product(id) ON DELETE SET NULL,
                 ad_type VARCHAR(20) NOT NULL DEFAULT 'SHOP',
                 status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
-                banner_url VARCHAR,
+                banner_url VARCHAR NOT NULL,
                 start_date TIMESTAMP,
                 end_date TIMESTAMP,
-                payment_reference VARCHAR(255) NOT NULL UNIQUE,
+                payment_reference VARCHAR(255) UNIQUE,
                 clicks INTEGER NOT NULL DEFAULT 0,
                 impressions INTEGER NOT NULL DEFAULT 0,
                 created_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -95,7 +95,7 @@ def _upgrade_sqlite(engine):
         ("account_name", "VARCHAR(255)"),
         ("paystack_subaccount_code", "VARCHAR(100)"),
         ("flutterwave_subaccount_id", "VARCHAR(100)"),
-        ("commission_rate", "FLOAT NOT NULL DEFAULT 10.0"),
+        ("commission_rate", "REAL NOT NULL DEFAULT 10.0"),
     ]
     with engine.connect() as conn:
         # Check if retailer table exists
@@ -133,7 +133,7 @@ def _upgrade_sqlite(engine):
                     location VARCHAR(255),
                     primary_color VARCHAR(20) DEFAULT 'zinc',
                     status VARCHAR(20) DEFAULT 'ACTIVE',
-                    rating FLOAT NOT NULL DEFAULT 0.0,
+                    rating REAL NOT NULL DEFAULT 0.0,
                     review_count INTEGER NOT NULL DEFAULT 0,
                     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -155,22 +155,22 @@ def _upgrade_sqlite(engine):
         # Create ad_campaign table if not exists
         if "ad_campaign" not in tables:
             conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS ad_campaign (
-                    id VARCHAR PRIMARY KEY,
-                    retailer_id VARCHAR NOT NULL REFERENCES retailer(id) ON DELETE CASCADE,
-                    product_id VARCHAR REFERENCES product(id) ON DELETE SET NULL,
-                    ad_type VARCHAR(20) NOT NULL DEFAULT 'SHOP',
-                    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
-                    banner_url VARCHAR,
-                    start_date TIMESTAMP,
-                    end_date TIMESTAMP,
-                    payment_reference VARCHAR(255) NOT NULL UNIQUE,
-                    clicks INTEGER NOT NULL DEFAULT 0,
-                    impressions INTEGER NOT NULL DEFAULT 0,
-                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-                )
-            """))
+            CREATE TABLE IF NOT EXISTS ad_campaign (
+                id VARCHAR PRIMARY KEY,
+                retailer_id VARCHAR REFERENCES retailer(id) ON DELETE CASCADE,
+                product_id VARCHAR REFERENCES product(id) ON DELETE SET NULL,
+                ad_type VARCHAR(20) NOT NULL DEFAULT 'SHOP',
+                status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+                banner_url VARCHAR NOT NULL,
+                start_date TIMESTAMP,
+                end_date TIMESTAMP,
+                payment_reference VARCHAR(255) UNIQUE,
+                clicks INTEGER NOT NULL DEFAULT 0,
+                impressions INTEGER NOT NULL DEFAULT 0,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
             print("  Created table: ad_campaign")
         else:
             print("  Skipped (exists): ad_campaign")

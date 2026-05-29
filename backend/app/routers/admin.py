@@ -750,8 +750,10 @@ def retailer_banking(request: Request, db: Session = Depends(get_db)):
 @router.get("/retailer/ads", response_class=HTMLResponse)
 def retailer_ads(request: Request, db: Session = Depends(get_db)):
     admin = get_current_user_from_cookie(request, db)
-    if not admin or not has_permission(admin, "catalog"):
+    if not admin or admin.role.value not in ("DIR_ADMIN", "MANAGEMENT", "RETAILER"):
         return RedirectResponse(url="/admin/login", status_code=302)
+    if admin.role.value == "RETAILER":
+        return RedirectResponse(url="/admin/dashboard", status_code=302)
 
     retailer_id = admin.vendor_id
     campaigns = []

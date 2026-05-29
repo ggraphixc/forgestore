@@ -32,20 +32,20 @@ ROLE_PERMISSIONS = {
     AdminRole.DIR_ADMIN: [
         "dashboard", "catalog", "categories", "retailers",
         "orders", "customers", "settings", "admin_users",
+        "ads", "payments", "settings_technical", "settings_developer",
+        "system_logs", "system_audit", "performance",
     ],
     AdminRole.MANAGEMENT: [
-        "dashboard", "catalog", "categories", "retailers",
-        "orders", "customers",
+        "dashboard", "catalog", "orders", "customers", "ads",
     ],
     AdminRole.TECH_ADMIN: [
-        "dashboard", "settings", "admin_users",
-        "settings_technical", "settings_developer",
+        "dashboard", "system_logs", "system_audit", "performance",
     ],
     AdminRole.RETAILER: [
-        "dashboard", "catalog",
+        "catalog", "retailers", "orders",
     ],
     AdminRole.LOGISTICS: [
-        "dashboard", "orders", "customers",
+        "orders", "shipments",
     ],
 }
 

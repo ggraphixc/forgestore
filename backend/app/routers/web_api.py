@@ -1147,3 +1147,27 @@ def change_password(request: Request, data: dict, db: Session = Depends(get_db))
     customer.updated_at = utcnow()
     db.commit()
     return {"success": True}
+
+
+@router.post("/customer/profile/delete")
+def delete_customer_account(request: Request, response: Response, db: Session = Depends(get_db)):
+    """Self-service account deletion for authenticated customers."""
+    customer = get_current_customer_from_cookie(request, db)
+    if not customer:
+        raise HTTPException(status_code=401, detail="Not logged in")
+
+    # Delete related records in correct order (items before orders)
+    order_ids = [o.id for o in db.query(Order.id).filter(Order.customer_id == customer.id).subquery()]
+    db.query(OrderItem).filter(OrderItem.order_id.in_(order_ids)).delete(synchronize_session=False)
+    db.query(Order).filter(Order.customer_id == customer.id).delete(synchronize_session=False)
+    db.query(Review).filter(Review.user_id == customer.id).delete(synchronize_session=False)
+
+    # Anonymize user record
+    customer.email = f"deleted_{customer.id}@example.com"
+    customer.name = "Deleted User"
+    customer.password = None
+    customer.updated_at = utcnow()
+    db.commit()
+
+    response.delete_cookie("customer_token")
+    return {"success": True, "message": "Account deleted successfully"}

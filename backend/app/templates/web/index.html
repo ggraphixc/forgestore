@@ -102,42 +102,51 @@
         </div>
         {% endif %}
         
-        <div class="p-5 relative z-10">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full {% if ad.ad_type == 'PRODUCT' %}bg-amber-500/20 text-amber-300 border border-amber-400/20{% else %}bg-blue-500/20 text-blue-300 border border-blue-400/20{% endif %}">
-              {{ ad.ad_type }}
-            </span>
-            <span class="text-[10px] text-stone-400">Active</span>
-          </div>
-          
-          {% if ad.ad_type == 'PRODUCT' and ad.product %}
-          <a href="/shop/products/{{ ad.product.slug }}" class="block">
-            <h3 class="text-base font-bold text-white group-hover:text-amber-300 transition-colors line-clamp-1">{{ ad.product.name }}</h3>
-            <p class="text-sm text-stone-400 mt-1 line-clamp-2">{{ ad.product.description|truncate(80) if ad.product.description else 'Discover this featured product' }}</p>
-            <div class="flex items-center gap-3 mt-3">
-              {% if ad.product.discount_price %}
-              <span class="text-lg font-bold text-amber-400 font-mono">{{ format_price(ad.product.discount_price, currency) }}</span>
-              <span class="text-sm text-stone-500 line-through font-mono">{{ format_price(ad.product.price, currency) }}</span>
-              {% else %}
-              <span class="text-lg font-bold text-amber-400 font-mono">{{ format_price(ad.product.price, currency) }}</span>
-              {% endif %}
-            </div>
-          </a>
-          {% else %}
-          <a href="/shop/shops/{{ ad.retailer.slug if ad.retailer else '#' }}" class="block">
-            <h3 class="text-base font-bold text-white group-hover:text-amber-300 transition-colors">
-              {% if ad.retailer %}{{ ad.retailer.name }}{% else %}Featured Shop{% endif %}
-            </h3>
-            <p class="text-sm text-stone-400 mt-1 line-clamp-2">
-              {% if ad.retailer and ad.retailer.bio %}{{ ad.retailer.bio|truncate(100) }}{% else %}Visit this artisan's shop and explore their handcrafted collection.{% endif %}
-            </p>
-            <span class="inline-flex items-center gap-1.5 text-sm font-medium text-amber-400 mt-3 group-hover:gap-2.5 transition-all">
-              Visit Shop
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-            </span>
-          </a>
-          {% endif %}
-        </div>
+<div class="p-5 relative z-10">
+           <div class="flex items-center gap-2 mb-2">
+             <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full {% if ad.ad_type == 'PRODUCT' %}bg-amber-500/20 text-amber-300 border border-amber-400/20{% elif ad.ad_type == 'SYSTEM_PROMO' %}bg-purple-500/20 text-purple-300 border border-purple-400/20{% else %}bg-blue-500/20 text-blue-300 border border-blue-400/20{% endif %}">
+               {{ ad.ad_type }}
+             </span>
+             <span class="text-[10px] text-stone-400">Active</span>
+           </div>
+           
+           {% if ad.ad_type == 'PRODUCT' and ad.product %}
+           <a href="/shop/products/{{ ad.product.slug }}" class="block">
+             <h3 class="text-base font-bold text-white group-hover:text-amber-300 transition-colors line-clamp-1">{{ ad.product.name }}</h3>
+             <p class="text-sm text-stone-400 mt-1 line-clamp-2">{{ ad.product.description|truncate(80) if ad.product.description else 'Discover this featured product' }}</p>
+             <div class="flex items-center gap-3 mt-3">
+               {% if ad.product.discount_price %}
+               <span class="text-lg font-bold text-amber-400 font-mono">{{ format_price(ad.product.discount_price, currency) }}</span>
+               <span class="text-sm text-stone-500 line-through font-mono">{{ format_price(ad.product.price, currency) }}</span>
+               {% else %}
+               <span class="text-lg font-bold text-amber-400 font-mono">{{ format_price(ad.product.price, currency) }}</span>
+               {% endif %}
+             </div>
+           </a>
+           {% elif ad.ad_type == 'SYSTEM_PROMO' %}
+           <a href="{{ ad.target_url or '/shop/marketplace' }}" class="block">
+             <h3 class="text-base font-bold text-white group-hover:text-purple-300 transition-colors">Site Promotion</h3>
+             <p class="text-sm text-stone-400 mt-1 line-clamp-2">Check out our latest offers and seasonal campaigns</p>
+             <span class="inline-flex items-center gap-1.5 text-sm font-medium text-purple-400 mt-3 group-hover:gap-2.5 transition-all">
+               Explore Offers
+               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+             </span>
+           </a>
+           {% else %}
+           <a href="/shop/shops/{{ ad.retailer.slug if ad.retailer else '#' }}" class="block">
+             <h3 class="text-base font-bold text-white group-hover:text-amber-300 transition-colors">
+               {% if ad.retailer %}{{ ad.retailer.name }}{% else %}Featured Shop{% endif %}
+             </h3>
+             <p class="text-sm text-stone-400 mt-1 line-clamp-2">
+               {% if ad.retailer and ad.retailer.bio %}{{ ad.retailer.bio|truncate(100) }}{% else %}Visit this artisan's shop and explore their handcrafted collection.{% endif %}
+             </p>
+             <span class="inline-flex items-center gap-1.5 text-sm font-medium text-amber-400 mt-3 group-hover:gap-2.5 transition-all">
+               Visit Shop
+               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+             </span>
+           </a>
+           {% endif %}
+         </div>
       </div>
       {% endfor %}
     </div>

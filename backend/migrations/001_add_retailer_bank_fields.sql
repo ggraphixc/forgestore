@@ -5,26 +5,25 @@
 -- =============================================================================
 
 -- Step 1: Add banking/payment columns to retailer table
-ALTER TABLE retailer
-  ADD COLUMN IF NOT EXISTS bank_name VARCHAR(255),
-  ADD COLUMN IF NOT EXISTS account_number VARCHAR(50),
-  ADD COLUMN IF NOT EXISTS bank_code VARCHAR(20),
-  ADD COLUMN IF NOT EXISTS account_name VARCHAR(255),
-  ADD COLUMN IF NOT EXISTS paystack_subaccount_code VARCHAR(100),
-  ADD COLUMN IF NOT EXISTS flutterwave_subaccount_id VARCHAR(100),
-  ADD COLUMN IF NOT EXISTS commission_rate FLOAT NOT NULL DEFAULT 10.0;
+ALTER TABLE retailer ADD COLUMN IF NOT EXISTS bank_name VARCHAR(255);
+ALTER TABLE retailer ADD COLUMN IF NOT EXISTS account_number VARCHAR(50);
+ALTER TABLE retailer ADD COLUMN IF NOT EXISTS bank_code VARCHAR(20);
+ALTER TABLE retailer ADD COLUMN IF NOT EXISTS account_name VARCHAR(255);
+ALTER TABLE retailer ADD COLUMN IF NOT EXISTS paystack_subaccount_code VARCHAR(100);
+ALTER TABLE retailer ADD COLUMN IF NOT EXISTS flutterwave_subaccount_id VARCHAR(100);
+ALTER TABLE retailer ADD COLUMN IF NOT EXISTS commission_rate FLOAT DEFAULT 10.0;
 
 -- Step 2: Create ad_campaign table
 CREATE TABLE IF NOT EXISTS ad_campaign (
     id VARCHAR PRIMARY KEY,
-    retailer_id VARCHAR NOT NULL REFERENCES retailer(id) ON DELETE CASCADE,
+    retailer_id VARCHAR REFERENCES retailer(id) ON DELETE CASCADE,
     product_id VARCHAR REFERENCES product(id) ON DELETE SET NULL,
     ad_type VARCHAR(20) NOT NULL DEFAULT 'SHOP',
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
-    banner_url VARCHAR,
+    banner_url VARCHAR NOT NULL,
     start_date TIMESTAMP,
     end_date TIMESTAMP,
-    payment_reference VARCHAR(255) NOT NULL UNIQUE,
+    payment_reference VARCHAR(255) UNIQUE,
     clicks INTEGER NOT NULL DEFAULT 0,
     impressions INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),

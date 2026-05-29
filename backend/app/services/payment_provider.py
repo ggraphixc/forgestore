@@ -274,6 +274,46 @@ def register_provider(name: str, cls: type[PaymentProvider]):
     _registry[name.lower()] = cls
 
 
+_db_provider_cache: str | None = None
+_db_provider_lookup_attempted: bool = False
+
+
+def _get_db_provider() -> str | None:
+    """Read the active payment provider from the DB Settings table.
+
+    Caches the result to avoid a DB query on every request.
+    Falls back to ``None`` when the DB is unavailable or no provider is set.
+    """
+    global _db_provider_cache, _db_provider_lookup_attempted
+    if _db_provider_lookup_attempted:
+        return _db_provider_cache
+    _db_provider_lookup_attempted = True
+    try:
+        from app.database import SessionLocal
+        from app.models import Settings as SettingsModel
+        db = SessionLocal()
+        try:
+            setting = db.query(SettingsModel).filter(
+                SettingsModel.key == "default_payment_provider"
+            ).first()
+            if setting and setting.value:
+                _db_provider_cache = setting.value.lower()
+                return _db_provider_cache
+        finally:
+            db.close()
+    except Exception:
+        logger.warning("Could not read default_payment_provider from DB, falling back to env")
+    return None
+
+
+def invalidate_provider_cache():
+    """Clear the cached DB provider value. Call after updating the setting."""
+    global _db_provider_cache, _db_provider_lookup_attempted
+    _db_provider_cache = None
+    _db_provider_lookup_attempted = False
+    logger.info("Payment provider cache invalidated")
+
+
 def get_payment_provider(
     provider: str = "paystack",
     secret_key: Optional[str] = None,
@@ -281,21 +321,30 @@ def get_payment_provider(
 ) -> PaymentProvider:
     """Factory: return a configured payment provider instance.
 
+    Resolution order:
+        1. Explicit *provider* argument
+        2. ``default_payment_provider`` from the DB ``Settings`` table
+        3. ``settings.default_payment_provider`` from environment / ``.env``
+
     Keys are read from environment via ``get_settings()`` when not passed explicitly.
     """
     from app.config import get_settings
 
     settings = get_settings()
-    provider = provider.lower()
 
-    cls = _registry.get(provider)
+    # Try DB provider first, fall back to env config
+    db_provider = _get_db_provider()
+    effective_provider = db_provider or settings.default_payment_provider or provider
+    effective_provider = effective_provider.lower()
+
+    cls = _registry.get(effective_provider)
     if not cls:
-        raise ValueError(f"Unknown payment provider: {provider!r} (known: {list(_registry)})")
+        raise ValueError(f"Unknown payment provider: {effective_provider!r} (known: {list(_registry)})")
 
-    if provider == "paystack":
+    if effective_provider == "paystack":
         sk = secret_key or settings.paystack_secret_key
         pk = public_key or settings.paystack_public_key
-    elif provider == "flutterwave":
+    elif effective_provider == "flutterwave":
         sk = secret_key or settings.flutterwave_secret_key
         pk = public_key or settings.flutterwave_public_key
     else:

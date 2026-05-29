@@ -1123,18 +1123,19 @@ class AdCampaign(Base):
     __tablename__ = "ad_campaign"
 
     id = Column(String, primary_key=True, default=_uuid)
-    retailer_id = Column(String, ForeignKey("retailer.id", ondelete="CASCADE"), nullable=False)
+    retailer_id = Column(String, ForeignKey("retailer.id", ondelete="CASCADE"), nullable=True)
     product_id = Column(String, ForeignKey("product.id", ondelete="SET NULL"), nullable=True)
-    ad_type = Column(String(20), nullable=False, default="SHOP")  # PRODUCT or SHOP
+    ad_type = Column(String(20), nullable=False, default="SHOP")  # PRODUCT, SHOP, or SYSTEM_PROMO
     status = Column(String(20), nullable=False, default="PENDING")  # PENDING, PAID, ACTIVE, EXPIRED
-    banner_url = Column(String, nullable=True)
+    banner_url = Column(String, nullable=False)  # Required for all ad types including SYSTEM_PROMO
+    target_url = Column(String, nullable=True)  # Optional target URL for SYSTEM_PROMO ads
     start_date = Column(DateTime, nullable=True)
     end_date = Column(DateTime, nullable=True)
-    payment_reference = Column(String(255), nullable=False, unique=True)
+    payment_reference = Column(String(255), nullable=True, unique=True)
     clicks = Column(Integer, nullable=False, default=0)
     impressions = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    retailer: "Retailer" = relationship("Retailer", back_populates="ad_campaigns")
+    retailer: "Retailer | None" = relationship("Retailer", back_populates="ad_campaigns")
     product: "Product | None" = relationship("Product", back_populates="ad_campaigns")

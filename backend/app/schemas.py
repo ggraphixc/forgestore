@@ -35,6 +35,51 @@ class CheckoutRequest(BaseModel):
     address: str
 
 
+# --- Ad Campaigns ---
+class AdCampaignCreate(BaseModel):
+    product_id: Optional[str] = None
+    retailer_id: Optional[str] = None
+    ad_type: str  # PRODUCT, SHOP, or SYSTEM_PROMO
+    banner_url: str
+    target_url: Optional[str] = None
+    duration_months: int = 1
+
+    def validate_type(self):
+        if self.ad_type == "PRODUCT" and not self.product_id:
+            raise ValueError("product_id required for PRODUCT ad type")
+        if self.ad_type == "SHOP" and not self.retailer_id:
+            raise ValueError("retailer_id required for SHOP ad type")
+        if self.ad_type == "SYSTEM_PROMO" and not self.banner_url:
+            raise ValueError("banner_url required for SYSTEM_PROMO ad type")
+
+
+class AdCampaignUpdate(BaseModel):
+    product_id: Optional[str] = None
+    retailer_id: Optional[str] = None
+    ad_type: Optional[str] = None
+    banner_url: Optional[str] = None
+    target_url: Optional[str] = None
+    status: Optional[str] = None
+
+
+class AdCampaignResponse(BaseModel):
+    id: str
+    product_id: Optional[str] = None
+    retailer_id: Optional[str] = None
+    ad_type: str
+    status: str
+    banner_url: str
+    target_url: Optional[str] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    clicks: int = 0
+    impressions: int = 0
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
 # --- Reviews ---
 class ReviewCreateRequest(BaseModel):
     product_id: str

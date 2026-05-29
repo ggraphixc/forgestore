@@ -524,6 +524,11 @@ SETTINGS_DEFINITIONS: List[Dict[str, Any]] = [
      "description": "Comma-separated list of allowed CORS origins.", "default": ""},
     {"key": "webhook_url", "category": "developer", "type": "text", "label": "Order Webhook URL",
      "description": "URL called when a new order is placed.", "default": ""},
+    {"key": "default_payment_provider", "category": "developer", "type": "select", "label": "Default Payment Provider",
+     "description": "Which payment gateway to use as the primary option.",
+     "default": "paystack",
+     "options": [{"value": "paystack", "label": "Paystack"},
+                 {"value": "flutterwave", "label": "Flutterwave"}]},
 
     # ── Logistics ──
     {"key": "default_shipping_fee", "category": "logistics", "type": "number", "label": "Default Shipping Fee",

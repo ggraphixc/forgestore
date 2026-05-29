@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, Form, Response
 from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -11,13 +11,14 @@ from datetime import datetime
 from app.utils import utcnow
 
 from app.database import get_db
-from app.models import Product, Category, Retailer, Order, OrderItem, OrderStatus, User
+from app.models import Product, Category, Retailer, Order, OrderItem, OrderStatus, User, WishlistItem, Review
 from app.schemas import (
     ProductCreate, ProductUpdate, ProductResponse,
     CategoryCreate, CategoryUpdate, CategoryResponse,
     RetailerCreate, RetailerUpdate, RetailerResponse,
+    AdCampaignCreate, AdCampaignUpdate, AdCampaignResponse,
 )
-from app.auth import get_current_admin, require_role, hash_password, has_permission, AdminRole, log_admin_action
+from app.auth import get_current_admin, require_role, hash_password, has_permission, AdminRole, log_admin_action, require_admin_role, create_access_token, set_auth_cookie
 from app.config import get_settings
 from app.models import AdminUser, NewsletterSubscriber, BroadcastCampaign, BroadcastEvent, BroadcastTemplate, AdCampaign
 from app.services.email_service import send_newsletter_broadcast
@@ -1696,6 +1697,7 @@ def retailer_banking_status(
 AD_PRICING = {
     "SHOP": {"price_per_month": 10000, "label": "Shop Banner Ad"},
     "PRODUCT": {"price_per_month": 5000, "label": "Product Promotion Ad"},
+    "SYSTEM_PROMO": {"price_per_month": 0, "label": "System Promo Flyer"},
 }
 
 
@@ -1703,7 +1705,7 @@ AD_PRICING = {
 def initialize_ad_payment(
     data: dict,
     db: Session = Depends(get_db),
-    admin: AdminUser = Depends(require_role("catalog")),
+    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT)),
 ):
     """
     Initialize an ad campaign payment.
@@ -1712,8 +1714,11 @@ def initialize_ad_payment(
     the subscription fee payment.
 
     Request body:
-        - ad_type: "SHOP" or "PRODUCT"
+        - ad_type: "SHOP", "PRODUCT", or "SYSTEM_PROMO"
         - product_id: (optional) Product ID for PRODUCT ads
+        - retailer_id: (optional) Retailer ID for SHOP ads
+        - banner_url: Banner image URL for SYSTEM_PROMO
+        - target_url: (optional) Target URL for SYSTEM_PROMO
         - duration_months: Number of months (default: 1)
 
     Returns:
@@ -1728,25 +1733,61 @@ def initialize_ad_payment(
 
     ad_type = data.get("ad_type", "SHOP").upper()
     product_id = data.get("product_id") or None
+    retailer_id = data.get("retailer_id") or admin.vendor_id
+    banner_url = data.get("banner_url") or None
+    target_url = data.get("target_url") or None
     duration_months = int(data.get("duration_months", 1))
 
     if ad_type not in AD_PRICING:
-        raise HTTPException(status_code=400, detail=f"Invalid ad_type '{ad_type}'. Must be SHOP or PRODUCT.")
+        raise HTTPException(status_code=400, detail=f"Invalid ad_type '{ad_type}'. Must be SHOP, PRODUCT, or SYSTEM_PROMO.")
 
     if ad_type == "PRODUCT" and not product_id:
         raise HTTPException(status_code=400, detail="product_id is required for PRODUCT ads")
 
-    retailer_id = admin.vendor_id
-    if not retailer_id:
-        raise HTTPException(status_code=400, detail="Admin user has no vendor_id. Only retailers can purchase ads.")
+    if ad_type == "SHOP" and not retailer_id:
+        raise HTTPException(status_code=400, detail="retailer_id required for SHOP ads")
 
-    retailer = db.query(Retailer).filter(Retailer.id == retailer_id).first()
-    if not retailer:
-        raise HTTPException(status_code=404, detail="Retailer not found")
+    if ad_type == "SYSTEM_PROMO" and not banner_url:
+        raise HTTPException(status_code=400, detail="banner_url is required for SYSTEM_PROMO ads")
+
+    retailer = None
+    if retailer_id:
+        retailer = db.query(Retailer).filter(Retailer.id == retailer_id).first()
+        if not retailer:
+            raise HTTPException(status_code=404, detail="Retailer not found")
 
     # Calculate price
     pricing = AD_PRICING[ad_type]
     amount = pricing["price_per_month"] * duration_months
+
+    # SYSTEM_PROMO ads are free and auto-activate for DIR_ADMIN
+    if ad_type == "SYSTEM_PROMO" and admin.role == AdminRole.DIR_ADMIN:
+        campaign = AdCampaign(
+            retailer_id=None,
+            product_id=None,
+            ad_type=ad_type,
+            status="ACTIVE",
+            banner_url=banner_url,
+            target_url=target_url,
+            start_date=utcnow(),
+        )
+        from datetime import timedelta
+        campaign.end_date = utcnow() + timedelta(days=30)
+        db.add(campaign)
+        db.commit()
+        db.refresh(campaign)
+
+        log_admin_action(db, admin, "create", "ad_campaign", campaign.id,
+                         f"Created SYSTEM_PROMO campaign")
+        return {
+            "success": True,
+            "authorization_url": None,
+            "reference": None,
+            "campaign_id": campaign.id,
+            "amount": 0,
+            "message": "SYSTEM_PROMO campaign created and activated",
+        }
+
     cfg = get_settings()
 
     # Create a unique payment reference
@@ -1759,6 +1800,8 @@ def initialize_ad_payment(
         ad_type=ad_type,
         status="PENDING",
         payment_reference=payment_reference,
+        banner_url=banner_url,
+        target_url=target_url,
     )
     db.add(campaign)
     db.commit()
@@ -1804,7 +1847,7 @@ def initialize_ad_payment(
 @router.get("/ads/campaigns")
 def list_ad_campaigns(
     db: Session = Depends(get_db),
-    admin: AdminUser = Depends(require_role("catalog")),
+    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT)),
 ):
     """List ad campaigns for the current retailer or all campaigns for admins."""
     from app.models import AdCampaign
@@ -1822,6 +1865,9 @@ def list_ad_campaigns(
                 "ad_type": c.ad_type,
                 "status": c.status,
                 "banner_url": c.banner_url,
+                "target_url": c.target_url,
+                "retailer_id": c.retailer_id,
+                "product_id": c.product_id,
                 "start_date": c.start_date.isoformat() if c.start_date else None,
                 "end_date": c.end_date.isoformat() if c.end_date else None,
                 "payment_reference": c.payment_reference,
@@ -1839,16 +1885,13 @@ def activate_ad_campaign(
     campaign_id: str,
     data: dict,
     db: Session = Depends(get_db),
-    admin: AdminUser = Depends(require_role("settings")),
+    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT)),
 ):
     """Activate a PAID ad campaign (admin-only: DIR_ADMIN or MANAGEMENT).
 
     Sets status to ACTIVE, assigns start_date/end_date and optional banner_url.
     """
     from app.models import AdCampaign
-
-    if admin.role not in (AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT):
-        raise HTTPException(status_code=403, detail="Only DIR_ADMIN or MANAGEMENT can activate campaigns")
 
     campaign = db.query(AdCampaign).filter(AdCampaign.id == campaign_id).first()
     if not campaign:
@@ -1877,7 +1920,7 @@ def activate_ad_campaign(
 def expire_ad_campaign(
     campaign_id: str,
     db: Session = Depends(get_db),
-    admin: AdminUser = Depends(require_role("settings")),
+    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT)),
 ):
     """Manually expire an ACTIVE ad campaign."""
     from app.models import AdCampaign
@@ -1897,6 +1940,135 @@ def expire_ad_campaign(
     return {"success": True}
 
 
+# ==============================================================================
+# ADMIN IMPERSONATION
+# ==============================================================================
+
+
+@router.post("/impersonate/customer/{customer_id}")
+def impersonate_customer(
+    customer_id: str,
+    response: Response,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT)),
+):
+    """
+    Impersonate a customer by generating and setting their session cookie.
+    Restricted to DIR_ADMIN and MANAGEMENT roles only.
+    """
+    customer = db.query(User).filter(User.id == customer_id).first()
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    from datetime import timedelta
+    token = create_access_token(
+        {
+            "sub": customer.id,
+            "email": customer.email,
+            "name": customer.name,
+            "type": "customer",
+            "impersonated_by": admin.id,
+        },
+        expires_delta=timedelta(hours=1),
+    )
+
+    set_auth_cookie(response, token, "customer_token", max_age_days=1)
+
+    log_admin_action(
+        db, admin, "impersonate", "customer", customer_id,
+        f"Impersonated customer {customer.email} ({customer.name})",
+    )
+
+    return {
+        "success": True,
+        "redirect_url": "/shop",
+    }
+
+
+# ==============================================================================
+# PAYMENT PROVIDER TOGGLE
+# ==============================================================================
+
+
+@router.get("/settings/payment-provider")
+def get_payment_provider_setting(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """Get the currently active payment provider."""
+    from app.models import Settings as SettingsModel
+    from app.config import get_settings as get_env_settings
+
+    env = get_env_settings()
+
+    setting = db.query(SettingsModel).filter(
+        SettingsModel.key == "default_payment_provider"
+    ).first()
+    db_provider = setting.value if setting else None
+    active_provider = db_provider or env.default_payment_provider or "paystack"
+
+    return {
+        "active_provider": active_provider,
+        "source": "database" if db_provider else "environment",
+        "available_providers": ["paystack", "flutterwave"],
+    }
+
+
+@router.post("/settings/payment-provider")
+def set_payment_provider(
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN)),
+):
+    """
+    Toggle the active payment provider.
+
+    Request body:
+        - provider: "paystack" or "flutterwave"
+
+    This updates the ``default_payment_provider`` key in the Settings table.
+    The change takes effect immediately for all subsequent payment operations.
+    """
+    from app.models import Settings as SettingsModel
+    from app.services.payment_provider import invalidate_provider_cache
+
+    provider = (data.get("provider") or "").strip().lower()
+
+    if provider not in ("paystack", "flutterwave"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid provider '{provider}'. Must be 'paystack' or 'flutterwave'."
+        )
+
+    setting = db.query(SettingsModel).filter(
+        SettingsModel.key == "default_payment_provider"
+    ).first()
+
+    if setting:
+        setting.value = provider
+    else:
+        setting = SettingsModel(
+            key="default_payment_provider",
+            value=provider,
+            category="developer",
+            setting_type="select",
+            label="Default Payment Provider",
+        )
+        db.add(setting)
+
+    db.commit()
+
+    # Invalidate both caches so the change is picked up immediately
+    invalidate_provider_cache()
+    from app.config import invalidate_settings_cache
+    invalidate_settings_cache()
+
+    log_admin_action(db, admin, "update", "payment_provider", "",
+                     f"Switched default payment provider to {provider}")
+
+    return {"success": True, "active_provider": provider}
+
+
 @router.get("/ads/pricing")
 def get_ad_pricing():
     """Get ad pricing configuration."""
@@ -1906,7 +2078,7 @@ def get_ad_pricing():
 @router.get("/ads/analytics")
 def get_ad_analytics(
     db: Session = Depends(get_db),
-    admin: AdminUser = Depends(require_role("settings")),
+    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT)),
 ):
     """Get aggregated ad campaign analytics for the admin dashboard."""
     from app.models import AdCampaign, Retailer
@@ -2036,3 +2208,43 @@ async def upload_file(files: List[UploadFile] = File(...)):
         urls.append(f"/static/uploads/products/{unique_name}")
 
     return {"urls": urls}
+
+
+# ==============================================================================
+# CUSTOMER ACCOUNT DELETION (Admin)
+# ==============================================================================
+
+@router.delete("/customers/{customer_id}")
+def admin_delete_customer(
+    customer_id: str,
+    response: Response,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT)),
+):
+    """
+    Admin-force delete a customer account.
+    Restricted to DIR_ADMIN and MANAGEMENT roles.
+    """
+    customer = db.query(User).filter(User.id == customer_id).first()
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    # Delete related records in correct order (items before orders)
+    order_ids = [o.id for o in db.query(Order.id).filter(Order.customer_id == customer_id).subquery()]
+    db.query(OrderItem).filter(OrderItem.order_id.in_(order_ids)).delete(synchronize_session=False)
+    db.query(Order).filter(Order.customer_id == customer_id).delete(synchronize_session=False)
+    db.query(Review).filter(Review.user_id == customer_id).delete(synchronize_session=False)
+
+    email = customer.email
+    name = customer.name
+    db.delete(customer)
+    db.commit()
+
+    log_admin_action(db, admin, "delete", "customer", customer_id,
+                     f"Admin-deleted customer {email} ({name})")
+
+    response.delete_cookie("customer_token")
+
+    return {"success": True, "message": f"Customer {email} deleted successfully"}
+
+
