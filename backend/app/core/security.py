@@ -52,6 +52,8 @@ ROLE_PERMISSIONS = {
 
 def has_permission(admin: AdminUser, permission: str) -> bool:
     """Check whether *admin* holds *permission* under the current RBAC map."""
+    if admin is None:
+        return False
     role = admin.role
     if isinstance(role, str):
         try:

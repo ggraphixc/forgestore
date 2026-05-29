@@ -31,23 +31,23 @@
             <div class="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-amber-500/10 transition-colors duration-200"></div>
             <div class="flex items-center gap-3 relative">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ring-2 ring-offset-1 ring-offset-white dark:ring-offset-stone-900 shadow-sm
-                    {% if admin.role.value == 'DIR_ADMIN' %}bg-purple-600 ring-purple-400/30
-                    {% elif admin.role.value == 'MANAGEMENT' %}bg-blue-600 ring-blue-400/30
-                    {% elif admin.role.value == 'TECH_ADMIN' %}bg-cyan-600 ring-cyan-400/30
-                    {% elif admin.role.value == 'RETAILER' %}bg-amber-600 ring-amber-400/30
+                    {% if admin and admin.role.value == 'DIR_ADMIN' %}bg-purple-600 ring-purple-400/30
+                    {% elif admin and admin.role.value == 'MANAGEMENT' %}bg-blue-600 ring-blue-400/30
+                    {% elif admin and admin.role.value == 'TECH_ADMIN' %}bg-cyan-600 ring-cyan-400/30
+                    {% elif admin and admin.role.value == 'RETAILER' %}bg-amber-600 ring-amber-400/30
                     {% else %}bg-emerald-600 ring-emerald-400/30{% endif %}">
                     {{ admin.name[0]|upper if admin and admin.name else "A" }}
                 </div>
                 <div class="min-w-0 flex-1">
                     <p class="text-sm font-semibold text-stone-900 dark:text-stone-100 truncate">{{ admin.name if admin and admin.name else "Admin" }}</p>
-                    <p class="text-[11px] text-stone-500 dark:text-stone-400 truncate">{{ admin.email }}</p>
+                    <p class="text-[11px] text-stone-500 dark:text-stone-400 truncate">{{ admin.email if admin and admin.email else "" }}</p>
                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider mt-0.5
-                        {% if admin.role.value == 'DIR_ADMIN' %}bg-purple-100 text-purple-700
-                        {% elif admin.role.value == 'MANAGEMENT' %}bg-blue-100 text-blue-700
-                        {% elif admin.role.value == 'TECH_ADMIN' %}bg-cyan-100 text-cyan-700
-                        {% elif admin.role.value == 'RETAILER' %}bg-amber-100 text-amber-700
+                        {% if admin and admin.role.value == 'DIR_ADMIN' %}bg-purple-100 text-purple-700
+                        {% elif admin and admin.role.value == 'MANAGEMENT' %}bg-blue-100 text-blue-700
+                        {% elif admin and admin.role.value == 'TECH_ADMIN' %}bg-cyan-100 text-cyan-700
+                        {% elif admin and admin.role.value == 'RETAILER' %}bg-amber-100 text-amber-700
                         {% else %}bg-emerald-100 text-emerald-700{% endif %}">
-                        {{ admin.role.value }}
+                        {{ admin.role.value if admin and admin.role else "GUEST" }}
                     </span>
                 </div>
                 <!-- Chevron indicator -->
@@ -277,10 +277,10 @@
                     <!-- Avatar touch target -->
                     <a href="/admin/me" class="block">
                         <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold ring-2 ring-offset-1 ring-offset-white dark:ring-offset-stone-900 flex-shrink-0 shadow-sm transition-transform hover:scale-105 active:scale-95
-                            {% if admin.role.value == 'DIR_ADMIN' %}bg-purple-600 ring-purple-400/30
-                            {% elif admin.role.value == 'MANAGEMENT' %}bg-blue-600 ring-blue-400/30
-                            {% elif admin.role.value == 'TECH_ADMIN' %}bg-cyan-600 ring-cyan-400/30
-                            {% elif admin.role.value == 'RETAILER' %}bg-amber-600 ring-amber-400/30
+                            {% if admin and admin.role.value == 'DIR_ADMIN' %}bg-purple-600 ring-purple-400/30
+                            {% elif admin and admin.role.value == 'MANAGEMENT' %}bg-blue-600 ring-blue-400/30
+                            {% elif admin and admin.role.value == 'TECH_ADMIN' %}bg-cyan-600 ring-cyan-400/30
+                            {% elif admin and admin.role.value == 'RETAILER' %}bg-amber-600 ring-amber-400/30
                             {% else %}bg-emerald-600 ring-emerald-400/30{% endif %}">
                             {{ admin.name[0]|upper if admin and admin.name else "A" }}
                         </div>

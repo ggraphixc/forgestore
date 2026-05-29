@@ -24,10 +24,10 @@
                 <!-- Avatar -->
                 <div class="px-6 pb-6 -mt-12 relative">
                     <div class="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl font-bold ring-4 ring-white shadow-lg mx-auto
-                        {% if admin.role.value == 'DIR_ADMIN' %}bg-purple-600 ring-purple-100
-                        {% elif admin.role.value == 'MANAGEMENT' %}bg-blue-600 ring-blue-100
-                        {% elif admin.role.value == 'TECH_ADMIN' %}bg-cyan-600 ring-cyan-100
-                        {% elif admin.role.value == 'RETAILER' %}bg-amber-600 ring-amber-100
+                        {% if admin and admin.role.value == 'DIR_ADMIN' %}bg-purple-600 ring-purple-100
+                        {% elif admin and admin.role.value == 'MANAGEMENT' %}bg-blue-600 ring-blue-100
+                        {% elif admin and admin.role.value == 'TECH_ADMIN' %}bg-cyan-600 ring-cyan-100
+                        {% elif admin and admin.role.value == 'RETAILER' %}bg-amber-600 ring-amber-100
                         {% else %}bg-emerald-600 ring-emerald-100{% endif %}">
                         {{ admin.name[0]|upper if admin and admin.name else "A" }}
                     </div>
@@ -39,16 +39,13 @@
 
                     <!-- Role badge -->
                     <div class="mt-4 flex justify-center">
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border
-                            {% if admin.role.value == 'DIR_ADMIN' %}bg-purple-50 text-purple-700 border-purple-200
-                            {% elif admin.role.value == 'MANAGEMENT' %}bg-blue-50 text-blue-700 border-blue-200
-                            {% elif admin.role.value == 'TECH_ADMIN' %}bg-cyan-50 text-cyan-700 border-cyan-200
-                            {% elif admin.role.value == 'RETAILER' %}bg-amber-50 text-amber-700 border-amber-200
+<span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border
+                            {% if admin and admin.role.value == 'DIR_ADMIN' %}bg-purple-50 text-purple-700 border-purple-200
+                            {% elif admin and admin.role.value == 'MANAGEMENT' %}bg-blue-50 text-blue-700 border-blue-200
+                            {% elif admin and admin.role.value == 'TECH_ADMIN' %}bg-cyan-50 text-cyan-700 border-cyan-200
+                            {% elif admin and admin.role.value == 'RETAILER' %}bg-amber-50 text-amber-700 border-amber-200
                             {% else %}bg-emerald-50 text-emerald-700 border-emerald-200{% endif %}">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                            </svg>
-                            {{ admin.role.value }}
+                            {{ admin.role.value if admin and admin.role else "GUEST" }}
                         </span>
                     </div>
 
@@ -144,12 +141,12 @@
                             <p class="text-xs text-stone-400">Permission level & access scope</p>
                         </div>
                         <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border
-                            {% if admin.role.value == 'DIR_ADMIN' %}bg-purple-50 text-purple-700 border-purple-200
-                            {% elif admin.role.value == 'MANAGEMENT' %}bg-blue-50 text-blue-700 border-blue-200
-                            {% elif admin.role.value == 'TECH_ADMIN' %}bg-cyan-50 text-cyan-700 border-cyan-200
-                            {% elif admin.role.value == 'RETAILER' %}bg-amber-50 text-amber-700 border-amber-200
+                            {% if admin and admin.role.value == 'DIR_ADMIN' %}bg-purple-50 text-purple-700 border-purple-200
+                            {% elif admin and admin.role.value == 'MANAGEMENT' %}bg-blue-50 text-blue-700 border-blue-200
+                            {% elif admin and admin.role.value == 'TECH_ADMIN' %}bg-cyan-50 text-cyan-700 border-cyan-200
+                            {% elif admin and admin.role.value == 'RETAILER' %}bg-amber-50 text-amber-700 border-amber-200
                             {% else %}bg-emerald-50 text-emerald-700 border-emerald-200{% endif %}">
-                            {{ admin.role.value }}
+                            {{ admin.role.value if admin and admin.role else "GUEST" }}
                         </span>
                     </div>
 
@@ -216,7 +213,7 @@
                 </div>
                 <div class="px-6 py-4">
                     <p class="text-sm text-stone-600 mb-4">
-                        Based on the <span class="font-semibold text-stone-900">{{ admin.role.value }}</span> role, you have access to:
+                        Based on the <span class="font-semibold text-stone-900">{{ admin.role.value if admin and admin.role else "GUEST" }}</span> role, you have access to:
                     </p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {% set perm_labels = {

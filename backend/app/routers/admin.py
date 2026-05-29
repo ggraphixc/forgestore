@@ -45,7 +45,7 @@ def login_page(request: Request, db: Session = Depends(get_db)):
     admin = get_current_user_from_cookie(request, db)
     if admin:
         return RedirectResponse(url="/admin/dashboard", status_code=302)
-    return render_template("admin/login.html", {"request": request})
+    return render_template("admin/login.html", {"request": request, "has_permission": has_permission})
 
 
 @router.get("/dashboard", response_class=HTMLResponse)
@@ -77,6 +77,7 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
             "total_revenue": float(total_revenue),
         },
         "recent_orders": recent_orders,
+        "has_permission": has_permission,
     })
 
 
@@ -102,6 +103,7 @@ def product_list(request: Request, db: Session = Depends(get_db)):
         "products": products,
         "categories": categories,
         "retailers": retailers,
+        "has_permission": has_permission,
     })
 
 
@@ -123,6 +125,7 @@ def product_new(request: Request, db: Session = Depends(get_db)):
         "admin": admin,
         "categories": categories,
         "retailers": retailers,
+        "has_permission": has_permission,
     })
 
 
@@ -236,6 +239,7 @@ def product_edit(request: Request, product_id: str, db: Session = Depends(get_db
         "product": product,
         "categories": categories,
         "retailers": retailers,
+        "has_permission": has_permission,
     })
 
 
@@ -258,6 +262,7 @@ def product_detail(request: Request, product_id: str, db: Session = Depends(get_
         "request": request,
         "admin": admin,
         "product": product,
+        "has_permission": has_permission,
     })
 
 
@@ -278,6 +283,7 @@ def category_list(request: Request, db: Session = Depends(get_db)):
         "admin": admin,
         "categories": categories,
         "product_counts": product_counts,
+        "has_permission": has_permission,
     })
 
 
@@ -295,6 +301,7 @@ def category_edit(request: Request, category_id: str, db: Session = Depends(get_
         "request": request,
         "admin": admin,
         "category": category,
+        "has_permission": has_permission,
     })
 
 
@@ -315,6 +322,7 @@ def retailer_list(request: Request, db: Session = Depends(get_db)):
         "admin": admin,
         "retailers": retailers,
         "product_counts": product_counts,
+        "has_permission": has_permission,
     })
 
 
@@ -327,6 +335,7 @@ def retailer_new(request: Request, db: Session = Depends(get_db)):
     return render_template("admin/retailers/new.html", {
         "request": request,
         "admin": admin,
+        "has_permission": has_permission,
     })
 
 
@@ -347,6 +356,7 @@ def retailer_detail(request: Request, slug: str, db: Session = Depends(get_db)):
         "admin": admin,
         "retailer": retailer,
         "products": products,
+        "has_permission": has_permission,
     })
 
 
@@ -364,6 +374,7 @@ def retailer_edit(request: Request, slug: str, db: Session = Depends(get_db)):
         "request": request,
         "admin": admin,
         "retailer": retailer,
+        "has_permission": has_permission,
     })
 
 
@@ -385,6 +396,7 @@ def order_list(request: Request, db: Session = Depends(get_db)):
         "admin": admin,
         "orders": orders,
         "customers": customers,
+        "has_permission": has_permission,
     })
 
 
@@ -407,6 +419,7 @@ def order_detail(request: Request, order_id: str, db: Session = Depends(get_db))
         "order": order,
         "items": items,
         "customer": customer,
+        "has_permission": has_permission,
     })
 
 
@@ -431,6 +444,7 @@ def customer_list(request: Request, db: Session = Depends(get_db)):
         "request": request,
         "admin": admin,
         "customers": customers,
+        "has_permission": has_permission,
     })
 
 
@@ -460,6 +474,7 @@ def settings_page(request: Request, db: Session = Depends(get_db)):
         "admin": admin,
         "categorized_settings": categorized,
         "accessible_categories": accessible_categories,
+        "has_permission": has_permission,
     })
 
 
@@ -473,6 +488,7 @@ def newsletter_broadcast(request: Request, db: Session = Depends(get_db)):
     return render_template("admin/newsletter/broadcast.html", {
         "request": request,
         "admin": admin,
+        "has_permission": has_permission,
     })
 
 
@@ -487,6 +503,7 @@ def newsletter_broadcast_analytics(request: Request, db: Session = Depends(get_d
         "request": request,
         "admin": admin,
         "campaigns": campaigns,
+        "has_permission": has_permission,
     })
 
 
@@ -507,6 +524,7 @@ def newsletter_templates(request: Request, db: Session = Depends(get_db)):
         "request": request,
         "admin": admin,
         "templates": templates,
+        "has_permission": has_permission,
     })
 
 
@@ -536,6 +554,7 @@ def newsletter_subscribers(request: Request, db: Session = Depends(get_db)):
         "pending_count": pending_count,
         "expired_count": expired_count,
         "now": utcnow,
+        "has_permission": has_permission,
     })
 
 
@@ -553,6 +572,7 @@ def admin_users_list(request: Request, db: Session = Depends(get_db)):
         "admin": admin,
         "admin_users": admin_users,
         "get_role_badge": get_role_badge,
+        "has_permission": has_permission,
     })
 
 
@@ -568,6 +588,7 @@ def admin_users_new(request: Request, db: Session = Depends(get_db)):
         "request": request,
         "admin": admin,
         "retailers": retailers,
+        "has_permission": has_permission,
     })
 
 
@@ -589,6 +610,7 @@ async def admin_users_create(request: Request, db: Session = Depends(get_db)):
             "request": request,
             "admin": admin,
             "error": "Email and password are required",
+            "has_permission": has_permission,
         })
 
     existing = db.query(AdminUser).filter(AdminUser.email == email).first()
@@ -597,6 +619,7 @@ async def admin_users_create(request: Request, db: Session = Depends(get_db)):
             "request": request,
             "admin": admin,
             "error": "An admin with this email already exists",
+            "has_permission": has_permission,
         })
 
     new_admin = AdminUser(
@@ -631,6 +654,7 @@ def admin_users_edit(request: Request, admin_id: str, db: Session = Depends(get_
         "admin": admin,
         "target_admin": target_admin,
         "retailers": retailers,
+        "has_permission": has_permission,
     })
 
 
@@ -692,6 +716,7 @@ def notifications_page(request: Request, db: Session = Depends(get_db)):
     return render_template("admin/notifications.html", {
         "request": request,
         "admin": admin,
+        "has_permission": has_permission,
     })
 
 
@@ -705,6 +730,7 @@ def intelligence_dashboard(request: Request, db: Session = Depends(get_db)):
     return render_template("admin/intelligence.html", {
         "request": request,
         "admin": admin,
+        "has_permission": has_permission,
     })
 
 
@@ -744,6 +770,7 @@ def retailer_banking(request: Request, db: Session = Depends(get_db)):
         "admin": admin,
         "retailer": retailer,
         "banks": banks,
+        "has_permission": has_permission,
     })
 
 
@@ -778,6 +805,7 @@ def retailer_ads(request: Request, db: Session = Depends(get_db)):
         "products": products,
         "ad_pricing": AD_PRICING,
         "utcnow": utcnow,
+        "has_permission": has_permission,
     })
 
 
@@ -797,6 +825,7 @@ def manage_ads(request: Request, db: Session = Depends(get_db)):
         "campaigns": campaigns,
         "retailers": retailers_map,
         "products": products_map,
+        "has_permission": has_permission,
     })
 
 
@@ -809,6 +838,7 @@ def ad_analytics_page(request: Request, db: Session = Depends(get_db)):
     return render_template("admin/ads/analytics.html", {
         "request": request,
         "admin": admin,
+        "has_permission": has_permission,
     })
 
 
@@ -825,6 +855,7 @@ def shipment_list(request: Request, db: Session = Depends(get_db)):
         "request": request,
         "admin": admin,
         "shipments": shipments,
+        "has_permission": has_permission,
     })
 
 
@@ -841,6 +872,7 @@ def affiliate_list(request: Request, db: Session = Depends(get_db)):
         "request": request,
         "admin": admin,
         "affiliates": affiliates,
+        "has_permission": has_permission,
     })
 
 
