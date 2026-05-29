@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 
 from app.database import get_db
-from app.auth import get_current_user_from_cookie
+from app.auth import get_current_customer_from_cookie
 from app.services.ai_chat_service import AIChatService, RecommendationService
 from app.services.search_service import SearchService, TrendingService
 from app.services.affiliate_service import AffiliateService, ReferralService
@@ -28,8 +28,8 @@ def ai_chat(
     db: Session = Depends(get_db),
 ):
     """Chat with the AI shopping assistant."""
-    admin = get_current_user_from_cookie(request, db)
-    user_id = admin.id if admin else None
+    customer = get_current_customer_from_cookie(request, db)
+    user_id = customer.id if customer else None
     service = AIChatService(db)
     return service.chat(session_id, message, user_id)
 
@@ -43,8 +43,8 @@ def get_recommendations(
     db: Session = Depends(get_db),
 ):
     """Get AI-powered product recommendations."""
-    admin = get_current_user_from_cookie(request, db)
-    user_id = admin.id if admin else None
+    customer = get_current_customer_from_cookie(request, db)
+    user_id = customer.id if customer else None
     service = RecommendationService(db)
     return {"recommendations": service.get_recommendations(user_id, product_id, context_type, limit)}
 
@@ -64,8 +64,8 @@ def smart_search(
     db: Session = Depends(get_db),
 ):
     """Smart search with full-text matching, filters, and personalization."""
-    admin = get_current_user_from_cookie(request, db) if request else None
-    user_id = admin.id if admin else None
+    customer = get_current_customer_from_cookie(request, db) if request else None
+    user_id = customer.id if customer else None
     service = SearchService(db)
     return service.search(q, category, min_price, max_price, sort, page, per_page, user_id)
 
@@ -94,8 +94,8 @@ def create_referral(
     db: Session = Depends(get_db),
 ):
     """Create an affiliate/referral account using the current user."""
-    admin = get_current_user_from_cookie(request, db)
-    user_id = admin.id if admin else None
+    customer = get_current_customer_from_cookie(request, db)
+    user_id = customer.id if customer else None
     if not user_id:
         raise HTTPException(status_code=401, detail="Not authenticated")
     service = AffiliateService(db)
@@ -106,8 +106,8 @@ def create_referral(
 @router.get("/referrals/stats")
 def get_referral_stats(request: Request, db: Session = Depends(get_db)):
     """Get referral statistics for the current user."""
-    admin = get_current_user_from_cookie(request, db)
-    user_id = admin.id if admin else None
+    customer = get_current_customer_from_cookie(request, db)
+    user_id = customer.id if customer else None
     if not user_id:
         raise HTTPException(status_code=401, detail="Not authenticated")
     service = AffiliateService(db)
@@ -126,8 +126,8 @@ def get_referral_stats(request: Request, db: Session = Depends(get_db)):
 @router.get("/referrals/earnings")
 def get_referral_earnings(request: Request, db: Session = Depends(get_db)):
     """Get referral earnings for the current user."""
-    admin = get_current_user_from_cookie(request, db)
-    user_id = admin.id if admin else None
+    customer = get_current_customer_from_cookie(request, db)
+    user_id = customer.id if customer else None
     if not user_id:
         raise HTTPException(status_code=401, detail="Not authenticated")
     service = AffiliateService(db)
@@ -151,8 +151,8 @@ async def withdraw_referral_earnings(
     amount = body.get('amount', 0)
     payment_method = body.get('payment_method', 'wallet')
     
-    admin = get_current_user_from_cookie(request, db)
-    user_id = admin.id if admin else None
+    customer = get_current_customer_from_cookie(request, db)
+    user_id = customer.id if customer else None
     if not user_id:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
@@ -172,8 +172,8 @@ async def withdraw_referral_earnings(
 @router.get("/referrals/history")
 def get_referral_history(request: Request, db: Session = Depends(get_db)):
     """Get referral history for current user."""
-    admin = get_current_user_from_cookie(request, db)
-    user_id = admin.id if admin else None
+    customer = get_current_customer_from_cookie(request, db)
+    user_id = customer.id if customer else None
     if not user_id:
         raise HTTPException(status_code=401, detail="Not authenticated")
     from app.services.affiliate_service import ReferralService
@@ -203,8 +203,8 @@ async def fund_wallet(
     db: Session = Depends(get_db),
 ):
     """Initialize wallet funding."""
-    admin = get_current_user_from_cookie(request, db)
-    if not admin:
+    customer = get_current_customer_from_cookie(request, db)
+    if not customer:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
     # Parse JSON body
@@ -216,29 +216,29 @@ async def fund_wallet(
         raise HTTPException(status_code=400, detail="Invalid request body")
     
     payment = PaymentService(db)
-    result = payment.initialize_payment(None, amount, provider=provider, metadata={"user_id": admin.id, "purpose": "wallet_funding"})
+    result = payment.initialize_payment(None, amount, provider_name=provider, metadata={"user_id": customer.id, "purpose": "wallet_funding"})
     return result
 
 
 @router.get("/wallet/balance")
 def get_wallet_balance(request: Request, db: Session = Depends(get_db)):
     """Get wallet balance."""
-    admin = get_current_user_from_cookie(request, db)
-    if not admin:
+    customer = get_current_customer_from_cookie(request, db)
+    if not customer:
         raise HTTPException(status_code=401, detail="Not authenticated")
     wallet = WalletService(db)
-    balance = wallet.get_balance(admin.id)
+    balance = wallet.get_balance(customer.id)
     return {"balance": balance, "currency": "NGN"}
 
 
 @router.get("/wallet/transactions")
 def get_wallet_transactions(request: Request, limit: int = 50, db: Session = Depends(get_db)):
     """Get wallet transaction history."""
-    admin = get_current_user_from_cookie(request, db)
-    if not admin:
+    customer = get_current_customer_from_cookie(request, db)
+    if not customer:
         raise HTTPException(status_code=401, detail="Not authenticated")
     wallet = WalletService(db)
-    transactions = wallet.get_transactions(admin.id, limit)
+    transactions = wallet.get_transactions(customer.id, limit)
     return {
         "transactions": [
             {
@@ -309,8 +309,8 @@ def restore_cart(abandoned_cart_id: str, db: Session = Depends(get_db)):
 @router.post("/reviews/{review_id}/react")
 def react_to_review(review_id: str, request: Request, reaction_type: str = "helpful", db: Session = Depends(get_db)):
     """React to a review."""
-    admin = get_current_user_from_cookie(request, db)
-    user_id = admin.id if admin else None
+    customer = get_current_customer_from_cookie(request, db)
+    user_id = customer.id if customer else None
     if not user_id:
         raise HTTPException(status_code=401, detail="Not authenticated")
     service = ReviewService(db)
@@ -334,11 +334,11 @@ def reply_to_review(review_id: str, content: str, db: Session = Depends(get_db))
 @router.get("/notifications")
 def get_notifications(request: Request, unread_only: bool = False, db: Session = Depends(get_db)):
     """Get user notifications."""
-    admin = get_current_user_from_cookie(request, db)
-    if not admin:
+    customer = get_current_customer_from_cookie(request, db)
+    if not customer:
         raise HTTPException(status_code=401, detail="Not authenticated")
     service = NotificationService(db)
-    notifications = service.get_user_notifications(admin.id, "customer", unread_only=unread_only)
+    notifications = service.get_user_notifications(customer.id, "customer", unread_only=unread_only)
     return {
         "notifications": [
             {
@@ -363,11 +363,11 @@ def mark_all_read(request: Request, notification_id: Optional[str] = None, db: S
 @router.post("/notifications/preferences")
 def update_notification_preferences(request: Request, preferences: dict, db: Session = Depends(get_db)):
     """Update notification preferences."""
-    admin = get_current_user_from_cookie(request, db)
-    if not admin:
+    customer = get_current_customer_from_cookie(request, db)
+    if not customer:
         raise HTTPException(status_code=401, detail="Not authenticated")
     service = NotificationService(db)
-    prefs = service.update_preferences(admin.id, preferences)
+    prefs = service.update_preferences(customer.id, preferences)
     return {"status": "updated"}
 
 
@@ -377,11 +377,11 @@ def register_push_subscription(
     db: Session = Depends(get_db),
 ):
     """Register a push notification subscription."""
-    admin = get_current_user_from_cookie(request, db)
-    if not admin:
+    customer = get_current_customer_from_cookie(request, db)
+    if not customer:
         raise HTTPException(status_code=401, detail="Not authenticated")
     service = PushService(db)
-    sub = service.register_subscription(admin.id, endpoint, keys)
+    sub = service.register_subscription(customer.id, endpoint, keys)
     return {"id": sub.id, "status": "registered"}
 
 

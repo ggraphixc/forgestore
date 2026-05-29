@@ -13,7 +13,7 @@ from app.models import (
     User, Settings, OrderStatus, NewsletterSubscriber,
     BroadcastCampaign, BroadcastTemplate,
     Shipment, ShipmentEvent, DeliveryAgent, Affiliate, AffiliateCommission,
-    VendorAnalytics, VendorPayout, NotificationQueue
+    VendorAnalytics, VendorPayout, NotificationQueue, AdCampaign
 )
 from app.schemas import (
     ProductCreate, ProductUpdate, CategoryCreate, CategoryUpdate,
@@ -703,6 +703,108 @@ def intelligence_dashboard(request: Request, db: Session = Depends(get_db)):
         return RedirectResponse(url="/admin/login", status_code=302)
 
     return render_template("admin/intelligence.html", {
+        "request": request,
+        "admin": admin,
+    })
+
+
+# --- Retailer Banking & Ads ---
+@router.get("/retailer/banking", response_class=HTMLResponse)
+def retailer_banking(request: Request, db: Session = Depends(get_db)):
+    admin = get_current_user_from_cookie(request, db)
+    if not admin or not has_permission(admin, "catalog"):
+        return RedirectResponse(url="/admin/login", status_code=302)
+
+    retailer_id = admin.vendor_id
+    retailer = None
+    if retailer_id:
+        retailer = db.query(Retailer).filter(Retailer.id == retailer_id).first()
+
+    # Fetch available banks for the dropdown (from Paystack)
+    banks = []
+    from app.config import get_settings as gs
+    cfg = gs()
+    if cfg.paystack_secret_key:
+        import requests
+        try:
+            resp = requests.get(
+                "https://api.paystack.co/bank?country=nigeria&perPage=100",
+                headers={"Authorization": f"Bearer {cfg.paystack_secret_key}"},
+                timeout=10,
+            )
+            data = resp.json()
+            if data.get("status"):
+                banks = [{"code": b["code"], "name": b["name"]} for b in data.get("data", [])]
+                banks.sort(key=lambda x: x["name"])
+        except Exception:
+            banks = []
+
+    return render_template("admin/retailers/banking.html", {
+        "request": request,
+        "admin": admin,
+        "retailer": retailer,
+        "banks": banks,
+    })
+
+
+@router.get("/retailer/ads", response_class=HTMLResponse)
+def retailer_ads(request: Request, db: Session = Depends(get_db)):
+    admin = get_current_user_from_cookie(request, db)
+    if not admin or not has_permission(admin, "catalog"):
+        return RedirectResponse(url="/admin/login", status_code=302)
+
+    retailer_id = admin.vendor_id
+    campaigns = []
+    products = []
+
+    if retailer_id:
+        retailer = db.query(Retailer).filter(Retailer.id == retailer_id).first()
+        campaigns = db.query(AdCampaign).filter(
+            AdCampaign.retailer_id == retailer_id
+        ).order_by(AdCampaign.created_at.desc()).all()
+        products = db.query(Product).filter(Product.retailer_id == retailer_id).all()
+    else:
+        retailer = None
+
+    from app.routers.admin_api import AD_PRICING
+
+    return render_template("admin/retailers/ads.html", {
+        "request": request,
+        "admin": admin,
+        "retailer": retailer,
+        "campaigns": campaigns,
+        "products": products,
+        "ad_pricing": AD_PRICING,
+        "utcnow": utcnow,
+    })
+
+
+@router.get("/ads/manage", response_class=HTMLResponse)
+def manage_ads(request: Request, db: Session = Depends(get_db)):
+    admin = get_current_user_from_cookie(request, db)
+    if not admin or not has_permission(admin, "settings"):
+        return RedirectResponse(url="/admin/login", status_code=302)
+
+    campaigns = db.query(AdCampaign).order_by(AdCampaign.created_at.desc()).all()
+    retailers_map = {r.id: r for r in db.query(Retailer).all()}
+    products_map = {p.id: p for p in db.query(Product).all()}
+
+    return render_template("admin/ads/manage.html", {
+        "request": request,
+        "admin": admin,
+        "campaigns": campaigns,
+        "retailers": retailers_map,
+        "products": products_map,
+    })
+
+
+@router.get("/ads/analytics", response_class=HTMLResponse)
+def ad_analytics_page(request: Request, db: Session = Depends(get_db)):
+    admin = get_current_user_from_cookie(request, db)
+    if not admin or not has_permission(admin, "settings"):
+        return RedirectResponse(url="/admin/login", status_code=302)
+
+    return render_template("admin/ads/analytics.html", {
         "request": request,
         "admin": admin,
     })

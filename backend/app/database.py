@@ -10,13 +10,15 @@ code that does ``from app.database import engine, SessionLocal``.
 """
 
 from sqlalchemy import create_engine, event
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.orm import sessionmaker, DeclarativeBase  # type: ignore[attr-defined]  # sqlalchemy2-stubs doesn't re-export DeclarativeBase
 from app.config import get_settings
 
 _engine = None
 _SessionLocal = None
+
+
 class Base(DeclarativeBase):
-    pass
+    __allow_unmapped__ = True
 
 
 def _normalize_url(url: str) -> str:

@@ -1,0 +1,172 @@
+{% extends "admin/base.html" %}
+{% block title %}Banking Setup — ForgeStore{% endblock %}
+{% block content %}
+
+<div class="max-w-3xl mx-auto">
+  <!-- Header -->
+  <div class="mb-8">
+    <a href="/admin/retailers" class="inline-flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 mb-3 transition-colors">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m7 7l-7-7 7-7"/></svg>
+      Back to Retailers
+    </a>
+    <h1 class="text-2xl sm:text-3xl font-black text-stone-900 dark:text-stone-100 font-display">Banking Setup</h1>
+    <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">Link your bank account for automated payouts and split payments</p>
+  </div>
+
+  <!-- Banking Status Card -->
+  <div class="card-glass p-6 mb-8">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-sm font-bold text-stone-900 dark:text-stone-100">Current Status</h2>
+      <span id="banking-status-badge" class="text-xs font-bold px-2.5 py-1 rounded-full {% if retailer and retailer.account_number %}bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400{% else %}bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400{% endif %}">
+        {% if retailer and retailer.account_number %}Connected{% else %}Not Set Up{% endif %}
+      </span>
+    </div>
+    {% if retailer %}
+    <div id="banking-details" class="space-y-2 text-sm {% if not retailer.account_number %}hidden{% endif %}">
+      <div class="flex justify-between py-2 border-b border-stone-100 dark:border-stone-700">
+        <span class="text-stone-500">Account Name</span>
+        <span class="font-semibold text-stone-900 dark:text-stone-100">{{ retailer.account_name or '—' }}</span>
+      </div>
+      <div class="flex justify-between py-2 border-b border-stone-100 dark:border-stone-700">
+        <span class="text-stone-500">Account Number</span>
+        <span class="font-semibold text-stone-900 dark:text-stone-100">
+          {% if retailer.account_number %}{{ '*' * (retailer.account_number|length - 4) + retailer.account_number[-4:] }}{% else %}—{% endif %}
+        </span>
+      </div>
+      <div class="flex justify-between py-2 border-b border-stone-100 dark:border-stone-700">
+        <span class="text-stone-500">Bank</span>
+        <span class="font-semibold text-stone-900 dark:text-stone-100">{{ retailer.bank_name or '—' }}</span>
+      </div>
+      <div class="flex justify-between py-2 border-b border-stone-100 dark:border-stone-700">
+        <span class="text-stone-500">Commission Rate</span>
+        <span class="font-semibold text-stone-900 dark:text-stone-100">{{ retailer.commission_rate }}%</span>
+      </div>
+      <div class="flex justify-between py-2">
+        <span class="text-stone-500">Subaccount</span>
+        <span class="font-semibold text-stone-900 dark:text-stone-100">
+          {% if retailer.paystack_subaccount_code or retailer.flutterwave_subaccount_id %}
+          <span class="text-emerald-600 dark:text-emerald-400">Active</span>
+          {% else %}—{% endif %}
+        </span>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Bank Setup Form -->
+  <div class="card-glass p-6">
+    <h2 class="text-sm font-bold text-stone-900 dark:text-stone-100 mb-6">
+      {% if retailer and retailer.account_number %}Update Bank Details{% else %}Set Up Bank Account{% endif %}
+    </h2>
+
+    <form id="bank-setup-form" class="space-y-5">
+      <!-- Bank Selection -->
+      <div>
+        <label for="bank_code" class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">Bank</label>
+        <select id="bank_code" name="bank_code" required
+          class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 text-sm focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all duration-200">
+          <option value="">Select your bank...</option>
+          {% for bank in banks %}
+          <option value="{{ bank.code }}" {% if retailer and retailer.bank_code == bank.code %}selected{% endif %}>{{ bank.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Account Number -->
+      <div>
+        <label for="account_number" class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">Account Number</label>
+        <input type="text" id="account_number" name="account_number" value="{{ retailer.account_number or '' }}" required maxlength="10" pattern="\d{10}"
+          class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 text-sm focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all duration-200"
+          placeholder="0123456789">
+        <p class="text-xs text-stone-400 mt-1">10-digit NUBAN account number</p>
+      </div>
+
+      <!-- Bank Name (optional, for Flutterwave) -->
+      <div>
+        <label for="bank_name" class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">Bank Name <span class="text-stone-400 font-normal">(optional)</span></label>
+        <input type="text" id="bank_name" name="bank_name" value="{{ retailer.bank_name or '' }}"
+          class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 text-sm focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all duration-200"
+          placeholder="e.g. Access Bank">
+      </div>
+
+      <!-- Submit -->
+      <div class="flex items-center gap-3 pt-4">
+        <button type="submit" id="bank-submit-btn"
+          class="btn-forge text-sm">
+          <span id="bank-btn-text">Save &amp; Create Subaccount</span>
+          <svg id="bank-btn-spinner" class="w-4 h-4 hidden animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </button>
+        <span id="bank-error" class="text-sm text-red-500 hidden"></span>
+      </div>
+    </form>
+
+    <!-- Success message -->
+    <div id="bank-success" class="hidden mt-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+      <div class="flex items-center gap-3">
+        <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div>
+          <p class="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Bank account linked successfully!</p>
+          <p id="bank-success-detail" class="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('bank-setup-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('bank-submit-btn');
+  const btnText = document.getElementById('bank-btn-text');
+  const spinner = document.getElementById('bank-btn-spinner');
+  const errorEl = document.getElementById('bank-error');
+  const successEl = document.getElementById('bank-success');
+  const successDetail = document.getElementById('bank-success-detail');
+
+  errorEl.classList.add('hidden');
+  successEl.classList.add('hidden');
+
+  btn.disabled = true;
+  btnText.textContent = 'Processing...';
+  spinner.classList.remove('hidden');
+
+  try {
+    const res = await fetch('/api/admin/retailer/bank-setup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        account_number: document.getElementById('account_number').value.trim(),
+        bank_code: document.getElementById('bank_code').value,
+        bank_name: document.getElementById('bank_name').value.trim(),
+      }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      successDetail.textContent = `Account: ${data.account_name} — Subaccount: ${data.subaccount_id}`;
+      successEl.classList.remove('hidden');
+      // Update status
+      document.getElementById('banking-status-badge').textContent = 'Connected';
+      document.getElementById('banking-status-badge').className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+      document.getElementById('banking-details').classList.remove('hidden');
+      // Refresh page after short delay
+      setTimeout(() => location.reload(), 2000);
+    } else {
+      errorEl.textContent = data.detail || 'Failed to link bank account';
+      errorEl.classList.remove('hidden');
+    }
+  } catch (err) {
+    errorEl.textContent = 'Network error. Please try again.';
+    errorEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = 'Save & Create Subaccount';
+    spinner.classList.add('hidden');
+  }
+});
+</script>
+{% endblock %}

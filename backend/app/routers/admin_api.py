@@ -19,7 +19,7 @@ from app.schemas import (
 )
 from app.auth import get_current_admin, require_role, hash_password, has_permission, AdminRole, log_admin_action
 from app.config import get_settings
-from app.models import AdminUser, NewsletterSubscriber, BroadcastCampaign, BroadcastEvent, BroadcastTemplate
+from app.models import AdminUser, NewsletterSubscriber, BroadcastCampaign, BroadcastEvent, BroadcastTemplate, AdCampaign
 from app.services.email_service import send_newsletter_broadcast
 from app.config import get_settings
 import csv
@@ -1535,7 +1535,489 @@ def cleanup_expired_confirmations(
     return {"success": True, "cleaned": count, "emails": emails}
 
 
-# --- File Upload ---
+# ==============================================================================
+# RETAILER BANKING & SUBACCOUNT SETUP
+# ==============================================================================
+
+
+def _resolve_bank_account_name(bank_code: str, account_number: str) -> str:
+    """Resolve a bank account name using the active payment provider.
+
+    Uses Paystack's resolve account endpoint by default.
+    Returns the account name or raises ValueError.
+    """
+    from app.config import get_settings
+    cfg = get_settings()
+
+    if not cfg.paystack_secret_key:
+        raise ValueError("Paystack is not configured. Set PAYSTACK_SECRET_KEY in .env")
+
+    import requests
+    resp = requests.get(
+        f"https://api.paystack.co/bank/resolve?account_number={account_number}&bank_code={bank_code}",
+        headers={"Authorization": f"Bearer {cfg.paystack_secret_key}"},
+        timeout=15,
+    )
+    data = resp.json()
+    if not data.get("status"):
+        raise ValueError(f"Could not resolve account: {data.get('message', 'Unknown error')}")
+    return data["data"]["account_name"]
+
+
+@router.post("/retailer/bank-setup")
+def retailer_bank_setup(
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """
+    Set up banking details for a retailer.
+
+    Accepts account_number and bank_code, resolves the account name via
+    the payment gateway, creates a subaccount for split payments, and
+    saves all details to the retailer record.
+
+    Requirements:
+        - Admin user must have RETAILER role with vendor_id set to the retailer ID
+        - PAYSTACK_SECRET_KEY must be configured in .env
+    """
+    account_number = (data.get("account_number") or "").strip()
+    bank_code = (data.get("bank_code") or "").strip()
+    bank_name = (data.get("bank_name") or "").strip()
+
+    if not account_number or not bank_code:
+        raise HTTPException(status_code=400, detail="account_number and bank_code are required")
+
+    # Determine the retailer — from vendor_id for RETAILER role, or explicit retailer_id for admins
+    retailer_id = data.get("retailer_id") or admin.vendor_id
+    if not retailer_id:
+        raise HTTPException(status_code=400, detail="Could not determine retailer. Set retailer_id or ensure admin has vendor_id.")
+
+    retailer = db.query(Retailer).filter(Retailer.id == retailer_id).first()
+    if not retailer:
+        raise HTTPException(status_code=404, detail="Retailer not found")
+
+    # Resolve account name via Paystack
+    try:
+        account_name = _resolve_bank_account_name(bank_code, account_number)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    # Determine which payment provider is active
+    from app.config import get_settings
+    cfg = get_settings()
+    provider_name = cfg.default_payment_provider or "paystack"
+
+    if provider_name == "paystack":
+        if not cfg.paystack_secret_key:
+            raise HTTPException(status_code=400, detail="Paystack secret key is not configured")
+        from app.services.wallet_service import PaystackProvider
+        provider = PaystackProvider(cfg.paystack_secret_key)
+        try:
+            subaccount_id = provider.create_subaccount(
+                business_name=retailer.name or account_name,
+                bank_code=bank_code,
+                account_number=account_number,
+            )
+            retailer.paystack_subaccount_code = subaccount_id
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=f"Subaccount creation failed: {str(e)}")
+    elif provider_name == "flutterwave":
+        if not cfg.flutterwave_secret_key:
+            raise HTTPException(status_code=400, detail="Flutterwave secret key is not configured")
+        from app.services.wallet_service import FlutterwaveProvider
+        provider = FlutterwaveProvider(cfg.flutterwave_secret_key)
+        try:
+            subaccount_id = provider.create_subaccount(
+                business_name=retailer.name or account_name,
+                bank_code=bank_code,
+                account_number=account_number,
+                bank_name=bank_name or None,
+            )
+            retailer.flutterwave_subaccount_id = subaccount_id
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=f"Subaccount creation failed: {str(e)}")
+    else:
+        raise HTTPException(status_code=400, detail=f"Unsupported payment provider: {provider_name}")
+
+    # Save bank details
+    retailer.bank_name = bank_name or None
+    retailer.account_number = account_number
+    retailer.bank_code = bank_code
+    retailer.account_name = account_name
+
+    db.commit()
+    db.refresh(retailer)
+
+    log_admin_action(db, admin, "update", "retailer_banking", retailer.id,
+                     f"Set up banking for retailer '{retailer.name}' — {account_name} ({bank_code}/{account_number[-4:]})")
+
+    return {
+        "success": True,
+        "account_name": account_name,
+        "bank_name": bank_name or None,
+        "subaccount_id": subaccount_id,
+    }
+
+
+@router.get("/retailer/banking-status")
+def retailer_banking_status(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """Get the banking and subaccount status for the current retailer."""
+    retailer_id = admin.vendor_id
+    if not retailer_id:
+        raise HTTPException(status_code=400, detail="Admin user has no vendor_id")
+
+    retailer = db.query(Retailer).filter(Retailer.id == retailer_id).first()
+    if not retailer:
+        raise HTTPException(status_code=404, detail="Retailer not found")
+
+    return {
+        "bank_name": retailer.bank_name,
+        "account_number": retailer.account_number[-4:] if retailer.account_number else None,
+        "account_name": retailer.account_name,
+        "bank_code": retailer.bank_code,
+        "paystack_subaccount_code": retailer.paystack_subaccount_code,
+        "flutterwave_subaccount_id": retailer.flutterwave_subaccount_id,
+        "commission_rate": retailer.commission_rate,
+        "has_banking": bool(retailer.account_number and retailer.bank_code),
+        "has_subaccount": bool(retailer.paystack_subaccount_code or retailer.flutterwave_subaccount_id),
+    }
+
+
+# ==============================================================================
+# ADVERTISING CAMPAIGNS
+# ==============================================================================
+
+
+# Ad pricing configuration
+AD_PRICING = {
+    "SHOP": {"price_per_month": 10000, "label": "Shop Banner Ad"},
+    "PRODUCT": {"price_per_month": 5000, "label": "Product Promotion Ad"},
+}
+
+
+@router.post("/ads/initialize")
+def initialize_ad_payment(
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """
+    Initialize an ad campaign payment.
+
+    Creates a PENDING AdCampaign record and returns a payment link to complete
+    the subscription fee payment.
+
+    Request body:
+        - ad_type: "SHOP" or "PRODUCT"
+        - product_id: (optional) Product ID for PRODUCT ads
+        - duration_months: Number of months (default: 1)
+
+    Returns:
+        - authorization_url: Payment link to redirect the retailer
+        - reference: Payment reference
+        - campaign_id: ID of the created campaign
+        - amount: Amount to pay
+    """
+    from app.config import get_settings
+    from app.services.wallet_service import PaymentService
+    import uuid
+
+    ad_type = data.get("ad_type", "SHOP").upper()
+    product_id = data.get("product_id") or None
+    duration_months = int(data.get("duration_months", 1))
+
+    if ad_type not in AD_PRICING:
+        raise HTTPException(status_code=400, detail=f"Invalid ad_type '{ad_type}'. Must be SHOP or PRODUCT.")
+
+    if ad_type == "PRODUCT" and not product_id:
+        raise HTTPException(status_code=400, detail="product_id is required for PRODUCT ads")
+
+    retailer_id = admin.vendor_id
+    if not retailer_id:
+        raise HTTPException(status_code=400, detail="Admin user has no vendor_id. Only retailers can purchase ads.")
+
+    retailer = db.query(Retailer).filter(Retailer.id == retailer_id).first()
+    if not retailer:
+        raise HTTPException(status_code=404, detail="Retailer not found")
+
+    # Calculate price
+    pricing = AD_PRICING[ad_type]
+    amount = pricing["price_per_month"] * duration_months
+    cfg = get_settings()
+
+    # Create a unique payment reference
+    payment_reference = f"AD-{uuid.uuid4().hex[:12].upper()}"
+
+    # Create PENDING AdCampaign
+    campaign = AdCampaign(
+        retailer_id=retailer_id,
+        product_id=product_id,
+        ad_type=ad_type,
+        status="PENDING",
+        payment_reference=payment_reference,
+    )
+    db.add(campaign)
+    db.commit()
+    db.refresh(campaign)
+
+    # Initialize payment via PaymentService
+    payment_service = PaymentService(db)
+    callback_url = f"{cfg.site_base_url.rstrip('/')}/admin/ads/callback?campaign_id={campaign.id}"
+
+    metadata = {
+        "campaign_id": campaign.id,
+        "ad_type": ad_type,
+        "retailer_id": retailer_id,
+        "duration_months": duration_months,
+    }
+
+    try:
+        result = payment_service.initialize_payment(
+            order_id="",  # No order for ad campaigns
+            amount=float(amount),
+            currency="NGN",
+            metadata=metadata,
+        )
+        # Patch the reference on the campaign
+        campaign.payment_reference = result["reference"]
+        db.commit()
+
+        return {
+            "success": True,
+            "authorization_url": result.get("authorization_url", ""),
+            "reference": result["reference"],
+            "campaign_id": campaign.id,
+            "amount": amount,
+            "duration_months": duration_months,
+        }
+    except ValueError as e:
+        # Clean up the campaign on failure
+        db.delete(campaign)
+        db.commit()
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/ads/campaigns")
+def list_ad_campaigns(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """List ad campaigns for the current retailer or all campaigns for admins."""
+    from app.models import AdCampaign
+
+    if admin.role == AdminRole.RETAILER and admin.vendor_id:
+        query = db.query(AdCampaign).filter(AdCampaign.retailer_id == admin.vendor_id)
+    else:
+        query = db.query(AdCampaign)
+
+    campaigns = query.order_by(AdCampaign.created_at.desc()).all()
+    return {
+        "campaigns": [
+            {
+                "id": c.id,
+                "ad_type": c.ad_type,
+                "status": c.status,
+                "banner_url": c.banner_url,
+                "start_date": c.start_date.isoformat() if c.start_date else None,
+                "end_date": c.end_date.isoformat() if c.end_date else None,
+                "payment_reference": c.payment_reference,
+                "clicks": c.clicks,
+                "impressions": c.impressions,
+                "created_at": c.created_at.isoformat() if c.created_at else None,
+            }
+            for c in campaigns
+        ]
+    }
+
+
+@router.put("/ads/{campaign_id}/activate")
+def activate_ad_campaign(
+    campaign_id: str,
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """Activate a PAID ad campaign (admin-only: DIR_ADMIN or MANAGEMENT).
+
+    Sets status to ACTIVE, assigns start_date/end_date and optional banner_url.
+    """
+    from app.models import AdCampaign
+
+    if admin.role not in (AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT):
+        raise HTTPException(status_code=403, detail="Only DIR_ADMIN or MANAGEMENT can activate campaigns")
+
+    campaign = db.query(AdCampaign).filter(AdCampaign.id == campaign_id).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+
+    if campaign.status not in ("PAID", "PENDING"):
+        raise HTTPException(status_code=400, detail=f"Campaign cannot be activated (status: {campaign.status})")
+
+    campaign.status = "ACTIVE"
+    campaign.start_date = utcnow()
+    campaign.end_date = utcnow()  # Will be set properly below with timedelta
+    # Set end_date based on duration (default 30 days)
+    from datetime import timedelta
+    campaign.end_date = utcnow() + timedelta(days=30)
+
+    if "banner_url" in data:
+        campaign.banner_url = data["banner_url"]
+
+    db.commit()
+    log_admin_action(db, admin, "activate", "ad_campaign", campaign_id, f"Activated ad campaign {campaign.id}")
+
+    return {"success": True}
+
+
+@router.post("/ads/{campaign_id}/expire")
+def expire_ad_campaign(
+    campaign_id: str,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """Manually expire an ACTIVE ad campaign."""
+    from app.models import AdCampaign
+
+    campaign = db.query(AdCampaign).filter(AdCampaign.id == campaign_id).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+
+    if campaign.status != "ACTIVE":
+        raise HTTPException(status_code=400, detail=f"Campaign is not ACTIVE (status: {campaign.status})")
+
+    campaign.status = "EXPIRED"
+    campaign.end_date = utcnow()
+    db.commit()
+
+    log_admin_action(db, admin, "expire", "ad_campaign", campaign_id, f"Expired ad campaign {campaign.id}")
+    return {"success": True}
+
+
+@router.get("/ads/pricing")
+def get_ad_pricing():
+    """Get ad pricing configuration."""
+    return {"pricing": AD_PRICING}
+
+
+@router.get("/ads/analytics")
+def get_ad_analytics(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """Get aggregated ad campaign analytics for the admin dashboard."""
+    from app.models import AdCampaign, Retailer
+    from datetime import timedelta
+
+    # Overall stats
+    total_campaigns = db.query(func.count(AdCampaign.id)).scalar() or 0
+    active_campaigns = db.query(func.count(AdCampaign.id)).filter(AdCampaign.status == "ACTIVE").scalar() or 0
+    total_clicks = db.query(func.coalesce(func.sum(AdCampaign.clicks), 0)).scalar() or 0
+    total_impressions = db.query(func.coalesce(func.sum(AdCampaign.impressions), 0)).scalar() or 0
+    total_spent = total_campaigns * sum(p["price_per_month"] for p in AD_PRICING.values()) // len(AD_PRICING)
+
+    # CTR (Click-Through Rate)
+    ctr = round(total_clicks / total_impressions * 100, 2) if total_impressions > 0 else 0
+
+    # Breakdown by type
+    shop_campaigns = db.query(func.count(AdCampaign.id)).filter(AdCampaign.ad_type == "SHOP").scalar() or 0
+    product_campaigns = db.query(func.count(AdCampaign.id)).filter(AdCampaign.ad_type == "PRODUCT").scalar() or 0
+
+    # Status distribution
+    status_counts = {}
+    for status in ("PENDING", "PAID", "ACTIVE", "EXPIRED"):
+        status_counts[status] = db.query(func.count(AdCampaign.id)).filter(
+            AdCampaign.status == status
+        ).scalar() or 0
+
+    # Top retailers by campaign count
+    top_retailers_data = db.query(
+        AdCampaign.retailer_id,
+        func.count(AdCampaign.id).label("campaign_count"),
+        func.coalesce(func.sum(AdCampaign.clicks), 0).label("total_clicks"),
+        func.coalesce(func.sum(AdCampaign.impressions), 0).label("total_impressions"),
+    ).group_by(AdCampaign.retailer_id).order_by(func.count(AdCampaign.id).desc()).limit(10).all()
+
+    retailer_ids = [r.retailer_id for r in top_retailers_data]
+    retailer_names = {
+        r.id: r.name for r in db.query(Retailer).filter(Retailer.id.in_(retailer_ids)).all()
+    } if retailer_ids else {}
+
+    top_retailers = []
+    for r in top_retailers_data:
+        r_ctr = round(r.total_clicks / r.total_impressions * 100, 2) if r.total_impressions > 0 else 0
+        top_retailers.append({
+            "retailer_id": r.retailer_id,
+            "retailer_name": retailer_names.get(r.retailer_id, "Unknown"),
+            "campaign_count": r.campaign_count,
+            "total_clicks": r.total_clicks,
+            "total_impressions": r.total_impressions,
+            "ctr": r_ctr,
+        })
+
+    # Monthly trend (last 6 months)
+    from datetime import datetime
+    now = utcnow()
+    monthly_trend = []
+    for i in range(5, -1, -1):
+        month = now.month - i
+        year = now.year
+        while month < 1:
+            month += 12
+            year -= 1
+        month_start = datetime(year, month, 1)
+        if month == 12:
+            month_end = datetime(year + 1, 1, 1)
+        else:
+            month_end = datetime(year, month + 1, 1)
+
+        month_campaigns = db.query(func.count(AdCampaign.id)).filter(
+            AdCampaign.created_at >= month_start,
+            AdCampaign.created_at < month_end,
+        ).scalar() or 0
+
+        month_clicks = db.query(func.coalesce(func.sum(AdCampaign.clicks), 0)).filter(
+            AdCampaign.created_at >= month_start,
+            AdCampaign.created_at < month_end,
+        ).scalar() or 0
+
+        month_imps = db.query(func.coalesce(func.sum(AdCampaign.impressions), 0)).filter(
+            AdCampaign.created_at >= month_start,
+            AdCampaign.created_at < month_end,
+        ).scalar() or 0
+
+        monthly_trend.append({
+            "month": month_start.strftime("%b %Y"),
+            "campaigns": month_campaigns,
+            "clicks": month_clicks,
+            "impressions": month_imps,
+        })
+
+    return {
+        "overview": {
+            "total_campaigns": total_campaigns,
+            "active_campaigns": active_campaigns,
+            "total_clicks": total_clicks,
+            "total_impressions": total_impressions,
+            "ctr": ctr,
+            "total_spent": total_spent,
+        },
+        "by_type": {
+            "SHOP": shop_campaigns,
+            "PRODUCT": product_campaigns,
+        },
+        "by_status": status_counts,
+        "top_retailers": top_retailers,
+        "monthly_trend": monthly_trend,
+    }
+
+
+# ==============================================================================
+# File Upload
+# ==============================================================================
 @router.post("/upload")
 async def upload_file(files: List[UploadFile] = File(...)):
     upload_dir = os.path.join("app", "static", "uploads", "products")

@@ -1,109 +1,82 @@
 {% extends "web/base.html" %}
 {% block title %}{{ retailer.name }} — ForgeStore{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-    <!-- Breadcrumb -->
-    <nav class="flex items-center gap-2 text-sm text-stone-400 dark:text-stone-500 mb-8 reveal" aria-label="Breadcrumb">
-        <a href="/shop" class="hover:text-stone-600 dark:hover:text-stone-300 transition-colors">Home</a>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
-        <a href="/shop/shops" class="hover:text-stone-600 dark:hover:text-stone-300 transition-colors">Artisans</a>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
-        <span class="text-stone-600 dark:text-stone-300 font-medium">{{ retailer.name }}</span>
-    </nav>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+  <!-- Back link -->
+  <a href="/shop/shops" class="inline-flex items-center gap-1.5 text-sm text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors mb-8">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m0 0l7 7m-7-7l7-7"/></svg>
+    Back to Artisans
+  </a>
 
-    <!-- Shop Header -->
-    <div class="relative mb-16 reveal">
-        {% if retailer.banner_url %}
-        <div class="h-48 sm:h-64 md:h-80 rounded-2xl sm:rounded-3xl overflow-hidden bg-stone-100 dark:bg-stone-800 shadow-inner relative">
-            <img loading="lazy" src="{{ retailer.banner_url }}" alt="{{ retailer.name }} workshop" class="w-full h-full object-cover">
-            <div class="absolute inset-0 bg-gradient-to-t from-stone-900/60 via-stone-900/20 to-transparent"></div>
-        </div>
-        {% else %}
-        <div class="h-36 sm:h-48 md:h-64 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-stone-900 via-stone-800 to-amber-900 relative overflow-hidden">
-            <div class="absolute inset-0 bg-grid opacity-10"></div>
-            <div class="grain-overlay absolute inset-0"></div>
-        </div>
-        {% endif %}
+  <!-- Shop Header -->
+  <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-stone-900 via-stone-800 to-amber-950 p-8 sm:p-12 mb-12 reveal">
+    <div class="absolute -top-1/3 -right-1/4 w-[400px] h-[400px] bg-gradient-to-br from-amber-500/15 to-amber-600/5 rounded-full blur-[100px]"></div>
+    <div class="absolute -bottom-1/3 -left-1/4 w-[300px] h-[300px] bg-gradient-to-br from-orange-500/8 to-transparent rounded-full blur-[80px]"></div>
+    <div class="absolute inset-0 opacity-[0.03]" style="background-image: linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px); background-size: 60px 60px;"></div>
 
-        <div class="flex flex-col sm:flex-row items-start sm:items-end gap-4 sm:gap-6 px-0 sm:px-8 {% if retailer.banner_url %}-translate-y-[30%] sm:-translate-y-1/2 ml-4 sm:ml-0{% else %}mt-8{% endif %}">
-            <div class="relative {% if retailer.banner_url %}ring-4 ring-white dark:ring-stone-800 shadow-xl{% endif %} rounded-2xl overflow-hidden w-20 h-20 sm:w-28 sm:h-28 flex-shrink-0">
-                {% if retailer.logo_url %}
-                <img src="{{ retailer.logo_url }}" alt="{{ retailer.name }}" class="w-full h-full object-cover bg-white dark:bg-stone-800">
-                {% else %}
-                <div class="w-20 h-20 sm:w-28 sm:h-28 bg-gradient-to-br from-stone-800 to-stone-700 flex items-center justify-center text-white text-2xl sm:text-4xl font-bold">
-                    {{ retailer.name[0]|upper }}
-                </div>
-                {% endif %}
-            </div>
-            <div class="pb-1 min-w-0 flex-1">
-                <h1 class="text-2xl sm:text-3xl md:text-4xl font-black text-stone-900 dark:text-stone-100 font-display">{{ retailer.name }}</h1>
-                <div class="flex items-center gap-4 mt-2 flex-wrap">
-                    {% if retailer.rating and retailer.rating > 0 %}
-                    <div class="flex items-center gap-1.5">
-                        <div class="flex">
-                            {% for i in range(5) %}
-                            <svg class="w-4 h-4 {% if i < retailer.rating|int %}text-amber-400{% else %}text-stone-200 dark:text-stone-600{% endif %}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                            {% endfor %}
-                        </div>
-                        <span class="text-sm text-stone-500 dark:text-stone-400 font-medium">{{ "%.1f"|format(retailer.rating) }}</span>
-                    </div>
-                    {% endif %}
-                    <span class="text-sm text-stone-400 dark:text-stone-500">{{ products|length }} piece{% if products|length != 1 %}s{% endif %}</span>
-                    {% if retailer.location %}
-                    <span class="text-sm text-stone-400 dark:text-stone-500 flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        {{ retailer.location }}
-                    </span>
-                    {% endif %}
-                </div>
-            </div>
+    <div class="relative z-10 flex flex-col sm:flex-row items-start gap-6">
+      <div class="w-24 h-24 sm:w-28 sm:h-28 bg-white/10 rounded-3xl overflow-hidden flex items-center justify-center text-4xl font-bold text-white/50 ring-2 ring-white/10 flex-shrink-0 backdrop-blur-sm">
+        {% if retailer.logo_url %}<img src="{{ retailer.logo_url }}" alt="{{ retailer.name }}" class="w-full h-full object-cover">{% else %}{{ retailer.name[0] }}{% endif %}
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-2">
+          <h1 class="text-3xl sm:text-4xl font-black text-white font-display">{{ retailer.name }}</h1>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 text-amber-300 text-xs font-bold rounded-full">
+            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            {{ "%.1f"|format(retailer.rating) }}
+          </span>
         </div>
+        {% if retailer.location %}<p class="text-sm text-stone-400 flex items-center gap-1.5 mb-4">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          {{ retailer.location }}
+        </p>{% endif %}
+        {% if retailer.bio %}<p class="text-sm text-stone-300 leading-relaxed max-w-2xl">{{ retailer.bio }}</p>{% endif %}
+        <div class="flex items-center gap-5 mt-5 text-sm">
+          <span class="text-stone-400"><span class="text-white font-semibold">{{ products|length }}</span> pieces</span>
+        </div>
+      </div>
     </div>
+  </div>
 
-    {% if retailer.bio %}
-    <div class="mb-12 max-w-3xl reveal">
-        <div class="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-8 shadow-sm">
-            <h2 class="text-sm font-bold uppercase tracking-[0.15em] text-stone-400 dark:text-stone-500 mb-3">About the Workshop</h2>
-            <p class="text-stone-600 dark:text-stone-300 leading-relaxed text-lg">{{ retailer.bio }}</p>
+  <!-- Products Grid -->
+  <div class="flex items-center justify-between mb-8">
+    <h2 class="text-xl font-bold text-stone-900 dark:text-stone-100 font-display">Collection</h2>
+  </div>
+
+  {% if products %}
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+    {% for p in products %}
+    <div class="card-product group reveal-scale relative" style="animation-delay: {{ (loop.index0 * 60) + 100 }}ms;">
+      <button onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist('{{ p.id }}', this)" class="wishlist-heart absolute top-3 right-3 z-10 w-8 h-8 bg-white/80 dark:bg-stone-800/80 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform duration-200 md:opacity-0 md:group-hover:opacity-100" data-product-id="{{ p.id }}" aria-label="Add to wishlist">
+        <svg class="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+        </svg>
+      </button>
+      <a href="/shop/products/{{ p.slug }}">
+        <div class="aspect-[3/4] overflow-hidden bg-stone-50 dark:bg-stone-700 relative">
+          {% if p.images and p.images|length > 0 %}
+          <img loading="lazy" src="{{ p.images[0] }}" alt="{{ p.name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
+          {% else %}
+          <div class="w-full h-full flex items-center justify-center text-stone-300 dark:text-stone-500">
+            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          </div>
+          {% endif %}
+          {% if p.discount_price and p.discount_price < p.price %}
+          <span class="absolute top-3 left-3 badge-red">Sale</span>
+          {% endif %}
         </div>
+        <div class="p-3 sm:p-4">
+          <h3 class="text-xs sm:text-sm font-semibold text-stone-900 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors line-clamp-1">{{ p.name }}</h3>
+          <span class="text-sm font-bold text-amber-600 dark:text-amber-400 font-mono mt-1 block">{{ format_price(p.price, currency) }}</span>
+        </div>
+      </a>
     </div>
-    {% endif %}
-
-    <!-- Products Grid -->
-    <div>
-        <div class="flex items-center justify-between mb-8 reveal">
-            <div>
-                <h2 class="text-2xl font-bold text-stone-900 dark:text-stone-100 font-display">Crafted <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Pieces</span></h2>
-                <p class="text-sm text-stone-400 dark:text-stone-500 mt-1">{{ products|length }} product{% if products|length != 1 %}s{% endif %} from {{ retailer.name }}</p>
-            </div>
-        </div>
-
-        {% if products %}
-        <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-            {% for product in products %}
-            <a href="/shop/products/{{ product.slug or product.id }}" class="card-product group reveal-scale" style="animation-delay: {{ (loop.index0 % 4) * 80 }}ms;">
-                <div class="aspect-square overflow-hidden bg-stone-50 dark:bg-stone-700">
-                    {% if product.images and product.images|length > 0 %}
-                    <img loading="lazy" src="{{ product.images[0] }}" alt="{{ product.name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
-                    {% else %}
-                    <div class="w-full h-full flex items-center justify-center text-stone-200 dark:text-stone-500">
-                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                    </div>
-                    {% endif %}
-                </div>
-                <div class="p-4">
-                    <p class="text-sm font-semibold text-stone-900 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors line-clamp-1">{{ product.name }}</p>
-                    <p class="text-sm font-bold text-stone-800 dark:text-stone-100 mt-1 font-mono">{{ format_price(product.price, currency) }}</p>
-                </div>
-            </a>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="text-center py-16 bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 reveal">
-            <svg class="w-12 h-12 mx-auto text-stone-200 dark:text-stone-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-            <p class="text-stone-400 dark:text-stone-500">No pieces yet from this artisan.</p>
-        </div>
-        {% endif %}
-    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-16">
+    <p class="text-stone-500 dark:text-stone-400">No pieces available yet. Check back soon!</p>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

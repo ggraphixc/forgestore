@@ -55,6 +55,10 @@ class AffiliateService:
         """Get affiliate by referral code."""
         return self.db.query(Affiliate).filter(Affiliate.code == code).first()
 
+    def get_affiliate_by_user_id(self, user_id: str) -> Optional[Affiliate]:
+        """Get affiliate by user ID."""
+        return self.db.query(Affiliate).filter(Affiliate.user_id == user_id).first()
+
     def track_click(self, affiliate_code: str, ip_address: Optional[str] = None,
                     user_agent: Optional[str] = None) -> Optional[ReferralEvent]:
         """Track a referral link click."""

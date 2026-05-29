@@ -13,7 +13,7 @@ logger = logging.getLogger("forgestore.ai")
 
 # ─── Provider Registry ──────────────────────────────────────────────
 
-PROVIDER_CONFIGS = {
+PROVIDER_CONFIGS: dict[str, dict[str, Any]] = {
     "openai": {
         "label": "OpenAI (GPT-4o, GPT-4o-mini)",
         "sdk": "openai",
@@ -86,7 +86,7 @@ def get_active_provider() -> str:
     return _get_db_setting("ai_provider") or "openai"
 
 
-def get_ai_client():
+def get_ai_client() -> Any:
     """
     Get an AI client for the currently configured provider.
     Returns None if the provider's API key is not set.
@@ -108,7 +108,7 @@ def get_ai_client():
             kwargs = {"api_key": api_key}
             if config["base_url"]:
                 kwargs["base_url"] = config["base_url"]
-            return openai.OpenAI(**kwargs)
+            return openai.OpenAI(**kwargs)  # type: ignore[arg-type]
 
         elif config["sdk"] == "anthropic":
             import anthropic

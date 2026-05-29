@@ -70,6 +70,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from app.routers import paystack_webhook
+from app.routers import flutterwave_webhook
 from app.config import get_settings
 
 rate_limiter = Limiter(key_func=get_remote_address)
@@ -112,6 +113,7 @@ app.include_router(admin_api.router)
 app.include_router(web.router)
 app.include_router(web_api.router)
 app.include_router(paystack_webhook.router)
+app.include_router(flutterwave_webhook.router)
 
 # New enterprise system routers
 from app.routers.api_admin_ext import router as api_admin_ext_router

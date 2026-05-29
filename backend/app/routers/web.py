@@ -1,13 +1,13 @@
 from datetime import datetime
 from app.utils import utcnow
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, BackgroundTasks
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
 from urllib.parse import quote
 
 from app.database import get_db
-from app.models import Product, Category, Retailer, Order, OrderItem, Review, User, Settings, WishlistItem
+from app.models import Product, Category, Retailer, Order, OrderItem, Review, User, Settings, WishlistItem, AdCampaign
 from app.auth import get_current_user_from_cookie, get_current_customer_from_cookie
 from app.templates_shared import render_template
 from app.config import get_site_settings, get_settings
@@ -41,6 +41,8 @@ def _render_page(template: str, request: Request, db: Session, context: dict = N
         "user": customer,
         "categories": categories,
         "paystack_public_key": _cfg.paystack_public_key,
+        "flutterwave_public_key": _cfg.flutterwave_public_key,
+        "default_payment_provider": _cfg.default_payment_provider or "paystack",
     }
     page_context.update(context)
     return render_template(template, page_context, status_code=status_code)
@@ -58,6 +60,29 @@ def _require_customer(request: Request, db: Session):
     return RedirectResponse(url=f"/shop/login?next={quote(next_url)}", status_code=302)
 
 
+def log_ad_impressions_background(ad_ids: list[str]):
+    """Increment ad impressions in a background task.
+
+    Uses its own database session to avoid holding the request session open
+    and to prevent row-locking / 'database is locked' errors on high-traffic
+    pages (homepage, marketplace).
+    """
+    if not ad_ids:
+        return
+    from app.database import SessionLocal
+    db = SessionLocal()
+    try:
+        for ad_id in ad_ids:
+            db.query(AdCampaign).filter(AdCampaign.id == ad_id).update(
+                {AdCampaign.impressions: AdCampaign.impressions + 1}
+            )
+        db.commit()
+    except Exception:
+        db.rollback()
+    finally:
+        db.close()
+
+
 def format_price(amount: float, currency: str = "NGN") -> str:
     symbols = {"NGN": "₦", "USD": "$", "GBP": "£", "EUR": "€"}
     symbol = symbols.get(currency, "₦")
@@ -66,10 +91,8 @@ def format_price(amount: float, currency: str = "NGN") -> str:
 
 # --- Homepage ---
 @router.get("", response_class=HTMLResponse)
-def homepage(request: Request, db: Session = Depends(get_db)):
-    customer = _require_customer(request, db)
-    if isinstance(customer, RedirectResponse):
-        return customer
+def homepage(request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    customer = _get_current_customer(request, db)
 
     currency = get_currency(db)
 
@@ -86,6 +109,16 @@ def homepage(request: Request, db: Session = Depends(get_db)):
     # Top rated products for marketplace section
     top_products = db.query(Product).order_by(desc(Product.rating)).limit(8).all()
 
+    # Active ad campaigns for homepage banners — chronological expiration enforced
+    active_ads = db.query(AdCampaign).filter(
+        AdCampaign.status == "ACTIVE",
+        AdCampaign.end_date > utcnow()
+    ).order_by(desc(AdCampaign.created_at)).limit(5).all()
+
+    # Track impressions asynchronously — avoids blocking page load
+    if active_ads:
+        background_tasks.add_task(log_ad_impressions_background, [ad.id for ad in active_ads])
+
     return _render_page("web/index.html", request, db, {
         "currency": currency,
         "format_price": format_price,
@@ -95,15 +128,14 @@ def homepage(request: Request, db: Session = Depends(get_db)):
         "retailer_counts": retailer_counts,
         "categories": categories,
         "top_products": top_products,
+        "active_ads": active_ads,
     })
 
 
 # --- Marketplace ---
 @router.get("/marketplace", response_class=HTMLResponse)
-def marketplace(request: Request, db: Session = Depends(get_db)):
-    customer = _require_customer(request, db)
-    if isinstance(customer, RedirectResponse):
-        return customer
+def marketplace(request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    customer = _get_current_customer(request, db)
 
     currency = get_currency(db)
     category_slug = request.query_params.get("category")
@@ -125,6 +157,16 @@ def marketplace(request: Request, db: Session = Depends(get_db)):
     for cat in categories:
         cat_counts[cat.id] = db.query(func.count(Product.id)).filter(Product.category_id == cat.id).scalar() or 0
 
+    # Active ad campaigns for marketplace banners — chronological expiration enforced
+    active_ad_campaigns = db.query(AdCampaign).filter(
+        AdCampaign.status == "ACTIVE",
+        AdCampaign.end_date > utcnow()
+    ).order_by(desc(AdCampaign.created_at)).limit(4).all()
+
+    # Track impressions asynchronously — avoids blocking page load
+    if active_ad_campaigns:
+        background_tasks.add_task(log_ad_impressions_background, [ad.id for ad in active_ad_campaigns])
+
     return _render_page("web/marketplace.html", request, db, {
         "currency": currency,
         "format_price": format_price,
@@ -132,6 +174,7 @@ def marketplace(request: Request, db: Session = Depends(get_db)):
         "categories": categories,
         "retailers": retailers,
         "cat_counts": cat_counts,
+        "active_ad_campaigns": active_ad_campaigns,
     })
 
 

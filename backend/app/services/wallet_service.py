@@ -3,7 +3,7 @@ import logging
 import uuid
 from datetime import timedelta
 from app.utils import utcnow
-from typing import Optional, Protocol, Any
+from typing import Optional
 from abc import ABC, abstractmethod
 from sqlalchemy.orm import Session
 
@@ -16,8 +16,14 @@ class PaymentProviderInterface(ABC):
     """Abstract payment gateway interface."""
 
     @abstractmethod
-    def initialize_payment(self, amount: float, currency: str, reference: str, metadata: dict) -> dict:
-        """Initialize a payment transaction."""
+    def initialize_payment(self, amount: float, currency: str, reference: str, metadata: dict, split_config: Optional[dict] = None) -> dict:
+        """Initialize a payment transaction.
+
+        Args:
+            split_config: Subaccount split info, e.g.
+                Paystack: {"subaccount": "SUB_xxxxx", "transaction_charge": 0}
+                Flutterwave: {"subaccounts": [{"id": "RS_xxxx", "split_ratio": 90}]}
+        """
         pass
 
     @abstractmethod
@@ -30,23 +36,40 @@ class PaymentProviderInterface(ABC):
         """Process a refund."""
         pass
 
+    @abstractmethod
+    def create_subaccount(self, business_name: str, bank_code: str, account_number: str, bank_name: Optional[str] = None) -> str:
+        """Create a subaccount for split payments.
+
+        Returns:
+            str: The subaccount identifier (Paystack: subaccount_code, Flutterwave: id)
+        """
+        pass
+
 
 class PaystackProvider(PaymentProviderInterface):
     """Paystack payment provider implementation."""
 
-    def __init__(self, secret_key: str):
+    def __init__(self, secret_key: str) -> None:
         self.secret_key = secret_key
 
-    def initialize_payment(self, amount: float, currency: str, reference: str, metadata: dict) -> dict:
+    def initialize_payment(self, amount: float, currency: str, reference: str, metadata: dict, split_config: Optional[dict] = None) -> dict:
         import requests
+        payload: dict[str, object] = {
+            "amount": int(amount * 100),
+            "currency": currency,
+            "reference": reference,
+            "metadata": metadata,
+        }
+        if split_config:
+            if "subaccount" in split_config:
+                payload["subaccount"] = split_config["subaccount"]
+            if "transaction_charge" in split_config:
+                payload["transaction_charge"] = split_config["transaction_charge"]
+            if "bearer" in split_config:
+                payload["bearer"] = split_config["bearer"]
         resp = requests.post(
             "https://api.paystack.co/transaction/initialize",
-            json={
-                "amount": int(amount * 100),
-                "currency": currency,
-                "reference": reference,
-                "metadata": metadata,
-            },
+            json=payload,
             headers={"Authorization": f"Bearer {self.secret_key}"},
         )
         return resp.json()
@@ -61,7 +84,7 @@ class PaystackProvider(PaymentProviderInterface):
 
     def refund_payment(self, reference: str, amount: Optional[float] = None) -> dict:
         import requests
-        data = {"transaction": reference}
+        data: dict[str, object] = {"transaction": reference}
         if amount:
             data["amount"] = int(amount * 100)
         resp = requests.post(
@@ -71,23 +94,44 @@ class PaystackProvider(PaymentProviderInterface):
         )
         return resp.json()
 
+    def create_subaccount(self, business_name: str, bank_code: str, account_number: str, bank_name: Optional[str] = None) -> str:
+        """Create a Paystack subaccount for split payments."""
+        import requests
+        resp = requests.post(
+            "https://api.paystack.co/subaccount",
+            json={
+                "business_name": business_name,
+                "bank_code": bank_code,
+                "account_number": account_number,
+                "percentage_charge": 0,  # We handle commission via transaction_charge at payment time
+            },
+            headers={"Authorization": f"Bearer {self.secret_key}"},
+        )
+        data = resp.json()
+        if not data.get("status"):
+            raise ValueError(f"Paystack subaccount creation failed: {data.get('message', 'Unknown error')}")
+        return data["data"]["subaccount_code"]
+
 
 class FlutterwaveProvider(PaymentProviderInterface):
     """Flutterwave payment provider implementation."""
 
-    def __init__(self, secret_key: str):
+    def __init__(self, secret_key: str) -> None:
         self.secret_key = secret_key
 
-    def initialize_payment(self, amount: float, currency: str, reference: str, metadata: dict) -> dict:
+    def initialize_payment(self, amount: float, currency: str, reference: str, metadata: dict, split_config: Optional[dict] = None) -> dict:
         import requests
+        payload: dict[str, object] = {
+            "tx_ref": reference,
+            "amount": amount,
+            "currency": currency,
+            "meta": metadata,
+        }
+        if split_config and "subaccounts" in split_config:
+            payload["subaccounts"] = split_config["subaccounts"]
         resp = requests.post(
             "https://api.flutterwave.com/v3/payments",
-            json={
-                "tx_ref": reference,
-                "amount": amount,
-                "currency": currency,
-                "meta": metadata,
-            },
+            json=payload,
             headers={"Authorization": f"Bearer {self.secret_key}"},
         )
         return resp.json()
@@ -112,9 +156,32 @@ class FlutterwaveProvider(PaymentProviderInterface):
         )
         return resp.json()
 
+    def create_subaccount(self, business_name: str, bank_code: str, account_number: str, bank_name: Optional[str] = None) -> str:
+        """Create a Flutterwave subaccount for split payments."""
+        import requests
+        body: dict[str, object] = {
+            "business_name": business_name,
+            "account_bank": bank_code,
+            "account_number": account_number,
+        }
+        if bank_name:
+            body["bank_name"] = bank_name
+        resp = requests.post(
+            "https://api.flutterwave.com/v3/subaccounts",
+            json=body,
+            headers={"Authorization": f"Bearer {self.secret_key}"},
+        )
+        data = resp.json()
+        if data.get("status") != "success":
+            raise ValueError(f"Flutterwave subaccount creation failed: {data.get('message', 'Unknown error')}")
+        return str(data["data"]["id"])
+
 
 class CryptoProvider(PaymentProviderInterface):
     """Crypto payment placeholder for future integration."""
+
+    def __init__(self) -> None:
+        pass
 
     def initialize_payment(self, amount: float, currency: str, reference: str, metadata: dict) -> dict:
         return {"status": True, "message": "Crypto payments coming soon", "data": {"reference": reference}}
@@ -124,6 +191,9 @@ class CryptoProvider(PaymentProviderInterface):
 
     def refund_payment(self, reference: str, amount: Optional[float] = None) -> dict:
         return {"status": True, "message": "Crypto refund placeholder"}
+
+    def create_subaccount(self, business_name: str, bank_code: str, account_number: str, bank_name: Optional[str] = None) -> str:
+        return "crypto_subaccount_placeholder"
 
 
 class PaymentGatewayFactory:
@@ -164,13 +234,13 @@ class WalletService:
     def get_balance(self, user_id: str, currency: str = "NGN") -> float:
         """Get wallet balance."""
         wallet = self.get_or_create_wallet(user_id, currency)
-        return wallet.balance
+        return wallet.balance  # type: ignore[return-value]
 
     def credit_wallet(self, user_id: str, amount: float, reference: str, description: str = "", currency: str = "NGN", metadata: Optional[dict] = None) -> WalletTransaction:
         """Credit a user's wallet."""
         wallet = self.get_or_create_wallet(user_id, currency)
         balance_before = wallet.balance
-        wallet.balance += amount
+        wallet.balance += amount  # type: ignore[assignment]
 
         transaction = WalletTransaction(
             wallet_id=wallet.id,
@@ -196,7 +266,7 @@ class WalletService:
             raise ValueError("Insufficient balance")
 
         balance_before = wallet.balance
-        wallet.balance -= amount
+        wallet.balance -= amount  # type: ignore[assignment]
 
         transaction = WalletTransaction(
             wallet_id=wallet.id,
@@ -298,7 +368,7 @@ class PaymentService:
             PaymentProvider.is_default == True,
         ).first()
 
-    def initialize_payment(self, order_id: str, amount: float, currency: str = "NGN", provider_name: Optional[str] = None, metadata: Optional[dict] = None) -> dict:
+    def initialize_payment(self, order_id: str, amount: float, currency: str = "NGN", provider_name: Optional[str] = None, metadata: Optional[dict] = None, split_config: Optional[dict] = None) -> dict:
         """Initialize a payment through the specified or default provider."""
         if provider_name:
             provider_config = self.db.query(PaymentProvider).filter(PaymentProvider.name == provider_name).first()
@@ -312,7 +382,7 @@ class PaymentService:
         reference = f"FS-{uuid.uuid4().hex[:12].upper()}"
 
         provider = PaymentGatewayFactory.get_provider(provider_config.name, provider_config.config)
-        result = provider.initialize_payment(amount, currency, reference, metadata or {})
+        result = provider.initialize_payment(amount, currency, reference, metadata or {}, split_config=split_config)
 
         # Log the payment attempt
         log = PaymentLog(

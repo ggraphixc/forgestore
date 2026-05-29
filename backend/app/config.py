@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     # Flutterwave payment gateway (alternative to Paystack)
     flutterwave_secret_key: str = ""
     flutterwave_public_key: str = ""
+    flutterwave_encryption_key: str = ""
+
+    # Default payment provider ("paystack" or "flutterwave")
+    default_payment_provider: str = "paystack"
 
     # Debug mode (set to "true" in development for detailed logging)
     debug: bool = False
@@ -76,6 +80,8 @@ class Settings(BaseSettings):
             warnings.append("PAYSTACK_PUBLIC_KEY is not set — payment checkout page may fail")
         if not self.flutterwave_secret_key:
             warnings.append("FLUTTERWAVE_SECRET_KEY is not set — Flutterwave payment gateway will be unavailable")
+        if not self.flutterwave_public_key:
+            warnings.append("FLUTTERWAVE_PUBLIC_KEY is not set — Flutterwave checkout may fail")
         return warnings
 
 
@@ -136,7 +142,7 @@ def get_categorized_settings(db) -> Dict[str, List]:
     db_settings = {s.key: s.value for s in db.query(SettingsModel).all()}
 
     # Build categorized dict
-    categories = {}
+    categories: Dict[str, List] = {}
     for sd in SETTINGS_DEFINITIONS:
         cat = sd["category"]
         if cat not in categories:

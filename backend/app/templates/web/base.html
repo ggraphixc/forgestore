@@ -358,7 +358,7 @@ document.addEventListener('scroll', function() {
     {% block content %}{% endblock %}
 </main>
 
-<!-- Footer -->
+{% block footer %}
 <footer class="bg-stone-900 text-stone-400 relative overflow-hidden">
     <div class="absolute inset-0"><div class="absolute inset-0 bg-grain opacity-20"></div></div>
     
@@ -443,10 +443,10 @@ document.addEventListener('scroll', function() {
             <div class="flex items-center gap-6">
                 <a href="#" class="text-stone-500 hover:text-stone-300 transition-colors text-xs">Privacy Policy</a>
                 <a href="#" class="text-stone-500 hover:text-stone-300 transition-colors text-xs">Terms of Service</a>
-            </div>
-        </div>
-    </div>
+            </div>    </div>
+</div>
 </footer>
+{% endblock %}
 
 <script>
 // ===== Password visibility toggle =====

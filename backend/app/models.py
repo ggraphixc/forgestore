@@ -1,4 +1,5 @@
 import uuid
+from typing import Optional
 from app.utils import utcnow
 from sqlalchemy import (
     Column, String, Integer, Float, Boolean, DateTime, Text, JSON, Enum as SAEnum, ForeignKey
@@ -48,7 +49,17 @@ class Retailer(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    products = relationship("Product", back_populates="retailer")
+    # Payment & Banking
+    bank_name = Column(String(255), nullable=True)
+    account_number = Column(String(50), nullable=True)
+    bank_code = Column(String(20), nullable=True)
+    account_name = Column(String(255), nullable=True)
+    paystack_subaccount_code = Column(String(100), nullable=True)
+    flutterwave_subaccount_id = Column(String(100), nullable=True)
+    commission_rate = Column(Float, nullable=False, default=10.0)
+
+    products: list["Product"] = relationship("Product", back_populates="retailer")
+    ad_campaigns: list["AdCampaign"] = relationship("AdCampaign", back_populates="retailer")
 
 
 class Category(Base):
@@ -62,7 +73,7 @@ class Category(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    products = relationship("Product", back_populates="category")
+    products: list["Product"] = relationship("Product", back_populates="category")
 
 
 class Product(Base):
@@ -89,10 +100,11 @@ class Product(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    category = relationship("Category", back_populates="products")
-    retailer = relationship("Retailer", back_populates="products")
-    order_items = relationship("OrderItem", back_populates="product")
-    reviews = relationship("Review", back_populates="product")
+    category: "Category | None" = relationship("Category", back_populates="products")
+    retailer: "Retailer | None" = relationship("Retailer", back_populates="products")
+    order_items: list["OrderItem"] = relationship("OrderItem", back_populates="product")
+    reviews: list["Review"] = relationship("Review", back_populates="product")
+    ad_campaigns: list["AdCampaign"] = relationship("AdCampaign", back_populates="product")
 
 
 class User(Base):
@@ -105,8 +117,8 @@ class User(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    orders = relationship("Order", back_populates="customer")
-    reviews = relationship("Review", back_populates="user")
+    orders: list["Order"] = relationship("Order", back_populates="customer")
+    reviews: list["Review"] = relationship("Review", back_populates="user")
 
 
 class Order(Base):
@@ -121,8 +133,8 @@ class Order(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    customer = relationship("User", back_populates="orders")
-    items = relationship("OrderItem", back_populates="order")
+    customer: "User" = relationship("User", back_populates="orders")
+    items: list["OrderItem"] = relationship("OrderItem", back_populates="order")
 
 
 class OrderItem(Base):
@@ -136,8 +148,8 @@ class OrderItem(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    product = relationship("Product", back_populates="order_items")
-    order = relationship("Order", back_populates="items")
+    product: "Product" = relationship("Product", back_populates="order_items")
+    order: "Order" = relationship("Order", back_populates="items")
 
 
 class Review(Base):
@@ -154,8 +166,8 @@ class Review(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    product = relationship("Product", back_populates="reviews")
-    user = relationship("User", back_populates="reviews")
+    product: "Product" = relationship("Product", back_populates="reviews")
+    user: "User | None" = relationship("User", back_populates="reviews")
 
 
 class AdminUser(Base):
@@ -178,7 +190,7 @@ class WishlistItem(Base):
     product_id = Column(String, ForeignKey("product.id", ondelete="CASCADE"), nullable=False)
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
-    product = relationship("Product")
+    product: "Product" = relationship("Product")
 
 
 class CartItem(Base):
@@ -190,7 +202,7 @@ class CartItem(Base):
     quantity = Column(Integer, nullable=False, default=1)
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
-    product = relationship("Product")
+    product: "Product" = relationship("Product")
 
 
 class AdminAuditLog(Base):
@@ -274,7 +286,7 @@ class BroadcastCampaign(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    template = relationship("BroadcastTemplate", back_populates="campaigns")
+    template: "BroadcastTemplate | None" = relationship("BroadcastTemplate", back_populates="campaigns")
 
 
 class BroadcastEvent(Base):
@@ -287,8 +299,8 @@ class BroadcastEvent(Base):
     extra_data = Column(JSON, nullable=True)  # e.g. {"url": "https://..."} for clicks
     timestamp = Column(DateTime, nullable=False, default=utcnow)
 
-    campaign = relationship("BroadcastCampaign")
-    subscriber = relationship("NewsletterSubscriber")
+    campaign: "BroadcastCampaign" = relationship("BroadcastCampaign")
+    subscriber: "NewsletterSubscriber" = relationship("NewsletterSubscriber")
 
 
 class BroadcastTemplate(Base):
@@ -302,7 +314,7 @@ class BroadcastTemplate(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    campaigns = relationship("BroadcastCampaign", back_populates="template")
+    campaigns: list["BroadcastCampaign"] = relationship("BroadcastCampaign", back_populates="template")
 
 
 class Settings(Base):
@@ -352,9 +364,9 @@ class Shipment(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    order = relationship("Order")
-    events = relationship("ShipmentEvent", back_populates="shipment", cascade="all, delete-orphan")
-    delivery_agent = relationship("DeliveryAgent", back_populates="shipments")
+    order: "Order" = relationship("Order")
+    events: list["ShipmentEvent"] = relationship("ShipmentEvent", back_populates="shipment", cascade="all, delete-orphan")
+    delivery_agent: "DeliveryAgent | None" = relationship("DeliveryAgent", back_populates="shipments")
 
 
 class ShipmentEvent(Base):
@@ -370,7 +382,7 @@ class ShipmentEvent(Base):
     timestamp = Column(DateTime, nullable=False, default=utcnow)
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
-    shipment = relationship("Shipment", back_populates="events")
+    shipment: "Shipment" = relationship("Shipment", back_populates="events")
 
 
 class DeliveryAgent(Base):
@@ -391,8 +403,8 @@ class DeliveryAgent(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    shipments = relationship("Shipment", back_populates="delivery_agent")
-    location_logs = relationship("DeliveryLocationLog", back_populates="agent", cascade="all, delete-orphan")
+    shipments: list["Shipment"] = relationship("Shipment", back_populates="delivery_agent")
+    location_logs: list["DeliveryLocationLog"] = relationship("DeliveryLocationLog", back_populates="agent", cascade="all, delete-orphan")
 
 
 class DeliveryLocationLog(Base):
@@ -406,8 +418,8 @@ class DeliveryLocationLog(Base):
     shipment_id = Column(String, ForeignKey("shipment.id", ondelete="SET NULL"), nullable=True)
     timestamp = Column(DateTime, nullable=False, default=utcnow)
 
-    agent = relationship("DeliveryAgent", back_populates="location_logs")
-    shipment = relationship("Shipment")
+    agent: "DeliveryAgent" = relationship("DeliveryAgent", back_populates="location_logs")
+    shipment: "Shipment | None" = relationship("Shipment")
 
 
 # ==============================================================================
@@ -432,7 +444,7 @@ class VendorAnalytics(Base):
     page_views = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
-    retailer = relationship("Retailer")
+    retailer: "Retailer" = relationship("Retailer")
 
 
 class VendorPayout(Base):
@@ -453,7 +465,7 @@ class VendorPayout(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    retailer = relationship("Retailer")
+    retailer: "Retailer" = relationship("Retailer")
 
 
 class VendorActivityLog(Base):
@@ -467,7 +479,7 @@ class VendorActivityLog(Base):
     details = Column(JSON, nullable=True)
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
-    retailer = relationship("Retailer")
+    retailer: "Retailer" = relationship("Retailer")
 
 
 class VendorPerformanceCache(Base):
@@ -481,7 +493,7 @@ class VendorPerformanceCache(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    retailer = relationship("Retailer")
+    retailer: "Retailer" = relationship("Retailer")
 
 
 # ==============================================================================
@@ -502,8 +514,8 @@ class AIConversation(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    messages = relationship("AIMessage", back_populates="conversation", cascade="all, delete-orphan")
-    user = relationship("User")
+    messages: list["AIMessage"] = relationship("AIMessage", back_populates="conversation", cascade="all, delete-orphan")
+    user: "User | None" = relationship("User")
 
 
 class AIMessage(Base):
@@ -517,7 +529,7 @@ class AIMessage(Base):
     tokens_used = Column(Integer, nullable=True)
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
-    conversation = relationship("AIConversation", back_populates="messages")
+    conversation: "AIConversation" = relationship("AIConversation", back_populates="messages")
 
 
 class UserPreferenceVector(Base):
@@ -534,7 +546,7 @@ class UserPreferenceVector(Base):
     embedding = Column(Text, nullable=True)  # JSON vector
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    user = relationship("User")
+    user: "User" = relationship("User")
 
 
 class RecommendationCache(Base):
@@ -574,9 +586,9 @@ class Affiliate(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    user = relationship("User")
-    commissions = relationship("AffiliateCommission", back_populates="affiliate", cascade="all, delete-orphan")
-    payouts = relationship("AffiliatePayout", back_populates="affiliate", cascade="all, delete-orphan")
+    user: "User | None" = relationship("User")
+    commissions: list["AffiliateCommission"] = relationship("AffiliateCommission", back_populates="affiliate", cascade="all, delete-orphan")
+    payouts: list["AffiliatePayout"] = relationship("AffiliatePayout", back_populates="affiliate", cascade="all, delete-orphan")
 
 
 class AffiliateCommission(Base):
@@ -595,9 +607,9 @@ class AffiliateCommission(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    affiliate = relationship("Affiliate", back_populates="commissions")
-    order = relationship("Order")
-    product = relationship("Product")
+    affiliate: "Affiliate" = relationship("Affiliate", back_populates="commissions")
+    order: "Order | None" = relationship("Order")
+    product: "Product | None" = relationship("Product")
 
 
 class ReferralEvent(Base):
@@ -612,7 +624,7 @@ class ReferralEvent(Base):
     extra_data = Column(JSON, nullable=True)
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
-    affiliate = relationship("Affiliate")
+    affiliate: "Affiliate" = relationship("Affiliate")
 
 
 class AffiliatePayout(Base):
@@ -631,7 +643,7 @@ class AffiliatePayout(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    affiliate = relationship("Affiliate", back_populates="payouts")
+    affiliate: "Affiliate" = relationship("Affiliate", back_populates="payouts")
 
 
 # ==============================================================================
@@ -650,8 +662,8 @@ class Wallet(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    user = relationship("User")
-    transactions = relationship("WalletTransaction", back_populates="wallet", cascade="all, delete-orphan", foreign_keys="WalletTransaction.wallet_id")
+    user: "User" = relationship("User")
+    transactions: list["WalletTransaction"] = relationship("WalletTransaction", back_populates="wallet", cascade="all, delete-orphan", foreign_keys="WalletTransaction.wallet_id")
 
 
 class WalletTransaction(Base):
@@ -670,7 +682,7 @@ class WalletTransaction(Base):
     extra_data = Column(JSON, nullable=True)
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
-    wallet = relationship("Wallet", back_populates="transactions", foreign_keys=[wallet_id])
+    wallet: "Wallet" = relationship("Wallet", back_populates="transactions", foreign_keys=[wallet_id])
 
 
 class PaymentProvider(Base):
@@ -706,7 +718,7 @@ class PaymentLog(Base):
     ip_address = Column(String(50), nullable=True)
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
-    order = relationship("Order")
+    order: "Order | None" = relationship("Order")
 
 
 class EscrowTransaction(Base):
@@ -726,9 +738,9 @@ class EscrowTransaction(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    order = relationship("Order")
-    payer = relationship("User", foreign_keys=[payer_id])
-    payee = relationship("User", foreign_keys=[payee_id])
+    order: "Order" = relationship("Order")
+    payer: "User | None" = relationship("User", foreign_keys=[payer_id])
+    payee: "User | None" = relationship("User", foreign_keys=[payee_id])
 
 
 class PaymentSplit(Base):
@@ -744,8 +756,8 @@ class PaymentSplit(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    order = relationship("Order")
-    recipient = relationship("Retailer")
+    order: "Order" = relationship("Order")
+    recipient: "Retailer" = relationship("Retailer")
 
 
 # ==============================================================================
@@ -765,10 +777,10 @@ class PersistentCart(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    user = relationship("User")
-    activities = relationship("CartActivity", back_populates="cart", cascade="all, delete-orphan",
+    user: "User | None" = relationship("User")
+    activities: list["CartActivity"] = relationship("CartActivity", back_populates="cart", cascade="all, delete-orphan",
         primaryjoin="PersistentCart.cart_token == foreign(CartActivity.cart_token)")
-    recommendations = relationship("CartRecommendation", back_populates="cart", cascade="all, delete-orphan",
+    recommendations: list["CartRecommendation"] = relationship("CartRecommendation", back_populates="cart", cascade="all, delete-orphan",
         primaryjoin="PersistentCart.cart_token == foreign(CartRecommendation.cart_token)")
 
 
@@ -783,9 +795,9 @@ class CartActivity(Base):
     extra_data = Column(JSON, nullable=True)
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
-    cart = relationship("PersistentCart", back_populates="activities",
+    cart: "PersistentCart" = relationship("PersistentCart", back_populates="activities",
         primaryjoin="foreign(CartActivity.cart_token) == PersistentCart.cart_token")
-    product = relationship("Product")
+    product: "Product | None" = relationship("Product")
 
 
 class AbandonedCart(Base):
@@ -807,8 +819,8 @@ class AbandonedCart(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    user = relationship("User")
-    recovery_order = relationship("Order")
+    user: "User | None" = relationship("User")
+    recovery_order: "Order | None" = relationship("Order")
 
 
 class CartRecommendation(Base):
@@ -823,9 +835,9 @@ class CartRecommendation(Base):
     clicked = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
-    cart = relationship("PersistentCart", back_populates="recommendations",
+    cart: "PersistentCart" = relationship("PersistentCart", back_populates="recommendations",
         primaryjoin="foreign(CartRecommendation.cart_token) == PersistentCart.cart_token")
-    product = relationship("Product")
+    product: "Product" = relationship("Product")
 
 
 # ==============================================================================
@@ -847,7 +859,7 @@ class SearchHistory(Base):
     duration_ms = Column(Integer, nullable=True)
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
-    user = relationship("User")
+    user: "User | None" = relationship("User")
 
 
 class SearchTrend(Base):
@@ -874,7 +886,7 @@ class SearchEmbedding(Base):
     chunk_text = Column(Text, nullable=True)  # The text that was embedded
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
-    product = relationship("Product")
+    product: "Product" = relationship("Product")
 
 
 class SearchClickAnalytics(Base):
@@ -888,8 +900,8 @@ class SearchClickAnalytics(Base):
     dwell_time_ms = Column(Integer, nullable=True)
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
-    search = relationship("SearchHistory")
-    product = relationship("Product")
+    search: "SearchHistory | None" = relationship("SearchHistory")
+    product: "Product | None" = relationship("Product")
 
 
 # ==============================================================================
@@ -908,7 +920,7 @@ class ReviewMedia(Base):
     is_cover = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
-    review = relationship("Review")
+    review: "Review" = relationship("Review")
 
 
 class ReviewReaction(Base):
@@ -920,8 +932,8 @@ class ReviewReaction(Base):
     reaction_type = Column(String(20), nullable=False)  # helpful, funny, agree
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
-    review = relationship("Review")
-    user = relationship("User")
+    review: "Review" = relationship("Review")
+    user: "User" = relationship("User")
 
 
 class ReviewSentiment(Base):
@@ -936,7 +948,7 @@ class ReviewSentiment(Base):
     model = Column(String(100), nullable=True)
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
-    review = relationship("Review")
+    review: "Review" = relationship("Review")
 
 
 class ReviewModeration(Base):
@@ -953,8 +965,8 @@ class ReviewModeration(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    review = relationship("Review")
-    reviewer = relationship("AdminUser")
+    review: "Review" = relationship("Review")
+    reviewer: "AdminUser | None" = relationship("AdminUser")
 
 
 # ==============================================================================
@@ -992,7 +1004,7 @@ class PushSubscription(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    user = relationship("User")
+    user: "User | None" = relationship("User")
 
 
 class UserNotificationPreferences(Base):
@@ -1013,7 +1025,7 @@ class UserNotificationPreferences(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    user = relationship("User")
+    user: "User" = relationship("User")
 
 
 class NotificationDeliveryLog(Base):
@@ -1027,7 +1039,7 @@ class NotificationDeliveryLog(Base):
     delivered_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
-    notification = relationship("NotificationQueue")
+    notification: "NotificationQueue | None" = relationship("NotificationQueue")
 
 
 # ==============================================================================
@@ -1061,7 +1073,7 @@ class CustomerLifetimeValue(Base):
     segment = Column(String(30), nullable=True)  # champions, loyal, at_risk, etc.
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
-    user = relationship("User")
+    user: "User" = relationship("User")
 
 
 class FraudDetectionEvent(Base):
@@ -1080,9 +1092,9 @@ class FraudDetectionEvent(Base):
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
-    order = relationship("Order")
-    user = relationship("User")
-    reviewer = relationship("AdminUser")
+    order: "Order | None" = relationship("Order")
+    user: "User | None" = relationship("User")
+    reviewer: "AdminUser | None" = relationship("AdminUser")
 
 
 class PredictiveForecast(Base):
@@ -1100,3 +1112,29 @@ class PredictiveForecast(Base):
     features_used = Column(JSON, nullable=True)
     actual_value = Column(Float, nullable=True)  # Filled in later when actual data is available
     created_at = Column(DateTime, nullable=False, default=utcnow)
+
+
+# ==============================================================================
+# SYSTEM 11: ADVERTISING CAMPAIGNS
+# ==============================================================================
+
+
+class AdCampaign(Base):
+    __tablename__ = "ad_campaign"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    retailer_id = Column(String, ForeignKey("retailer.id", ondelete="CASCADE"), nullable=False)
+    product_id = Column(String, ForeignKey("product.id", ondelete="SET NULL"), nullable=True)
+    ad_type = Column(String(20), nullable=False, default="SHOP")  # PRODUCT or SHOP
+    status = Column(String(20), nullable=False, default="PENDING")  # PENDING, PAID, ACTIVE, EXPIRED
+    banner_url = Column(String, nullable=True)
+    start_date = Column(DateTime, nullable=True)
+    end_date = Column(DateTime, nullable=True)
+    payment_reference = Column(String(255), nullable=False, unique=True)
+    clicks = Column(Integer, nullable=False, default=0)
+    impressions = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+    retailer: "Retailer" = relationship("Retailer", back_populates="ad_campaigns")
+    product: "Product | None" = relationship("Product", back_populates="ad_campaigns")

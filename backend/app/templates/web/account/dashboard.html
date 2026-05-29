@@ -1,110 +1,82 @@
 {% extends "web/base.html" %}
 {% block title %}My Account — ForgeStore{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="flex items-center justify-between mb-8 reveal">
-        <div>
-            <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Dashboard</span>
-            <h1 class="text-2xl sm:text-3xl md:text-4xl font-display font-black text-stone-900 dark:text-stone-100">My <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Account</span></h1>
-            <p class="text-sm text-stone-500 dark:text-stone-400 mt-2">Welcome back{% if user %}, <span class="font-medium text-stone-700 dark:text-stone-300">{{ user.name }}</span>{% endif %}</p>
-        </div>
-        <a href="/shop/logout" class="px-4 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 rounded-xl transition-all duration-200 border border-transparent hover:border-red-100">Sign Out</a>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-10 reveal">
+    <div>
+      <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Account</span>
+      <h1 class="text-3xl sm:text-4xl font-black text-stone-900 dark:text-stone-100 font-display">
+        Welcome back, <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">{{ user.name|default('there') }}</span>
+      </h1>
     </div>
+  </div>
 
-    <!-- Quick Links Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8 reveal" style="animation-delay: 100ms;">
-        <a href="/shop/account/orders" class="group relative bg-white rounded-2xl border border-stone-200 p-6 hover:shadow-lg hover:border-stone-300 transition-all duration-300 overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-br from-amber-50/0 to-amber-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="relative">
-                <div class="w-10 h-10 bg-stone-50 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200">
-                    <svg class="w-5 h-5 text-stone-500 group-hover:text-stone-900 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                </div>
-                <p class="text-sm font-semibold text-stone-900">My Orders</p>
-                <p class="text-xs text-stone-400 mt-1">View order history &amp; track</p>
-            </div>
-        </a>
-        <a href="/shop/marketplace" class="group relative bg-white rounded-2xl border border-stone-200 p-6 hover:shadow-lg hover:border-stone-300 transition-all duration-300 overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-br from-amber-50/0 to-amber-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="relative">
-                <div class="w-10 h-10 bg-stone-50 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200">
-                    <svg class="w-5 h-5 text-stone-500 group-hover:text-stone-900 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                </div>
-                <p class="text-sm font-semibold text-stone-900">Browse Products</p>
-                <p class="text-xs text-stone-400 mt-1">Discover new items</p>
-            </div>
-        </a>
-        <a href="/shop/account/settings" class="group relative bg-white rounded-2xl border border-stone-200 p-6 hover:shadow-lg hover:border-stone-300 transition-all duration-300 overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-br from-amber-50/0 to-amber-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="relative">
-                <div class="w-10 h-10 bg-stone-50 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200">
-                    <svg class="w-5 h-5 text-stone-500 group-hover:text-stone-900 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                </div>
-                <p class="text-sm font-semibold text-stone-900">Settings</p>
-                <p class="text-xs text-stone-400 mt-1">Update profile &amp; password</p>
-            </div>
-        </a>
-        <a href="/shop/account/wallet" class="group relative bg-white rounded-2xl border border-stone-200 p-6 hover:shadow-lg hover:border-stone-300 transition-all duration-300 overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-br from-amber-50/0 to-amber-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="relative">
-                <div class="w-10 h-10 bg-stone-50 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200">
-                    <svg class="w-5 h-5 text-stone-500 group-hover:text-stone-900 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                </div>
-                <p class="text-sm font-semibold text-stone-900">My Wallet</p>
-                <p class="text-xs text-stone-400 mt-1">Balance &amp; transactions</p>
-            </div>
-        </a>
-        <a href="/shop/account/referrals" class="group relative bg-white rounded-2xl border border-stone-200 p-6 hover:shadow-lg hover:border-stone-300 transition-all duration-300 overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-br from-amber-50/0 to-amber-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="relative">
-                <div class="w-10 h-10 bg-stone-50 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200">
-                    <svg class="w-5 h-5 text-stone-500 group-hover:text-stone-900 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                </div>
-                <p class="text-sm font-semibold text-stone-900">Refer &amp; Earn</p>
-                <p class="text-xs text-stone-400 mt-1">Share &amp; earn rewards</p>
-            </div>
-        </a>
-    </div>
+  <!-- Quick Links Grid -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-10 reveal">
+    <a href="/shop/account/orders" class="p-5 bg-white dark:bg-stone-800/60 rounded-2xl border border-stone-200 dark:border-stone-700/50 hover:border-amber-200 dark:hover:border-amber-700/50 hover:shadow-sm transition-all duration-200 group">
+      <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+        <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </div>
+      <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">My Orders</p>
+      <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">{{ orders|length }} order{% if orders|length != 1 %}s{% endif %}</p>
+    </a>
+    <a href="/shop/account/settings" class="p-5 bg-white dark:bg-stone-800/60 rounded-2xl border border-stone-200 dark:border-stone-700/50 hover:border-amber-200 dark:hover:border-amber-700/50 hover:shadow-sm transition-all duration-200 group">
+      <div class="w-10 h-10 bg-stone-100 dark:bg-stone-700 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+        <svg class="w-5 h-5 text-stone-600 dark:text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </div>
+      <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">Settings</p>
+      <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Profile & preferences</p>
+    </a>
+    <a href="/shop/wishlist" class="p-5 bg-white dark:bg-stone-800/60 rounded-2xl border border-stone-200 dark:border-stone-700/50 hover:border-rose-200 dark:hover:border-rose-700/50 hover:shadow-sm transition-all duration-200 group">
+      <div class="w-10 h-10 bg-rose-50 dark:bg-rose-900/20 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+        <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      </div>
+      <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">Wishlist</p>
+      <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Saved items</p>
+    </a>
+    <a href="/shop/account/reviews" class="p-5 bg-white dark:bg-stone-800/60 rounded-2xl border border-stone-200 dark:border-stone-700/50 hover:border-amber-200 dark:hover:border-amber-700/50 hover:shadow-sm transition-all duration-200 group">
+      <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+        <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+      </div>
+      <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">Reviews</p>
+      <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Your feedback</p>
+    </a>
+  </div>
 
-    <!-- Recent Orders -->
-    <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
-        <div class="px-4 sm:px-6 py-4 border-b border-stone-100 flex items-center justify-between">
-            <h2 class="text-sm font-bold text-stone-900 uppercase tracking-wider">Recent Orders</h2>
-            <a href="/shop/account/orders" class="text-xs font-medium text-amber-700 hover:text-amber-800 transition-colors duration-200">View all →</a>
+  <!-- Recent Orders -->
+  <div class="reveal">
+    <h2 class="text-lg font-bold text-stone-900 dark:text-stone-100 mb-5 font-display">Recent Orders</h2>
+    {% if orders %}
+    <div class="bg-white dark:bg-stone-800/60 rounded-2xl border border-stone-200 dark:border-stone-700/50 overflow-hidden">
+      {% for order in orders[:5] %}
+      <a href="/shop/account/orders/{{ order.id }}" class="flex items-center justify-between p-4 hover:bg-stone-50 dark:hover:bg-stone-700/30 transition-colors border-b border-stone-100 dark:border-stone-700/50 last:border-0 group">
+        <div class="flex items-center gap-4">
+          <div class="w-10 h-10 bg-stone-100 dark:bg-stone-700 rounded-xl flex items-center justify-center">
+            <svg class="w-5 h-5 text-stone-500 dark:text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-stone-900 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">#{{ order.id[:12] }}</p>
+            <p class="text-xs text-stone-500 dark:text-stone-400">{{ order.created_at.strftime('%b %d, %Y') }}</p>
+          </div>
         </div>
-        {% if orders and orders|length > 0 %}
-        <div class="overflow-x-auto -mx-4 sm:mx-0">
-            <table class="w-full min-w-[400px] sm:min-w-0">
-                <thead>
-                    <tr class="border-b border-stone-50">
-                        <th class="text-left px-4 sm:px-6 py-3 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-stone-400">Order</th>
-                        <th class="text-left px-4 sm:px-6 py-3 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-stone-400 hidden sm:table-cell">Date</th>
-                        <th class="text-left px-4 sm:px-6 py-3 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-stone-400">Status</th>
-                        <th class="text-right px-4 sm:px-6 py-3 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-stone-400">Total</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-stone-50">
-                    {% for order in orders[:5] %}
-                    <tr class="hover:bg-amber-50/20 transition-colors duration-150 cursor-pointer" onclick="window.location='/shop/account/orders/{{ order.id }}'">
-                        <td class="px-4 sm:px-6 py-3 text-sm font-medium text-stone-900">#{{ order.id[:8] }}...</td>
-                        <td class="px-4 sm:px-6 py-3 text-sm text-stone-400 hidden sm:table-cell">{{ order.created_at.strftime('%b %d, %Y') if order.created_at else '—' }}</td>
-                        <td class="px-4 sm:px-6 py-3">
-                            <span class="px-2.5 py-1 text-[10px] sm:text-xs font-medium rounded-full {% if order.status == 'PENDING' %}bg-amber-50 text-amber-700 border border-amber-200{% elif order.status == 'DELIVERED' %}bg-emerald-50 text-emerald-700 border border-emerald-200{% elif order.status == 'CANCELLED' %}bg-red-50 text-red-700 border border-red-200{% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">{{ order.status }}</span>
-                        </td>
-                        <td class="px-4 sm:px-6 py-3 text-sm font-semibold text-stone-900 text-right">₦{{ "%.2f"|format(order.total_amount or 0) }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="text-right">
+          <span class="text-sm font-bold text-stone-900 dark:text-stone-100 font-mono">{{ format_price(order.total_amount, currency) }}</span>
+          <span class="block text-xs {% if order.status == 'completed' %}text-emerald-600 dark:text-emerald-400{% elif order.status == 'pending' %}text-amber-600 dark:text-amber-400{% else %}text-stone-500{% endif %} font-medium">{{ order.status|capitalize }}</span>
         </div>
-        {% else %}
-        <div class="px-6 py-12 text-center">
-            <div class="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-            </div>
-            <p class="text-sm text-stone-400">No orders yet.</p>
-            <a href="/shop/marketplace" class="text-sm font-medium text-amber-700 hover:text-amber-800 transition-colors mt-2 inline-block">Start shopping →</a>
-        </div>
-        {% endif %}
+      </a>
+      {% endfor %}
     </div>
+    <a href="/shop/account/orders" class="inline-flex items-center gap-1.5 text-sm font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors mt-4">
+      View All Orders
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+    </a>
+    {% else %}
+    <div class="bg-white dark:bg-stone-800/60 rounded-2xl border border-stone-200 dark:border-stone-700/50 p-8 text-center">
+      <p class="text-sm text-stone-500 dark:text-stone-400 mb-4">No orders yet. Start exploring our marketplace!</p>
+      <a href="/shop/marketplace" class="btn-forge text-sm">Browse Marketplace</a>
+    </div>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}

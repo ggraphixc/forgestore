@@ -1,0 +1,319 @@
+{% extends "admin/base.html" %}
+{% block title %}Ad Campaigns — ForgeStore{% endblock %}
+{% block content %}
+
+<div class="max-w-4xl mx-auto">
+  <!-- Header -->
+  <div class="mb-8">
+    <a href="/admin/dashboard" class="inline-flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 mb-3 transition-colors">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m7 7l-7-7 7-7"/></svg>
+      Back to Dashboard
+    </a>
+    <h1 class="text-2xl sm:text-3xl font-black text-stone-900 dark:text-stone-100 font-display">Ad Campaigns</h1>
+    <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">Promote your shop or products with paid advertising campaigns</p>
+  </div>
+
+  {% if not retailer %}
+  <div class="card-glass p-8 text-center">
+    <div class="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+    </div>
+    <h3 class="text-lg font-bold text-stone-900 dark:text-stone-100 mb-2">Retailer Account Required</h3>
+    <p class="text-sm text-stone-500 dark:text-stone-400">Only retailers can create ad campaigns. Please ensure your account has a linked retailer profile.</p>
+  </div>
+  {% else %}
+
+  <!-- Quick Status -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+    <div class="card-glass p-4">
+      <p class="text-2xl font-bold text-stone-900 dark:text-stone-100">{{ campaigns|length }}</p>
+      <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Total Campaigns</p>
+    </div>
+    <div class="card-glass p-4">
+      <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{ campaigns|selectattr('status', 'equalto', 'ACTIVE')|list|length }}</p>
+      <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Active</p>
+    </div>
+    <div class="card-glass p-4">
+      <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">{{ campaigns|selectattr('status', 'equalto', 'PAID')|list|length + campaigns|selectattr('status', 'equalto', 'PENDING')|list|length }}</p>
+      <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Pending / Awaiting</p>
+    </div>
+  </div>
+
+  <!-- Create New Campaign -->
+  <div class="card-glass p-6 mb-8">
+    <h2 class="text-sm font-bold text-stone-900 dark:text-stone-100 mb-6">Create New Campaign</h2>
+
+    {% if not retailer.paystack_subaccount_code and not retailer.flutterwave_subaccount_id %}
+    <div class="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl mb-6">
+      <div class="flex items-start gap-3">
+        <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div>
+          <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">Bank account not set up yet</p>
+          <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">Please set up your banking details first to enable subaccount-based split payments.</p>
+          <a href="/admin/retailer/banking" class="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 dark:text-amber-300 mt-2 hover:underline">
+            Set up banking →
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <form id="ad-create-form" class="space-y-5">
+      <!-- Ad Type -->
+      <div>
+        <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-3">Ad Type</label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label class="relative cursor-pointer">
+            <input type="radio" name="ad_type" value="SHOP" checked class="peer sr-only">
+            <div class="p-4 rounded-xl border-2 border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 peer-checked:border-amber-500 peer-checked:bg-amber-50 dark:peer-checked:bg-amber-900/20 transition-all duration-200">
+              <div class="flex items-start justify-between mb-2">
+                <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+                <span class="text-xs font-bold text-amber-600 bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 rounded-full">{{ ad_pricing.SHOP.price_per_month // 100 }}K ₦/mo</span>
+              </div>
+              <h4 class="text-sm font-bold text-stone-900 dark:text-stone-100">Shop Banner Ad</h4>
+              <p class="text-xs text-stone-500 dark:text-stone-400 mt-1">Your shop banner will be featured on the homepage and marketplace</p>
+            </div>
+          </label>
+          <label class="relative cursor-pointer">
+            <input type="radio" name="ad_type" value="PRODUCT" class="peer sr-only">
+            <div class="p-4 rounded-xl border-2 border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 peer-checked:border-amber-500 peer-checked:bg-amber-50 dark:peer-checked:bg-amber-900/20 transition-all duration-200">
+              <div class="flex items-start justify-between mb-2">
+                <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                </svg>
+                <span class="text-xs font-bold text-amber-600 bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 rounded-full">{{ ad_pricing.PRODUCT.price_per_month // 100 }}K ₦/mo</span>
+              </div>
+              <h4 class="text-sm font-bold text-stone-900 dark:text-stone-100">Product Promotion Ad</h4>
+              <p class="text-xs text-stone-500 dark:text-stone-400 mt-1">Promote a specific product with a dedicated banner ad</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Product Selection (shown only for PRODUCT type) -->
+      <div id="product-selection" class="hidden">
+        <label for="product_id" class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">Select Product</label>
+        <select id="product_id" name="product_id"
+          class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 text-sm focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all duration-200">
+          <option value="">Choose a product...</option>
+          {% for p in products %}
+          <option value="{{ p.id }}">{{ p.name }} — {{ ad_pricing.PRODUCT.price_per_month // 100 }}K ₦/mo</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Duration -->
+      <div>
+        <label for="duration_months" class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">Duration</label>
+        <div class="grid grid-cols-3 gap-3">
+          <label class="relative cursor-pointer">
+            <input type="radio" name="duration_months" value="1" checked class="peer sr-only">
+            <div class="p-3 rounded-xl border-2 border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 peer-checked:border-amber-500 peer-checked:bg-amber-50 dark:peer-checked:bg-amber-900/20 text-center transition-all duration-200">
+              <p class="text-sm font-bold text-stone-900 dark:text-stone-100">1 Month</p>
+              <p class="text-xs text-stone-400">Standard</p>
+            </div>
+          </label>
+          <label class="relative cursor-pointer">
+            <input type="radio" name="duration_months" value="3" class="peer sr-only">
+            <div class="p-3 rounded-xl border-2 border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 peer-checked:border-amber-500 peer-checked:bg-amber-50 dark:peer-checked:bg-amber-900/20 text-center transition-all duration-200">
+              <p class="text-sm font-bold text-stone-900 dark:text-stone-100">3 Months</p>
+              <p class="text-xs text-emerald-600 dark:text-emerald-400">Save 10%</p>
+            </div>
+          </label>
+          <label class="relative cursor-pointer">
+            <input type="radio" name="duration_months" value="6" class="peer sr-only">
+            <div class="p-3 rounded-xl border-2 border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 peer-checked:border-amber-500 peer-checked:bg-amber-50 dark:peer-checked:bg-amber-900/20 text-center transition-all duration-200">
+              <p class="text-sm font-bold text-stone-900 dark:text-stone-100">6 Months</p>
+              <p class="text-xs text-emerald-600 dark:text-emerald-400">Save 20%</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Price Summary -->
+      <div id="price-summary" class="p-4 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-stone-200 dark:border-stone-700">
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-stone-600 dark:text-stone-400">Total</span>
+          <span id="total-price" class="text-2xl font-bold text-amber-600 dark:text-amber-400">₦10,000</span>
+        </div>
+        <p id="price-breakdown" class="text-xs text-stone-400 mt-1">₦10,000/month × 1 month</p>
+      </div>
+
+      <!-- Submit -->
+      <div class="flex items-center gap-3 pt-2">
+        <button type="submit" id="ad-submit-btn"
+          class="btn-forge text-sm">
+          <span id="ad-btn-text">Initialize Payment</span>
+          <svg id="ad-btn-spinner" class="w-4 h-4 hidden animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </button>
+        <span id="ad-error" class="text-sm text-red-500 hidden"></span>
+      </div>
+    </form>
+
+    <!-- Payment Modal / Redirect -->
+    <div id="ad-payment-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div class="bg-white dark:bg-stone-800 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold text-stone-900 dark:text-stone-100 mb-2">Payment Initialized</h3>
+          <p class="text-sm text-stone-500 dark:text-stone-400 mb-6">You'll be redirected to complete your payment.</p>
+          <a id="payment-redirect-link" href="#" target="_blank" class="btn-forge text-sm w-full justify-center mb-3">
+            Proceed to Payment
+          </a>
+          <p class="text-xs text-stone-400">Reference: <span id="payment-reference" class="font-mono"></span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Campaign History -->
+  <div class="card-glass p-6">
+    <h2 class="text-sm font-bold text-stone-900 dark:text-stone-100 mb-4">Campaign History</h2>
+    {% if campaigns %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left border-b border-stone-200 dark:border-stone-700">
+            <th class="pb-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider">Type</th>
+            <th class="pb-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider">Status</th>
+            <th class="pb-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider">Clicks</th>
+            <th class="pb-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider">Impressions</th>
+            <th class="pb-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider">Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in campaigns %}
+          <tr class="border-b border-stone-100 dark:border-stone-700/50">
+            <td class="py-3">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
+                {% if c.ad_type == 'SHOP' %}bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400
+                {% else %}bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400{% endif %}">
+                {{ c.ad_type }}
+              </span>
+            </td>
+            <td class="py-3">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold
+                {% if c.status == 'ACTIVE' %}bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400
+                {% elif c.status == 'PAID' %}bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400
+                {% elif c.status == 'EXPIRED' %}bg-stone-100 text-stone-500 dark:bg-stone-800 dark:text-stone-400
+                {% else %}bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400{% endif %}">
+                {{ c.status }}
+              </span>
+            </td>
+            <td class="py-3 text-stone-600 dark:text-stone-400 font-mono">{{ c.clicks }}</td>
+            <td class="py-3 text-stone-600 dark:text-stone-400 font-mono">{{ c.impressions }}</td>
+            <td class="py-3 text-stone-400 text-xs">{{ c.created_at.strftime('%b %d, %Y') if c.created_at else '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-8">
+      <p class="text-sm text-stone-500 dark:text-stone-400">No campaigns yet. Create your first one above!</p>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<script>
+// Show/hide product selection based on ad type
+document.querySelectorAll('input[name="ad_type"]').forEach(el => {
+  el.addEventListener('change', function() {
+    const productSel = document.getElementById('product-selection');
+    if (this.value === 'PRODUCT') {
+      productSel.classList.remove('hidden');
+    } else {
+      productSel.classList.add('hidden');
+    }
+    updatePrice();
+  });
+});
+
+// Update price summary
+document.querySelectorAll('input[name="duration_months"]').forEach(el => {
+  el.addEventListener('change', updatePrice);
+});
+
+function updatePrice() {
+  const adType = document.querySelector('input[name="ad_type"]:checked').value;
+  const months = parseInt(document.querySelector('input[name="duration_months"]:checked').value);
+  const pricing = {{ ad_pricing|tojson }};
+  const pricePerMonth = pricing[adType].price_per_month;
+
+  let total = pricePerMonth * months;
+  let discount = 0;
+  if (months >= 6) discount = 0.2;
+  else if (months >= 3) discount = 0.1;
+  total = total * (1 - discount);
+
+  document.getElementById('total-price').textContent = '₦' + total.toLocaleString();
+  let breakdown = '₦' + pricePerMonth.toLocaleString() + '/month × ' + months + ' month' + (months > 1 ? 's' : '');
+  if (discount > 0) {
+    breakdown += ' (' + (discount * 100) + '% discount applied)';
+  }
+  document.getElementById('price-breakdown').textContent = breakdown;
+}
+
+// Form submission
+document.getElementById('ad-create-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('ad-submit-btn');
+  const btnText = document.getElementById('ad-btn-text');
+  const spinner = document.getElementById('ad-btn-spinner');
+  const errorEl = document.getElementById('ad-error');
+  const modal = document.getElementById('ad-payment-modal');
+
+  errorEl.classList.add('hidden');
+  btn.disabled = true;
+  btnText.textContent = 'Initializing...';
+  spinner.classList.remove('hidden');
+
+  try {
+    const adType = document.querySelector('input[name="ad_type"]:checked').value;
+    const months = parseInt(document.querySelector('input[name="duration_months"]:checked').value);
+    const productId = document.getElementById('product_id').value;
+
+    const res = await fetch('/api/admin/ads/initialize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ad_type: adType,
+        duration_months: months,
+        product_id: productId || null,
+      }),
+    });
+    const data = await res.json();
+    if (data.success && data.authorization_url) {
+      document.getElementById('payment-redirect-link').href = data.authorization_url;
+      document.getElementById('payment-reference').textContent = data.reference;
+      modal.classList.remove('hidden');
+    } else {
+      errorEl.textContent = data.detail || 'Failed to initialize payment';
+      errorEl.classList.remove('hidden');
+    }
+  } catch (err) {
+    errorEl.textContent = 'Network error. Please try again.';
+    errorEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = 'Initialize Payment';
+    spinner.classList.add('hidden');
+  }
+});
+</script>
+{% endblock %}

@@ -44,6 +44,14 @@ services:
         sync: false
       - key: PAYSTACK_PUBLIC_KEY
         sync: false
+      - key: FLUTTERWAVE_SECRET_KEY
+        sync: false
+      - key: FLUTTERWAVE_PUBLIC_KEY
+        sync: false
+      - key: FLUTTERWAVE_ENCRYPTION_KEY
+        sync: false
+      - key: DEFAULT_PAYMENT_PROVIDER
+        sync: false
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT

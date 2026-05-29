@@ -1,9 +1,13 @@
 """
-Paystack Webhook & Payment Verification Router
+Flutterwave Webhook & Payment Verification Router
 
 Handles:
-- POST /api/paystack/webhook — Receives Paystack charge.success callbacks
-- GET  /api/payments/verify/{reference} — Verifies a payment status
+- POST /api/flutterwave/webhook — Receives Flutterwave charge.completed callbacks
+
+Flutterwave webhook signature verification:
+Flutterwave sends a `verif-hash` header that matches the webhook hash you configure
+in your Flutterwave dashboard. It's a static token comparison — NOT an HMAC of the body
+(which is different from Paystack's HMAC-SHA512 approach).
 """
 import json
 import logging
@@ -14,60 +18,83 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Order, OrderStatus, OrderItem, Product, AdminNotification, User, AdCampaign
-from app.services.paystack_service import verify_webhook_signature, verify_payment
+from app.config import get_settings
 
-logger = logging.getLogger("forgestore.paystack_webhook")
+logger = logging.getLogger("forgestore.flutterwave_webhook")
 
-router = APIRouter(prefix="/api", tags=["paystack"])
+router = APIRouter(prefix="/api", tags=["flutterwave"])
 
 
-@router.post("/paystack/webhook")
-async def paystack_webhook(request: Request):
+@router.post("/flutterwave/webhook")
+async def flutterwave_webhook(request: Request):
     """
-    Receive Paystack webhook events.
+    Receive Flutterwave webhook events.
 
-    Expects:
-        - x-paystack-signature header for HMAC-SHA512 verification
+    Flutterwave sends a POST with:
+        - `verif-hash` header — static token you set in Flutterwave dashboard
         - JSON body with event type and data
 
+    The verif-hash is compared against `flutterwave_encryption_key` (serves as the
+    shared secret that matches what you configure in the Flutterwave webhook settings).
+
     Processes:
-        - charge.success → marks order as PAID, decrements inventory
+        - charge.completed / transfer.completed → marks order as PAID, decrements inventory
     """
-    # Read raw body for signature verification
+    # Read raw body
     body = await request.body()
     body_str = body.decode("utf-8")
 
-    # Verify signature
-    signature = request.headers.get("x-paystack-signature", "")
-    if not verify_webhook_signature(signature, body_str):
-        logger.warning("Invalid Paystack webhook signature")
+    # Flutterwave verif-hash is a static token comparison — NOT HMAC.
+    # Compare against the encryption key (which serves as our shared secret).
+    settings = get_settings()
+    expected_hash = settings.flutterwave_encryption_key
+    received_hash = request.headers.get("verif-hash", "")
+
+    if not expected_hash or received_hash != expected_hash:
+        logger.warning(
+            "Invalid Flutterwave webhook verif-hash (received: %s, expected match)",
+            received_hash[:8] + "..." if received_hash else "none",
+        )
         return JSONResponse({"status": "invalid signature"}, status_code=401)
 
     # Parse event
     try:
         event = json.loads(body_str)
     except json.JSONDecodeError:
-        logger.error("Failed to parse Paystack webhook body")
+        logger.error("Failed to parse Flutterwave webhook body")
         return JSONResponse({"status": "invalid JSON"}, status_code=400)
 
-    logger.info("Paystack webhook received: %s", event.get("event"))
+    logger.info("Flutterwave webhook received: %s", event.get("event"))
 
-    # Only handle charge.success
-    if event.get("event") != "charge.success":
+    # Only handle charge.completed / transfer.completed
+    event_type = event.get("event", "")
+    if event_type not in ("charge.completed", "transfer.completed"):
         return JSONResponse({"status": "ignored"})
 
     data = event.get("data", {})
     tx_status = data.get("status", "")
-    if tx_status != "success":
+    if tx_status != "successful":
         logger.info("Transaction not successful (%s), skipping", tx_status)
         return JSONResponse({"status": "ignored"})
 
-    reference = data.get("reference", "")
-    metadata = data.get("metadata", {}) or {}
-    order_id = metadata.get("order_id", "")
+    reference = data.get("tx_ref", "") or data.get("flw_ref", "")
+    meta = data.get("meta", {}) or {}
+    order_id = meta.get("order_id", "")
 
     if not order_id:
-        logger.error("No order_id in Paystack webhook metadata")
+        # Fallback: look up order by transaction reference (order_number)
+        db_check: Session = next(get_db())
+        try:
+            order = db_check.query(Order).filter(Order.order_number == reference).first()
+            if order:
+                order_id = order.id
+        except Exception:
+            pass
+        finally:
+            db_check.close()
+
+    if not order_id:
+        logger.error("No order_id found for Flutterwave webhook (tx_ref: %s)", reference)
         return JSONResponse({"status": "missing order_id"}, status_code=400)
 
     # Process order payment and ad campaign in a new DB session
@@ -80,7 +107,7 @@ async def paystack_webhook(request: Request):
         if campaign:
             if campaign.status in ("PENDING", "PAID"):
                 logger.info(
-                    "Ad campaign %s paid via Paystack (ref: %s, type: %s)",
+                    "Ad campaign %s paid via Flutterwave (ref: %s, type: %s)",
                     campaign.id, reference, campaign.ad_type,
                 )
                 campaign.status = "PAID"
@@ -89,7 +116,7 @@ async def paystack_webhook(request: Request):
                     type="ad_payment",
                     title="Ad Campaign Payment Received",
                     message=(
-                        f"Ad campaign '{campaign.id[:8]}' ({campaign.ad_type}) paid via Paystack. "
+                        f"Ad campaign '{campaign.id[:8]}' ({campaign.ad_type}) paid via Flutterwave. "
                         f"Go to Ads section to activate it."
                     ),
                     link="/admin/ads",
@@ -129,7 +156,7 @@ async def paystack_webhook(request: Request):
             title="Payment Received",
             message=(
                 f"Order {order.order_number} paid — "
-                f"₦{order.total_amount:,.2f} via Paystack"
+                f"₦{order.total_amount:,.2f} via Flutterwave"
             ),
             link=f"/admin/orders/{order.id}",
         )
@@ -152,71 +179,15 @@ async def paystack_webhook(request: Request):
         db.commit()
 
         logger.info(
-            "Order %s marked as PAID. Ref: %s, Tx ID: %s",
+            "Order %s marked as PAID via Flutterwave. Tx Ref: %s",
             order.order_number,
             reference,
-            data.get("id"),
         )
     except Exception:
         db.rollback()
-        logger.exception("Failed to process Paystack webhook for order %s", order_id)
+        logger.exception("Failed to process Flutterwave webhook for order %s", order_id)
         return JSONResponse({"status": "error"}, status_code=500)
     finally:
         db.close()
 
     return JSONResponse({"status": "success"})
-
-
-@router.get("/payments/verify/{reference}")
-def verify_payment_endpoint(reference: str):
-    """
-    Verify a Paystack payment by reference (order number).
-    Used by the frontend order-success page to confirm payment status.
-    """
-    result = verify_payment(reference)
-
-    if result["success"] and result.get("paid"):
-        # If payment is confirmed, update the order status
-        db: Session = next(get_db())
-        try:
-            order = (
-                db.query(Order)
-                .filter(Order.order_number == reference)
-                .first()
-            )
-            if order and order.status != OrderStatus.PAID:
-                order.status = OrderStatus.PAID
-                db.commit()
-                logger.info(
-                    "Order %s marked as PAID via verification endpoint",
-                    reference,
-                )
-        except Exception:
-            logger.exception("Failed to update order status on verification")
-        finally:
-            db.close()
-
-        return JSONResponse({
-            "success": True,
-            "paid": True,
-            "status": result["status"],
-            "amount": result["amount"],
-            "currency": result["currency"],
-            "gateway_response": result.get("gateway_response", ""),
-        })
-
-    # Payment not confirmed
-    if result["success"]:
-        return JSONResponse({
-            "success": True,
-            "paid": False,
-            "status": result["status"],
-            "amount": result["amount"],
-            "currency": result["currency"],
-            "gateway_response": result.get("gateway_response", ""),
-        })
-
-    return JSONResponse(
-        {"success": False, "message": result.get("message", "Verification failed")},
-        status_code=400,
-    )

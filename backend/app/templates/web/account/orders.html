@@ -1,46 +1,75 @@
 {% extends "web/base.html" %}
 {% block title %}My Orders — ForgeStore{% endblock %}
 {% block content %}
-<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="flex items-center gap-4 mb-8">
-        <a href="/shop/account" class="p-2 -ml-2 text-stone-400 hover:text-stone-900 transition-all duration-200 hover:bg-stone-50 rounded-lg">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7"/></svg>
-        </a>
-        <div>
-            <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-1 block">History</span>
-            <h1 class="text-3xl md:text-4xl font-display font-black text-stone-900 dark:text-stone-100">My <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Orders</span></h1>
-            <p class="text-sm text-stone-500 mt-1">Track and manage your orders</p>
+<div class="min-h-screen bg-gradient-to-br from-stone-50 via-white to-amber-50/20 dark:from-stone-950 dark:via-stone-900 dark:to-amber-950/20">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sm:mb-10 reveal">
+      <div>
+        <div class="flex items-center gap-3 mb-2">
+          <a href="/shop/account" class="p-2 -ml-2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-all" aria-label="Back to dashboard">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 12H5m7-7l-7 7 7 7"/></svg>
+          </a>
+          <h1 class="text-2xl sm:text-3xl lg:text-4xl font-display font-black text-stone-900 dark:text-stone-100">My <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Orders</span></h1>
         </div>
+        <p class="text-sm text-stone-500 dark:text-stone-400 ml-2">Track and manage your purchases</p>
+      </div>
     </div>
 
-    <div id="orders-container">
-        {% if orders and orders|length > 0 %}
-            {% for order in orders %}
-                {% set status_value = order.status.value if order.status.value is defined else order.status %}
-                <a href="/shop/account/orders/{{ order.id }}" class="block bg-white rounded-2xl border border-stone-200 p-6 hover:shadow-lg hover:border-stone-300 transition-all duration-200 mb-4 group">
-                    <div class="flex items-center justify-between mb-3">
-                        <p class="text-sm font-mono text-stone-500">#{{ order.id[:12] }}...</p>
-                        <span class="px-3 py-1 text-xs font-medium rounded-full border {% if status_value == 'PENDING' %}bg-amber-50 text-amber-700 border-amber-200{% elif status_value == 'PROCESSING' %}bg-blue-50 text-blue-700 border-blue-200{% elif status_value == 'SHIPPED' %}bg-purple-50 text-purple-700 border-purple-200{% elif status_value == 'DELIVERED' %}bg-emerald-50 text-emerald-700 border-emerald-200{% elif status_value == 'CANCELLED' %}bg-red-50 text-red-700 border-red-200{% else %}bg-stone-50 text-stone-500 border-stone-200{% endif %}">{{ status_value }}</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <p class="text-sm text-stone-400">{{ order.created_at.strftime('%B %d, %Y') if order.created_at else '' }}</p>
-                        <div class="flex items-center gap-3">
-                            <p class="text-sm font-bold text-stone-900">₦{{ format_price(order.total_amount) }}</p>
-                            <svg class="w-4 h-4 text-stone-300 group-hover:text-stone-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                        </div>
-                    </div>
-                </a>
-            {% endfor %}
-        {% else %}
-            <div class="text-center py-20 bg-white rounded-2xl border border-stone-200 shadow-sm">
-                <div class="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-5">
-                    <svg class="w-10 h-10 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                </div>
-                <p class="text-sm text-stone-500 mb-2">No orders yet</p>
-                <p class="text-xs text-stone-400 mb-6">Start exploring our marketplace of handcrafted goods.</p>
-                <a href="/shop/marketplace" class="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-stone-900 hover:bg-stone-800 rounded-xl transition-all duration-200">Browse Marketplace</a>
+    <!-- Orders List -->
+    {% if orders %}
+    <div class="space-y-4">
+      {% for order in orders %}
+      <a href="/shop/account/orders/{{ order.id }}" class="block reveal{% if loop.index > 1 %} stagger-{{ loop.index % 6 + 1 }}{% endif %}">
+        <div class="card-artisan p-4 sm:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">{{ order.order_number }}</p>
+                <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">{{ order.created_at.strftime('%b %d, %Y at %I:%M %p') if order.created_at else '—' }}</p>
+              </div>
             </div>
-        {% endif %}
+            <div class="flex items-center gap-3 sm:gap-4">
+              <span class="text-sm font-mono font-bold text-stone-900 dark:text-stone-100">{{ format_price(order.total_amount, currency) if format_price else '₦' + '{:,.2f}'.format(order.total_amount) }}</span>
+              {% set status = order.status.value if order.status is mapping == false and order.status is not string else order.status %}
+              {% set status_str = status|string|lower if status else 'pending' %}
+              {% if 'delivered' in status_str or 'completed' in status_str %}
+              <span class="badge-emerald">{{ status|string|replace('_', ' ')|title if status else 'Pending' }}</span>
+              {% elif 'processing' in status_str or 'shipped' in status_str %}
+              <span class="badge-blue">{{ status|string|replace('_', ' ')|title if status else 'Pending' }}</span>
+              {% elif 'cancelled' in status_str or 'refunded' in status_str %}
+              <span class="badge-red">{{ status|string|replace('_', ' ')|title if status else 'Pending' }}</span>
+              {% else %}
+              <span class="badge-amber">{{ status|string|replace('_', ' ')|title if status else 'Pending' }}</span>
+              {% endif %}
+              <svg class="w-4 h-4 text-stone-300 dark:text-stone-600 flex-shrink-0 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </div>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
     </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-16 sm:py-24 reveal">
+      <div class="w-20 h-20 bg-stone-100 dark:bg-stone-800 rounded-2xl flex items-center justify-center mx-auto mb-6">
+        <svg class="w-10 h-10 text-stone-400 dark:text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+      </div>
+      <h2 class="text-xl font-bold text-stone-900 dark:text-stone-100 mb-2">No orders yet</h2>
+      <p class="text-sm text-stone-500 dark:text-stone-400 max-w-sm mx-auto mb-8">Your order history will appear here once you make a purchase.</p>
+      <a href="/shop/marketplace" class="btn-forge inline-flex">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Start Shopping
+      </a>
+    </div>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}
