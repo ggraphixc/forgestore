@@ -15,6 +15,7 @@ MIGRATIONS = {
     "001": "migrations.001_add_retailer_bank_fields",
     "002": "migrations.002_extend_ad_campaign",
     "003": "migrations.003_add_order_earning_promo_ad",
+    "004": "migrations.004_add_ad_campaign_columns",
 }
 
 
