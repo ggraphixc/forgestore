@@ -780,18 +780,23 @@ def retailer_ads(request: Request, db: Session = Depends(get_db)):
     if not admin or not has_permission(admin, "ads"):
         return RedirectResponse(url="/admin/login", status_code=302)
 
-    retailer_id = admin.vendor_id
-    campaigns = []
-    products = []
+    selected_retailer_id = request.query_params.get("retailer_id") or admin.vendor_id
 
-    if retailer_id:
-        retailer = db.query(Retailer).filter(Retailer.id == retailer_id).first()
+    if selected_retailer_id:
+        retailer = db.query(Retailer).filter(Retailer.id == selected_retailer_id).first()
         campaigns = db.query(AdCampaign).filter(
-            AdCampaign.retailer_id == retailer_id
+            AdCampaign.retailer_id == selected_retailer_id
         ).order_by(AdCampaign.created_at.desc()).all()
-        products = db.query(Product).filter(Product.retailer_id == retailer_id).all()
+        products = db.query(Product).filter(Product.retailer_id == selected_retailer_id).all()
     else:
         retailer = None
+        campaigns = []
+        products = []
+
+    # DIR_ADMIN/MANAGEMENT can pick which retailer to manage
+    all_retailers = []
+    if not admin.vendor_id and admin.role.value in ("DIR_ADMIN", "MANAGEMENT"):
+        all_retailers = db.query(Retailer).order_by(Retailer.name).all()
 
     from app.routers.admin_api import AD_PRICING
 
@@ -801,6 +806,8 @@ def retailer_ads(request: Request, db: Session = Depends(get_db)):
         "retailer": retailer,
         "campaigns": campaigns,
         "products": products,
+        "all_retailers": all_retailers,
+        "selected_retailer_id": selected_retailer_id,
         "ad_pricing": AD_PRICING,
         "utcnow": utcnow,
         "has_permission": has_permission,

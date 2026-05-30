@@ -26,6 +26,11 @@ from app.schemas import CartAddRequest, CartUpdateRequest, CheckoutRequest, Revi
 from app.auth import get_current_customer_from_cookie
 from app.services.ai_service import ai_search_assistant, get_ai_recommendations
 from app.services.payment_provider import get_payment_provider
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+import asyncio
+
+chat_limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter(prefix="/api", tags=["web-api"])
 
@@ -734,13 +739,14 @@ def get_product_chat(
 
 
 @router.post("/products/{product_id}/chat")
+@chat_limiter.limit("20/minute")
 def post_product_chat_message(
     product_id: str,
     data: dict,
     request: Request,
     db: Session = Depends(get_db),
 ):
-    """Post a chat message on a product. Requires customer auth."""
+    """Post a chat message on a product. Rate-limited to 20/min per IP."""
     from app.models import ProductChatMessage, User
 
     # Verify product exists
@@ -767,6 +773,23 @@ def post_product_chat_message(
     db.add(msg)
     db.commit()
     db.refresh(msg)
+
+    # Broadcast to WebSocket channel for real-time delivery
+    try:
+        from app.core.websocket_manager import ws_manager
+        loop = asyncio.get_event_loop()
+        loop.create_task(ws_manager.broadcast(f"chat:{product_id}", {
+            "type": "chat:new_message",
+            "message": {
+                "id": msg.id,
+                "author_name": msg.author_name,
+                "content": msg.content,
+                "is_admin": msg.is_admin,
+                "created_at": msg.created_at.isoformat() if msg.created_at else None,
+            },
+        }))
+    except Exception:
+        pass  # WebSocket broadcast is best-effort
 
     return {
         "success": True,

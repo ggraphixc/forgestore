@@ -187,9 +187,21 @@ async def websocket_route(websocket, channel: str = ""):
         - admin:alerts    — Admin dashboard alerts
         - order:{id}      — Specific order tracking (customer)
         - shipment:{id}   — Specific shipment tracking
+        - chat:{product_id} — Live product chat
     """
     from fastapi import WebSocket
     await ws_manager.connect(websocket, channel)
+    try:
+        while True:
+            # Keep connection alive — handle incoming pings or messages
+            data = await websocket.receive_text()
+            # Client can send "ping" to keep alive
+            if data == "ping":
+                await websocket.send_text('{"type":"pong"}')
+    except Exception:
+        pass
+    finally:
+        await ws_manager.disconnect(websocket)
 
 
 @app.get("/", response_class=HTMLResponse)
