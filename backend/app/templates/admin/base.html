@@ -106,7 +106,7 @@
             </a>
             {% endif %}
             <!-- Banking & Ads (Retailer Self-Service) -->
-            {% if has_permission(admin, 'catalog') %}
+            {% if admin and admin.role == 'RETAILER' %}
             <a href="/admin/retailer/banking" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
                 <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
                 <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
@@ -122,7 +122,7 @@
                 <span class="ml-auto text-[9px] text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded-md">Promote</span>
             </a>
             {% endif %}
-            {% if has_permission(admin, 'settings') %}
+            {% if has_permission(admin, 'ads') %}
             <div class="space-y-0.5 pl-10">
                 <a href="/admin/ads/manage" class="sidebar-link flex items-center gap-3 px-3 py-2 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
                     <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
@@ -137,22 +137,28 @@
             </div>
             {% endif %}
 
+            {% if has_permission(admin, 'orders') or has_permission(admin, 'customers') %}
             <!-- Sales Section -->
             <div class="pt-5 pb-1.5 px-3 flex items-center gap-2">
                 <div class="flex-1 h-px bg-stone-100 dark:bg-stone-800"></div>
                 <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Sales</span>
                 <div class="flex-1 h-px bg-stone-100 dark:bg-stone-800"></div>
             </div>
+            {% endif %}
+            {% if has_permission(admin, 'orders') %}
             <a href="/admin/orders" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
                 <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
                 <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
                 <span>Orders</span>
             </a>
+            {% endif %}
+            {% if has_permission(admin, 'customers') %}
             <a href="/admin/customers" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
                 <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
                 <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 <span>Customers</span>
             </a>
+            {% endif %}
 
 {% if admin and admin.role == 'DIR_ADMIN' %}
              <a href="/admin/settings" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
@@ -166,49 +172,62 @@
                  <span>Payment Toggles</span>
              </a>
              {% endif %}
-                        <!-- Enterprise Section -->
+            {% if has_permission(admin, 'performance') or has_permission(admin, 'shipments') or has_permission(admin, 'admin_users') %}
+            <!-- Enterprise Section -->
             <div class="pt-5 pb-1.5 px-3 flex items-center gap-2">
                 <div class="flex-1 h-px bg-stone-100 dark:bg-stone-800"></div>
                 <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Enterprise</span>
                 <div class="flex-1 h-px bg-stone-100 dark:bg-stone-800"></div>
             </div>
+            {% endif %}
+            {% if has_permission(admin, 'performance') %}
             <a href="/admin/intelligence" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
                 <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
                 <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                 <span>Intelligence</span>
                 <span class="ml-auto text-[9px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded-md">AI</span>
             </a>
+            {% endif %}
+            {% if has_permission(admin, 'shipments') %}
             <a href="/admin/shipments" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
                 <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
                 <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                 <span>Shipments</span>
                 <span class="ml-auto text-[9px] text-stone-400 bg-stone-100 dark:bg-stone-800 px-1.5 py-0.5 rounded-md">Tracking</span>
             </a>
+            {% endif %}
+            {% if has_permission(admin, 'admin_users') %}
             <a href="/admin/affiliates" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
                 <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
                 <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 <span>Affiliates</span>
                 <span class="ml-auto text-[9px] text-stone-400 bg-stone-100 dark:bg-stone-800 px-1.5 py-0.5 rounded-md">Referrals</span>
             </a>
+            {% endif %}
 
+            {% if has_permission(admin, 'admin_users') or has_permission(admin, 'customers') %}
             <!-- Management Section -->
             <div class="pt-5 pb-1.5 px-3 flex items-center gap-2">
                 <div class="flex-1 h-px bg-stone-100 dark:bg-stone-800"></div>
                 <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Management</span>
                 <div class="flex-1 h-px bg-stone-100 dark:bg-stone-800"></div>
             </div>
+            {% endif %}
             <a href="/admin/notifications" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative" id="notification-link">
                 <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
                 <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                 <span>Notifications</span>
                 <span id="sidebar-notif-badge" class="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[9px] font-bold bg-amber-500 text-white hidden"></span>
             </a>
+            {% if has_permission(admin, 'admin_users') %}
             <a href="/admin/admin-users" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
                 <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
                 <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/></svg>
                 <span>Admin Users</span>
                 <span class="ml-auto text-[9px] text-stone-400 bg-stone-100 dark:bg-stone-800 px-1.5 py-0.5 rounded-md">Team</span>
             </a>
+            {% endif %}
+            {% if has_permission(admin, 'customers') %}
             <div class="space-y-0.5">
                 <div class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl bg-stone-50/50 dark:bg-stone-800/30">
                     <svg class="w-5 h-5 text-stone-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
@@ -235,6 +254,7 @@
                     Analytics
                 </a>
             </div>
+            {% endif %}
         </nav>
         <div class="px-3 py-4 border-t border-stone-100 bg-gradient-to-r from-stone-50 to-transparent">
             <a href="/admin/logout" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-150 group">
