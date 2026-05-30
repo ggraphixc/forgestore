@@ -29,23 +29,32 @@ security = HTTPBearer(auto_error=False)
 # ==============================================================================
 
 ROLE_PERMISSIONS = {
+    # ── Super Admin: absolute control over everything ──────────────
     AdminRole.DIR_ADMIN: [
         "dashboard", "catalog", "categories", "retailers",
         "orders", "customers", "settings", "admin_users",
-        "ads", "payments", "settings_technical", "settings_developer",
+        "ads", "payments", "shipments",
+        "settings_technical", "settings_developer",
         "system_logs", "system_audit", "performance",
+        "impersonate",
     ],
+    # ── Management: product approvals, inventory, ledger, customer mgmt ─
     AdminRole.MANAGEMENT: [
-        "dashboard", "catalog", "orders", "customers", "ads",
+        "dashboard", "catalog", "retailers",
+        "orders", "customers", "admin_users", "ads", "shipments",
     ],
+    # ── Tech Admin: logs, audit trails, technical health only ──────
     AdminRole.TECH_ADMIN: [
         "dashboard", "system_logs", "system_audit", "performance",
+        "settings_technical", "settings_developer",
     ],
+    # ── Retailer: own products, inventory, wallet only ─────────────
     AdminRole.RETAILER: [
         "catalog", "retailers", "orders",
     ],
+    # ── Logistics: dispatch, routes, driver assignments, tracking ──
     AdminRole.LOGISTICS: [
-        "orders", "shipments",
+        "dashboard", "orders", "shipments",
     ],
 }
 
