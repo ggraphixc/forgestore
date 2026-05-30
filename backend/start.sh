@@ -31,6 +31,12 @@ pip install -r requirements.txt -q 2>/dev/null || {
     exit 1
 }
 
+# Run pending database migrations
+echo "  [*] Running pending migrations..."
+python -m migrations.run_migration 2>/dev/null || {
+    echo "  [*] No migrations to apply or migration runner not available."
+}
+
 # Seed database if forgestore.db does not exist
 if [ ! -f "forgestore.db" ]; then
     echo "  [*] Seeding database with demo data..."

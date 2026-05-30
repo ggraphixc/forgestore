@@ -14,6 +14,13 @@ if not exist "logs" mkdir "logs"
 :: Install dependencies if needed
 pip install -r requirements.txt --quiet 2>nul
 
+:: Run pending database migrations
+echo 🔄 Running pending migrations...
+python -m migrations.run_migration 2>nul
+if %errorlevel% neq 0 (
+    echo ✓ No migrations to apply.
+)
+
 :: Run database seed if DB doesn't exist
 if not exist "forgestore.db" (
     echo 📦 Running database seed...

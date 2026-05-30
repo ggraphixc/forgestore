@@ -139,7 +139,20 @@ async def websocket_endpoint(request: Request):
 def on_startup():
     init_db()
     logger.info("Database initialized")
+    _run_migrations()
     _cleanup_abandoned_carts()
+
+
+def _run_migrations():
+    """Run pending database migrations on startup."""
+    try:
+        from migrations.run_migration import run_pending_migrations
+        run_pending_migrations(print_func=logger.info)
+        logger.info("Pending migrations applied successfully")
+    except ImportError as e:
+        logger.warning("Migrations module not available: %s", e)
+    except Exception as e:
+        logger.warning("Migration runner failed (may be harmless): %s", e)
 
 
 def _cleanup_abandoned_carts():

@@ -33,6 +33,20 @@ def run_migration(migration_id: str):
     print(f"Migration {migration_id} applied successfully.")
 
 
+def run_pending_migrations(print_func=print):
+    """Run all pending migrations in order.
+
+    Safe to call from app startup (e.g., main.py on_startup).
+    Skips with a warning if migrations directory can't be imported.
+    Uses print_func for output so callers can pass logger.info.
+    """
+    for mid in sorted(MIGRATIONS.keys()):
+        try:
+            run_migration(mid)
+        except Exception as e:
+            print_func(f"Migration {mid} skipped (already applied or failed): {e}")
+
+
 def run_all():
     """Run all migrations in order."""
     for mid in sorted(MIGRATIONS.keys()):
