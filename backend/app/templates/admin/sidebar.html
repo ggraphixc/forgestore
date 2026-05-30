@@ -85,13 +85,34 @@
             </a>
             {% endif %}
 
-            {# DIR_ADMIN / MANAGEMENT: Ad Campaigns / User Profiles #}
+            {# DIR_ADMIN / MANAGEMENT / RETAILER: Ads &amp; Earnings #}
             {% if admin and admin.role in ['DIR_ADMIN', 'MANAGEMENT'] %}
+            <div class="pt-5 pb-1.5 px-3 flex items-center gap-2">
+                <div class="flex-1 h-px bg-stone-100 dark:bg-stone-800"></div>
+                <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Marketing</span>
+                <div class="flex-1 h-px bg-stone-100 dark:bg-stone-800"></div>
+            </div>
             <a href="/admin/retailer/ads" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
                 <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
                 <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
                 <span>Ad Campaigns</span>
             </a>
+            {% endif %}
+            {% if has_permission(admin, 'ads') %}
+            <a href="/admin/promo-ads" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
+                <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                <span>Promo Ads</span>
+            </a>
+            {% endif %}
+            {% if admin and admin.role in ['DIR_ADMIN', 'MANAGEMENT', 'RETAILER'] %}
+            <a href="/admin/earnings" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
+                <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Earnings</span>
+            </a>
+            {% endif %}
+            {% if admin and admin.role in ['DIR_ADMIN', 'MANAGEMENT'] %}
             <a href="/admin/customers" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
                 <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
                 <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>

@@ -17,7 +17,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Order, OrderStatus, OrderItem, Product, AdminNotification, User, AdCampaign
+from app.models import Order, OrderStatus, OrderItem, Product, AdminNotification, User, AdCampaign, OrderEarning, Retailer
 from app.config import get_settings
 
 logger = logging.getLogger("forgestore.flutterwave_webhook")
@@ -143,12 +143,32 @@ async def flutterwave_webhook(request: Request):
         order.status = OrderStatus.PAID
         db.flush()
 
-        # Decrement inventory
+        # Decrement inventory and create OrderEarning records
         items = db.query(OrderItem).filter(OrderItem.order_id == order_id).all()
         for item in items:
             product = db.query(Product).filter(Product.id == item.product_id).first()
             if product:
                 product.inventory = max(0, product.inventory - item.quantity)
+
+            # Create OrderEarning for the retailer
+            if product and product.retailer_id:
+                retailer = db.query(Retailer).filter(Retailer.id == product.retailer_id).first()
+                if retailer:
+                    commission_rate = retailer.commission_rate or 10.0
+                    item_total = item.price * item.quantity
+                    commission = round(item_total * commission_rate / 100, 2)
+                    net_amount = round(item_total - commission, 2)
+
+                    earning = OrderEarning(
+                        order_id=order_id,
+                        retailer_id=product.retailer_id,
+                        product_id=product.id,
+                        amount=item_total,
+                        commission=commission,
+                        net_amount=net_amount,
+                        status="SCHEDULED",
+                    )
+                    db.add(earning)
 
         # Admin notification
         notif = AdminNotification(

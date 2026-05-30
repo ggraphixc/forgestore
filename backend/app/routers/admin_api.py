@@ -20,7 +20,7 @@ from app.schemas import (
 )
 from app.auth import get_current_admin, require_role, hash_password, has_permission, AdminRole, log_admin_action, require_admin_role, create_access_token, set_auth_cookie
 from app.config import get_settings
-from app.models import AdminUser, NewsletterSubscriber, BroadcastCampaign, BroadcastEvent, BroadcastTemplate, AdCampaign
+from app.models import AdminUser, NewsletterSubscriber, BroadcastCampaign, BroadcastEvent, BroadcastTemplate, AdCampaign, PromoAd, OrderEarning
 from app.services.email_service import send_newsletter_broadcast
 from app.config import get_settings
 import csv
@@ -2184,6 +2184,337 @@ def get_ad_analytics(
         "by_status": status_counts,
         "top_retailers": top_retailers,
         "monthly_trend": monthly_trend,
+    }
+
+
+# ==============================================================================
+# PROMO ADS CRUD
+# ==============================================================================
+
+
+@router.get("/promo-ads")
+def list_promo_ads(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """List promo ads. RETAILER sees only their own; others see all."""
+    from app.models import PromoAd
+
+    query = db.query(PromoAd)
+    if admin.role == AdminRole.RETAILER and admin.vendor_id:
+        query = query.filter(
+            (PromoAd.retailer_id == admin.vendor_id) | (PromoAd.retailer_id == None)
+        )
+    promo_ads = query.order_by(PromoAd.created_at.desc()).all()
+
+    return {
+        "promo_ads": [
+            {
+                "id": a.id,
+                "title": a.title,
+                "ad_subtype": a.ad_subtype,
+                "banner_type": a.banner_type,
+                "banner_url": a.banner_url,
+                "target_url": a.target_url,
+                "status": a.status,
+                "retailer_id": a.retailer_id,
+                "start_date": a.start_date.isoformat() if a.start_date else None,
+                "end_date": a.end_date.isoformat() if a.end_date else None,
+                "clicks": a.clicks,
+                "impressions": a.impressions,
+                "note": a.note,
+                "created_at": a.created_at.isoformat() if a.created_at else None,
+            }
+            for a in promo_ads
+        ]
+    }
+
+
+@router.post("/promo-ads")
+def create_promo_ad(
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """Create a new promo ad. DIR_ADMIN, MANAGEMENT, and RETAILER can create."""
+    from app.models import PromoAd
+
+    title = (data.get("title") or "").strip()
+    ad_subtype = (data.get("ad_subtype") or "PROMO").upper()
+    banner_type = (data.get("banner_type") or "banner").lower()
+    banner_url = (data.get("banner_url") or "").strip()
+    target_url = (data.get("target_url") or "").strip() or None
+    status = (data.get("status") or "ACTIVE").upper()
+    note = (data.get("note") or "").strip() or None
+
+    if not title:
+        raise HTTPException(status_code=400, detail="title is required")
+    if not banner_url:
+        raise HTTPException(status_code=400, detail="banner_url is required")
+    if ad_subtype not in ("PROMO", "FLASH_SALE", "SUPER_SALE"):
+        raise HTTPException(status_code=400, detail="ad_subtype must be PROMO, FLASH_SALE, or SUPER_SALE")
+    if banner_type not in ("banner", "poster", "flyer"):
+        raise HTTPException(status_code=400, detail="banner_type must be banner, poster, or flyer")
+
+    # RETAILER can only create for their own retailer_id
+    retailer_id = data.get("retailer_id") or admin.vendor_id
+    if admin.role == AdminRole.RETAILER:
+        retailer_id = admin.vendor_id
+
+    # Default duration: 30 days
+    from datetime import timedelta
+    start_date = data.get("start_date") or utcnow()
+    end_date = data.get("end_date") or (utcnow() + timedelta(days=30))
+
+    promo_ad = PromoAd(
+        title=title,
+        ad_subtype=ad_subtype,
+        banner_type=banner_type,
+        banner_url=banner_url,
+        target_url=target_url,
+        status=status,
+        created_by=admin.id,
+        retailer_id=retailer_id,
+        start_date=start_date,
+        end_date=end_date,
+        note=note,
+    )
+    db.add(promo_ad)
+    db.commit()
+    db.refresh(promo_ad)
+
+    log_admin_action(db, admin, "create", "promo_ad", promo_ad.id,
+                     f"Created promo ad '{title}' ({ad_subtype}/{banner_type})")
+
+    return {"success": True, "id": promo_ad.id}
+
+
+@router.put("/promo-ads/{ad_id}")
+def update_promo_ad(
+    ad_id: str,
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """Update a promo ad."""
+    from app.models import PromoAd
+
+    promo_ad = db.query(PromoAd).filter(PromoAd.id == ad_id).first()
+    if not promo_ad:
+        raise HTTPException(status_code=404, detail="Promo ad not found")
+
+    # RETAILER can only update their own ads
+    if admin.role == AdminRole.RETAILER:
+        if promo_ad.retailer_id != admin.vendor_id:
+            raise HTTPException(status_code=403, detail="You can only edit your own promo ads")
+
+    updatable = ["title", "ad_subtype", "banner_type", "banner_url", "target_url",
+                 "status", "note", "start_date", "end_date"]
+    for key in updatable:
+        if key in data:
+            setattr(promo_ad, key, data[key])
+
+    promo_ad.updated_at = utcnow()
+    db.commit()
+
+    log_admin_action(db, admin, "update", "promo_ad", ad_id, f"Updated promo ad '{promo_ad.title}'")
+    return {"success": True}
+
+
+@router.delete("/promo-ads/{ad_id}")
+def delete_promo_ad(
+    ad_id: str,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """Delete a promo ad."""
+    from app.models import PromoAd
+
+    promo_ad = db.query(PromoAd).filter(PromoAd.id == ad_id).first()
+    if not promo_ad:
+        raise HTTPException(status_code=404, detail="Promo ad not found")
+
+    # RETAILER can only delete their own ads
+    if admin.role == AdminRole.RETAILER:
+        if promo_ad.retailer_id != admin.vendor_id:
+            raise HTTPException(status_code=403, detail="You can only delete your own promo ads")
+
+    db.delete(promo_ad)
+    db.commit()
+
+    log_admin_action(db, admin, "delete", "promo_ad", ad_id, f"Deleted promo ad '{promo_ad.title}'")
+    return {"success": True}
+
+
+# ==============================================================================
+# ORDER EARNINGS (Retailer Payout View)
+# ==============================================================================
+
+
+@router.get("/earnings")
+def list_earnings(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """
+    Get order earnings for the current retailer.
+    RETAILER role sees their own earnings; DIR_ADMIN/MANAGEMENT see all.
+    """
+    from app.models import OrderEarning
+
+    query = db.query(OrderEarning)
+    if admin.role == AdminRole.RETAILER and admin.vendor_id:
+        query = query.filter(OrderEarning.retailer_id == admin.vendor_id)
+
+    earnings = query.order_by(OrderEarning.created_at.desc()).limit(100).all()
+
+    # Fetch related order numbers and product names
+    order_ids = list(set(e.order_id for e in earnings))
+    product_ids = list(set(e.product_id for e in earnings if e.product_id))
+    orders = {o.id: o.order_number for o in db.query(Order).filter(Order.id.in_(order_ids)).all()} if order_ids else {}
+    products = {p.id: p.name for p in db.query(Product).filter(Product.id.in_(product_ids)).all()} if product_ids else {}
+
+    total_amount = sum(e.amount for e in earnings) if earnings else 0
+    total_commission = sum(e.commission for e in earnings) if earnings else 0
+    total_net = sum(e.net_amount for e in earnings) if earnings else 0
+
+    return {
+        "earnings": [
+            {
+                "id": e.id,
+                "order_id": e.order_id,
+                "order_number": orders.get(e.order_id, "Unknown"),
+                "product_id": e.product_id,
+                "product_name": products.get(e.product_id, "Unknown"),
+                "amount": e.amount,
+                "commission": e.commission,
+                "net_amount": e.net_amount,
+                "status": e.status,
+                "paid_at": e.paid_at.isoformat() if e.paid_at else None,
+                "created_at": e.created_at.isoformat() if e.created_at else None,
+            }
+            for e in earnings
+        ],
+        "summary": {
+            "total_amount": total_amount,
+            "total_commission": total_commission,
+            "total_net": total_net,
+            "count": len(earnings),
+        },
+    }
+
+
+# ==============================================================================
+# REQUEST PAYOUT (RETAILER SELF-SERVICE)
+# ==============================================================================
+
+
+@router.post("/earnings/request-payout")
+def request_earnings_payout(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """
+    Request payout for all SCHEDULED earnings.
+
+    RETAILER role only — marks all their SCHEDULED/PENDING earnings as PAID.
+    This is a self-service payout request that does not require admin approval.
+    """
+    from app.models import OrderEarning
+
+    if admin.role != AdminRole.RETAILER:
+        raise HTTPException(status_code=403, detail="Only RETAILERs can request payouts")
+
+    retailer_id = admin.vendor_id
+    if not retailer_id:
+        raise HTTPException(status_code=400, detail="Admin user has no vendor_id")
+
+    earnings = db.query(OrderEarning).filter(
+        OrderEarning.retailer_id == retailer_id,
+        OrderEarning.status.in_(["SCHEDULED", "PENDING"]),
+    ).all()
+
+    if not earnings:
+        return {"success": True, "marked": 0, "message": "No pending earnings to request payout for"}
+
+    now = utcnow()
+    for e in earnings:
+        e.status = "PAID"
+        e.paid_at = now
+
+    db.commit()
+
+    log_admin_action(
+        db, admin, "request_payout", "order_earning", "",
+        f"Requested payout for {len(earnings)} order earnings (total net: ₦{sum(e.net_amount for e in earnings):.2f})"
+    )
+
+    return {
+        "success": True,
+        "marked": len(earnings),
+        "total_net": sum(e.net_amount for e in earnings),
+        "message": f"Marked {len(earnings)} earning(s) as PAID",
+    }
+
+
+# ==============================================================================
+# BATCH MARK EARNINGS AS PAID
+# ==============================================================================
+
+
+@router.post("/earnings/batch-mark-paid")
+def batch_mark_earnings_paid(
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT)),
+):
+    """
+    Batch-mark order earnings as PAID.
+
+    Accepts either:
+      - earning_ids: list of specific earning IDs to mark paid
+      - filter_all_pending: true to mark ALL PENDING earnings as paid (for the current retailer if RETAILER role)
+
+    DIR_ADMIN and MANAGEMENT only.
+    """
+    from app.models import OrderEarning
+
+    earning_ids = data.get("earning_ids", None)
+    filter_all_pending = data.get("filter_all_pending", False)
+
+    query = db.query(OrderEarning).filter(OrderEarning.status.in_(["PENDING", "SCHEDULED"]))
+
+    if admin.role == AdminRole.RETAILER and admin.vendor_id:
+        query = query.filter(OrderEarning.retailer_id == admin.vendor_id)
+
+    if earning_ids and isinstance(earning_ids, list) and len(earning_ids) > 0:
+        query = query.filter(OrderEarning.id.in_(earning_ids))
+    elif not filter_all_pending:
+        raise HTTPException(
+            status_code=400,
+            detail="Provide earning_ids or set filter_all_pending=true"
+        )
+
+    earnings = query.all()
+    if not earnings:
+        return {"success": True, "marked": 0, "message": "No pending earnings to mark as paid"}
+
+    now = utcnow()
+    for e in earnings:
+        e.status = "PAID"
+        e.paid_at = now
+
+    db.commit()
+
+    log_admin_action(
+        db, admin, "batch_mark_paid", "order_earning", "",
+        f"Batch-marked {len(earnings)} order earnings as PAID"
+    )
+
+    return {
+        "success": True,
+        "marked": len(earnings),
+        "message": f"Marked {len(earnings)} earning(s) as PAID",
     }
 
 

@@ -13,7 +13,7 @@ from app.models import (
     User, Settings, OrderStatus, NewsletterSubscriber,
     BroadcastCampaign, BroadcastTemplate,
     Shipment, ShipmentEvent, DeliveryAgent, Affiliate, AffiliateCommission,
-    VendorAnalytics, VendorPayout, NotificationQueue, AdCampaign
+    VendorAnalytics, VendorPayout, NotificationQueue, AdCampaign, PromoAd, OrderEarning
 )
 from app.schemas import (
     ProductCreate, ProductUpdate, CategoryCreate, CategoryUpdate,
@@ -777,10 +777,8 @@ def retailer_banking(request: Request, db: Session = Depends(get_db)):
 @router.get("/retailer/ads", response_class=HTMLResponse)
 def retailer_ads(request: Request, db: Session = Depends(get_db)):
     admin = get_current_user_from_cookie(request, db)
-    if not admin or admin.role.value not in ("DIR_ADMIN", "MANAGEMENT", "RETAILER"):
+    if not admin or not has_permission(admin, "ads"):
         return RedirectResponse(url="/admin/login", status_code=302)
-    if admin.role.value == "RETAILER":
-        return RedirectResponse(url="/admin/dashboard", status_code=302)
 
     retailer_id = admin.vendor_id
     campaigns = []
@@ -955,6 +953,48 @@ async def admin_profile_update(request: Request, db: Session = Depends(get_db)):
     db.commit()
 
     return RedirectResponse(url="/admin/me?success=Profile+updated+successfully.", status_code=302)
+
+
+# --- Promo Ads ---
+@router.get("/promo-ads", response_class=HTMLResponse)
+def promo_ads_page(request: Request, db: Session = Depends(get_db)):
+    admin = get_current_user_from_cookie(request, db)
+    if not admin or not has_permission(admin, "ads"):
+        return RedirectResponse(url="/admin/login", status_code=302)
+
+    # RETAILER sees own promo ads; admins see all
+    query = db.query(PromoAd).order_by(PromoAd.created_at.desc())
+    if admin.role.value == "RETAILER" and admin.vendor_id:
+        query = query.filter(
+            (PromoAd.retailer_id == admin.vendor_id) | (PromoAd.retailer_id == None)
+        )
+    promo_ads = query.all()
+
+    retailers_map = {r.id: r.name for r in db.query(Retailer).all()}
+    admin_users_map = {u.id: u.name for u in db.query(AdminUser).all()}
+
+    return render_template("admin/ads/promo_ads.html", {
+        "request": request,
+        "admin": admin,
+        "promo_ads": promo_ads,
+        "retailers_map": retailers_map,
+        "admin_users_map": admin_users_map,
+        "has_permission": has_permission,
+    })
+
+
+# --- Earnings ---
+@router.get("/earnings", response_class=HTMLResponse)
+def earnings_page(request: Request, db: Session = Depends(get_db)):
+    admin = get_current_user_from_cookie(request, db)
+    if not admin or not has_permission(admin, "ads"):
+        return RedirectResponse(url="/admin/login", status_code=302)
+
+    return render_template("admin/ads/earnings.html", {
+        "request": request,
+        "admin": admin,
+        "has_permission": has_permission,
+    })
 
 
 @router.get("/logout")

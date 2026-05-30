@@ -48,9 +48,9 @@ ROLE_PERMISSIONS = {
         "dashboard", "system_logs", "system_audit", "performance",
         "settings_technical", "settings_developer",
     ],
-    # ── Retailer: own products, inventory, wallet only ─────────────
+    # ── Retailer: own products, inventory, wallet, ads, earnings ──
     AdminRole.RETAILER: [
-        "catalog", "retailers", "orders",
+        "catalog", "retailers", "orders", "ads",
     ],
     # ── Logistics: dispatch, routes, driver assignments, tracking ──
     AdminRole.LOGISTICS: [
