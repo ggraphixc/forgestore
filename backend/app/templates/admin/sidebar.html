@@ -86,7 +86,7 @@
             {% endif %}
 
             {# DIR_ADMIN / MANAGEMENT / RETAILER: Ads &amp; Earnings #}
-            {% if admin and admin.role in ['DIR_ADMIN', 'MANAGEMENT'] %}
+            {% if admin and admin.role in ['DIR_ADMIN', 'MANAGEMENT', 'RETAILER'] %}
             <div class="pt-5 pb-1.5 px-3 flex items-center gap-2">
                 <div class="flex-1 h-px bg-stone-100 dark:bg-stone-800"></div>
                 <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Marketing</span>

@@ -142,9 +142,9 @@
             <div class="flex items-center justify-between mb-2">
               <div class="flex items-center gap-2">
                 <div class="w-8 h-8 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center text-xs font-bold text-amber-700 dark:text-amber-400">
-                  {{ review.name[0]|default('A')|upper }}
+                  {{ review.author[0]|default('A')|upper }}
                 </div>
-                <span class="text-sm font-medium text-stone-900 dark:text-stone-100">{{ review.name|default('Anonymous') }}</span>
+                <span class="text-sm font-medium text-stone-900 dark:text-stone-100">{{ review.author|default('Anonymous') }}</span>
               </div>
               <div class="flex items-center gap-0.5">
                 {% for i in range(5) %}
@@ -154,7 +154,7 @@
                 {% endfor %}
               </div>
             </div>
-            <p class="text-sm text-stone-600 dark:text-stone-400">{{ review.text }}</p>
+            <p class="text-sm text-stone-600 dark:text-stone-400">{{ review.content }}</p>
           </div>
           {% endfor %}
         </div>

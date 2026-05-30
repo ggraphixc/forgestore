@@ -1705,7 +1705,7 @@ AD_PRICING = {
 def initialize_ad_payment(
     data: dict,
     db: Session = Depends(get_db),
-    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT)),
+    admin: AdminUser = Depends(require_role("ads")),
 ):
     """
     Initialize an ad campaign payment.
@@ -1733,7 +1733,6 @@ def initialize_ad_payment(
 
     ad_type = data.get("ad_type", "SHOP").upper()
     product_id = data.get("product_id") or None
-    retailer_id = data.get("retailer_id") or admin.vendor_id
     banner_url = data.get("banner_url") or None
     target_url = data.get("target_url") or None
     duration_months = int(data.get("duration_months", 1))
@@ -1744,11 +1743,13 @@ def initialize_ad_payment(
     if ad_type == "PRODUCT" and not product_id:
         raise HTTPException(status_code=400, detail="product_id is required for PRODUCT ads")
 
-    if ad_type == "SHOP" and not retailer_id:
-        raise HTTPException(status_code=400, detail="retailer_id required for SHOP ads")
-
     if ad_type == "SYSTEM_PROMO" and not banner_url:
         raise HTTPException(status_code=400, detail="banner_url is required for SYSTEM_PROMO ads")
+
+    # Determine retailer — RETAILERs use their vendor_id, DIR_ADMIN/MANAGEMENT can pass explicit retailer_id
+    retailer_id = data.get("retailer_id") or admin.vendor_id
+    if ad_type == "SHOP" and not retailer_id:
+        raise HTTPException(status_code=400, detail="retailer_id is required for SHOP ads. DIR_ADMIN must pass retailer_id in request.")
 
     retailer = None
     if retailer_id:
@@ -1847,9 +1848,9 @@ def initialize_ad_payment(
 @router.get("/ads/campaigns")
 def list_ad_campaigns(
     db: Session = Depends(get_db),
-    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT)),
+    admin: AdminUser = Depends(require_role("ads")),
 ):
-    """List ad campaigns for the current retailer or all campaigns for admins."""
+    """List ad campaigns. RETAILER sees only their own; admins see all."""
     from app.models import AdCampaign
 
     if admin.role == AdminRole.RETAILER and admin.vendor_id:
