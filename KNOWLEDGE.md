@@ -1,6 +1,6 @@
 # ForgeStore — Full Project Knowledge File
 
-> **Generated:** May 29, 2026  
+> **Generated:** May 30, 2026  
 > **Tech Stack:** Python 3.13, FastAPI, SQLAlchemy 2.0, Jinja2, Tailwind CSS v3, PostgreSQL/SQLite  
 > **Repo:** Monorepo at `C:\Users\USER\Documents\forgestore`
 
@@ -69,13 +69,27 @@ forgestore/
 │   │   │   ├── web.py                # /shop/* (storefront pages)
 │   │   │   ├── web_api.py            # /api/* (public storefront APIs)
 │   │   │   ├── paystack_webhook.py   # /api/paystack/webhook
-│   │   │   └── flutterwave_webhook.py# /api/flutterwave/webhook
+│   │   │   ├── flutterwave_webhook.py# /api/flutterwave/webhook
+│   │   │   ├── api_admin_ext.py      # Extended admin APIs (shipments, notifications, analytics, affiliates, wallet, reviews)
+│   │   │   ├── api_web_ext.py        # Extended web APIs (AI chat, smart search, wallet, referrals, tracking)
+│   │   │   └── api_shipment.py       # Order tracking API
 │   │   ├── services/
 │   │   │   ├── __init__.py
 │   │   │   ├── email_service.py      # SMTP + Brevo transactional email
 │   │   │   ├── ai_service.py         # AI content generation + settings defs
+│   │   │   ├── ai_chat_service.py    # AI shopping assistant chat
 │   │   │   ├── payment_provider.py   # Abstract payment facade + Paystack/Flutterwave
-│   │   │   └── paystack_service.py   # Paystack API integration (legacy, used by webhook)
+│   │   │   ├── paystack_service.py   # Paystack API integration (legacy, used by webhook)
+│   │   │   ├── wallet_service.py     # Wallet, escrow, split payments
+│   │   │   ├── affiliate_service.py  # Affiliate/referral system
+│   │   │   ├── analytics_service.py  # Commerce analytics, forecasting, fraud
+│   │   │   ├── vendor_analytics_service.py # Vendor dashboard analytics
+│   │   │   ├── search_service.py     # Smart search with personalization
+│   │   │   ├── review_service.py     # Review moderation & sentiment
+│   │   │   ├── shipment_service.py   # Shipment tracking & delivery
+│   │   │   ├── notification_service.py # Push notifications
+│   │   │   ├── notification_bus.py   # Notification event bus
+│   │   │   └── cart_sync_service.py  # Cart persistence & recovery
 │   │   ├── templates/
 │   │   │   ├── base.html             # Global base template
 │   │   │   ├── admin/                # Admin panel templates
@@ -198,6 +212,8 @@ All models in `backend/app/models.py`. Uses SQLAlchemy 2.0 `DeclarativeBase` (de
 | **Modern Review System** | review_media, review_reaction, review_sentiment, review_moderation |
 | **Notification Infrastructure** | notification_queue, push_subscription, user_notification_preferences, notification_delivery_log |
 | **Enterprise Commerce Intelligence** | analytics_snapshot, customer_lifetime_value, fraud_detection_event, predictive_forecast |
+| **Chat & Moderation** | product_chat_message (image_url, is_flagged, is_hidden), chat_moderation |
+| **Promotional Ads** | promo_ad (6 subtypes: PROMO, FLASH_SALE, SUPER_SALE, HOT_WEEK, FESTIVAL, SEASONAL_SALE; 3 banner types: banner, poster, flyer) |
 
 ### Database Initialization
 
@@ -208,6 +224,20 @@ In `backend/app/database.py`:
 - `init_db()` — Creates all tables at startup
 - SQLite: `PRAGMA foreign_keys=ON` enabled on connect
 - `postgres://` URLs are auto-normalized to `postgresql://`
+
+### Migrations (`backend/migrations/`)
+
+Run individually: `python -m migrations.run_migration 006`  
+Or all pending: `python -m migrations.run_migration`
+
+| Migration | Description |
+|---|---|
+| 001 | Add retailer bank fields |
+| 002 | Extend ad campaign columns |
+| 003 | Add order_earning and promo_ad tables |
+| 004 | Add ad campaign columns (ad_subtype, banner_type, admin_id, note) |
+| 005 | Create product_chat_message table |
+| 006 | Add image_url/is_flagged/is_hidden to chat; create chat_moderation table |
 
 ---
 
@@ -300,6 +330,13 @@ Comprehensive REST API for admin panel operations — products CRUD, categories,
 ### Web/Storefront API Router (`/api`)
 
 Public APIs for products, categories, retailers, cart, checkout, payments intialize/verify, wishlist, search, AI recommendations, newsletter subscription, password reset.
+
+**Product Chat API:**
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/products/{product_id}/chat` | Get chat messages (excludes hidden, includes image_url, is_flagged) |
+| POST | `/api/products/{product_id}/chat` | Post message (JSON or multipart with image upload, 5MB max, rate-limited 20/min) |
 
 ### Paystack Webhook (`/api/paystack/webhook`)
 
@@ -395,13 +432,22 @@ Provides full CRUD interfaces for: dashboard analytics, products, categories, re
 | Method | Path | Template | Description |
 |---|---|---|---|
 | GET | `/admin/retailer/banking` | `admin/retailers/banking.html` | Bank setup UI — form to set account number, bank code, bank name; fetches live bank list from Paystack API; displays current bank details |
-| GET | `/admin/retailer/ads` | `admin/retailers/ads.html` | Ad purchase UI — lists existing campaigns, purchase form with ad type (SHOP/₦10K/mo or PRODUCT/₦5K/mo), duration selector, checkout button |
+| GET | `/admin/retailer/ads` | `admin/retailers/ads.html` | Ad purchase UI — lists existing campaigns, purchase form with ad type (SHOP/₦10K/mo or PRODUCT/₦5K/mo), duration selector, checkout button. Also includes Promotional Ads section with 6 quick-create cards (Flash Sale, Hot Week, Festival, Seasonal, Super Sale, General) and promo ad grid |
 | GET | `/admin/ads/manage` | `admin/ads/manage.html` | Campaign management UI — lists all campaigns with status, filters (ALL/PENDING/PAID/ACTIVE/EXPIRED), approve action button, pending/active counts |
 | GET | `/admin/ads/analytics` | `admin/ads/analytics.html` | Analytics dashboard — overview stats cards (total campaigns, active, impressions, CTR), status distribution bar, ad type breakdown, monthly trend chart, top 10 retailers table with color-coded CTR |
+| GET | `/admin/ads/settings` | `admin/ads/settings.html` | Ads Pricing & Provider settings — ad provider selector (Internal/Google/Meta), campaign pricing editor, promotional ads pricing editor (per-day rates), general settings (auto-approve, max duration, min budget, promo type toggles) |
+
+**Chat Moderation Route:**
+
+| Method | Path | Template | Description |
+|---|---|---|---|
+| GET | `/admin/chat-moderation` | `admin/chat-moderation.html` | Chat moderation panel — lists product chat messages with flag/hidden status, stats (total/flagged/hidden/pending), filter by status, actions: flag, hide, unhide, delete |
 
 **Sidebar Navigation:**
 - **Banking** link under retailer management section (payout icon)
 - **Ad Campaigns** expandable section with **Manage** + **Analytics** sub-links (matching Newsletter pattern)
+- **Ads Pricing** link under System section (for ad pricing & provider settings)
+- **Chat Moderation** link under Community section (for moderating product chat messages)
 
 Admin templates use a collapsible sidebar (w-80/w-72), top header, search overlay, dark mode toggle.
 
@@ -587,7 +633,7 @@ cd backend
 python -m pytest tests/ -v
 ```
 
-All **112 tests** currently pass (106 passed + 6 xfailed for external API keys).
+All **123 tests** currently pass (117 passed + 6 xfailed for external API keys).
 
 ---
 
@@ -880,6 +926,46 @@ Run: `python seed_settings.py`
 **112 tests pass (106 passed + 6 xfailed)** (external API keys required for Paystack/Flutterwave integration tests)
 
 ---
+
+### 2026-05-30: Chat Moderation System with Image Upload
+
+**Scope:** Live product chat moderation with image support, admin moderation panel, and premium chat UI.
+
+**Files Changed:**
+
+#### Models & Migration
+- `backend/app/models.py` — Extended `ProductChatMessage` with `image_url` (String 500), `is_flagged` (Boolean), `is_hidden` (Boolean). Created new `ChatModeration` model (message_id FK, status PENDING/APPROVED/REJECTED, reason, notes, reviewed_by FK, timestamps).
+- `backend/migrations/006_chat_moderation.py` — **New:** ALTER TABLE for 3 new columns + CREATE TABLE for `chat_moderation` with indexes. Dual SQLite/PostgreSQL support.
+- `backend/app/database.py` — Added `ProductChatMessage` and `ChatModeration` imports to `init_db()`.
+
+#### API Changes
+- `backend/app/routers/web_api.py` — `GET /api/products/{id}/chat` now filters hidden messages, returns `image_url` and `is_flagged`. `POST /api/products/{id}/chat` accepts multipart form with image upload (5MB max, stored in `static/uploads/chat/`), falls back to JSON body. WebSocket broadcasts include `image_url`.
+- `backend/app/routers/admin_api.py` — Added `POST /api/admin/chat-moderate/{id}` for flag/hide/unhide/delete moderation actions with audit logging.
+
+#### Templates
+- `backend/app/templates/web/product-detail.html` — Replaced basic chat + reviews section with premium live chat UI: gradient send button, image attachment with preview/remove, connection status indicator, flagged message badges, image lightbox, empty state, hover timestamps.
+- `backend/app/templates/admin/chat-moderation.html` — **New:** Admin moderation panel with stats (total/flagged/hidden/pending), filterable table, flag/hide/unhide/delete actions.
+- `backend/app/templates/admin/sidebar.html` — Added "Chat Moderation" link under new "Community" section.
+
+---
+
+### 2026-05-30: Promotional Ads System with Pricing & Provider Settings
+
+**Scope:** Full promotional ads system with 6 event types, per-day pricing, provider configuration, and admin settings page.
+
+**Files Changed:**
+
+#### Models
+- `backend/app/models.py` — Extended `PromoAd.ad_subtype` to support 6 event types: `PROMO`, `FLASH_SALE`, `SUPER_SALE`, `HOT_WEEK`, `FESTIVAL`, `SEASONAL_SALE`. Added `PROMO_AD_SUBTYPES` dict with labels, icons, colors. Widened column from `String(20)` to `String(30)`.
+
+#### API
+- `backend/app/routers/admin_api.py` — Added `PROMO_PRICING` dict with per-day pricing for each promo type. Added `AD_PROVIDERS` dict (Internal, Google Ads, Meta Ads). Added `GET /api/admin/ads/settings` and `POST /api/admin/ads/settings` endpoints for full settings CRUD. Updated `create_promo_ad` to accept new subtypes.
+- `backend/app/routers/admin.py` — Added `GET /admin/ads/settings` route for ads pricing & provider settings page. Updated `retailer_ads` route to fetch and pass `promo_ads` to template.
+
+#### Templates
+- `backend/app/templates/admin/ads/settings.html` — **New:** Ads Pricing & Provider settings page with ad provider selector (Internal/Google/Meta), campaign pricing editor, promotional ads pricing editor (per-day rates), general settings (auto-approve, max duration, min budget, promo type toggles).
+- `backend/app/templates/admin/retailers/ads.html` — Added "Promotional Ads" section with 6 quick-create cards (Flash Sale, Hot Week, Festival, Seasonal, Super Sale, General), promo ad grid with status/type badges, create modal with event type, banner format (poster/flyer), dates.
+- `backend/app/templates/admin/sidebar.html` — Added "Ads Pricing" link under System section.
 
 ## Key Architectural Decisions
 
