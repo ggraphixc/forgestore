@@ -1,0 +1,172 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}Chat Moderation — ForgeStore Admin{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto">
+  <!-- Page Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div>
+      <h1 class="text-2xl font-bold text-stone-900 dark:text-stone-100 font-display">Chat Moderation</h1>
+      <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">Review and moderate product chat messages.</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <select id="filter-status" onchange="filterMessages()" class="text-sm py-2 px-3 border border-stone-200 dark:border-stone-700 rounded-xl bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 focus:ring-2 focus:ring-amber-500/30">
+        <option value="all">All Messages</option>
+        <option value="flagged">Flagged Only</option>
+        <option value="hidden">Hidden Only</option>
+        <option value="pending">Pending Review</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="p-4 bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700">
+      <p class="text-xs font-medium text-stone-500 dark:text-stone-400 mb-1">Total Messages</p>
+      <p class="text-2xl font-bold text-stone-900 dark:text-stone-100" id="stat-total">{{ messages|length }}</p>
+    </div>
+    <div class="p-4 bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700">
+      <p class="text-xs font-medium text-stone-500 dark:text-stone-400 mb-1">Flagged</p>
+      <p class="text-2xl font-bold text-red-600 dark:text-red-400" id="stat-flagged">{{ flagged_count }}</p>
+    </div>
+    <div class="p-4 bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700">
+      <p class="text-xs font-medium text-stone-500 dark:text-stone-400 mb-1">Hidden</p>
+      <p class="text-2xl font-bold text-amber-600 dark:text-amber-400" id="stat-hidden">{{ hidden_count }}</p>
+    </div>
+    <div class="p-4 bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700">
+      <p class="text-xs font-medium text-stone-500 dark:text-stone-400 mb-1">Pending Review</p>
+      <p class="text-2xl font-bold text-blue-600 dark:text-blue-400" id="stat-pending">{{ pending_count }}</p>
+    </div>
+  </div>
+
+  <!-- Messages Table -->
+  <div class="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-stone-100 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50">
+            <th class="text-left px-4 py-3 font-semibold text-stone-600 dark:text-stone-300">Message</th>
+            <th class="text-left px-4 py-3 font-semibold text-stone-600 dark:text-stone-300">Author</th>
+            <th class="text-left px-4 py-3 font-semibold text-stone-600 dark:text-stone-300">Product</th>
+            <th class="text-left px-4 py-3 font-semibold text-stone-600 dark:text-stone-300">Status</th>
+            <th class="text-left px-4 py-3 font-semibold text-stone-600 dark:text-stone-300">Date</th>
+            <th class="text-right px-4 py-3 font-semibold text-stone-600 dark:text-stone-300">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="messages-table">
+          {% for msg in messages %}
+          <tr class="border-b border-stone-50 dark:border-stone-700/50 hover:bg-stone-50 dark:hover:bg-stone-700/30 transition-colors" data-id="{{ msg.id }}" data-flagged="{{ msg.is_flagged|lower }}" data-hidden="{{ msg.is_hidden|lower }}">
+            <td class="px-4 py-3 max-w-xs">
+              <p class="text-stone-900 dark:text-stone-100 truncate">{{ msg.content or '(image)' }}</p>
+              {% if msg.image_url %}
+              <img src="{{ msg.image_url }}" alt="Chat image" class="mt-1 h-8 rounded-lg object-cover">
+              {% endif %}
+            </td>
+            <td class="px-4 py-3">
+              <span class="text-stone-700 dark:text-stone-300">{{ msg.author_name }}</span>
+              {% if msg.is_admin %}
+              <span class="ml-1 px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-[9px] font-bold text-amber-700 dark:text-amber-400 rounded-full">Staff</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3">
+              <span class="text-stone-500 dark:text-stone-400 text-xs">{{ msg.product_name|default('Unknown') }}</span>
+            </td>
+            <td class="px-4 py-3">
+              {% if msg.is_hidden %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">Hidden</span>
+              {% elif msg.is_flagged %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">Flagged</span>
+              {% else %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">Visible</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3 text-xs text-stone-500 dark:text-stone-400">
+              {{ msg.created_at.strftime('%b %d, %Y %H:%M') if msg.created_at else '-' }}
+            </td>
+            <td class="px-4 py-3 text-right">
+              <div class="flex items-center justify-end gap-2">
+                {% if not msg.is_flagged %}
+                <button onclick="flagMessage('{{ msg.id }}')" class="px-2.5 py-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors" title="Flag for review">
+                  Flag
+                </button>
+                {% endif %}
+                {% if not msg.is_hidden %}
+                <button onclick="hideMessage('{{ msg.id }}')" class="px-2.5 py-1.5 text-[11px] font-semibold text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors" title="Hide from users">
+                  Hide
+                </button>
+                {% else %}
+                <button onclick="unhideMessage('{{ msg.id }}')" class="px-2.5 py-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors" title="Show to users">
+                  Unhide
+                </button>
+                {% endif %}
+                <button onclick="deleteMessage('{{ msg.id }}')" class="px-2.5 py-1.5 text-[11px] font-semibold text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors" title="Delete permanently">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if not messages %}
+    <div class="text-center py-16 text-stone-400 dark:text-stone-500">
+      <svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+      <p class="text-sm">No chat messages to moderate.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function filterMessages() {
+  const filter = document.getElementById('filter-status').value;
+  const rows = document.querySelectorAll('#messages-table tr');
+  rows.forEach(row => {
+    if (!row.dataset.id) return;
+    const flagged = row.dataset.flagged === 'true';
+    const hidden = row.dataset.hidden === 'true';
+    let show = true;
+    if (filter === 'flagged') show = flagged;
+    else if (filter === 'hidden') show = hidden;
+    else if (filter === 'pending') show = flagged && !hidden;
+    row.style.display = show ? '' : 'none';
+  });
+}
+
+async function flagMessage(id) {
+  await moderateMessage(id, { action: 'flag' });
+}
+
+async function hideMessage(id) {
+  await moderateMessage(id, { action: 'hide' });
+}
+
+async function unhideMessage(id) {
+  await moderateMessage(id, { action: 'unhide' });
+}
+
+async function deleteMessage(id) {
+  if (!confirm('Permanently delete this message?')) return;
+  await moderateMessage(id, { action: 'delete' });
+}
+
+async function moderateMessage(id, data) {
+  try {
+    const res = await fetch('/api/admin/chat-moderate/' + id, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (res.ok) {
+      location.reload();
+    } else {
+      const err = await res.json();
+      alert(err.detail || 'Action failed');
+    }
+  } catch (e) {
+    alert('Network error');
+  }
+}
+</script>
+{% endblock %}

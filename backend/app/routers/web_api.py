@@ -1,9 +1,10 @@
 import logging
+import os
 import secrets
 import hashlib
 import hmac
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, UploadFile, File
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
@@ -717,11 +718,12 @@ def get_product_chat(
     request: Request,
     db: Session = Depends(get_db),
 ):
-    """Get chat messages for a product, newest last."""
+    """Get chat messages for a product, newest last. Excludes hidden messages."""
     from app.models import ProductChatMessage
 
     messages = db.query(ProductChatMessage).filter(
-        ProductChatMessage.product_id == product_id
+        ProductChatMessage.product_id == product_id,
+        ProductChatMessage.is_hidden == False,
     ).order_by(ProductChatMessage.created_at.asc()).limit(50).all()
 
     return {
@@ -730,7 +732,9 @@ def get_product_chat(
                 "id": m.id,
                 "author_name": m.author_name,
                 "content": m.content,
+                "image_url": m.image_url,
                 "is_admin": m.is_admin,
+                "is_flagged": m.is_flagged,
                 "created_at": m.created_at.isoformat() if m.created_at else None,
             }
             for m in messages
@@ -740,34 +744,64 @@ def get_product_chat(
 
 @router.post("/products/{product_id}/chat")
 @chat_limiter.limit("20/minute")
-def post_product_chat_message(
+async def post_product_chat_message(
     product_id: str,
-    data: dict,
     request: Request,
     db: Session = Depends(get_db),
 ):
-    """Post a chat message on a product. Rate-limited to 20/min per IP."""
-    from app.models import ProductChatMessage, User
+    """Post a chat message on a product. Rate-limited to 20/min per IP.
+    Accepts JSON body or multipart form with optional image upload.
+    """
+    from app.models import ProductChatMessage
 
     # Verify product exists
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    content = (data.get("content") or "").strip()
-    if not content:
-        raise HTTPException(status_code=400, detail="Message content is required")
-    if len(content) > 1000:
+    content = ""
+    author_name = ""
+    image_url = None
+
+    content_type = request.headers.get("content-type", "")
+    if "multipart/form-data" in content_type:
+        form = await request.form()
+        content = (form.get("content") or "").strip()
+        author_name = (form.get("author_name") or "").strip()
+        upload_file = form.get("image")
+        if upload_file and hasattr(upload_file, "filename") and upload_file.filename:
+            ext = upload_file.filename.rsplit(".", 1)[-1].lower() if "." in upload_file.filename else "jpg"
+            if ext not in ("jpg", "jpeg", "png", "gif", "webp"):
+                raise HTTPException(status_code=400, detail="Image must be jpg, png, gif, or webp")
+            upload_dir = os.path.join("app", "static", "uploads", "chat")
+            os.makedirs(upload_dir, exist_ok=True)
+            unique_name = f"chat-{int(utcnow().timestamp())}-{uuid.uuid4().hex[:8]}.{ext}"
+            file_path = os.path.join(upload_dir, unique_name)
+            file_content = await upload_file.read()
+            if len(file_content) > 5 * 1024 * 1024:
+                raise HTTPException(status_code=400, detail="Image must be under 5MB")
+            with open(file_path, "wb") as f:
+                f.write(file_content)
+            image_url = f"/static/uploads/chat/{unique_name}"
+    else:
+        data = await request.json()
+        content = (data.get("content") or "").strip()
+        author_name = (data.get("author_name") or "").strip()
+
+    if not content and not image_url:
+        raise HTTPException(status_code=400, detail="Message content or image is required")
+    if content and len(content) > 1000:
         raise HTTPException(status_code=400, detail="Message too long (max 1000 chars)")
 
     customer = get_current_customer_from_cookie(request, db)
-    author_name = data.get("author_name", "").strip() or (customer.name if customer else "Anonymous")
+    author_name = author_name or (customer.name if customer else "Anonymous")
 
     msg = ProductChatMessage(
         product_id=product_id,
         user_id=customer.id if customer else None,
         author_name=author_name,
         content=content,
+        image_url=image_url,
         is_admin=False,
     )
     db.add(msg)
@@ -784,6 +818,7 @@ def post_product_chat_message(
                 "id": msg.id,
                 "author_name": msg.author_name,
                 "content": msg.content,
+                "image_url": msg.image_url,
                 "is_admin": msg.is_admin,
                 "created_at": msg.created_at.isoformat() if msg.created_at else None,
             },
@@ -797,6 +832,7 @@ def post_product_chat_message(
             "id": msg.id,
             "author_name": msg.author_name,
             "content": msg.content,
+            "image_url": msg.image_url,
             "is_admin": msg.is_admin,
             "created_at": msg.created_at.isoformat() if msg.created_at else None,
         },

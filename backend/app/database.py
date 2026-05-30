@@ -162,5 +162,8 @@ def init_db():
         PredictiveForecast,
         # System 11: Advertising Campaigns
         AdCampaign,
+        # Chat Moderation
+        ProductChatMessage,
+        ChatModeration,
     )
     Base.metadata.create_all(bind=get_engine())

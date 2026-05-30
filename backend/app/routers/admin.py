@@ -13,7 +13,8 @@ from app.models import (
     User, Settings, OrderStatus, NewsletterSubscriber,
     BroadcastCampaign, BroadcastTemplate,
     Shipment, ShipmentEvent, DeliveryAgent, Affiliate, AffiliateCommission,
-    VendorAnalytics, VendorPayout, NotificationQueue, AdCampaign, PromoAd, OrderEarning
+    VendorAnalytics, VendorPayout, NotificationQueue, AdCampaign, PromoAd, OrderEarning,
+    ProductChatMessage, ChatModeration
 )
 from app.schemas import (
     ProductCreate, ProductUpdate, CategoryCreate, CategoryUpdate,
@@ -877,6 +878,41 @@ def affiliate_list(request: Request, db: Session = Depends(get_db)):
         "request": request,
         "admin": admin,
         "affiliates": affiliates,
+        "has_permission": has_permission,
+    })
+
+
+# --- Chat Moderation ---
+@router.get("/chat-moderation", response_class=HTMLResponse)
+def chat_moderation_page(request: Request, db: Session = Depends(get_db)):
+    admin = get_current_user_from_cookie(request, db)
+    if not admin or not has_permission(admin, "settings"):
+        return RedirectResponse(url="/admin/login", status_code=302)
+
+    messages = (
+        db.query(ProductChatMessage)
+        .order_by(ProductChatMessage.created_at.desc())
+        .limit(200)
+        .all()
+    )
+
+    # Attach product names for display
+    product_ids = list({m.product_id for m in messages})
+    products_map = {p.id: p.name for p in db.query(Product).filter(Product.id.in_(product_ids)).all()}
+    for m in messages:
+        m.product_name = products_map.get(m.product_id, "Deleted")
+
+    flagged_count = sum(1 for m in messages if m.is_flagged)
+    hidden_count = sum(1 for m in messages if m.is_hidden)
+    pending_count = sum(1 for m in messages if m.is_flagged and not m.is_hidden)
+
+    return render_template("admin/chat-moderation.html", {
+        "request": request,
+        "admin": admin,
+        "messages": messages,
+        "flagged_count": flagged_count,
+        "hidden_count": hidden_count,
+        "pending_count": pending_count,
         "has_permission": has_permission,
     })
 

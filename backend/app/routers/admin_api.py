@@ -2615,3 +2615,65 @@ def admin_delete_customer(
     return {"success": True, "message": f"Customer {email} deleted successfully"}
 
 
+# --- Chat Moderation API ---
+
+@router.post("/chat-moderate/{message_id}")
+def moderate_chat_message(
+    message_id: str,
+    data: dict,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """Moderate a product chat message: flag, hide, unhide, or delete."""
+    from app.models import ProductChatMessage, ChatModeration
+
+    admin = get_current_admin(request, db)
+    if not admin:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    msg = db.query(ProductChatMessage).filter(ProductChatMessage.id == message_id).first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+
+    action = data.get("action", "")
+    reason = data.get("reason", "")
+    notes = data.get("notes", "")
+
+    if action == "flag":
+        msg.is_flagged = True
+        mod = ChatModeration(
+            message_id=message_id,
+            status="PENDING",
+            reason=reason or "flagged_by_admin",
+            notes=notes,
+            reviewed_by=admin.id,
+        )
+        db.add(mod)
+    elif action == "unflag":
+        msg.is_flagged = False
+    elif action == "hide":
+        msg.is_hidden = True
+        msg.is_flagged = True
+        mod = ChatModeration(
+            message_id=message_id,
+            status="REJECTED",
+            reason=reason or "hidden_by_admin",
+            notes=notes,
+            reviewed_by=admin.id,
+            reviewed_at=utcnow(),
+        )
+        db.add(mod)
+    elif action == "unhide":
+        msg.is_hidden = False
+    elif action == "delete":
+        db.delete(msg)
+    else:
+        raise HTTPException(status_code=400, detail=f"Unknown action: {action}")
+
+    db.commit()
+    log_admin_action(db, admin, "moderate", "chat_message", message_id,
+                     f"Chat moderation: {action} by {admin.email}")
+
+    return {"success": True}
+
+

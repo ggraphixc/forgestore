@@ -1153,11 +1153,31 @@ class ProductChatMessage(Base):
     user_id = Column(String, ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
     author_name = Column(String(255), nullable=False)
     content = Column(Text, nullable=False)
+    image_url = Column(String(500), nullable=True)
     is_admin = Column(Boolean, nullable=False, default=False)
+    is_flagged = Column(Boolean, nullable=False, default=False)
+    is_hidden = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
     product: "Product" = relationship("Product", backref="chat_messages")
     user: "User | None" = relationship("User")
+
+
+class ChatModeration(Base):
+    __tablename__ = "chat_moderation"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    message_id = Column(String, ForeignKey("product_chat_message.id", ondelete="CASCADE"), nullable=False)
+    status = Column(String(20), nullable=False, default="PENDING")  # PENDING, APPROVED, REJECTED
+    reason = Column(String(100), nullable=True)  # spam, offensive, inappropriate, other
+    notes = Column(Text, nullable=True)
+    reviewed_by = Column(String, ForeignKey("admin_user.id", ondelete="SET NULL"), nullable=True)
+    reviewed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+    message: "ProductChatMessage" = relationship("ProductChatMessage")
+    reviewer: "AdminUser | None" = relationship("AdminUser")
 
 
 class OrderEarning(Base):
