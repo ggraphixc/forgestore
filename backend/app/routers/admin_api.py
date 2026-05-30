@@ -1700,6 +1700,21 @@ AD_PRICING = {
     "SYSTEM_PROMO": {"price_per_month": 0, "label": "System Promo Flyer"},
 }
 
+PROMO_PRICING = {
+    "PROMO": {"price_per_day": 500, "label": "General Promo"},
+    "FLASH_SALE": {"price_per_day": 800, "label": "Flash Sale"},
+    "SUPER_SALE": {"price_per_day": 1000, "label": "Super Sale"},
+    "HOT_WEEK": {"price_per_day": 1500, "label": "Hot Week"},
+    "FESTIVAL": {"price_per_day": 1200, "label": "Festival Sale"},
+    "SEASONAL_SALE": {"price_per_day": 700, "label": "Seasonal Sale"},
+}
+
+AD_PROVIDERS = {
+    "internal": {"label": "Internal (Built-in)", "description": "Use ForgeStore's built-in ad system"},
+    "google_ads": {"label": "Google Ads", "description": "Google Ads integration for external ad serving"},
+    "meta_ads": {"label": "Meta Ads (Facebook/Instagram)", "description": "Facebook & Instagram ad integration"},
+}
+
 
 @router.post("/ads/initialize")
 def initialize_ad_payment(
@@ -2073,7 +2088,74 @@ def set_payment_provider(
 @router.get("/ads/pricing")
 def get_ad_pricing():
     """Get ad pricing configuration."""
-    return {"pricing": AD_PRICING}
+    return {"pricing": AD_PRICING, "promo_pricing": PROMO_PRICING}
+
+
+@router.get("/ads/settings")
+def get_ads_settings(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN)),
+):
+    """Get all ads-related settings."""
+    settings_keys = [
+        "ads_default_provider", "ads_auto_approve", "ads_max_duration_days",
+        "ads_min_budget", "promo_ads_enabled", "promo_flash_sale_enabled",
+        "promo_hot_week_enabled", "promo_festival_enabled",
+    ]
+    settings = {}
+    for key in settings_keys:
+        s = db.query(Settings).filter(Settings.key == key).first()
+        settings[key] = s.value if s else ""
+    return {"settings": settings, "pricing": AD_PRICING, "promo_pricing": PROMO_PRICING}
+
+
+@router.post("/ads/settings")
+def update_ads_settings(
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN)),
+):
+    """Update ads-related settings (pricing, provider, toggles)."""
+    settings_map = {
+        "ads_default_provider": data.get("ads_default_provider", "internal"),
+        "ads_auto_approve": str(data.get("ads_auto_approve", "false")).lower(),
+        "ads_max_duration_days": str(data.get("ads_max_duration_days", "90")),
+        "ads_min_budget": str(data.get("ads_min_budget", "1000")),
+        "promo_ads_enabled": str(data.get("promo_ads_enabled", "true")).lower(),
+        "promo_flash_sale_enabled": str(data.get("promo_flash_sale_enabled", "true")).lower(),
+        "promo_hot_week_enabled": str(data.get("promo_hot_week_enabled", "true")).lower(),
+        "promo_festival_enabled": str(data.get("promo_festival_enabled", "true")).lower(),
+    }
+
+    # Update pricing if provided
+    if "promo_pricing" in data:
+        for subtype, price_data in data["promo_pricing"].items():
+            if subtype in PROMO_PRICING and "price_per_day" in price_data:
+                PROMO_PRICING[subtype]["price_per_day"] = int(price_data["price_per_day"])
+
+    for key, value in settings_map.items():
+        existing = db.query(Settings).filter(Settings.key == key).first()
+        if existing:
+            existing.value = value
+        else:
+            setting = Settings(
+                key=key,
+                value=value,
+                category="optional",
+                setting_type="text",
+                label=key.replace("_", " ").title(),
+            )
+            db.add(setting)
+
+    db.commit()
+
+    from app.config import invalidate_settings_cache
+    invalidate_settings_cache()
+
+    log_admin_action(db, admin, "update", "ads_settings", "",
+                     f"Updated ads settings: {list(settings_map.keys())}")
+
+    return {"success": True}
 
 
 @router.get("/ads/analytics")
@@ -2252,8 +2334,8 @@ def create_promo_ad(
         raise HTTPException(status_code=400, detail="title is required")
     if not banner_url:
         raise HTTPException(status_code=400, detail="banner_url is required")
-    if ad_subtype not in ("PROMO", "FLASH_SALE", "SUPER_SALE"):
-        raise HTTPException(status_code=400, detail="ad_subtype must be PROMO, FLASH_SALE, or SUPER_SALE")
+    if ad_subtype not in ("PROMO", "FLASH_SALE", "SUPER_SALE", "HOT_WEEK", "FESTIVAL", "SEASONAL_SALE"):
+        raise HTTPException(status_code=400, detail="ad_subtype must be PROMO, FLASH_SALE, SUPER_SALE, HOT_WEEK, FESTIVAL, or SEASONAL_SALE")
     if banner_type not in ("banner", "poster", "flyer"):
         raise HTTPException(status_code=400, detail="banner_type must be banner, poster, or flyer")
 

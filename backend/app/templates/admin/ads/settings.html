@@ -1,0 +1,235 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}Ads Pricing & Provider — ForgeStore Admin{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto">
+  <div class="mb-8">
+    <a href="/admin/dashboard" class="inline-flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 mb-3 transition-colors">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m7 7l-7-7 7-7"/></svg>
+      Back to Dashboard
+    </a>
+    <h1 class="text-2xl sm:text-3xl font-black text-stone-900 dark:text-stone-100 font-display">Ads Pricing & Provider</h1>
+    <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">Configure advertising pricing, providers, and promotional ad toggles.</p>
+  </div>
+
+  <form id="ads-settings-form" class="space-y-8">
+    <!-- Ad Provider -->
+    <div class="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 overflow-hidden">
+      <div class="px-6 py-4 border-b border-stone-100 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50">
+        <h2 class="text-sm font-bold text-stone-900 dark:text-stone-100">Ad Provider</h2>
+        <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Choose which ad system to use</p>
+      </div>
+      <div class="p-6 space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {% for pid, pinfo in ad_providers.items() %}
+          <label class="relative cursor-pointer">
+            <input type="radio" name="ads_default_provider" value="{{ pid }}" class="peer sr-only"
+              {% if site_settings.get('ads_default_provider', 'internal') == pid %}checked{% endif %}>
+            <div class="p-4 rounded-xl border-2 border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 peer-checked:border-amber-500 peer-checked:bg-amber-50 dark:peer-checked:bg-amber-900/20 transition-all duration-200">
+              <h4 class="text-sm font-bold text-stone-900 dark:text-stone-100">{{ pinfo.label }}</h4>
+              <p class="text-xs text-stone-500 dark:text-stone-400 mt-1">{{ pinfo.description }}</p>
+            </div>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Campaign Ad Pricing -->
+    <div class="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 overflow-hidden">
+      <div class="px-6 py-4 border-b border-stone-100 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50">
+        <h2 class="text-sm font-bold text-stone-900 dark:text-stone-100">Campaign Ad Pricing</h2>
+        <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Monthly pricing for shop and product ad campaigns</p>
+      </div>
+      <div class="p-6">
+        <div class="space-y-4">
+          {% for atype, pdata in ad_pricing.items() %}
+          <div class="flex items-center gap-4 p-4 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-stone-100 dark:border-stone-700">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0
+              {% if atype == 'SHOP' %}bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400
+              {% elif atype == 'PRODUCT' %}bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400
+              {% else %}bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400{% endif %}">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">{{ pdata.label }}</p>
+              <p class="text-xs text-stone-500 dark:text-stone-400">{{ atype }} type</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-stone-500">₦</span>
+              <input type="number" name="pricing_{{ atype }}" value="{{ pdata.price_per_month }}"
+                class="w-28 px-3 py-2 text-sm border border-stone-200 dark:border-stone-700 rounded-xl bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:ring-2 focus:ring-amber-500/30 font-mono">
+              <span class="text-xs text-stone-500">/mo</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Promotional Ads Pricing -->
+    <div class="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 overflow-hidden">
+      <div class="px-6 py-4 border-b border-stone-100 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50">
+        <h2 class="text-sm font-bold text-stone-900 dark:text-stone-100">Promotional Ads Pricing</h2>
+        <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Per-day pricing for promotional ad types</p>
+      </div>
+      <div class="p-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {% set subtype_colors = {
+            'PROMO': 'amber', 'FLASH_SALE': 'red', 'SUPER_SALE': 'orange',
+            'HOT_WEEK': 'rose', 'FESTIVAL': 'purple', 'SEASONAL_SALE': 'blue'
+          } %}
+          {% for stype, pdata in promo_pricing.items() %}
+          {% set color = subtype_colors.get(stype, 'stone') %}
+          <div class="p-4 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-stone-100 dark:border-stone-700">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-{{ color }}-100 dark:bg-{{ color }}-900/30 text-{{ color }}-700 dark:text-{{ color }}-400">
+                {{ stype }}
+              </span>
+              <span class="text-xs text-stone-500 dark:text-stone-400">{{ subtype_counts.get(stype, 0) }} ads created</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-stone-500">₦</span>
+              <input type="number" name="promo_price_{{ stype }}" value="{{ pdata.price_per_day }}"
+                class="w-24 px-3 py-2 text-sm border border-stone-200 dark:border-stone-700 rounded-xl bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:ring-2 focus:ring-amber-500/30 font-mono">
+              <span class="text-xs text-stone-500">/day</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- General Ads Settings -->
+    <div class="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 overflow-hidden">
+      <div class="px-6 py-4 border-b border-stone-100 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50">
+        <h2 class="text-sm font-bold text-stone-900 dark:text-stone-100">General Settings</h2>
+        <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Configure ad behavior and limits</p>
+      </div>
+      <div class="divide-y divide-stone-100 dark:divide-stone-700">
+        <!-- Auto-approve -->
+        <div class="px-6 py-4 flex items-center justify-between">
+          <div>
+            <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">Auto-Approve Ads</p>
+            <p class="text-xs text-stone-500 dark:text-stone-400">Automatically activate ads after payment</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" name="ads_auto_approve" class="sr-only peer"
+              {% if site_settings.get('ads_auto_approve') == 'true' %}checked{% endif %}>
+            <div class="w-11 h-6 bg-stone-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-amber-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+          </label>
+        </div>
+
+        <!-- Max Duration -->
+        <div class="px-6 py-4 flex items-center justify-between gap-4">
+          <div>
+            <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">Max Campaign Duration</p>
+            <p class="text-xs text-stone-500 dark:text-stone-400">Maximum days for a single ad campaign</p>
+          </div>
+          <input type="number" name="ads_max_duration_days" value="{{ site_settings.get('ads_max_duration_days', '90') }}"
+            class="w-24 px-3 py-2 text-sm border border-stone-200 dark:border-stone-700 rounded-xl bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:ring-2 focus:ring-amber-500/30 font-mono text-right">
+        </div>
+
+        <!-- Min Budget -->
+        <div class="px-6 py-4 flex items-center justify-between gap-4">
+          <div>
+            <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">Minimum Ad Budget</p>
+            <p class="text-xs text-stone-500 dark:text-stone-400">Minimum amount required to create an ad campaign</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-stone-500">₦</span>
+            <input type="number" name="ads_min_budget" value="{{ site_settings.get('ads_min_budget', '1000') }}"
+              class="w-28 px-3 py-2 text-sm border border-stone-200 dark:border-stone-700 rounded-xl bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:ring-2 focus:ring-amber-500/30 font-mono text-right">
+          </div>
+        </div>
+
+        <!-- Promo Toggles -->
+        <div class="px-6 py-4">
+          <p class="text-sm font-semibold text-stone-900 dark:text-stone-100 mb-3">Promotional Ad Types</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {% set toggles = [
+              ('promo_ads_enabled', 'Enable Promo Ads', 'Allow creation of general promo ads'),
+              ('promo_flash_sale_enabled', 'Flash Sales', 'Allow flash sale promotional ads'),
+              ('promo_hot_week_enabled', 'Hot Weeks', 'Allow hot week promotional ads'),
+              ('promo_festival_enabled', 'Festival Sales', 'Allow festival promotional ads'),
+            ] %}
+            {% for key, label, desc in toggles %}
+            <div class="flex items-center justify-between p-3 bg-stone-50 dark:bg-stone-800/50 rounded-xl">
+              <div>
+                <p class="text-xs font-semibold text-stone-900 dark:text-stone-100">{{ label }}</p>
+                <p class="text-[10px] text-stone-500 dark:text-stone-400">{{ desc }}</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="{{ key }}" class="sr-only peer"
+                  {% if site_settings.get(key, 'true') == 'true' %}checked{% endif %}>
+                <div class="w-9 h-5 bg-stone-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-amber-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-600"></div>
+              </label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save Button -->
+    <div class="flex justify-end">
+      <button type="button" onclick="saveAdsSettings()" id="save-ads-btn"
+        class="px-6 py-3 bg-gradient-to-r from-stone-800 to-stone-900 text-white text-sm font-bold rounded-xl hover:from-stone-900 hover:to-stone-950 transition-all shadow-md hover:shadow-lg inline-flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        Save Ads Settings
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+async function saveAdsSettings() {
+  const btn = document.getElementById('save-ads-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span> Saving...';
+
+  const data = {
+    ads_default_provider: document.querySelector('input[name="ads_default_provider"]:checked')?.value || 'internal',
+    ads_auto_approve: document.querySelector('input[name="ads_auto_approve"]')?.checked ? 'true' : 'false',
+    ads_max_duration_days: document.querySelector('input[name="ads_max_duration_days"]')?.value || '90',
+    ads_min_budget: document.querySelector('input[name="ads_min_budget"]')?.value || '1000',
+    promo_ads_enabled: document.querySelector('input[name="promo_ads_enabled"]')?.checked ? 'true' : 'false',
+    promo_flash_sale_enabled: document.querySelector('input[name="promo_flash_sale_enabled"]')?.checked ? 'true' : 'false',
+    promo_hot_week_enabled: document.querySelector('input[name="promo_hot_week_enabled"]')?.checked ? 'true' : 'false',
+    promo_festival_enabled: document.querySelector('input[name="promo_festival_enabled"]')?.checked ? 'true' : 'false',
+    promo_pricing: {},
+  };
+
+  // Collect campaign pricing
+  document.querySelectorAll('input[name^="pricing_"]').forEach(el => {
+    const subtype = el.name.replace('pricing_', '');
+    data.promo_pricing[subtype] = { price_per_day: parseInt(el.value) || 0 };
+  });
+
+  // Collect promo pricing
+  document.querySelectorAll('input[name^="promo_price_"]').forEach(el => {
+    const subtype = el.name.replace('promo_price_', '');
+    if (!data.promo_pricing[subtype]) data.promo_pricing[subtype] = {};
+    data.promo_pricing[subtype].price_per_day = parseInt(el.value) || 0;
+  });
+
+  try {
+    const res = await fetch('/api/admin/ads/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (result.success) {
+      showToast('Ads settings saved successfully!', 'success');
+    } else {
+      showToast(result.detail || 'Failed to save', 'error');
+    }
+  } catch {
+    showToast('Network error', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Save Ads Settings';
+  }
+}
+</script>
+{% endblock %}

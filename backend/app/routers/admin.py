@@ -800,6 +800,15 @@ def retailer_ads(request: Request, db: Session = Depends(get_db)):
         all_retailers = db.query(Retailer).order_by(Retailer.name).all()
 
     from app.routers.admin_api import AD_PRICING
+    from app.models import PromoAd
+
+    # Fetch promo ads for this retailer (or all if admin)
+    promo_query = db.query(PromoAd).order_by(PromoAd.created_at.desc())
+    if selected_retailer_id:
+        promo_query = promo_query.filter(
+            (PromoAd.retailer_id == selected_retailer_id) | (PromoAd.retailer_id == None)
+        )
+    promo_ads = promo_query.limit(20).all()
 
     return render_template("admin/retailers/ads.html", {
         "request": request,
@@ -810,6 +819,7 @@ def retailer_ads(request: Request, db: Session = Depends(get_db)):
         "all_retailers": all_retailers,
         "selected_retailer_id": selected_retailer_id,
         "ad_pricing": AD_PRICING,
+        "promo_ads": promo_ads,
         "utcnow": utcnow,
         "has_permission": has_permission,
     })
@@ -844,6 +854,47 @@ def ad_analytics_page(request: Request, db: Session = Depends(get_db)):
     return render_template("admin/ads/analytics.html", {
         "request": request,
         "admin": admin,
+        "has_permission": has_permission,
+    })
+
+
+# --- Ads Pricing & Provider Settings ---
+@router.get("/ads/settings", response_class=HTMLResponse)
+def ads_settings_page(request: Request, db: Session = Depends(get_db)):
+    admin = get_current_user_from_cookie(request, db)
+    if not admin or not has_permission(admin, "settings"):
+        return RedirectResponse(url="/admin/login", status_code=302)
+
+    from app.routers.admin_api import AD_PRICING, PROMO_PRICING, AD_PROVIDERS
+    from app.models import PromoAd
+
+    # Get existing settings
+    settings_keys = [
+        "ads_default_provider", "ads_auto_approve", "ads_max_duration_days",
+        "ads_min_budget", "promo_ads_enabled", "promo_flash_sale_enabled",
+        "promo_hot_week_enabled", "promo_festival_enabled",
+    ]
+    site_settings = {}
+    for key in settings_keys:
+        s = db.query(Settings).filter(Settings.key == key).first()
+        site_settings[key] = s.value if s else ""
+
+    # Get promo ad counts by subtype
+    from sqlalchemy import func
+    subtype_counts = dict(
+        db.query(PromoAd.ad_subtype, func.count(PromoAd.id))
+        .group_by(PromoAd.ad_subtype)
+        .all()
+    )
+
+    return render_template("admin/ads/settings.html", {
+        "request": request,
+        "admin": admin,
+        "ad_pricing": AD_PRICING,
+        "promo_pricing": PROMO_PRICING,
+        "ad_providers": AD_PROVIDERS,
+        "site_settings": site_settings,
+        "subtype_counts": subtype_counts,
         "has_permission": has_permission,
     })
 

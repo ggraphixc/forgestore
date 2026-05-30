@@ -287,7 +287,177 @@
     </div>
     {% endif %}
   </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- PROMOTIONAL ADS SECTION -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="mt-10 pt-8 border-t border-stone-200 dark:border-stone-700">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div>
+        <h2 class="text-xl font-bold text-stone-900 dark:text-stone-100 font-display">Promotional Ads</h2>
+        <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">Create flash sales, holiday deals, festival promos, and banner posts</p>
+      </div>
+      <button onclick="document.getElementById('promo-create-modal').classList.remove('hidden')"
+        class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-amber-500/25 hover:shadow-xl hover:from-amber-600 hover:to-orange-700 transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Create Promo Ad
+      </button>
+    </div>
+
+    <!-- Promo Type Quick Cards -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+      {% set promo_types = [
+        {'key': 'FLASH_SALE', 'label': 'Flash Sale', 'color': 'red', 'icon': 'M13 10V3L4 14h7v7l9-11h-7z'},
+        {'key': 'SUPER_SALE', 'label': 'Super Sale', 'color': 'orange', 'icon': 'M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z'},
+        {'key': 'HOT_WEEK', 'label': 'Hot Week', 'color': 'rose', 'icon': 'M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z'},
+        {'key': 'FESTIVAL', 'label': 'Festival', 'color': 'purple', 'icon': 'M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7'},
+        {'key': 'SEASONAL_SALE', 'label': 'Seasonal', 'color': 'blue', 'icon': 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'},
+        {'key': 'PROMO', 'label': 'General', 'color': 'amber', 'icon': 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z'},
+      ] %}
+      {% for pt in promo_types %}
+      <button onclick="openPromoModal('{{ pt.key }}')" class="group p-4 bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 hover:border-{{ pt.color }}-400 dark:hover:border-{{ pt.color }}-500 hover:shadow-md transition-all text-center">
+        <div class="w-10 h-10 mx-auto mb-2 rounded-xl bg-{{ pt.color }}-100 dark:bg-{{ pt.color }}-900/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+          <svg class="w-5 h-5 text-{{ pt.color }}-600 dark:text-{{ pt.color }}-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ pt.icon }}"/></svg>
+        </div>
+        <p class="text-xs font-semibold text-stone-900 dark:text-stone-100">{{ pt.label }}</p>
+      </button>
+      {% endfor %}
+    </div>
+
+    <!-- Existing Promo Ads Grid -->
+    {% if promo_ads is defined and promo_ads %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {% for ad in promo_ads %}
+      <div class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 overflow-hidden hover:shadow-md transition-shadow">
+        {% if ad.banner_url %}
+        <div class="aspect-video bg-stone-100 dark:bg-stone-800 overflow-hidden">
+          <img src="{{ ad.banner_url }}" alt="{{ ad.title }}" class="w-full h-full object-cover">
+        </div>
+        {% endif %}
+        <div class="p-4">
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <div>
+              <h4 class="text-sm font-bold text-stone-900 dark:text-stone-100">{{ ad.title }}</h4>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold
+                  {% if ad.ad_subtype == 'FLASH_SALE' %}bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400
+                  {% elif ad.ad_subtype == 'SUPER_SALE' %}bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400
+                  {% elif ad.ad_subtype == 'HOT_WEEK' %}bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400
+                  {% elif ad.ad_subtype == 'FESTIVAL' %}bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400
+                  {% elif ad.ad_subtype == 'SEASONAL_SALE' %}bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400
+                  {% else %}bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400{% endif %}">
+                  {{ ad.ad_subtype|replace('_', ' ') }}
+                </span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-400">
+                  {{ ad.banner_type }}
+                </span>
+              </div>
+            </div>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold
+              {% if ad.status == 'ACTIVE' %}bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400
+              {% elif ad.status == 'INACTIVE' %}bg-stone-100 text-stone-500 dark:bg-stone-800 dark:text-stone-400
+              {% else %}bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400{% endif %}">
+              {{ ad.status }}
+            </span>
+          </div>
+          <div class="flex items-center gap-4 text-[11px] text-stone-500 dark:text-stone-400">
+            <span>{{ ad.clicks }} clicks</span>
+            <span>{{ ad.impressions }} views</span>
+            {% if ad.start_date %}
+            <span>{{ ad.start_date.strftime('%b %d') }}{% if ad.end_date %} - {{ ad.end_date.strftime('%b %d') }}{% endif %}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-12 bg-stone-50 dark:bg-stone-800/30 rounded-2xl border border-dashed border-stone-300 dark:border-stone-600">
+      <svg class="w-12 h-12 mx-auto text-stone-300 dark:text-stone-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+      </svg>
+      <p class="text-sm text-stone-500 dark:text-stone-400 mb-3">No promotional ads yet</p>
+      <button onclick="document.getElementById('promo-create-modal').classList.remove('hidden')" class="text-sm font-semibold text-amber-600 dark:text-amber-400 hover:underline">Create your first promo ad</button>
+    </div>
+    {% endif %}
+  </div>
   {% endif %}
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- PROMO AD CREATE MODAL -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="promo-create-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-stone-800 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-stone-100 dark:border-stone-700">
+      <h3 class="text-lg font-bold text-stone-900 dark:text-stone-100" id="promo-modal-title">Create Promo Ad</h3>
+      <button onclick="closePromoModal()" class="p-1.5 text-stone-400 hover:text-stone-600 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="promo-ad-form" class="p-6 space-y-4" onsubmit="return savePromoAd(event)">
+      <input type="hidden" id="promo-ad-id" value="">
+
+      <div>
+        <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Title *</label>
+        <input type="text" id="promo-title" required class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 text-sm focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all" placeholder="e.g. Black Friday Flash Sale">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Event Type *</label>
+          <select id="promo-ad_subtype" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 text-sm focus:ring-2 focus:ring-amber-500/30 transition-all">
+            <option value="PROMO">General Promo</option>
+            <option value="FLASH_SALE">Flash Sale</option>
+            <option value="SUPER_SALE">Super Sale</option>
+            <option value="HOT_WEEK">Hot Week</option>
+            <option value="FESTIVAL">Festival Sale</option>
+            <option value="SEASONAL_SALE">Seasonal Sale</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Banner Format *</label>
+          <select id="promo-banner_type" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 text-sm focus:ring-2 focus:ring-amber-500/30 transition-all">
+            <option value="banner">Banner</option>
+            <option value="poster">Poster</option>
+            <option value="flyer">Flyer</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Banner Image URL *</label>
+        <input type="url" id="promo-banner_url" required class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 text-sm focus:ring-2 focus:ring-amber-500/30 transition-all" placeholder="https://example.com/banner.jpg">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Target URL</label>
+        <input type="url" id="promo-target_url" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 text-sm focus:ring-2 focus:ring-amber-500/30 transition-all" placeholder="https://example.com/promotion">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Start Date</label>
+          <input type="date" id="promo-start_date" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 text-sm focus:ring-2 focus:ring-amber-500/30 transition-all">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">End Date</label>
+          <input type="date" id="promo-end_date" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 text-sm focus:ring-2 focus:ring-amber-500/30 transition-all">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Notes</label>
+        <textarea id="promo-note" rows="2" class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 text-sm focus:ring-2 focus:ring-amber-500/30 transition-all" placeholder="Internal notes about this promotion"></textarea>
+      </div>
+
+      <div class="flex items-center gap-3 pt-2">
+        <button type="submit" id="promo-submit-btn" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-sm font-bold rounded-xl hover:from-amber-600 hover:to-orange-700 transition-all shadow-md">Save Promo Ad</button>
+        <button type="button" onclick="closePromoModal()" class="flex-1 px-4 py-2.5 text-sm font-semibold text-stone-600 dark:text-stone-400 bg-stone-100 dark:bg-stone-700 rounded-xl hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors">Cancel</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <script>
@@ -375,5 +545,73 @@ document.getElementById('ad-create-form').addEventListener('submit', async funct
     spinner.classList.add('hidden');
   }
 });
+
+// ── Promo Ad Functions ──────────────────────────────────────────────
+
+function openPromoModal(subtype) {
+  document.getElementById('promo-ad-id').value = '';
+  document.getElementById('promo-modal-title').textContent = 'Create Promo Ad';
+  document.getElementById('promo-title').value = '';
+  document.getElementById('promo-ad_subtype').value = subtype || 'PROMO';
+  document.getElementById('promo-banner_type').value = 'banner';
+  document.getElementById('promo-banner_url').value = '';
+  document.getElementById('promo-target_url').value = '';
+  document.getElementById('promo-start_date').value = '';
+  document.getElementById('promo-end_date').value = '';
+  document.getElementById('promo-note').value = '';
+  document.getElementById('promo-create-modal').classList.remove('hidden');
+}
+
+function closePromoModal() {
+  document.getElementById('promo-create-modal').classList.add('hidden');
+  document.getElementById('promo-ad-form').reset();
+  document.getElementById('promo-ad-id').value = '';
+}
+
+async function savePromoAd(e) {
+  e.preventDefault();
+  const id = document.getElementById('promo-ad-id').value;
+  const isEdit = !!id;
+  const data = {
+    title: document.getElementById('promo-title').value,
+    ad_subtype: document.getElementById('promo-ad_subtype').value,
+    banner_type: document.getElementById('promo-banner_type').value,
+    banner_url: document.getElementById('promo-banner_url').value,
+    target_url: document.getElementById('promo-target_url').value || null,
+    note: document.getElementById('promo-note').value || null,
+  };
+  const startDate = document.getElementById('promo-start_date').value;
+  const endDate = document.getElementById('promo-end_date').value;
+  if (startDate) data.start_date = startDate;
+  if (endDate) data.end_date = endDate;
+
+  const url = isEdit ? '/api/admin/promo-ads/' + id : '/api/admin/promo-ads';
+  const method = isEdit ? 'PUT' : 'POST';
+  const btn = document.getElementById('promo-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  try {
+    const res = await fetch(url, {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (result.success) {
+      showToast(isEdit ? 'Promo ad updated!' : 'Promo ad created!', 'success');
+      closePromoModal();
+      setTimeout(() => location.reload(), 800);
+    } else {
+      showToast(result.detail || 'Failed to save', 'error');
+    }
+  } catch {
+    showToast('Network error', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save Promo Ad';
+  }
+  return false;
+}
 </script>
 {% endblock %}

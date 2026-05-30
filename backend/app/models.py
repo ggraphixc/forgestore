@@ -1204,7 +1204,7 @@ class PromoAd(Base):
 
     id = Column(String, primary_key=True, default=_uuid)
     title = Column(String(255), nullable=False)
-    ad_subtype = Column(String(20), nullable=False)  # PROMO, FLASH_SALE, SUPER_SALE
+    ad_subtype = Column(String(30), nullable=False)  # PROMO, FLASH_SALE, SUPER_SALE, HOT_WEEK, FESTIVAL, SEASONAL_SALE
     banner_type = Column(String(20), default="banner")  # banner, poster, flyer
     banner_url = Column(String(500), nullable=False)
     target_url = Column(String(500), nullable=True)
@@ -1221,3 +1221,13 @@ class PromoAd(Base):
 
     creator: "AdminUser | None" = relationship("AdminUser")
     retailer: "Retailer | None" = relationship("Retailer")
+
+
+PROMO_AD_SUBTYPES = {
+    "PROMO": {"label": "General Promo", "icon": "tag", "color": "amber"},
+    "FLASH_SALE": {"label": "Flash Sale", "icon": "bolt", "color": "red"},
+    "SUPER_SALE": {"label": "Super Sale", "icon": "fire", "color": "orange"},
+    "HOT_WEEK": {"label": "Hot Week", "icon": "trending-up", "color": "rose"},
+    "FESTIVAL": {"label": "Festival Sale", "icon": "gift", "color": "purple"},
+    "SEASONAL_SALE": {"label": "Seasonal Sale", "icon": "calendar", "color": "blue"},
+}

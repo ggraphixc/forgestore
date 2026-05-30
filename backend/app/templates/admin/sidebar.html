@@ -157,6 +157,13 @@
             </a>
             {% endif %}
 
+            {% if has_permission(admin, 'settings') %}
+            <a href="/admin/ads/settings" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
+                <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+                <span>Ads Pricing</span>
+            </a>
+            {% endif %}
             <!-- Notifications & Admin Users (visible to all authenticated) -->
             <div class="pt-5 pb-1.5 px-3 flex items-center gap-2">
                 <div class="flex-1 h-px bg-stone-100 dark:bg-stone-800"></div>
