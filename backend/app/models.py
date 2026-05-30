@@ -1145,6 +1145,21 @@ class AdCampaign(Base):
     product: "Product | None" = relationship("Product", back_populates="ad_campaigns")
 
 
+class ProductChatMessage(Base):
+    __tablename__ = "product_chat_message"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    product_id = Column(String, ForeignKey("product.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(String, ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
+    author_name = Column(String(255), nullable=False)
+    content = Column(Text, nullable=False)
+    is_admin = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+
+    product: "Product" = relationship("Product", backref="chat_messages")
+    user: "User | None" = relationship("User")
+
+
 class OrderEarning(Base):
     __tablename__ = "order_earning"
 

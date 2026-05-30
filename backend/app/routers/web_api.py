@@ -704,6 +704,82 @@ def ai_search(
     }
 
 
+# --- PRODUCT CHAT ---
+
+@router.get("/products/{product_id}/chat")
+def get_product_chat(
+    product_id: str,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """Get chat messages for a product, newest last."""
+    from app.models import ProductChatMessage
+
+    messages = db.query(ProductChatMessage).filter(
+        ProductChatMessage.product_id == product_id
+    ).order_by(ProductChatMessage.created_at.asc()).limit(50).all()
+
+    return {
+        "messages": [
+            {
+                "id": m.id,
+                "author_name": m.author_name,
+                "content": m.content,
+                "is_admin": m.is_admin,
+                "created_at": m.created_at.isoformat() if m.created_at else None,
+            }
+            for m in messages
+        ],
+    }
+
+
+@router.post("/products/{product_id}/chat")
+def post_product_chat_message(
+    product_id: str,
+    data: dict,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """Post a chat message on a product. Requires customer auth."""
+    from app.models import ProductChatMessage, User
+
+    # Verify product exists
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    content = (data.get("content") or "").strip()
+    if not content:
+        raise HTTPException(status_code=400, detail="Message content is required")
+    if len(content) > 1000:
+        raise HTTPException(status_code=400, detail="Message too long (max 1000 chars)")
+
+    customer = get_current_customer_from_cookie(request, db)
+    author_name = data.get("author_name", "").strip() or (customer.name if customer else "Anonymous")
+
+    msg = ProductChatMessage(
+        product_id=product_id,
+        user_id=customer.id if customer else None,
+        author_name=author_name,
+        content=content,
+        is_admin=False,
+    )
+    db.add(msg)
+    db.commit()
+    db.refresh(msg)
+
+    return {
+        "success": True,
+        "message": {
+            "id": msg.id,
+            "author_name": msg.author_name,
+            "content": msg.content,
+            "is_admin": msg.is_admin,
+            "created_at": msg.created_at.isoformat() if msg.created_at else None,
+        },
+    }
+
+
 @router.post("/checkout")
 def checkout(
     request: Request,
