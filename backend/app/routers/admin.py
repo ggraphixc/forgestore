@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Form, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, Request, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
@@ -18,7 +18,7 @@ from app.models import (
 )
 from app.schemas import (
     ProductCreate, ProductUpdate, CategoryCreate, CategoryUpdate,
-    RetailerCreate, RetailerUpdate, DashboardStats
+    RetailerCreate, RetailerUpdate,
 )
 from app.auth import hash_password, verify_password, get_current_user_from_cookie, has_permission, AdminRole, log_admin_action
 from app.config import get_settings
