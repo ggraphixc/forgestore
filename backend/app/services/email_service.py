@@ -424,6 +424,36 @@ def send_newsletter_broadcast(
     return send_email(to_email, subject, full_html)
 
 
+def send_payout_email(to_email: str, retailer_name: str, total_amount: float, earning_count: int) -> bool:
+    """Send a payout notification email to a retailer."""
+    subject = f"Payout Processed — {settings.site_name or 'ForgeStore'}"
+    formatted_amount = f"\u20a6{total_amount:,.2f}"
+    html = f"""
+    <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px; background: #fafaf9; border-radius: 16px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <div style="display: inline-block; background: #1c1917; color: white; font-weight: 800; font-size: 20px; padding: 10px 18px; border-radius: 12px;">
+                {settings.site_name or 'ForgeStore'}
+            </div>
+        </div>
+        <h1 style="font-size: 22px; font-weight: 700; color: #1c1917; margin-bottom: 8px; text-align: center;">Payout Processed! \u2705</h1>
+        <p style="font-size: 14px; color: #57534e; text-align: center;">Hi <strong>{retailer_name}</strong>,</p>
+        <p style="font-size: 14px; color: #57534e; line-height: 1.6; text-align: center; margin-bottom: 20px;">
+            Your payout has been processed successfully.
+        </p>
+        <div style="background: #f5f5f4; border-radius: 12px; padding: 20px; margin-bottom: 24px; text-align: center;">
+            <p style="font-size: 13px; color: #78716c; margin: 0 0 8px 0;">Total Amount Paid</p>
+            <p style="font-size: 28px; font-weight: 800; color: #1c1917; margin: 0;">{formatted_amount}</p>
+            <p style="font-size: 12px; color: #a8a29e; margin: 8px 0 0 0;">{earning_count} earning(s) included in this payout</p>
+        </div>
+        <p style="font-size: 12px; color: #a8a29e; text-align: center; margin: 0;">
+            Thank you for selling on {settings.site_name or 'ForgeStore'}!<br>
+            <span style="color: #78716c;">Questions about this payout? Contact support.</span>
+        </p>
+    </div>
+    """
+    return send_email(to_email, subject, html)
+
+
 def send_order_status_email(to_email: str, order_number: str, customer_name: str, status: str) -> bool:
     """Send an email when order status changes."""
     status_emoji = {

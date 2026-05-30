@@ -2444,15 +2444,27 @@ def request_earnings_payout(
 
     db.commit()
 
+    total_net = sum(e.net_amount for e in earnings)
+
     log_admin_action(
         db, admin, "request_payout", "order_earning", "",
-        f"Requested payout for {len(earnings)} order earnings (total net: ₦{sum(e.net_amount for e in earnings):.2f})"
+        f"Requested payout for {len(earnings)} order earnings (total net: ₦{total_net:.2f})"
     )
+
+    # Send payout notification email
+    if admin.email:
+        retailer = db.query(Retailer).filter(Retailer.id == retailer_id).first()
+        retailer_name = retailer.name if retailer else admin.name or "Retailer"
+        try:
+            from app.services.email_service import send_payout_email
+            send_payout_email(admin.email, retailer_name, total_net, len(earnings))
+        except Exception:
+            pass  # Email failure should not block payout
 
     return {
         "success": True,
         "marked": len(earnings),
-        "total_net": sum(e.net_amount for e in earnings),
+        "total_net": total_net,
         "message": f"Marked {len(earnings)} earning(s) as PAID",
     }
 
@@ -2510,6 +2522,29 @@ def batch_mark_earnings_paid(
         db, admin, "batch_mark_paid", "order_earning", "",
         f"Batch-marked {len(earnings)} order earnings as PAID"
     )
+
+    # Send payout notification emails to affected retailers (grouped by retailer)
+    from app.services.email_service import send_payout_email
+    retailer_groups: dict = {}
+    for e in earnings:
+        if e.retailer_id not in retailer_groups:
+            retailer_groups[e.retailer_id] = []
+        retailer_groups[e.retailer_id].append(e)
+
+    for r_id, r_earnings in retailer_groups.items():
+        r_total_net = sum(e.net_amount for e in r_earnings)
+        # Find the admin user for this retailer
+        r_admin = db.query(AdminUser).filter(
+            AdminUser.vendor_id == r_id,
+            AdminUser.role == AdminRole.RETAILER
+        ).first()
+        if r_admin and r_admin.email:
+            retailer = db.query(Retailer).filter(Retailer.id == r_id).first()
+            retailer_name = retailer.name if retailer else r_admin.name or "Retailer"
+            try:
+                send_payout_email(r_admin.email, retailer_name, r_total_net, len(r_earnings))
+            except Exception:
+                pass
 
     return {
         "success": True,
