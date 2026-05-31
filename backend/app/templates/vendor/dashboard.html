@@ -1,0 +1,102 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}Vendor Dashboard &mdash; ForgeStore{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-stone-900 dark:text-stone-100">Vendor Dashboard</h1>
+            <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">Welcome back, {{ admin.name or 'Vendor' }}</p>
+        </div>
+        {% if retailer %}
+        <span class="px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-bold rounded-full">{{ retailer.name }}</span>
+        {% endif %}
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-5">
+            <p class="text-xs font-bold uppercase tracking-wider text-stone-400 mb-1">Products</p>
+            <p class="text-3xl font-black text-stone-900 dark:text-stone-100">{{ total_products }}</p>
+        </div>
+        <div class="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-5">
+            <p class="text-xs font-bold uppercase tracking-wider text-stone-400 mb-1">Orders</p>
+            <p class="text-3xl font-black text-stone-900 dark:text-stone-100">{{ total_orders }}</p>
+        </div>
+        <div class="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-5">
+            <p class="text-xs font-bold uppercase tracking-wider text-stone-400 mb-1">Revenue</p>
+            <p class="text-3xl font-black text-amber-600">₦{{ "{:,.2f}".format(total_revenue) }}</p>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <a href="/vendor/products" class="flex items-center gap-3 p-4 bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 hover:border-amber-300 dark:hover:border-amber-600 hover:shadow-md transition-all group">
+            <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </div>
+            <div>
+                <span class="text-sm font-bold text-stone-900 dark:text-stone-100 block">Products</span>
+                <span class="text-xs text-stone-500">Manage inventory</span>
+            </div>
+        </a>
+        <a href="/vendor/orders" class="flex items-center gap-3 p-4 bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 hover:border-amber-300 dark:hover:border-amber-600 hover:shadow-md transition-all group">
+            <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            </div>
+            <div>
+                <span class="text-sm font-bold text-stone-900 dark:text-stone-100 block">Orders</span>
+                <span class="text-xs text-stone-500">View & fulfill</span>
+            </div>
+        </a>
+        <a href="/vendor/earnings" class="flex items-center gap-3 p-4 bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 hover:border-amber-300 dark:hover:border-amber-600 hover:shadow-md transition-all group">
+            <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
+                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+            </div>
+            <div>
+                <span class="text-sm font-bold text-stone-900 dark:text-stone-100 block">Earnings</span>
+                <span class="text-xs text-stone-500">Track payouts</span>
+            </div>
+        </a>
+        <a href="/vendor/analytics" class="flex items-center gap-3 p-4 bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 hover:border-amber-300 dark:hover:border-amber-600 hover:shadow-md transition-all group">
+            <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            </div>
+            <div>
+                <span class="text-sm font-bold text-stone-900 dark:text-stone-100 block">Analytics</span>
+                <span class="text-xs text-stone-500">Sales insights</span>
+            </div>
+        </a>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 overflow-hidden">
+        <div class="px-5 py-4 border-b border-stone-100 dark:border-stone-700">
+            <h2 class="text-sm font-bold text-stone-900 dark:text-stone-100">Recent Orders</h2>
+        </div>
+        {% if recent_orders %}
+        <div class="divide-y divide-stone-100 dark:divide-stone-700">
+            {% for order in recent_orders %}
+            <div class="px-5 py-3 flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">#{{ order.order_number }}</p>
+                    <p class="text-xs text-stone-500">{{ order.created_at.strftime('%b %d, %Y') if order.created_at else '' }}</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm font-bold text-stone-900 dark:text-stone-100">₦{{ "{:,.2f}".format(order.total_amount) }}</p>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full
+                        {% if order.status.value == 'DELIVERED' %}bg-emerald-100 text-emerald-700
+                        {% elif order.status.value == 'SHIPPED' %}bg-blue-100 text-blue-700
+                        {% elif order.status.value == 'PROCESSING' %}bg-amber-100 text-amber-700
+                        {% else %}bg-stone-100 text-stone-600{% endif %}">
+                        {{ order.status.value }}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="px-5 py-8 text-center text-sm text-stone-400">No orders yet.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

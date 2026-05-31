@@ -1,0 +1,22 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}Analytics &mdash; ForgeStore{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <h1 class="text-2xl font-bold text-stone-900 dark:text-stone-100">Analytics</h1>
+    {% if analytics %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {% for a in analytics[:4] %}
+        <div class="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-5">
+            <p class="text-xs font-bold uppercase tracking-wider text-stone-400 mb-1">{{ a.period }}</p>
+            <p class="text-2xl font-black text-stone-900 dark:text-stone-100">₦{{ "{:,.2f}".format(a.total_revenue) }}</p>
+            <p class="text-xs text-stone-500 mt-1">{{ a.total_orders }} orders</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-12 text-center text-sm text-stone-400">
+        No analytics data available yet. Analytics are generated as sales come in.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

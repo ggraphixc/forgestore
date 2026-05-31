@@ -979,3 +979,145 @@ Run: `python seed_settings.py`
 8. **Payment providers use abstraction layer** — `payment_provider.py` defines a common interface, both Paystack and Flutterwave implement it, and the factory picks the right one from env config
 9. **Flutterwave webhook uses `verif-hash` static comparison** — unlike Paystack's HMAC-SHA512, Flutterwave sends a pre-configured hash token that must match `flutterwave_encryption_key`
 10. **Abandoned carts** cleaned up on startup (items older than 30 days)
+11. **Email engine is fully async** — `app.core.email.send_platform_email()` uses `aiosmtplib`, resolves SMTP from DB per-send, console fallback when unconfigured
+12. **WebSocket chat is JWT-authenticated** — `ws/chat/{token}` validates token on handshake, persists offline messages
+13. **Webhook idempotency** — `WebhookPayloadLog` prevents duplicate processing of payment events
+14. **Vendor wallet isolation** — `VendorWallet` model isolates per-vendor balances; `locked_escrow_balance` for pending payouts
+15. **Daily analytics materialization** — Pre-computed `DailyMarketplaceSnapshot` and `DailyVendorSnapshot` tables power dashboards without real-time aggregation
+
+---
+
+## 17. Multi-Vendor Architecture (Added 2026-05-31)
+
+### Tri-Portal Isolation
+
+| Portal | URL Prefix | Role | Template Dir |
+|--------|-----------|------|-------------|
+| **Admin** | `/admin/*` | DIR_ADMIN, MANAGEMENT, TECH_ADMIN | `templates/admin/` |
+| **Vendor** | `/vendor/*` | RETAILER | `templates/vendor/` |
+| **Logistics** | `/logistics/*` | LOGISTICS | `templates/logistics/` |
+
+**Key Files:**
+- `app/routers/vendor_portal.py` — Isolated vendor portal (dashboard, products, orders, earnings, analytics, payout requests, bulk import, notifications)
+- `app/routers/logistics_portal.py` — Isolated logistics portal (dashboard, shipments, drivers)
+- `app/templates/vendor/` — 5 templates (dashboard, products, orders, earnings, analytics)
+- `app/templates/logistics/` — 3 templates (dashboard, shipments, drivers)
+- `app/templates/web/apply-vendor.html` — Public vendor application page
+
+### Multi-Vendor Cart Splitting
+
+When checkout cart contains items from multiple vendors:
+1. Parent `Order` created with total amount
+2. `VendorFulfillment` rows created per-vendor with isolated subtotals, shipping, and items
+3. Per-vendor shipping fee computed from `shipping_fee_per_vendor` SystemSetting
+4. Auto-dispatch triggers independently per fulfillment
+
+### Vendor Settlement & Commission Ledger
+
+- `VendorSettlement` — Immutable audit log per order: gross_amount, platform_commission_fee, net_vendor_payout
+- Commission rate from `market_commission_percentage` SystemSetting (default 10%)
+- Vendor wallet credited on payment webhook success
+- `VendorWallet.locked_escrow_balance` for pending payouts
+
+### Three-Tier Affiliate Engine
+
+| Tier | Mechanism | Model |
+|------|-----------|-------|
+| Vendor-to-Vendor | `Retailer.invited_by_retailer_id` FK | Referring vendor gets percentage cut |
+| Vendor-to-Customer | `User.attribute_points` | Points credited on signup via referral |
+| Customer-to-Product | `ProductAffiliateToken` | Custom product affiliate links |
+
+### Public Vendor Funnel
+
+- `POST /api/vendor/apply` — Guest application (no auth required)
+- `POST /api/admin/vendor/approve/{id}` — DIR_ADMIN/MANAGEMENT approval
+- Creates Retailer + AdminUser(RETAILER) + VendorWallet on approval
+
+### Automated Logistics Dispatch
+
+- `auto_dispatch_shipment()` in `wallet_service.py` — triggers on PROCESSING status
+- Finds available `DeliveryAgent` or LOGISTICS admin
+- Creates `Shipment` with origin (vendor bio/address) and destination (order shipping_address)
+
+### Dispute & Escrow Pipeline
+
+- `OrderDispute` model with reason categories (DAMAGED_ITEM, NOT_RECEIVED, etc.)
+- `POST /api/disputes/create` — Customer files dispute, holds escrow
+- `POST /api/admin/disputes/{id}/reject` — Releases hold, credits vendor
+- `POST /api/admin/disputes/{id}/approve-refund` — Triggers gateway reverse transaction
+
+### Low-Stock Alerts
+
+- `VendorNotification` model with severity levels (INFO, WARNING, CRITICAL)
+- Auto-created when inventory drops below `low_stock_limit` SystemSetting
+- `GET /api/vendor/notifications` — Vendor notification feed
+
+### Bulk CSV Import
+
+- `POST /api/vendor/products/bulk-import` — Accepts CSV UploadFile
+- Validates all rows against vendor_id, returns `{created, errors, error_details}`
+
+### WebSocket Chat
+
+- `WS /ws/chat/{token}` — JWT-authenticated real-time messaging
+- `ChatConnectionManager` tracks online users
+- Offline messages persisted to `ChatMessage` table, delivered on reconnect
+- `GET /api/chat/messages` — Historical message feed
+- `POST /api/chat/send` — REST fallback
+
+### Redis Cache Layer
+
+- `app/core/cache.py` — Async cache-aside pattern for product listings
+- `cache_get()`, `cache_set()`, `cache_delete()`, `cache_delete_pattern()`
+- `invalidate_product_cache()` — Auto-purge on vendor mutations
+- TTL: 3600s default
+
+### Daily Analytics Materialization
+
+- `DailyMarketplaceSnapshot` — Revenue, commissions, vendors, disputes per day
+- `DailyVendorSnapshot` — Per-vendor daily metrics
+- `python -m app.scripts.compile_daily_analytics` — Computes prior day snapshots
+
+### Structured JSON Logging
+
+- `app/core/logger.py` — JSON formatter, rotating file, request middleware
+- Every log entry: timestamp, level, module, request_id, user_id, route, duration_ms
+- ASGI middleware adds request_id and timing to all HTTP requests
+
+### SystemSettings (New Keys)
+
+| Key | Category | Default | Description |
+|-----|----------|---------|-------------|
+| `vendor_to_vendor_percentage_cut` | global | 2.5 | Vendor referral commission % |
+| `vendor_to_customer_points_per_signup` | global | 10 | Points per referral signup |
+| `customer_product_affiliate_commission_rate` | global | 5.0 | Customer product affiliate % |
+| `logistics_auto_dispatch_enabled` | logistics | true | Auto-assign shipments |
+| `vendor_auto_approval_policy` | global | false | Auto-approve vendors |
+| `vendor_minimum_rating` | global | 3.0 | Min rating before suspension |
+| `shipping_fee_per_vendor` | logistics | 1500 | Flat fee per vendor in cart |
+| `points_to_currency_ratio` | global | 100 | Points per currency unit |
+| `market_commission_percentage` | global | 10.0 | Platform commission % |
+| `low_stock_limit` | logistics | 5 | Low-stock alert threshold |
+| `mail_console_fallback` | developer | true | Console dump instead of SMTP |
+
+### Migration 007
+
+- Adds `retailer.invited_by_retailer_id`, `user.attribute_points`, `user.referred_by_retailer_id`, `vendor_wallet.locked_escrow_balance`
+- Creates tables: `vendor_fulfillment`, `payout_request`, `point_redemption`, `vendor_settlement`, `webhook_payload_log`, `vendor_notification`, `chat_message`, `order_dispute`, `daily_marketplace_snapshot`, `daily_vendor_snapshot`
+- PostgreSQL-compatible (quotes reserved word `user`)
+
+### Security Tests
+
+`backend/tests/test_multivendor_security.py` — 27 tests:
+- RETAILER blocked from admin settings/admin_users/customers
+- LOGISTICS blocked from vendor portal/product mutations
+- Cross-tenant data isolation (Vendor A cannot edit Vendor B products)
+- Wallet isolation verified
+- Unauthenticated access blocked
+- DIR_ADMIN full access verified
+
+### Staging Seeder
+
+`python -m app.scripts.seed_staging_marketplace`:
+- 1 DIR_ADMIN, 3 vendors with wallets, 10 products across 4 categories
+- All 63+ SystemSettings seeded

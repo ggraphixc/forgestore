@@ -1,0 +1,11 @@
+{% extends "email/base.html" %}
+{% block body %}
+<p style="font-size:14px;color:#57534e;text-align:center;margin:0 0 20px;">Hi <strong>{{ customer_name }}</strong>,</p>
+<p style="font-size:14px;color:#57534e;line-height:1.6;text-align:center;margin:0 0 20px;">
+  Your order <strong>{{ order_number }}</strong> has been placed successfully.
+  We'll notify you when each vendor begins fulfillment.
+</p>
+{% if vendor_sections %}
+<p style="font-size:12px;color:#78716c;text-align:center;margin:0 0 4px;">This order includes items from {{ vendor_sections|length }} vendor(s):</p>
+{% endif %}
+{% endblock %}

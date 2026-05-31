@@ -64,24 +64,72 @@
         </div>
         <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto scrollbar-thin">
             {% if has_permission(admin, 'dashboard') %}
+            {% if admin and (admin.role.value == 'RETAILER' or admin.role == 'RETAILER') %}
+            <a href="/vendor/dashboard" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
+                <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 001 1h3m-6 0h6"/></svg>
+                <span>Vendor Dashboard</span>
+            </a>
+            {% elif admin and (admin.role.value == 'LOGISTICS' or admin.role == 'LOGISTICS') %}
+            <a href="/logistics/dashboard" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
+                <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 001 1h3m-6 0h6"/></svg>
+                <span>Logistics Dashboard</span>
+            </a>
+            {% else %}
             <a href="/admin/dashboard" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
                 <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
-                <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 001 1h3m1-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 001 1h3m-6 0h6"/></svg>
                 <span>Dashboard</span>
             </a>
             {% endif %}
+            {% endif %}
 
             {# RETAILER: My Products / Inventory Control #}
-            {% if admin and admin.role == 'RETAILER' %}
+            {% if admin and (admin.role == 'RETAILER' or admin.role.value == 'RETAILER') %}
             <div class="pt-5 pb-1.5 px-3 flex items-center gap-2">
                 <div class="flex-1 h-px bg-stone-100 dark:bg-stone-800"></div>
-                <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Inventory</span>
+                <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Vendor Portal</span>
                 <div class="flex-1 h-px bg-stone-100 dark:bg-stone-800"></div>
             </div>
-            <a href="/admin/catalog" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
+            <a href="/vendor/products" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
                 <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
                 <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                 <span>My Products</span>
+            </a>
+            <a href="/vendor/orders" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
+                <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <span>Orders</span>
+            </a>
+            <a href="/vendor/earnings" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
+                <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+                <span>Earnings</span>
+            </a>
+            <a href="/vendor/analytics" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
+                <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                <span>Analytics</span>
+            </a>
+            {% endif %}
+
+            {# LOGISTICS: Dedicated logistics portal #}
+            {% if admin and (admin.role == 'LOGISTICS' or admin.role.value == 'LOGISTICS') %}
+            <div class="pt-5 pb-1.5 px-3 flex items-center gap-2">
+                <div class="flex-1 h-px bg-stone-100 dark:bg-stone-800"></div>
+                <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Logistics Portal</span>
+                <div class="flex-1 h-px bg-stone-100 dark:bg-stone-800"></div>
+            </div>
+            <a href="/logistics/shipments" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
+                <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                <span>Shipments</span>
+            </a>
+            <a href="/logistics/drivers" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 rounded-xl hover:bg-amber-50 hover:text-amber-800 transition-all duration-150 group relative">
+                <span class="sidebar-active-dot w-1.5 h-1.5 rounded-full bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity absolute left-0"></span>
+                <svg class="w-5 h-5 text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                <span>Drivers</span>
             </a>
             {% endif %}
 

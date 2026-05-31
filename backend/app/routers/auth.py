@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from app.utils import utcnow
 
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, BackgroundTasks
 from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
 from slowapi import Limiter
@@ -69,7 +69,7 @@ def login(request: Request, data: LoginRequest, response: Response, db: Session 
 
 @router.post("/signup")
 @limiter.limit("5/minute")
-def signup(request: Request, data: LoginRequest, response: Response, db: Session = Depends(get_db)):
+def signup(request: Request, data: LoginRequest, response: Response, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     existing = db.query(User).filter(User.email == data.email).first()
     if existing:
         raise HTTPException(
@@ -86,10 +86,10 @@ def signup(request: Request, data: LoginRequest, response: Response, db: Session
     db.commit()
     db.refresh(customer)
 
-    # Send welcome email
+    # Send welcome email via BackgroundTasks (non-blocking)
     try:
         from app.services.email_service import send_welcome_email
-        send_welcome_email(customer.email, customer.name or "")
+        background_tasks.add_task(send_welcome_email, customer.email, customer.name or "")
     except Exception:
         pass
 
@@ -155,8 +155,8 @@ def get_me(user: User = Depends(get_current_user)):
 # ===== Password Reset =====
 
 @router.post("/forgot-password")
-def forgot_password(data: dict, db: Session = Depends(get_db)):
-    """Send a password reset link to the user's email."""
+def forgot_password(data: dict, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    """Send a password reset link to the user's email (non-blocking via BackgroundTasks)."""
     from app.models import PasswordResetToken
     from app.services.email_service import send_password_reset_email
     import secrets
@@ -176,11 +176,11 @@ def forgot_password(data: dict, db: Session = Depends(get_db)):
     db.add(reset_token)
     db.commit()
 
-    # Send email (falls back to console if SMTP not configured)
+    # Send email via BackgroundTasks (non-blocking)
     from app.config import get_settings
     base_url = get_settings().site_base_url.rstrip("/")
     reset_link = f"{base_url}/shop/reset-password/{token}"
-    send_password_reset_email(user.email, reset_link)
+    background_tasks.add_task(send_password_reset_email, user.email, reset_link)
 
     return {"message": "If that email exists, a reset link has been sent."}
 

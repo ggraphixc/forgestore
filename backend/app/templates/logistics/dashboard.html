@@ -1,0 +1,63 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}Logistics Dashboard &mdash; ForgeStore{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <div>
+        <h1 class="text-2xl font-bold text-stone-900 dark:text-stone-100">Logistics Dashboard</h1>
+        <p class="text-sm text-stone-500 mt-1">Shipment management and delivery operations</p>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4 text-center">
+            <p class="text-2xl font-black text-stone-900 dark:text-stone-100">{{ total_shipments }}</p>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-stone-400 mt-1">Total</p>
+        </div>
+        <div class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4 text-center">
+            <p class="text-2xl font-black text-amber-600">{{ pending_shipments }}</p>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-stone-400 mt-1">Pending</p>
+        </div>
+        <div class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4 text-center">
+            <p class="text-2xl font-black text-blue-600">{{ in_transit }}</p>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-stone-400 mt-1">In Transit</p>
+        </div>
+        <div class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4 text-center">
+            <p class="text-2xl font-black text-emerald-600">{{ delivered }}</p>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-stone-400 mt-1">Delivered</p>
+        </div>
+        <div class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4 text-center">
+            <p class="text-2xl font-black text-stone-900 dark:text-stone-100">{{ total_agents }}</p>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-stone-400 mt-1">Drivers</p>
+        </div>
+        <div class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4 text-center">
+            <p class="text-2xl font-black text-emerald-600">{{ available_agents }}</p>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-stone-400 mt-1">Available</p>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 overflow-hidden">
+        <div class="px-5 py-4 border-b border-stone-100 dark:border-stone-700 flex items-center justify-between">
+            <h2 class="text-sm font-bold text-stone-900 dark:text-stone-100">Recent Shipments</h2>
+            <a href="/logistics/shipments" class="text-xs font-bold text-amber-600 hover:underline">View All</a>
+        </div>
+        {% if recent_shipments %}
+        <div class="divide-y divide-stone-100 dark:divide-stone-700">
+            {% for s in recent_shipments %}
+            <div class="px-5 py-3 flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">{{ s.tracking_number }}</p>
+                    <p class="text-xs text-stone-500">{{ s.origin or 'N/A' }} → {{ s.destination or 'N/A' }}</p>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full
+                    {% if s.status == 'DELIVERED' %}bg-emerald-100 text-emerald-700
+                    {% elif s.status == 'IN_TRANSIT' %}bg-blue-100 text-blue-700
+                    {% elif s.status == 'PENDING' %}bg-amber-100 text-amber-700
+                    {% else %}bg-stone-100 text-stone-600{% endif %}">{{ s.status }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="px-5 py-8 text-center text-sm text-stone-400">No shipments yet.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

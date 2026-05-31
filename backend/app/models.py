@@ -58,6 +58,9 @@ class Retailer(Base):
     flutterwave_subaccount_id = Column(String(100), nullable=True)
     commission_rate = Column(Float, nullable=False, default=10.0)
 
+    # Affiliate: vendor-to-vendor referral tracking
+    invited_by_retailer_id = Column(String, ForeignKey("retailer.id", ondelete="SET NULL"), nullable=True)
+
     products: list["Product"] = relationship("Product", back_populates="retailer")
     ad_campaigns: list["AdCampaign"] = relationship("AdCampaign", back_populates="retailer")
 
@@ -116,6 +119,10 @@ class User(Base):
     password = Column(String(255), nullable=True)
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+    # Affiliate: vendor-to-customer attribute points
+    attribute_points = Column(Integer, nullable=False, default=0)
+    referred_by_retailer_id = Column(String, ForeignKey("retailer.id", ondelete="SET NULL"), nullable=True)
 
     orders: list["Order"] = relationship("Order", back_populates="customer")
     reviews: list["Review"] = relationship("Review", back_populates="user")
@@ -1231,3 +1238,357 @@ PROMO_AD_SUBTYPES = {
     "FESTIVAL": {"label": "Festival Sale", "icon": "gift", "color": "purple"},
     "SEASONAL_SALE": {"label": "Seasonal Sale", "icon": "calendar", "color": "blue"},
 }
+
+
+# ==============================================================================
+# SYSTEM 12: THREE-TIER AFFILIATE ENGINE
+# ==============================================================================
+
+
+class VendorWallet(Base):
+    """Isolated vendor wallet for multi-vendor payment segregation."""
+    __tablename__ = "vendor_wallet"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    retailer_id = Column(String, ForeignKey("retailer.id", ondelete="CASCADE"), nullable=False, unique=True)
+    balance = Column(Float, nullable=False, default=0.0)
+    pending_balance = Column(Float, nullable=False, default=0.0)
+    locked_escrow_balance = Column(Float, nullable=False, default=0.0)
+    currency = Column(String(10), nullable=False, default="NGN")
+    status = Column(String(20), nullable=False, default="ACTIVE")
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+    retailer: "Retailer" = relationship("Retailer")
+    transactions: list["VendorWalletTransaction"] = relationship("VendorWalletTransaction", back_populates="wallet", cascade="all, delete-orphan")
+
+
+class VendorWalletTransaction(Base):
+    __tablename__ = "vendor_wallet_transaction"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    wallet_id = Column(String, ForeignKey("vendor_wallet.id", ondelete="CASCADE"), nullable=False)
+    transaction_type = Column(String(30), nullable=False)  # sale_earning, affiliate_commission, withdrawal, fee, refund
+    amount = Column(Float, nullable=False)
+    balance_before = Column(Float, nullable=False)
+    balance_after = Column(Float, nullable=False)
+    order_id = Column(String, ForeignKey("order.id", ondelete="SET NULL"), nullable=True)
+    reference = Column(String(255), nullable=True)
+    description = Column(Text, nullable=True)
+    status = Column(String(20), nullable=False, default="COMPLETED")
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+
+    wallet: "VendorWallet" = relationship("VendorWallet", back_populates="transactions")
+
+
+class ProductAffiliateToken(Base):
+    """Customer-to-Product affiliate tokens for sharing product links."""
+    __tablename__ = "product_affiliate_token"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    user_id = Column(String, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    product_id = Column(String, ForeignKey("product.id", ondelete="CASCADE"), nullable=False)
+    token = Column(String(50), nullable=False, unique=True, index=True)
+    commission_rate = Column(Float, nullable=False, default=5.0)
+    total_clicks = Column(Integer, nullable=False, default=0)
+    total_conversions = Column(Integer, nullable=False, default=0)
+    total_earned = Column(Float, nullable=False, default=0.0)
+    status = Column(String(20), nullable=False, default="ACTIVE")
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+
+    user: "User" = relationship("User")
+    product: "Product" = relationship("Product")
+
+
+class AffiliateApplication(Base):
+    """Tracks affiliate onboarding applications from customers."""
+    __tablename__ = "affiliate_application"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    user_id = Column(String, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    full_name = Column(String(255), nullable=True)
+    email = Column(String(255), nullable=True)
+    phone = Column(String(50), nullable=True)
+    social_media = Column(JSON, nullable=True)
+    marketing_plan = Column(Text, nullable=True)
+    status = Column(String(20), nullable=False, default="PENDING")  # PENDING, APPROVED, REJECTED
+    reviewed_by = Column(String, ForeignKey("admin_user.id", ondelete="SET NULL"), nullable=True)
+    reviewed_at = Column(DateTime, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+    user: "User" = relationship("User")
+    reviewer: "AdminUser | None" = relationship("AdminUser")
+
+
+class VendorApplication(Base):
+    """Public vendor registration applications."""
+    __tablename__ = "vendor_application"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    full_name = Column(String(255), nullable=True)
+    email = Column(String(255), nullable=False)
+    phone = Column(String(50), nullable=True)
+    business_name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    account_number = Column(String(50), nullable=True)
+    bank_code = Column(String(20), nullable=True)
+    bank_name = Column(String(255), nullable=True)
+    catalog_category = Column(String(255), nullable=True)
+    status = Column(String(20), nullable=False, default="PENDING")  # PENDING, APPROVED, REJECTED
+    reviewed_by = Column(String, ForeignKey("admin_user.id", ondelete="SET NULL"), nullable=True)
+    reviewed_at = Column(DateTime, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+    reviewer: "AdminUser | None" = relationship("AdminUser")
+
+
+# ==============================================================================
+# SYSTEM 13: MULTI-VENDOR CART SPLITTING & FULFILLMENT
+# ==============================================================================
+
+
+class VendorFulfillment(Base):
+    """Sub-fulfillment row partitioned by vendor_id within a parent Order."""
+    __tablename__ = "vendor_fulfillment"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    order_id = Column(String, ForeignKey("order.id", ondelete="CASCADE"), nullable=False)
+    retailer_id = Column(String, ForeignKey("retailer.id", ondelete="CASCADE"), nullable=False)
+    status = Column(String(30), nullable=False, default="PENDING")  # PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED
+    subtotal = Column(Float, nullable=False, default=0.0)
+    shipping_fee = Column(Float, nullable=False, default=0.0)
+    tax_amount = Column(Float, nullable=False, default=0.0)
+    total_amount = Column(Float, nullable=False, default=0.0)
+    items_json = Column(JSON, nullable=True)  # [{product_id, name, quantity, price, image}]
+    origin_address = Column(Text, nullable=True)
+    destination_address = Column(Text, nullable=True)
+    assigned_driver_id = Column(String, nullable=True)
+    tracking_number = Column(String(255), nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+    order: "Order" = relationship("Order", backref="vendor_fulfillments")
+    retailer: "Retailer" = relationship("Retailer")
+
+
+# ==============================================================================
+# SYSTEM 14: VENDOR PAYOUT PIPELINE
+# ==============================================================================
+
+
+class PayoutRequest(Base):
+    """Vendor payout withdrawal request tracking."""
+    __tablename__ = "payout_request"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    retailer_id = Column(String, ForeignKey("retailer.id", ondelete="CASCADE"), nullable=False)
+    amount = Column(Float, nullable=False)
+    locked_amount = Column(Float, nullable=False, default=0.0)
+    status = Column(String(20), nullable=False, default="PENDING")  # PENDING, APPROVED, REJECTED, PROCESSING, SUCCESSFUL, FAILED
+    bank_name = Column(String(255), nullable=True)
+    account_number = Column(String(50), nullable=True)
+    bank_code = Column(String(20), nullable=True)
+    account_name = Column(String(255), nullable=True)
+    payment_reference = Column(String(255), nullable=True)
+    processed_by = Column(String, ForeignKey("admin_user.id", ondelete="SET NULL"), nullable=True)
+    processed_at = Column(DateTime, nullable=True)
+    notes = Column(Text, nullable=True)
+    failure_reason = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+    retailer: "Retailer" = relationship("Retailer")
+    processor: "AdminUser | None" = relationship("AdminUser")
+
+
+# ==============================================================================
+# SYSTEM 15: AFFILIATE POINT CONVERSION LEDGER
+# ==============================================================================
+
+
+class PointRedemption(Base):
+    """Tracks customer attribute point redemptions at checkout."""
+    __tablename__ = "point_redemption"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    user_id = Column(String, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    order_id = Column(String, ForeignKey("order.id", ondelete="SET NULL"), nullable=True)
+    points_redeemed = Column(Integer, nullable=False)
+    currency_value = Column(Float, nullable=False)
+    exchange_ratio = Column(Float, nullable=False)  # points per unit currency at time of redemption
+    status = Column(String(20), nullable=False, default="COMPLETED")  # COMPLETED, REVERSED
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+
+    user: "User" = relationship("User")
+    order: "Order | None" = relationship("Order")
+
+
+# ==============================================================================
+# SYSTEM 16: AUTOMATED COMMISSIONS & ESCROW SETTLEMENT LEDGER
+# ==============================================================================
+
+
+class VendorSettlement(Base):
+    """Immutable audit log tracking per-vendor fund splits on successful payment."""
+    __tablename__ = "vendor_settlement"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    order_id = Column(String, ForeignKey("order.id", ondelete="CASCADE"), nullable=False)
+    retailer_id = Column(String, ForeignKey("retailer.id", ondelete="CASCADE"), nullable=False)
+    gross_amount = Column(Float, nullable=False)
+    platform_commission_fee = Column(Float, nullable=False)
+    net_vendor_payout = Column(Float, nullable=False)
+    commission_percentage = Column(Float, nullable=False)
+    is_settled = Column(Boolean, nullable=False, default=False)
+    settled_at = Column(DateTime, nullable=True)
+    payment_reference = Column(String(255), nullable=True)
+    provider = Column(String(50), nullable=True)  # paystack, flutterwave
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+
+    order: "Order" = relationship("Order")
+    retailer: "Retailer" = relationship("Retailer")
+
+
+# ==============================================================================
+# SYSTEM 17: IDEMPOTENT WEBHOOK LOG & RECONCILIATION QUEUE
+# ==============================================================================
+
+
+class WebhookPayloadLog(Base):
+    """Idempotency guard for payment webhook processing."""
+    __tablename__ = "webhook_payload_log"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    event_id = Column(String(255), nullable=False, unique=True, index=True)
+    provider = Column(String(50), nullable=False)  # paystack, flutterwave
+    event_type = Column(String(100), nullable=True)
+    payload_json = Column(Text, nullable=True)
+    order_id = Column(String, nullable=True)
+    processed_status = Column(String(20), nullable=False, default="PENDING")  # PENDING, PROCESSED, FAILED
+    error_message = Column(Text, nullable=True)
+    retry_count = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    processed_at = Column(DateTime, nullable=True)
+
+
+# ==============================================================================
+# SYSTEM 18: VENDOR NOTIFICATION PIPELINE
+# ==============================================================================
+
+
+class VendorNotification(Base):
+    """Real-time vendor alert pipeline for low-stock, orders, etc."""
+    __tablename__ = "vendor_notification"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    retailer_id = Column(String, ForeignKey("retailer.id", ondelete="CASCADE"), nullable=False)
+    message_text = Column(Text, nullable=False)
+    severity_level = Column(String(20), nullable=False, default="INFO")  # INFO, WARNING, CRITICAL
+    notification_type = Column(String(50), nullable=False, default="general")  # low_stock, order, payout, general
+    is_read = Column(Boolean, nullable=False, default=False)
+    related_product_id = Column(String, ForeignKey("product.id", ondelete="SET NULL"), nullable=True)
+    related_order_id = Column(String, ForeignKey("order.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+
+    retailer: "Retailer" = relationship("Retailer")
+    product: "Product | None" = relationship("Product")
+    order: "Order | None" = relationship("Order")
+
+
+# ==============================================================================
+# SYSTEM 19: MULTI-TENANT REAL-TIME WEBSOCKET CHAT
+# ==============================================================================
+
+
+class ChatMessage(Base):
+    """Direct customer <-> vendor messaging with order context."""
+    __tablename__ = "chat_message"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    order_id = Column(String, ForeignKey("order.id", ondelete="SET NULL"), nullable=True)
+    sender_id = Column(String, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    recipient_id = Column(String, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    message_text = Column(Text, nullable=False)
+    is_read = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+
+    sender: "User" = relationship("User", foreign_keys=[sender_id])
+    recipient: "User" = relationship("User", foreign_keys=[recipient_id])
+    order: "Order | None" = relationship("Order")
+
+
+# ==============================================================================
+# SYSTEM 20: ORDER DISPUTES & ESCROW LIFECYCLE
+# ==============================================================================
+
+
+class OrderDispute(Base):
+    """Customer dispute tracker with escrow hold and refund workflow."""
+    __tablename__ = "order_dispute"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    order_id = Column(String, ForeignKey("order.id", ondelete="CASCADE"), nullable=False)
+    vendor_fulfillment_id = Column(String, ForeignKey("vendor_fulfillment.id", ondelete="SET NULL"), nullable=True)
+    customer_id = Column(String, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    retailer_id = Column(String, ForeignKey("retailer.id", ondelete="SET NULL"), nullable=True)
+    reason_category = Column(String(50), nullable=False)  # DAMAGED_ITEM, NOT_RECEIVED, WRONG_ITEM, QUALITY_ISSUE, OTHER
+    explanation_text = Column(Text, nullable=True)
+    status = Column(String(30), nullable=False, default="OPEN")  # OPEN, UNDER_REVIEW, RESOLVED_REFUNDED, RESOLVED_REJECTED
+    resolution_notes = Column(Text, nullable=True)
+    evidence_attachments_json = Column(JSON, nullable=True)  # [{url, filename, type}]
+    refund_amount = Column(Float, nullable=True)
+    resolved_by = Column(String, ForeignKey("admin_user.id", ondelete="SET NULL"), nullable=True)
+    resolved_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+    order: "Order" = relationship("Order")
+    customer: "User" = relationship("User")
+    retailer: "Retailer | None" = relationship("Retailer")
+    vendor_fulfillment: "VendorFulfillment | None" = relationship("VendorFulfillment")
+    resolver: "AdminUser | None" = relationship("AdminUser")
+
+
+# ==============================================================================
+# SYSTEM 21: DAILY ANALYTICS MATERIALIZATION
+# ==============================================================================
+
+
+class DailyMarketplaceSnapshot(Base):
+    """Pre-computed daily marketplace-wide metrics for fast dashboard reads."""
+    __tablename__ = "daily_marketplace_snapshot"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    date = Column(DateTime, nullable=False, unique=True, index=True)
+    total_revenue = Column(Float, nullable=False, default=0.0)
+    total_orders = Column(Integer, nullable=False, default=0)
+    total_commissions_earned = Column(Float, nullable=False, default=0.0)
+    total_active_vendors = Column(Integer, nullable=False, default=0)
+    total_dispute_count = Column(Integer, nullable=False, default=0)
+    total_new_customers = Column(Integer, nullable=False, default=0)
+    total_products_sold = Column(Integer, nullable=False, default=0)
+    avg_order_value = Column(Float, nullable=False, default=0.0)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+
+
+class DailyVendorSnapshot(Base):
+    """Pre-computed daily per-vendor metrics for fast vendor dashboard reads."""
+    __tablename__ = "daily_vendor_snapshot"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    date = Column(DateTime, nullable=False, index=True)
+    retailer_id = Column(String, ForeignKey("retailer.id", ondelete="CASCADE"), nullable=False)
+    revenue = Column(Float, nullable=False, default=0.0)
+    orders_count = Column(Integer, nullable=False, default=0)
+    products_sold = Column(Integer, nullable=False, default=0)
+    commission_paid = Column(Float, nullable=False, default=0.0)
+    net_earnings = Column(Float, nullable=False, default=0.0)
+    dispute_count = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+
+    retailer: "Retailer" = relationship("Retailer")

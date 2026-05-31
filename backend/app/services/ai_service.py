@@ -485,6 +485,8 @@ SETTINGS_DEFINITIONS: List[Dict[str, Any]] = [
      "description": "SMTP login password (use Gmail App Password for Gmail).", "default": ""},
     {"key": "from_email", "category": "developer", "type": "text", "label": "From Email Address",
      "description": "Email address shown in the 'From' field of all outgoing emails.", "default": "noreply@forgestore.com"},
+    {"key": "mail_console_fallback", "category": "developer", "type": "boolean", "label": "Console Fallback Mode",
+     "description": "When enabled, all emails are printed to terminal instead of sending via SMTP (useful for development).", "default": "true"},
     {"key": "ai_provider", "category": "developer", "type": "select", "label": "AI Provider",
      "description": "Which AI provider to use for product descriptions, search, and recommendations.",
      "default": "openai",
@@ -541,6 +543,34 @@ SETTINGS_DEFINITIONS: List[Dict[str, Any]] = [
      "description": "Number of days customers have to return items.", "default": "14"},
     {"key": "max_order_items", "category": "logistics", "type": "number", "label": "Max Items Per Order",
      "description": "Maximum quantity of items allowed in a single order.", "default": "50"},
+    {"key": "logistics_auto_dispatch_enabled", "category": "logistics", "type": "boolean", "label": "Auto-Dispatch Shipments",
+     "description": "Automatically assign shipments when orders enter PROCESSING status.", "default": "true"},
+
+    # ── Multi-Vendor / Affiliate ──
+    {"key": "vendor_to_vendor_percentage_cut", "category": "global", "type": "number", "label": "Vendor-to-Vendor Affiliate %",
+     "description": "Percentage cut credited to the referring vendor when an invited vendor makes a sale.", "default": "2.5"},
+    {"key": "vendor_to_customer_points_per_signup", "category": "global", "type": "number", "label": "Customer Signup Points",
+     "description": "Attribute points credited to a vendor when a customer joins via their referral link.", "default": "10"},
+    {"key": "customer_product_affiliate_commission_rate", "category": "global", "type": "number", "label": "Customer Product Affiliate %",
+     "description": "Commission rate for customers sharing product affiliate links.", "default": "5.0"},
+    {"key": "vendor_auto_approval_policy", "category": "global", "type": "boolean", "label": "Auto-Approve Vendors",
+     "description": "When enabled, new vendor applications are automatically approved.", "default": "false"},
+    {"key": "vendor_minimum_rating", "category": "global", "type": "number", "label": "Minimum Vendor Rating",
+     "description": "Vendors below this rating are automatically suspended. Set 0 to disable.", "default": "3.0"},
+
+    # ── Multi-Vendor Shipping & Point Conversions ──
+    {"key": "shipping_fee_per_vendor", "category": "logistics", "type": "number", "label": "Shipping Fee Per Vendor",
+     "description": "Flat shipping fee charged per distinct vendor in a multi-vendor cart checkout.", "default": "1500"},
+    {"key": "points_to_currency_ratio", "category": "global", "type": "number", "label": "Points-to-Currency Ratio",
+     "description": "How many attribute points equal 1 unit of currency (e.g. 100 points = ₦1,000 → ratio=100).", "default": "100"},
+
+    # ── Commission & Settlement ──
+    {"key": "market_commission_percentage", "category": "global", "type": "number", "label": "Market Commission %",
+     "description": "Platform commission percentage deducted from each vendor sale before payout.", "default": "10.0"},
+
+    # ── Low-Stock Alerts ──
+    {"key": "low_stock_limit", "category": "logistics", "type": "number", "label": "Low Stock Alert Threshold",
+     "description": "Inventory level at which vendors receive low-stock warnings.", "default": "5"},
 
     # ── Other ──
     {"key": "analytics_id", "category": "other", "type": "text", "label": "Analytics ID",

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Become a Vendor &mdash; ForgeStore{% endblock %}
+{% block content %}
+<div class="min-h-[80vh] flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-lg">
+        <!-- Glassmorphic Card -->
+        <div class="bg-white/80 dark:bg-stone-900/80 backdrop-blur-xl rounded-3xl border border-stone-200/50 dark:border-stone-700/50 shadow-2xl shadow-stone-900/10 p-8 sm:p-10">
+            <div class="text-center mb-8">
+                <div class="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-500/20">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                </div>
+                <h1 class="text-2xl font-black text-stone-900 dark:text-stone-100">Become a Vendor</h1>
+                <p class="text-sm text-stone-500 dark:text-stone-400 mt-2">Start selling on ForgeStore. Fill out the form below to apply.</p>
+            </div>
+
+            <div id="success-msg" class="hidden mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 rounded-xl text-sm text-emerald-700 dark:text-emerald-400 text-center font-medium">
+                Application submitted! We'll review it shortly.
+            </div>
+
+            <form id="vendor-form" class="space-y-4" onsubmit="submitVendorApplication(event)">
+                <div>
+                    <label class="block text-xs font-bold text-stone-500 dark:text-stone-400 mb-1.5 uppercase tracking-wider">Business Name *</label>
+                    <input name="business_name" required placeholder="Your shop name" class="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-500 dark:text-stone-400 mb-1.5 uppercase tracking-wider">Contact Email *</label>
+                    <input name="email" type="email" required placeholder="you@business.com" class="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-500 dark:text-stone-400 mb-1.5 uppercase tracking-wider">Phone Number *</label>
+                    <input name="phone" type="tel" required placeholder="+234..." class="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-500 dark:text-stone-400 mb-1.5 uppercase tracking-wider">Business Description</label>
+                    <textarea name="description" rows="3" placeholder="Tell us about your products..." class="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-500 dark:text-stone-400 mb-1.5 uppercase tracking-wider">Bank Account Number *</label>
+                    <input name="account_number" required placeholder="Account number" class="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-500 dark:text-stone-400 mb-1.5 uppercase tracking-wider">Bank Code *</label>
+                    <input name="bank_code" required placeholder="e.g. 044" class="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-500 dark:text-stone-400 mb-1.5 uppercase tracking-wider">Catalog Category</label>
+                    <input name="catalog_category" placeholder="e.g. Handmade Jewelry, Fashion..." class="w-full px-4 py-3 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all">
+                </div>
+                <button type="submit" id="submit-btn" class="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white text-sm font-bold rounded-xl shadow-lg shadow-amber-500/20 transition-all active:scale-[0.98]">
+                    Submit Application
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+async function submitVendorApplication(e) {
+    e.preventDefault();
+    const form = e.target;
+    const btn = document.getElementById('submit-btn');
+    const data = Object.fromEntries(new FormData(form));
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+    try {
+        const res = await fetch('/api/vendor/apply', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data),
+        });
+        const result = await res.json();
+        if (result.success) {
+            form.classList.add('hidden');
+            document.getElementById('success-msg').classList.remove('hidden');
+        } else {
+            alert(result.detail || 'Failed to submit. Please try again.');
+            btn.disabled = false;
+            btn.textContent = 'Submit Application';
+        }
+    } catch {
+        alert('Network error. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Submit Application';
+    }
+}
+</script>
+{% endblock %}

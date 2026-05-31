@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.database import init_db, get_db
 from app.routers import auth, admin, admin_api, web, web_api
+from app.routers import vendor_portal, logistics_portal
 from app.auth import get_current_user_from_cookie
 from app.templates_shared import render_template
 
@@ -123,6 +124,19 @@ from app.routers.api_shipment import router as api_shipment_router
 app.include_router(api_admin_ext_router)
 app.include_router(api_web_ext_router)
 app.include_router(api_shipment_router)
+app.include_router(vendor_portal.router)
+app.include_router(logistics_portal.router)
+
+# New system routers: Chat, Disputes
+from app.routers.chat import router as chat_router
+from app.routers.disputes import router as disputes_router
+app.include_router(chat_router)
+app.include_router(disputes_router)
+
+# Structured logging middleware
+from app.core.logger import RequestTimingMiddleware, setup_structured_logging
+setup_structured_logging()
+app.add_middleware(RequestTimingMiddleware)
 
 
 @app.get("/ws", include_in_schema=False)

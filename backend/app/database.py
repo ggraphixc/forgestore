@@ -165,5 +165,24 @@ def init_db():
         # Chat Moderation
         ProductChatMessage,
         ChatModeration,
+        # System 12: Three-Tier Affiliate Engine
+        VendorWallet,
+        VendorWalletTransaction,
+        ProductAffiliateToken,
+        AffiliateApplication,
+        VendorApplication,
+        # System 16: Automated Commissions & Settlement
+        VendorSettlement,
+        # System 17: Idempotent Webhook Log
+        WebhookPayloadLog,
+        # System 18: Vendor Notification Pipeline
+        VendorNotification,
+        # System 19: Multi-Tenant WebSocket Chat
+        ChatMessage,
+        # System 20: Order Disputes & Escrow
+        OrderDispute,
+        # System 21: Daily Analytics Materialization
+        DailyMarketplaceSnapshot,
+        DailyVendorSnapshot,
     )
     Base.metadata.create_all(bind=get_engine())

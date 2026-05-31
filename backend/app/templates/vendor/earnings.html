@@ -1,0 +1,39 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}Earnings &mdash; ForgeStore{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-bold text-stone-900 dark:text-stone-100">Earnings</h1>
+        <div class="text-right">
+            <p class="text-xs text-stone-400 uppercase tracking-wider font-bold">Total Net Earnings</p>
+            <p class="text-2xl font-black text-emerald-600">₦{{ "{:,.2f}".format(total_net) }}</p>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 overflow-hidden">
+        {% if earnings %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead><tr class="border-b border-stone-100 dark:border-stone-700 text-left text-xs font-bold uppercase tracking-wider text-stone-400">
+                    <th class="px-5 py-3">Order</th><th class="px-5 py-3">Amount</th><th class="px-5 py-3">Commission</th><th class="px-5 py-3">Net</th><th class="px-5 py-3">Status</th>
+                </tr></thead>
+                <tbody class="divide-y divide-stone-100 dark:divide-stone-700">
+                {% for e in earnings %}
+                <tr class="hover:bg-stone-50 dark:hover:bg-stone-700/50">
+                    <td class="px-5 py-3 text-stone-900 dark:text-stone-100 font-medium">₦{{ "{:,.2f}".format(e.amount) }}</td>
+                    <td class="px-5 py-3 text-stone-500">₦{{ "{:,.2f}".format(e.commission) }}</td>
+                    <td class="px-5 py-3 font-bold text-emerald-600">₦{{ "{:,.2f}".format(e.net_amount) }}</td>
+                    <td class="px-5 py-3"><span class="text-[10px] font-bold px-2 py-0.5 rounded-full
+                        {% if e.status == 'PAID' %}bg-emerald-100 text-emerald-700
+                        {% elif e.status == 'SCHEDULED' %}bg-blue-100 text-blue-700
+                        {% else %}bg-amber-100 text-amber-700{% endif %}">{{ e.status }}</span></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="px-5 py-12 text-center text-sm text-stone-400">No earnings recorded yet.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "email/base.html" %}
+{% block body %}
+<p style="font-size:14px;color:#57534e;text-align:center;margin:0 0 20px;">Hi <strong>{{ vendor_name }}</strong>,</p>
+<p style="font-size:14px;color:#57534e;line-height:1.6;text-align:center;margin:0 0 20px;">
+  You have a new order to fulfill! Order <strong>{{ order_number }}</strong>.
+</p>
+<div style="background:#f5f5f4;border-radius:12px;padding:20px;margin:20px 0;">
+  <p style="font-size:13px;color:#78716c;margin:0 0 8px;">Order Items:</p>
+  {% for item in items %}
+  <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e7e5e4;">
+    <span style="font-size:13px;color:#1c1917;">{{ item.name }} × {{ item.quantity }}</span>
+    <span style="font-size:13px;color:#1c1917;font-weight:600;">₦{{ "{:,.2f}".format(item.price * item.quantity) }}</span>
+  </div>
+  {% endfor %}
+  <div style="display:flex;justify-content:space-between;padding:8px 0 0;margin-top:4px;border-top:2px solid #d6d3d1;">
+    <span style="font-size:14px;font-weight:700;color:#1c1917;">Your Payout</span>
+    <span style="font-size:14px;font-weight:800;color:#16a34a;">₦{{ "{:,.2f}".format(net_payout) }}</span>
+  </div>
+  <p style="font-size:11px;color:#a8a29e;margin:8px 0 0;">Commission: ₦{{ "{:,.2f}".format(commission) }} ({{ commission_pct }}%)</p>
+</div>
+{% endblock %}

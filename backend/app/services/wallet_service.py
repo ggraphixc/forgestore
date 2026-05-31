@@ -293,6 +293,136 @@ class WalletService:
         ).order_by(WalletTransaction.created_at.desc()).limit(limit).all()
 
 
+class VendorWalletService:
+    """Isolated vendor wallet operations — ensures one vendor cannot access another's funds."""
+
+    def __init__(self, db: Session):
+        self.db = db
+
+    def get_or_create_wallet(self, retailer_id: str, currency: str = "NGN"):
+        from app.models import VendorWallet
+        wallet = self.db.query(VendorWallet).filter(
+            VendorWallet.retailer_id == retailer_id,
+            VendorWallet.currency == currency,
+        ).first()
+        if not wallet:
+            wallet = VendorWallet(retailer_id=retailer_id, currency=currency)
+            self.db.add(wallet)
+            self.db.commit()
+            self.db.refresh(wallet)
+        return wallet
+
+    def credit_vendor(self, retailer_id: str, amount: float, reference: str, description: str = "", order_id: Optional[str] = None):
+        """Credit a specific vendor's wallet. Isolated per retailer_id."""
+        from app.models import VendorWallet, VendorWalletTransaction
+        wallet = self.get_or_create_wallet(retailer_id)
+        balance_before = wallet.balance
+        wallet.balance += amount
+
+        tx = VendorWalletTransaction(
+            wallet_id=wallet.id,
+            transaction_type="sale_earning",
+            amount=amount,
+            balance_before=balance_before,
+            balance_after=wallet.balance,
+            order_id=order_id,
+            reference=reference,
+            description=description,
+            status="COMPLETED",
+        )
+        self.db.add(tx)
+        self.db.commit()
+        self.db.refresh(tx)
+        return tx
+
+    def credit_affiliate_commission(self, retailer_id: str, amount: float, reference: str, description: str = ""):
+        """Credit affiliate commission to a vendor's wallet."""
+        from app.models import VendorWallet, VendorWalletTransaction
+        wallet = self.get_or_create_wallet(retailer_id)
+        balance_before = wallet.balance
+        wallet.balance += amount
+
+        tx = VendorWalletTransaction(
+            wallet_id=wallet.id,
+            transaction_type="affiliate_commission",
+            amount=amount,
+            balance_before=balance_before,
+            balance_after=wallet.balance,
+            reference=reference,
+            description=description,
+            status="COMPLETED",
+        )
+        self.db.add(tx)
+        self.db.commit()
+        self.db.refresh(tx)
+        return tx
+
+    def get_balance(self, retailer_id: str) -> float:
+        wallet = self.get_or_create_wallet(retailer_id)
+        return wallet.balance
+
+    def get_transactions(self, retailer_id: str, limit: int = 50):
+        from app.models import VendorWallet, VendorWalletTransaction
+        wallet = self.get_or_create_wallet(retailer_id)
+        return self.db.query(VendorWalletTransaction).filter(
+            VendorWalletTransaction.wallet_id == wallet.id
+        ).order_by(VendorWalletTransaction.created_at.desc()).limit(limit).all()
+
+
+def auto_dispatch_shipment(db: Session, order_id: str):
+    """Automatically dispatch a shipment when order enters PROCESSING.
+
+    Finds the first available logistics agent or delivery agent,
+    creates a shipment entry, and assigns it.
+    """
+    from app.models import AdminUser, DeliveryAgent, Shipment, AdminRole, Retailer, OrderItem, Product
+
+    # Check if auto-dispatch is enabled
+    from app.models import Settings as SettingsModel
+    setting = db.query(SettingsModel).filter(SettingsModel.key == "logistics_auto_dispatch_enabled").first()
+    if setting and setting.value.lower() == "false":
+        return
+
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        return
+
+    # Find first available delivery agent
+    agent = db.query(DeliveryAgent).filter(DeliveryAgent.status == "AVAILABLE").order_by(DeliveryAgent.rating.desc()).first()
+    if not agent:
+        # Fallback: find a LOGISTICS admin user
+        logistics_admin = db.query(AdminUser).filter(AdminUser.role == AdminRole.LOGISTICS).first()
+        if not logistics_admin:
+            return
+
+    # Extract origin from retailer (vendor) address/bio
+    origin = ""
+    destination = ""
+    if order.shipping_address:
+        if isinstance(order.shipping_address, dict):
+            dest_parts = [order.shipping_address.get("address", ""), order.shipping_address.get("city", "")]
+            destination = ", ".join(p for p in dest_parts if p)
+
+    # Get retailer info for origin
+    order_items = db.query(OrderItem).filter(OrderItem.order_id == order_id).all()
+    if order_items:
+        first_product = db.query(Product).filter(Product.id == order_items[0].product_id).first()
+        if first_product and first_product.retailer_id:
+            retailer = db.query(Retailer).filter(Retailer.id == first_product.retailer_id).first()
+            if retailer:
+                origin = retailer.bio or retailer.location or retailer.name
+
+    from app.services.shipment_service import ShipmentService
+    svc = ShipmentService(db)
+    shipment = svc.create_shipment(
+        order_id=order_id,
+        origin=origin,
+        destination=destination,
+        delivery_agent_id=agent.id if agent else None,
+    )
+    return shipment
+
+
 class EscrowService:
     """Manages escrow transactions for secure payments."""
 

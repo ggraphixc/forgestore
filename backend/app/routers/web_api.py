@@ -864,27 +864,99 @@ def checkout(
             db.add(customer)
             db.flush()
 
-    # Calculate total
-    total = 0.0
-    order_items_data = []
+    # ── Point Redemption (optional) ──
+    points_redeemed = int(request.query_params.get("points", 0)) if hasattr(request.query_params, 'get') else 0
+    points_discount = 0.0
+    if points_redeemed > 0 and customer and customer.attribute_points > 0:
+        from app.models import Settings as SettingsModel
+        ratio_setting = db.query(SettingsModel).filter(SettingsModel.key == "points_to_currency_ratio").first()
+        ratio = float(ratio_setting.value) if ratio_setting else 100.0
+        if ratio > 0:
+            max_redeemable = customer.attribute_points
+            actual_redeemed = min(points_redeemed, max_redeemable)
+            points_discount = actual_redeemed / ratio  # e.g. 1000 pts / 100 = 10 currency units
+            customer.attribute_points -= actual_redeemed
+
+    # ── Group cart items by retailer_id (vendor) ──
+    from collections import defaultdict
+    vendor_items: dict[str, list] = defaultdict(list)
+    product_map = {}
     for ci in cart_items:
         product = db.query(Product).filter(Product.id == ci.product_id).first()
         if not product:
             continue
-        price = product.discount_price if product.discount_price else product.price
-        subtotal = price * ci.quantity
-        total += subtotal
-        order_items_data.append({
+        vendor_key = product.retailer_id or "__unassigned__"
+        vendor_items[vendor_key].append({
             "product": product,
             "quantity": ci.quantity,
-            "price": price,
+            "price": product.discount_price if product.discount_price else product.price,
+        })
+        product_map[product.id] = product
+
+    # ── Calculate shipping fees per vendor ──
+    from app.models import Settings as SettingsModel
+    shipping_setting = db.query(SettingsModel).filter(SettingsModel.key == "shipping_fee_per_vendor").first()
+    fee_per_vendor = float(shipping_setting.value) if shipping_setting else 0.0
+    free_threshold_setting = db.query(SettingsModel).filter(SettingsModel.key == "free_shipping_threshold").first()
+    free_threshold = float(free_threshold_setting.value) if free_threshold_setting else 0.0
+    tax_setting = db.query(SettingsModel).filter(SettingsModel.key == "tax_percentage").first()
+    tax_pct = float(tax_setting.value) if tax_setting else 0.0
+
+    # ── Compute totals ──
+    grand_subtotal = 0.0
+    total_shipping = 0.0
+    total_tax = 0.0
+    fulfillments_data = []
+
+    for vendor_id, items in vendor_items.items():
+        vendor_subtotal = sum(i["price"] * i["quantity"] for i in items)
+        vendor_shipping = fee_per_vendor if fee_per_vendor > 0 else 0.0
+        if free_threshold > 0 and vendor_subtotal >= free_threshold:
+            vendor_shipping = 0.0
+        vendor_tax = round(vendor_subtotal * tax_pct / 100, 2) if tax_pct > 0 else 0.0
+        vendor_total = vendor_subtotal + vendor_shipping + vendor_tax
+
+        # Resolve origin address from retailer bio/location
+        origin = ""
+        if vendor_id != "__unassigned__":
+            retailer_obj = db.query(Retailer).filter(Retailer.id == vendor_id).first()
+            if retailer_obj:
+                origin = retailer_obj.bio or retailer_obj.location or retailer_obj.name
+
+        fulfillments_data.append({
+            "retailer_id": vendor_id if vendor_id != "__unassigned__" else None,
+            "subtotal": vendor_subtotal,
+            "shipping_fee": vendor_shipping,
+            "tax_amount": vendor_tax,
+            "total_amount": vendor_total,
+            "origin_address": origin,
+            "items": [
+                {
+                    "product_id": i["product"].id,
+                    "name": i["product"].name,
+                    "quantity": i["quantity"],
+                    "price": i["price"],
+                    "image": i["product"].images[0] if i["product"].images else None,
+                }
+                for i in items
+            ],
         })
 
-    # Create order
+        grand_subtotal += vendor_subtotal
+        total_shipping += vendor_shipping
+        total_tax += vendor_tax
+
+    # Apply points discount (capped at grand_subtotal)
+    if points_discount > 0:
+        points_discount = min(points_discount, grand_subtotal)
+
+    total = grand_subtotal + total_shipping + total_tax - points_discount
+
+    # ── Create parent Order ──
     order = Order(
         order_number=generate_order_number(),
         status=OrderStatus.PENDING,
-        total_amount=total,
+        total_amount=round(total, 2),
         shipping_address={
             "name": shipping.name,
             "email": shipping.email,
@@ -896,18 +968,53 @@ def checkout(
     db.add(order)
     db.flush()
 
-    # Create order items
-    for oi in order_items_data:
-        item = OrderItem(
-            quantity=oi["quantity"],
-            price=oi["price"],
-            product_id=oi["product"].id,
+    # ── Create VendorFulfillment rows + OrderItems ──
+    from app.models import VendorFulfillment
+    for fd in fulfillments_data:
+        fulfillment = VendorFulfillment(
             order_id=order.id,
+            retailer_id=fd["retailer_id"],
+            status="PENDING",
+            subtotal=fd["subtotal"],
+            shipping_fee=fd["shipping_fee"],
+            tax_amount=fd["tax_amount"],
+            total_amount=fd["total_amount"],
+            items_json=fd["items"],
+            origin_address=fd["origin_address"],
+            destination_address=f"{shipping.address}",
         )
-        db.add(item)
+        db.add(fulfillment)
 
-        # Decrease inventory
-        oi["product"].inventory = max(0, oi["product"].inventory - oi["quantity"])
+        # Also create legacy OrderItems for backward compat
+        for item_data in fd["items"]:
+            oi = OrderItem(
+                quantity=item_data["quantity"],
+                price=item_data["price"],
+                product_id=item_data["product_id"],
+                order_id=order.id,
+            )
+            db.add(oi)
+            # Decrease inventory
+            prod = product_map.get(item_data["product_id"])
+            if prod:
+                prod.inventory = max(0, prod.inventory - item_data["quantity"])
+
+    # ── Record point redemption ──
+    if points_discount > 0 and points_redeemed > 0:
+        from app.models import PointRedemption
+        ratio_setting = db.query(SettingsModel).filter(SettingsModel.key == "points_to_currency_ratio").first()
+        ratio = float(ratio_setting.value) if ratio_setting else 100.0
+        pr = PointRedemption(
+            user_id=customer.id,
+            points_redeemed=actual_redeemed,
+            currency_value=points_discount,
+            exchange_ratio=ratio,
+            status="COMPLETED",
+        )
+        db.add(pr)
+
+    # ── Record vendor-to-vendor affiliate commissions ──
+    # (when an invited vendor's products are sold)
 
     # Clear cart
     for ci in cart_items:
@@ -919,33 +1026,96 @@ def checkout(
     notif = AdminNotification(
         type="new_order",
         title="New Order Received",
-        message=f"Order {order.order_number} from {shipping.name} — ₦{total:,.2f}",
+        message=f"Order {order.order_number} from {shipping.name} — ₦{total:,.2f} ({len(fulfillments_data)} vendor fulfillments)",
         link=f"/admin/orders/{order.id}",
     )
     db.add(notif)
 
     # Check for low inventory on ordered products
     from app.services.notification_bus import push as bus_push
-    for oi_data in order_items_data:
-        p = oi_data["product"]
-        if 0 < p.inventory <= 5:
-            low_notif = AdminNotification(
-                type="low_stock",
-                title="Low Stock Alert",
-                message=f"'{p.name}' only has {p.inventory} units left in inventory.",
-                link=f"/admin/catalog",
-            )
-            db.add(low_notif)
-            bus_push("low_stock", low_notif.title, low_notif.message, low_notif.link)
+    for fd in fulfillments_data:
+        for item_data in fd["items"]:
+            p = product_map.get(item_data["product_id"])
+            if p and 0 < p.inventory <= 5:
+                low_notif = AdminNotification(
+                    type="low_stock",
+                    title="Low Stock Alert",
+                    message=f"'{p.name}' only has {p.inventory} units left in inventory.",
+                    link="/admin/catalog",
+                )
+                db.add(low_notif)
+                bus_push("low_stock", low_notif.title, low_notif.message, low_notif.link)
 
     db.commit()
 
     # Push new order to real-time bus
     bus_push("new_order", notif.title, notif.message, notif.link)
 
-    # Send order confirmation email
-    from app.services.email_service import send_order_confirmation_email
-    send_order_confirmation_email(shipping.email, order.order_number, shipping.name)
+    # ── Async email dispatch (non-blocking) ──
+    from app.services.email_service import (
+        send_order_confirmation_email,
+        send_vendor_new_order_email,
+    )
+    from app.core.email import dispatch_email_background
+
+    # Customer confirmation email (async)
+    vendor_sections_for_email = []
+    for fd in fulfillments_data:
+        if fd["retailer_id"]:
+            vendor_sections_for_email.append({
+                "vendor_name": fd.get("retailer_name", "Vendor"),
+                "subtotal": fd["subtotal"],
+                "shipping_fee": fd["shipping_fee"],
+            })
+    items_table_for_email = [
+        {"name": i["name"], "quantity": i["quantity"], "price": i["price"]}
+        for fd in fulfillments_data
+        for i in fd.get("items", [])
+    ]
+    summary_lines_for_email = [
+        {"label": "Subtotal", "value": f"₦{grand_subtotal:,.2f}"},
+        {"label": "Shipping", "value": f"₦{total_shipping:,.2f}"},
+        {"label": "Tax", "value": f"₦{total_tax:,.2f}"},
+    ]
+    if points_discount > 0:
+        summary_lines_for_email.append({"label": "Points Discount", "value": f"-₦{points_discount:,.2f}"})
+    summary_lines_for_email.append({"label": "Total", "value": f"₦{total:,.2f}"})
+
+    send_order_confirmation_email(
+        shipping.email, order.order_number, shipping.name,
+        vendor_sections=vendor_sections_for_email,
+        items_table=items_table_for_email,
+        summary_lines=summary_lines_for_email,
+    )
+
+    # Per-vendor new-order notification emails (async, non-blocking)
+    from app.models import AdminUser as AdminUserModel
+    for fd in fulfillments_data:
+        if fd["retailer_id"]:
+            # Find vendor admin email
+            vendor_admin = db.query(AdminUserModel).filter(
+                AdminUserModel.vendor_id == fd["retailer_id"],
+                AdminUserModel.role.value == "RETAILER",
+            ).first()
+            if vendor_admin and vendor_admin.email:
+                send_vendor_new_order_email(
+                    to_email=vendor_admin.email,
+                    vendor_name=fd.get("retailer_name", "Vendor"),
+                    order_number=order.order_number,
+                    items=fd.get("items", []),
+                    net_payout=fd["subtotal"] * (1 - 0.10),
+                    commission=fd["subtotal"] * 0.10,
+                    commission_pct=10.0,
+                )
+
+    # ── Trigger per-vendor auto-dispatch ──
+    for fd in fulfillments_data:
+        if fd["retailer_id"]:
+            try:
+                from app.services.wallet_service import auto_dispatch_shipment
+                auto_dispatch_shipment(db, order.id)
+            except Exception:
+                pass
 
     # Initialize payment via abstraction layer
     from app.config import get_settings
@@ -961,7 +1131,13 @@ def checkout(
         reference=order.order_number,
         callback_url=f"{base_url}/shop/checkout?order_id={order.id}&reference={order.order_number}",
         currency=currency,
-        metadata={"order_id": order.id, "order_number": order.order_number},
+        metadata={
+            "order_id": order.id,
+            "order_number": order.order_number,
+            "vendor_count": len(fulfillments_data),
+            "points_redeemed": points_redeemed,
+            "points_discount": points_discount,
+        },
     )
 
     if payment_result["success"]:
@@ -971,6 +1147,9 @@ def checkout(
             "order_number": order.order_number,
             "payment_url": payment_result["authorization_url"],
             "access_code": payment_result.get("access_code", ""),
+            "vendor_fulfillments": len(fulfillments_data),
+            "points_discount": points_discount,
+            "shipping_total": total_shipping,
         }
     else:
         logger.warning(

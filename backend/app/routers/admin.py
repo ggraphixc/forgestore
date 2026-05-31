@@ -725,12 +725,45 @@ def notifications_page(request: Request, db: Session = Depends(get_db)):
 @router.get("/intelligence", response_class=HTMLResponse)
 def intelligence_dashboard(request: Request, db: Session = Depends(get_db)):
     admin = get_current_user_from_cookie(request, db)
-    if not admin or not has_permission(admin, "admin"):
+    if not admin:
         return RedirectResponse(url="/admin/login", status_code=302)
+    role_val = admin.role.value if hasattr(admin.role, 'value') else admin.role
+    if role_val not in ("DIR_ADMIN", "MANAGEMENT", "TECH_ADMIN"):
+        return RedirectResponse(url="/admin/dashboard", status_code=302)
+
+    from app.models import AnalyticsSnapshot, CustomerLifetimeValue, FraudDetectionEvent, PredictiveForecast
+    from sqlalchemy import func as sqlfunc
+
+    total_orders = db.query(sqlfunc.count(Order.id)).scalar() or 0
+    total_revenue = db.query(sqlfunc.coalesce(sqlfunc.sum(Order.total_amount), 0)).scalar() or 0
+    total_customers = db.query(sqlfunc.count(User.id)).scalar() or 0
+    total_products = db.query(sqlfunc.count(Product.id)).scalar() or 0
+    total_retailers = db.query(sqlfunc.count(Retailer.id)).scalar() or 0
+    total_shipments = db.query(sqlfunc.count(Shipment.id)).scalar() or 0
+
+    clv_records = db.query(sqlfunc.count(CustomerLifetimeValue.id)).scalar() or 0
+    fraud_events = db.query(sqlfunc.count(FraudDetectionEvent.id)).scalar() or 0
+    forecasts = db.query(sqlfunc.count(PredictiveForecast.id)).scalar() or 0
+    snapshots = db.query(sqlfunc.count(AnalyticsSnapshot.id)).scalar() or 0
+
+    recent_orders = db.query(Order).order_by(desc(Order.created_at)).limit(10).all()
 
     return render_template("admin/intelligence.html", {
         "request": request,
         "admin": admin,
+        "stats": {
+            "total_orders": total_orders,
+            "total_revenue": float(total_revenue),
+            "total_customers": total_customers,
+            "total_products": total_products,
+            "total_retailers": total_retailers,
+            "total_shipments": total_shipments,
+            "clv_records": clv_records,
+            "fraud_events": fraud_events,
+            "forecasts": forecasts,
+            "snapshots": snapshots,
+        },
+        "recent_orders": recent_orders,
         "has_permission": has_permission,
     })
 

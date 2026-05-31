@@ -18,6 +18,7 @@ MIGRATIONS = {
     "004": "migrations.004_add_ad_campaign_columns",
     "005": "migrations.005_add_product_chat",
     "006": "migrations.006_chat_moderation",
+    "007": "migrations.007_add_multivendor_columns",
 }
 
 

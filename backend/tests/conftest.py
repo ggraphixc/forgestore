@@ -30,6 +30,8 @@ from app.models import (
     Review, AdminUser, CartItem, Settings, AdminRole,
     NewsletterSubscriber, BroadcastCampaign, BroadcastEvent, BroadcastTemplate,
     AdminAuditLog, AdminNotification, PasswordResetToken, WishlistItem,
+    VendorWallet, VendorWalletTransaction, PayoutRequest, VendorFulfillment,
+    PointRedemption, ProductAffiliateToken, AffiliateApplication, VendorApplication,
 )
 
 

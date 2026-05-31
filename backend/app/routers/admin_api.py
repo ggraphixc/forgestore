@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, Form, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, Form, Response, BackgroundTasks
 from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -436,16 +436,36 @@ def update_order_status(
     order.updated_at = utcnow()
     db.commit()
 
-    # Send email on status change
-    from app.services.email_service import send_order_status_email
+    # Auto-dispatch shipment when order transitions to PROCESSING
+    if status == "PROCESSING":
+        try:
+            from app.services.wallet_service import auto_dispatch_shipment
+            auto_dispatch_shipment(db, order_id)
+        except Exception:
+            pass  # Dispatch failure should not block order update
+
+    # Send email on status change (non-blocking via dispatch_email_background)
+    from app.core.email import dispatch_email_background
+    from app.services.email_service import _render_email_template, _base_context
     customer = db.query(User).filter(User.id == order.customer_id).first()
     if customer and customer.email:
-        send_order_status_email(
-            customer.email,
-            order.order_number,
-            customer.name or "Customer",
-            status
-        )
+        status_emoji = {"PAID": "✅", "PROCESSING": "🔧", "SHIPPED": "📦", "DELIVERED": "🎉", "CANCELLED": "❌"}
+        emoji = status_emoji.get(status, "📋")
+        html = _render_email_template("order_status.html", _base_context(
+            heading=f"{emoji} Order {status.title()}!",
+            subtitle=f"Order {order.order_number}",
+            body_html=f"""<p style="font-size:14px;color:#57534e;text-align:center;margin:0 0 20px;">Hi <strong>{customer.name or 'Customer'}</strong>,</p>
+            <p style="font-size:14px;color:#57534e;line-height:1.6;text-align:center;margin:0 0 20px;">
+              Your order <strong>{order.order_number}</strong> has been updated to <strong>{status}</strong>.
+            </p>""",
+            cta_url=f"{settings.site_base_url.rstrip('/')}/shop/account/orders",
+            cta_label="View My Orders",
+            customer_name=customer.name or "Customer",
+            order_number=order.order_number,
+            status=status,
+            tracking_number="",
+        ))
+        dispatch_email_background(customer.email, f"Order {status.title()} — {order.order_number}", html)
 
     log_admin_action(db, admin, "update", "order", order_id, f"Updated order {order.order_number} to {status}")
     return {"success": True}
@@ -2534,13 +2554,24 @@ def request_earnings_payout(
         f"Requested payout for {len(earnings)} order earnings (total net: ₦{total_net:.2f})"
     )
 
-    # Send payout notification email
+    # Send payout notification email (non-blocking via BackgroundTasks)
     if admin.email:
         retailer = db.query(Retailer).filter(Retailer.id == retailer_id).first()
         retailer_name = retailer.name if retailer else admin.name or "Retailer"
         try:
             from app.services.email_service import send_payout_email
-            send_payout_email(admin.email, retailer_name, total_net, len(earnings))
+            # Use dispatch_email_background for non-blocking send
+            from app.core.email import dispatch_email_background
+            from app.services.email_service import _render_email_template, _base_context
+            html = _render_email_template("payout_processed.html", _base_context(
+                heading="Payout Processed!",
+                subtitle=f"₦{total_net:,.2f} paid",
+                body_html=f"<p>Hi <strong>{retailer_name}</strong>, your payout has been processed.</p>",
+                amount=total_net,
+                earning_count=len(earnings),
+                customer_name=retailer_name,
+            ))
+            dispatch_email_background(admin.email, f"Payout Processed — ForgeStore", html)
         except Exception:
             pass  # Email failure should not block payout
 
@@ -2606,8 +2637,9 @@ def batch_mark_earnings_paid(
         f"Batch-marked {len(earnings)} order earnings as PAID"
     )
 
-    # Send payout notification emails to affected retailers (grouped by retailer)
-    from app.services.email_service import send_payout_email
+    # Send payout notification emails to affected retailers (non-blocking via dispatch_email_background)
+    from app.core.email import dispatch_email_background
+    from app.services.email_service import _render_email_template, _base_context
     retailer_groups: dict = {}
     for e in earnings:
         if e.retailer_id not in retailer_groups:
@@ -2616,7 +2648,6 @@ def batch_mark_earnings_paid(
 
     for r_id, r_earnings in retailer_groups.items():
         r_total_net = sum(e.net_amount for e in r_earnings)
-        # Find the admin user for this retailer
         r_admin = db.query(AdminUser).filter(
             AdminUser.vendor_id == r_id,
             AdminUser.role == AdminRole.RETAILER
@@ -2625,7 +2656,15 @@ def batch_mark_earnings_paid(
             retailer = db.query(Retailer).filter(Retailer.id == r_id).first()
             retailer_name = retailer.name if retailer else r_admin.name or "Retailer"
             try:
-                send_payout_email(r_admin.email, retailer_name, r_total_net, len(r_earnings))
+                html = _render_email_template("payout_processed.html", _base_context(
+                    heading="Payout Processed!",
+                    subtitle=f"₦{r_total_net:,.2f} paid",
+                    body_html=f"<p>Hi <strong>{retailer_name}</strong>, your payout has been processed.</p>",
+                    amount=r_total_net,
+                    earning_count=len(r_earnings),
+                    customer_name=retailer_name,
+                ))
+                dispatch_email_background(r_admin.email, f"Payout Processed — ForgeStore", html)
             except Exception:
                 pass
 
@@ -2757,5 +2796,413 @@ def moderate_chat_message(
                      f"Chat moderation: {action} by {admin.email}")
 
     return {"success": True}
+
+
+# ==============================================================================
+# PUBLIC VENDOR APPLICATION FUNNEL
+# ==============================================================================
+
+
+@router.post("/vendor/apply")
+def vendor_apply(data: dict, db: Session = Depends(get_db)):
+    """Public endpoint for vendor applications. No auth required."""
+    from app.models import VendorApplication
+
+    email = (data.get("email") or "").strip()
+    business_name = (data.get("business_name") or "").strip()
+    if not email or not business_name:
+        raise HTTPException(status_code=400, detail="email and business_name are required")
+
+    application = VendorApplication(
+        full_name=data.get("full_name", ""),
+        email=email,
+        phone=data.get("phone", ""),
+        business_name=business_name,
+        description=data.get("description", ""),
+        account_number=data.get("account_number", ""),
+        bank_code=data.get("bank_code", ""),
+        bank_name=data.get("bank_name", ""),
+        catalog_category=data.get("catalog_category", ""),
+        status="PENDING",
+    )
+    db.add(application)
+    db.commit()
+    db.refresh(application)
+
+    # Notify admin
+    from app.models import AdminNotification
+    notif = AdminNotification(
+        type="info",
+        title="New Vendor Application",
+        message=f"{business_name} ({email}) has applied to become a vendor.",
+        link="/admin/settings",
+    )
+    db.add(notif)
+    db.commit()
+
+    return {"success": True, "application_id": application.id}
+
+
+@router.post("/admin/vendor/approve/{application_id}")
+def approve_vendor_application(
+    application_id: str,
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT)),
+):
+    """Approve or reject a vendor application. Creates Retailer + AdminUser with RETAILER role."""
+    from app.models import VendorApplication, Retailer as RetailerModel, AdminUser as AdminUserModel
+    import re
+
+    app = db.query(VendorApplication).filter(VendorApplication.id == application_id).first()
+    if not app:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    action = data.get("action", "approve")
+    if action not in ("approve", "reject"):
+        raise HTTPException(status_code=400, detail="action must be 'approve' or 'reject'")
+
+    app.status = "APPROVED" if action == "approve" else "REJECTED"
+    app.reviewed_by = admin.id
+    app.reviewed_at = utcnow()
+    app.notes = data.get("notes", "")
+
+    if action == "approve":
+        # Create slug from business name
+        slug = re.sub(r'[^a-z0-9]+', '-', app.business_name.lower().strip()).strip('-')
+        # Ensure uniqueness
+        existing_slug = db.query(RetailerModel).filter(RetailerModel.slug == slug).first()
+        if existing_slug:
+            slug = f"{slug}-{uuid.uuid4().hex[:6]}"
+
+        retailer = RetailerModel(
+            name=app.business_name,
+            slug=slug,
+            bio=app.description,
+            location=app.phone,
+            status="ACTIVE",
+            bank_name=app.bank_name,
+            account_number=app.account_number,
+            bank_code=app.bank_code,
+        )
+        db.add(retailer)
+        db.commit()
+        db.refresh(retailer)
+
+        # Create admin user with RETAILER role
+        temp_password = f"vendor-{uuid.uuid4().hex[:8]}"
+        new_admin = AdminUserModel(
+            email=app.email,
+            password=hash_password(temp_password),
+            name=app.full_name or app.business_name,
+            role=AdminRole.RETAILER,
+            vendor_id=retailer.id,
+        )
+        db.add(new_admin)
+        db.commit()
+
+        # Create vendor wallet
+        from app.models import VendorWallet
+        wallet = VendorWallet(retailer_id=retailer.id, balance=0.0, pending_balance=0.0)
+        db.add(wallet)
+        db.commit()
+
+        log_admin_action(db, admin, "approve", "vendor_application", application_id,
+                         f"Approved vendor '{app.business_name}' — created retailer {retailer.id}")
+
+        return {"success": True, "retailer_id": retailer.id, "admin_email": app.email, "temp_password": temp_password}
+    else:
+        log_admin_action(db, admin, "reject", "vendor_application", application_id,
+                         f"Rejected vendor '{app.business_name}'")
+        db.commit()
+        return {"success": True, "status": "REJECTED"}
+
+
+# ==============================================================================
+# AFFILIATE APPLICATION APPROVAL
+# ==============================================================================
+
+
+@router.post("/admin/affiliate/approve/{application_id}")
+def approve_affiliate_application(
+    application_id: str,
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT)),
+):
+    """Approve or reject an affiliate application. Creates Affiliate record on approval."""
+    from app.models import AffiliateApplication, Affiliate as AffiliateModel
+    import secrets
+
+    app = db.query(AffiliateApplication).filter(AffiliateApplication.id == application_id).first()
+    if not app:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    action = data.get("action", "approve")
+    if action not in ("approve", "reject"):
+        raise HTTPException(status_code=400, detail="action must be 'approve' or 'reject'")
+
+    app.status = "APPROVED" if action == "approve" else "REJECTED"
+    app.reviewed_by = admin.id
+    app.reviewed_at = utcnow()
+    app.notes = data.get("notes", "")
+
+    if action == "approve":
+        code = secrets.token_urlsafe(8).upper()
+        affiliate = AffiliateModel(
+            user_id=app.user_id,
+            code=code,
+            name=app.full_name,
+            email=app.email,
+            type="referral",
+            commission_rate=5.0,
+            status="ACTIVE",
+        )
+        db.add(affiliate)
+        db.commit()
+
+        log_admin_action(db, admin, "approve", "affiliate_application", application_id,
+                         f"Approved affiliate for user {app.user_id}")
+        return {"success": True, "affiliate_code": code}
+    else:
+        log_admin_action(db, admin, "reject", "affiliate_application", application_id,
+                         f"Rejected affiliate for user {app.user_id}")
+        db.commit()
+        return {"success": True, "status": "REJECTED"}
+
+
+# ==============================================================================
+# ADMIN VENDOR APPLICATIONS MANAGEMENT
+# ==============================================================================
+
+
+@router.get("/admin/vendor-applications")
+def list_vendor_applications(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT)),
+):
+    """List all vendor applications."""
+    from app.models import VendorApplication
+    apps = db.query(VendorApplication).order_by(VendorApplication.created_at.desc()).all()
+    return {
+        "applications": [
+            {
+                "id": a.id,
+                "business_name": a.business_name,
+                "email": a.email,
+                "phone": a.phone,
+                "status": a.status,
+                "created_at": a.created_at.isoformat() if a.created_at else None,
+            }
+            for a in apps
+        ]
+    }
+
+
+@router.get("/admin/affiliate-applications")
+def list_affiliate_applications(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT)),
+):
+    """List all affiliate applications."""
+    from app.models import AffiliateApplication
+    apps = db.query(AffiliateApplication).order_by(AffiliateApplication.created_at.desc()).all()
+    return {
+        "applications": [
+            {
+                "id": a.id,
+                "user_id": a.user_id,
+                "full_name": a.full_name,
+                "email": a.email,
+                "status": a.status,
+                "created_at": a.created_at.isoformat() if a.created_at else None,
+            }
+            for a in apps
+        ]
+    }
+
+
+# ==============================================================================
+# VENDOR RISK SAFEGUARD
+# ==============================================================================
+
+
+@router.post("/admin/vendor-risk-check")
+def vendor_risk_check(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT)),
+):
+    """Check all vendor ratings and auto-suspend those below threshold.
+
+    Reads the minimum rating threshold from SystemSettings.
+    """
+    from app.models import Retailer as RetailerModel, Product, Settings as SettingsModel
+
+    # Get threshold
+    setting = db.query(SettingsModel).filter(SettingsModel.key == "vendor_minimum_rating").first()
+    threshold = float(setting.value) if setting else 3.0
+    if threshold <= 0:
+        return {"success": True, "suspended": 0, "message": "Risk check disabled (threshold=0)"}
+
+    suspended = 0
+    retailers = db.query(RetailerModel).filter(RetailerModel.status == "ACTIVE").all()
+    for r in retailers:
+        if r.rating > 0 and r.rating < threshold:
+            r.status = "SUSPENDED"
+            # Hide all products from public storefront
+            db.query(Product).filter(Product.retailer_id == r.id).update({"inventory": 0})
+            suspended += 1
+
+    db.commit()
+
+    if suspended > 0:
+        log_admin_action(db, admin, "risk_check", "retailer", "",
+                         f"Auto-suspended {suspended} vendors below rating threshold {threshold}")
+
+    return {"success": True, "suspended": suspended, "threshold": threshold}
+
+
+# ==============================================================================
+# VENDOR PAYOUT PROCESSING (ADMIN)
+# ==============================================================================
+
+
+@router.post("/admin/payouts/{payout_id}/process")
+def process_payout(
+    payout_id: str,
+    data: dict,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT)),
+):
+    """Approve/reject and process a vendor payout request.
+
+    On APPROVE: triggers a background transfer via Paystack/Flutterwave bulk transfer API.
+    On REJECT: returns locked funds to vendor balance.
+    """
+    from app.models import PayoutRequest, VendorWallet, VendorWalletTransaction
+
+    payout = db.query(PayoutRequest).filter(PayoutRequest.id == payout_id).first()
+    if not payout:
+        raise HTTPException(status_code=404, detail="Payout request not found")
+
+    action = data.get("action", "approve")
+    if action not in ("approve", "reject"):
+        raise HTTPException(status_code=400, detail="action must be 'approve' or 'reject'")
+
+    payout.processed_by = admin.id
+    payout.processed_at = utcnow()
+
+    wallet = db.query(VendorWallet).filter(VendorWallet.retailer_id == payout.retailer_id).first()
+
+    if action == "reject":
+        payout.status = "REJECTED"
+        payout.notes = data.get("notes", "Rejected by admin")
+        # Return locked funds
+        if wallet:
+            wallet.locked_escrow_balance -= payout.amount
+            wallet.balance += payout.amount
+            tx = VendorWalletTransaction(
+                wallet_id=wallet.id,
+                transaction_type="refund",
+                amount=payout.amount,
+                balance_before=wallet.balance - payout.amount,
+                balance_after=wallet.balance,
+                reference=f"PAYOUT-REJECT-{payout.id[:8]}",
+                description=f"Payout rejected — funds returned",
+                status="COMPLETED",
+            )
+            db.add(tx)
+        db.commit()
+        log_admin_action(db, admin, "reject_payout", "payout", payout_id,
+                         f"Rejected payout ₦{payout.amount:.2f} for {payout.retailer_id}")
+        return {"success": True, "status": "REJECTED"}
+
+    # Approve and process
+    payout.status = "APPROVED"
+    payout.notes = data.get("notes", "")
+
+    # Background transfer via payment provider
+    try:
+        from app.config import get_settings as gs
+        cfg = gs()
+        import uuid as _uuid
+        ref = f"PAYOUT-{_uuid.uuid4().hex[:12].upper()}"
+        payout.payment_reference = ref
+
+        # Attempt Paystack transfer (if configured)
+        if cfg.paystack_secret_key and payout.account_number and payout.bank_code:
+            import requests as _requests
+            resp = _requests.post(
+                "https://api.paystack.co/transfer",
+                json={
+                    "source": "balance",
+                    "amount": int(payout.amount * 100),
+                    "currency": "NGN",
+                    "reason": f"Vendor payout for {payout.retailer_id}",
+                    "account_number": payout.account_number,
+                    "bank_code": payout.bank_code,
+                },
+                headers={"Authorization": f"Bearer {cfg.paystack_secret_key}"},
+                timeout=30,
+            )
+            result = resp.json()
+            if result.get("status"):
+                payout.status = "SUCCESSFUL"
+            else:
+                payout.status = "FAILED"
+                payout.failure_reason = result.get("message", "Transfer failed")
+        else:
+            # No gateway configured — mark as successful (manual processing)
+            payout.status = "SUCCESSFUL"
+
+        # On success: deduct from locked_escrow_balance
+        if payout.status == "SUCCESSFUL" and wallet:
+            wallet.locked_escrow_balance -= payout.amount
+            tx = VendorWalletTransaction(
+                wallet_id=wallet.id,
+                transaction_type="withdrawal",
+                amount=-payout.amount,
+                balance_before=wallet.balance,
+                balance_after=wallet.balance,
+                reference=ref,
+                description=f"Payout processed — ₦{payout.amount:.2f} transferred",
+                status="COMPLETED",
+            )
+            db.add(tx)
+
+    except Exception as e:
+        payout.status = "FAILED"
+        payout.failure_reason = str(e)
+
+    db.commit()
+    log_admin_action(db, admin, "process_payout", "payout", payout_id,
+                     f"Processed payout ₦{payout.amount:.2f} — status: {payout.status}")
+
+    # Send payout success receipt email via BackgroundTasks (non-blocking)
+    if payout.status == "SUCCESSFUL" and payout.retailer_id:
+        try:
+            from app.core.email import dispatch_email_background
+            from app.services.email_service import _render_email_template, _base_context
+            r_admin = db.query(AdminUser).filter(
+                AdminUser.vendor_id == payout.retailer_id,
+                AdminUser.role == AdminRole.RETAILER,
+            ).first()
+            if r_admin and r_admin.email:
+                retailer_obj = db.query(Retailer).filter(Retailer.id == payout.retailer_id).first()
+                r_name = retailer_obj.name if retailer_obj else r_admin.name or "Vendor"
+                html = _render_email_template("payout_processed.html", _base_context(
+                    heading="Payout Processed!",
+                    subtitle=f"₦{payout.amount:,.2f} paid",
+                    body_html=f"<p>Hi <strong>{r_name}</strong>, your payout has been processed.</p>",
+                    amount=payout.amount,
+                    earning_count=1,
+                    customer_name=r_name,
+                ))
+                background_tasks.add_task(dispatch_email_background, r_admin.email, f"Payout Processed — ForgeStore", html)
+        except Exception:
+            pass
+
+    return {"success": True, "status": payout.status, "reference": payout.payment_reference}
 
 
