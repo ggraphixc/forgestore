@@ -23,3 +23,7 @@ openai==1.55.0
 anthropic>=0.49.0
 pgvector>=0.3.0
 async-timeout>=5.0.0
+
+# --- Email ---
+brevo-python>=3.0.0
+aiosmtplib>=3.0.0
