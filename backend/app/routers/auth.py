@@ -3,14 +3,17 @@ from app.utils import utcnow
 
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, BackgroundTasks
 from fastapi.security import HTTPBearer
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+import httpx
 
 from app.database import get_db
 from app.models import AdminUser, User
 from app.schemas import LoginRequest
 from app.auth import verify_password, hash_password, create_access_token, get_current_admin, get_current_user, set_auth_cookie, delete_auth_cookie
+from app.config import get_settings
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 security = HTTPBearer(auto_error=False)
@@ -233,3 +236,86 @@ def setup_admin(db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Default admin created (admin@forgestore.com / admin123)"}
+
+
+# ===== Google OAuth =====
+
+@router.get("/google/login")
+async def google_login(request: Request):
+    """Redirects the client browser to Google's OAuth2 consent screen."""
+    settings = get_settings()
+    if not settings.google_client_id:
+        raise HTTPException(status_code=500, detail="Google OAuth is not configured on this server.")
+
+    redirect_uri = f"{settings.site_base_url.rstrip('/')}/api/auth/google/callback"
+    google_auth_url = (
+        "https://accounts.google.com/o/oauth2/v2/auth"
+        f"?response_type=code&client_id={settings.google_client_id}"
+        f"&redirect_uri={redirect_uri}&scope=openid%20email%20profile"
+        f"&access_type=offline&prompt=consent"
+    )
+    return RedirectResponse(url=google_auth_url)
+
+
+@router.get("/google/callback")
+async def google_callback(code: str, db: Session = Depends(get_db)):
+    """Exchanges auth code for tokens, verifies profile, and establishes session."""
+    settings = get_settings()
+    if not settings.google_client_id or not settings.google_client_secret:
+        raise HTTPException(status_code=500, detail="Google OAuth is not configured on this server.")
+
+    redirect_uri = f"{settings.site_base_url.rstrip('/')}/api/auth/google/callback"
+
+    # 1. Exchange authorization code for access tokens
+    async with httpx.AsyncClient() as client:
+        token_response = await client.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "code": code,
+                "client_id": settings.google_client_id,
+                "client_secret": settings.google_client_secret,
+                "redirect_uri": redirect_uri,
+                "grant_type": "authorization_code",
+            },
+        )
+        if token_response.status_code != 200:
+            raise HTTPException(status_code=400, detail="Failed to retrieve token from Google.")
+        token_data = token_response.json()
+        access_token = token_data.get("access_token")
+
+        # 2. Extract profile identity from Google UserInfo endpoint
+        user_info_response = await client.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        if user_info_response.status_code != 200:
+            raise HTTPException(status_code=400, detail="Failed to retrieve profile from Google.")
+        profile_data = user_info_response.json()
+
+    email = profile_data.get("email")
+    name = profile_data.get("name", email.split("@")[0]) if email else None
+    if not email:
+        raise HTTPException(status_code=400, detail="Google account did not provide a valid email.")
+
+    # 3. Synchronize with local user table
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        import secrets as _secrets
+        random_pass = _secrets.token_urlsafe(32)
+        user = User(
+            email=email,
+            name=name,
+            password=hash_password(random_pass),
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    # 4. Generate session JWT and set cookies
+    token_payload = {"sub": str(user.id), "email": user.email, "name": user.name, "type": "customer"}
+    session_jwt = create_access_token(data=token_payload, expires_delta=timedelta(days=30))
+
+    response = RedirectResponse(url="/shop")
+    set_auth_cookie(response, session_jwt, cookie_name="customer_token")
+    set_auth_cookie(response, session_jwt, cookie_name="access_token")
+    return response

@@ -30,8 +30,12 @@ class Settings(BaseSettings):
     site_base_url: str = "http://127.0.0.1:8000"
 
     # Brevo API (replaces SMTP for sending transactional emails)
-    # Generate an API v3 key from Brevo Dashboard → Settings → SMTP & API → API Keys
+    # Generate an API v3 key from Brevo Dashboard -> Settings -> SMTP & API -> API Keys
     brevo_api_key: str = ""
+
+    # Google OAuth
+    google_client_id: str = ""
+    google_client_secret: str = ""
 
     # Paystack payment gateway
     paystack_secret_key: str = ""
