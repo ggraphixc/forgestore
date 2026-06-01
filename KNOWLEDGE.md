@@ -141,6 +141,8 @@ forgestore/
 | `site_tagline` | `Your One-Stop Marketplace` | `SITE_TAGLINE` | Tagline |
 | `site_base_url` | `http://127.0.0.1:8000` | `SITE_BASE_URL` | Public URL (used in emails) |
 | `brevo_api_key` | `""` | `BREVO_API_KEY` | Brevo API v3 key |
+| `google_client_id` | `""` | `GOOGLE_CLIENT_ID` | Google OAuth client ID |
+| `google_client_secret` | `""` | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
 | `paystack_secret_key` | `""` | `PAYSTACK_SECRET_KEY` | Paystack secret key |
 | `paystack_public_key` | `""` | `PAYSTACK_PUBLIC_KEY` | Paystack public key |
 | `flutterwave_secret_key` | `""` | `FLUTTERWAVE_SECRET_KEY` | Flutterwave secret key |
@@ -312,6 +314,8 @@ ROLE_PERMISSIONS = {
 | POST | `/api/auth/signup` | Creates customer account, sets `customer_token` cookie |
 | POST | `/api/auth/logout` | Deletes both `access_token` and `customer_token` cookies |
 | GET | `/api/auth/me` | Returns authenticated user info (uses unified `get_current_user`) |
+| GET | `/api/auth/google/login` | Redirects browser to Google OAuth2 consent screen |
+| GET | `/api/auth/google/callback` | Exchanges auth code for tokens, creates user if first-time, sets session cookies, redirects to `/shop` |
 
 ### Admin API Router (`/api/admin`)
 
@@ -679,12 +683,14 @@ All **123 tests** currently pass (117 passed + 6 xfailed for external API keys).
 | `SMTP_PASSWORD` | ❌ | |
 | `FROM_EMAIL` | ❌ | |
 | `BREVO_API_KEY` | ❌ | Alternative to SMTP |
+| `GOOGLE_CLIENT_ID` | ❌ | Google OAuth client ID (for social login) |
+| `GOOGLE_CLIENT_SECRET` | ❌ | Google OAuth client secret |
 | `DEBUG` | ❌ | Set `false` in production |
 | `SECURE_COOKIES` | ❌ | Set `true` in production (HTTPS) |
 
 ### Sensitive Env Vars (set in Render dashboard, marked `sync: false` in render.yaml)
 
-DATABASE_URL, SECRET_KEY, SITE_BASE_URL, CORS_ORIGINS, PAYSTACK_SECRET_KEY, PAYSTACK_PUBLIC_KEY, FLUTTERWAVE_SECRET_KEY, FLUTTERWAVE_PUBLIC_KEY, FLUTTERWAVE_ENCRYPTION_KEY, DEFAULT_PAYMENT_PROVIDER, SMTP_* vars, FROM_EMAIL
+DATABASE_URL, SECRET_KEY, SITE_BASE_URL, CORS_ORIGINS, PAYSTACK_SECRET_KEY, PAYSTACK_PUBLIC_KEY, FLUTTERWAVE_SECRET_KEY, FLUTTERWAVE_PUBLIC_KEY, FLUTTERWAVE_ENCRYPTION_KEY, DEFAULT_PAYMENT_PROVIDER, SMTP_* vars, FROM_EMAIL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
 
 ### Deployment Process
 
@@ -1121,3 +1127,30 @@ When checkout cart contains items from multiple vendors:
 `python -m app.scripts.seed_staging_marketplace`:
 - 1 DIR_ADMIN, 3 vendors with wallets, 10 products across 4 categories
 - All 63+ SystemSettings seeded
+
+---
+
+### 2026-06-01: Google OAuth Integration & Email Dependencies Fix
+
+**Scope:** Added Google OAuth social login, removed GitHub auth buttons, fixed missing email dependencies.
+
+**Files Changed:**
+
+#### Authentication
+- `backend/app/routers/auth.py` — Added `GET /api/auth/google/login` (redirects to Google consent screen) and `GET /api/auth/google/callback` (exchanges code for tokens, creates user if first-time, sets session cookies). Uses `httpx.AsyncClient` for non-blocking HTTP requests. Imports: `RedirectResponse`, `httpx`, `get_settings`.
+- `backend/app/config.py` — Added `google_client_id: str = ""` and `google_client_secret: str = ""` to `Settings` class.
+- `backend/.env.example` — Added `# Google OAuth` section with `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` placeholders.
+
+#### Templates
+- `backend/app/templates/web/login.html` — Removed GitHub button, replaced dual social button layout with single Google button linking to `/api/auth/google/login`.
+- `backend/app/templates/web/signup.html` — Same change as login.html.
+
+#### Dependencies
+- `backend/requirements.txt` — Added `brevo-python>=3.0.0` and `aiosmtplib>=3.0.0` (both were missing, causing email fallback to console).
+
+#### Environment
+- `backend/.env` — Added `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` with production credentials.
+
+**Setup Required:**
+- Add Google OAuth credentials to Render environment variables
+- Configure Authorized redirect URI in Google Cloud Console: `https://forgestore1.onrender.com/api/auth/google/callback`
