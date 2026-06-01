@@ -75,7 +75,7 @@ forgestore/
 │   │   │   └── api_shipment.py       # Order tracking API
 │   │   ├── services/
 │   │   │   ├── __init__.py
-│   │   │   ├── email_service.py      # SMTP + Brevo transactional email
+│   │   │   ├── email_service.py      # Email templates + dispatch helpers
 │   │   │   ├── ai_service.py         # AI content generation + settings defs
 │   │   │   ├── ai_chat_service.py    # AI shopping assistant chat
 │   │   │   ├── payment_provider.py   # Abstract payment facade + Paystack/Flutterwave
@@ -141,6 +141,8 @@ forgestore/
 | `site_tagline` | `Your One-Stop Marketplace` | `SITE_TAGLINE` | Tagline |
 | `site_base_url` | `http://127.0.0.1:8000` | `SITE_BASE_URL` | Public URL (used in emails) |
 | `brevo_api_key` | `""` | `BREVO_API_KEY` | Brevo API v3 key |
+| `mail_from_email` | `noreply@forgestore.com` | `MAIL_FROM_EMAIL` | Verified Brevo sender email |
+| `mail_console_fallback` | `False` | `MAIL_CONSOLE_FALLBACK` | Console dump instead of sending |
 | `google_client_id` | `""` | `GOOGLE_CLIENT_ID` | Google OAuth client ID |
 | `google_client_secret` | `""` | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
 | `paystack_secret_key` | `""` | `PAYSTACK_SECRET_KEY` | Paystack secret key |
@@ -482,16 +484,26 @@ Admin templates use a collapsible sidebar (w-80/w-72), top header, search overla
 
 ## 10. Email & Notifications
 
-### Email Service (`backend/app/services/email_service.py`)
+### Email Service (`backend/app/core/email.py`)
 
-- **Primary:** Brevo API v3 (`BREVO_API_KEY` env var)
-- **Fallback:** SMTP (configurable via env vars)
-- **Fallback fallback:** Logs to console if neither configured
+- **Transport:** Brevo HTTP API v3 via `httpx.AsyncClient` — HTTPS POST to `https://api.brevo.com/v3/smtp/email`
+- **No SMTP ports** — completely bypasses STARTTLS/raw TCP, routes via secure HTTPS
+- **Verified sender:** `MAIL_FROM_EMAIL` env var (must be verified in Brevo dashboard)
+- **Fallback:** Console stdout dump when `MAIL_CONSOLE_FALLBACK=True` or `BREVO_API_KEY` missing
+
+### Configuration
+
+| Env Var | Default | Description |
+|---|---|---|
+| `BREVO_API_KEY` | `""` | Brevo API v3 key (from Dashboard > Settings > SMTP & API > API Keys) |
+| `MAIL_FROM_EMAIL` | `noreply@forgestore.com` | Verified sender email address |
+| `MAIL_CONSOLE_FALLBACK` | `False` | When `True`, emails print to stdout instead of sending |
 
 ### Sending Emails
 
 Functions:
-- `send_email(to_email, subject, html_content)` — Low-level send
+- `send_platform_email(to_email, subject, html_content)` — Async Brevo HTTP API v3 dispatch
+- `dispatch_email_background(to, subject, html)` — Non-blocking wrapper (auto-detects running event loop)
 - `send_order_status_email(to_email, order_number, customer_name, status)` — Order status notifications
 - `send_password_reset_email(to_email, reset_link, customer_name)` — Password reset
 - `send_broadcast_campaign(subscriber_email, subject, html_content, campaign_id, subscriber_id)` — Newsletter broadcasts
@@ -985,7 +997,7 @@ Run: `python seed_settings.py`
 8. **Payment providers use abstraction layer** — `payment_provider.py` defines a common interface, both Paystack and Flutterwave implement it, and the factory picks the right one from env config
 9. **Flutterwave webhook uses `verif-hash` static comparison** — unlike Paystack's HMAC-SHA512, Flutterwave sends a pre-configured hash token that must match `flutterwave_encryption_key`
 10. **Abandoned carts** cleaned up on startup (items older than 30 days)
-11. **Email engine is fully async** — `app.core.email.send_platform_email()` uses `aiosmtplib`, resolves SMTP from DB per-send, console fallback when unconfigured
+11. **Email engine is fully async** — `app.core.email.send_platform_email()` uses `httpx` to POST to Brevo HTTP API v3 (`/v3/smtp/email`), no SMTP ports or STARTTLS; console fallback when `MAIL_CONSOLE_FALLBACK=True` or `BREVO_API_KEY` missing
 12. **WebSocket chat is JWT-authenticated** — `ws/chat/{token}` validates token on handshake, persists offline messages
 13. **Webhook idempotency** — `WebhookPayloadLog` prevents duplicate processing of payment events
 14. **Vendor wallet isolation** — `VendorWallet` model isolates per-vendor balances; `locked_escrow_balance` for pending payouts
@@ -1169,3 +1181,18 @@ When checkout cart contains items from multiple vendors:
 
 #### Admin Cleanup
 - `backend/app/routers/admin.py` — Removed 18 unused imports (`HTTPException`, `Form`, `OrderStatus`, `ShipmentEvent`, `DeliveryAgent`, `AffiliateCommission`, `VendorAnalytics`, `VendorPayout`, `NotificationQueue`, `OrderEarning`, `ChatModeration`, `ProductCreate`, `ProductUpdate`, `CategoryCreate`, `CategoryUpdate`, `RetailerCreate`, `RetailerUpdate`, `AdminRole`). Removed redundant `from sqlalchemy import func` inside `ads_settings_page()`.
+
+---
+
+### 2026-06-01: Brevo HTTP API v3 Migration (Email Subsystem)
+
+**Scope:** Migrated email transport from SMTP/aiosmtplib/brevo-python to direct Brevo HTTP API v3 via httpx. No raw TCP ports, no STARTTLS negotiation.
+
+**Files Changed:**
+
+#### Environment & Config
+- `backend/.env` — Removed `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `FROM_EMAIL`. Added `MAIL_FROM_EMAIL=ggraphixc@gmail.com` and `MAIL_CONSOLE_FALLBACK=False`.
+- `backend/app/config.py` — Added `mail_from_email: str = "noreply@forgestore.com"` and `mail_console_fallback: bool = False` Pydantic fields.
+
+#### Core Email Engine
+- `backend/app/core/email.py` — **Complete rewrite.** Removed `aiosmtplib`, `brevo_python`, `MIMEMultipart`, DB-driven SMTP config (`_get_db_smtp_config`), and sync Brevo SDK wrapper (`_send_via_brevo_sync`). Now uses a single `httpx.AsyncClient` HTTPS POST to `https://api.brevo.com/v3/smtp/email` with `api-key` header auth. Console fallback on missing API key, HTTP rejection, or connection failure. `_resolve_config()` reads from Pydantic settings. Public API signatures (`send_platform_email`, `dispatch_email_background`) unchanged — all 8 consumer files compatible without modification.

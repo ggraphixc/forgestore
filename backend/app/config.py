@@ -29,9 +29,15 @@ class Settings(BaseSettings):
     # Base URL for the site (used in emails, etc.)
     site_base_url: str = "http://127.0.0.1:8000"
 
-    # Brevo API (replaces SMTP for sending transactional emails)
+    # Brevo HTTP API v3 (replaces SMTP for sending transactional emails)
     # Generate an API v3 key from Brevo Dashboard -> Settings -> SMTP & API -> API Keys
     brevo_api_key: str = ""
+
+    # Brevo verified sender email
+    mail_from_email: str = "noreply@forgestore.com"
+
+    # Console fallback: when True, emails print to stdout instead of sending
+    mail_console_fallback: bool = False
 
     # Google OAuth
     google_client_id: str = ""
