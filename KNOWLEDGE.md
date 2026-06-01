@@ -61,21 +61,27 @@ forgestore/
 │   │   ├── auth.py                   # [SHIM] Re-exports from app.core.security
 │   │   ├── core/
 │   │   │   ├── __init__.py
-│   │   │   └── security.py           # JWT, password hashing, RBAC, dependencies
+│   │   │   ├── security.py           # JWT, password hashing, RBAC, dependencies
+│   │   │   ├── notifications.py      # SMS alerts via Termii API
+│   │   │   ├── cache.py              # Redis cache-aside pattern (search, homepage)
+│   │   │   └── redis_manager.py      # Singleton Redis connection pool
 │   │   ├── routers/
 │   │   │   ├── auth.py               # /api/auth/* (login, signup, logout, me, google OAuth)
 │   │   │   ├── admin.py              # /admin/* (dashboard, CRUD pages)
 │   │   │   ├── admin_api.py          # /api/admin/* (REST APIs for admin panel)
 │   │   │   ├── web.py                # /shop/* (storefront pages)
 │   │   │   ├── web_api.py            # /api/* (public storefront APIs)
+│   │   │   ├── orders.py             # /api/orders/* (multi-vendor checkout, split-payments)
 │   │   │   ├── paystack_webhook.py   # /api/paystack/webhook
 │   │   │   ├── flutterwave_webhook.py# /api/flutterwave/webhook
 │   │   │   ├── api_admin_ext.py      # Extended admin APIs (shipments, notifications, analytics, affiliates, wallet, reviews)
 │   │   │   ├── api_web_ext.py        # Extended web APIs (AI chat, smart search, wallet, referrals, tracking)
-│   │   │   └── api_shipment.py       # Order tracking API
+│   │   │   ├── api_shipment.py       # Order tracking API
+│   │   │   └── search.py            # /api/v1/search (weighted search with Redis cache)
 │   │   ├── services/
 │   │   │   ├── __init__.py
 │   │   │   ├── email_service.py      # Email templates + dispatch helpers
+│   │   │   ├── split_payments.py     # Paystack split-payment engine (subaccount routing)
 │   │   │   ├── ai_service.py         # AI content generation + settings defs
 │   │   │   ├── ai_chat_service.py    # AI shopping assistant chat
 │   │   │   ├── payment_provider.py   # Abstract payment facade + Paystack/Flutterwave
@@ -132,11 +138,6 @@ forgestore/
 | `secret_key` | `change-this-to-...` | `SECRET_KEY` | JWT signing key |
 | `algorithm` | `HS256` | `ALGORITHM` | JWT algorithm |
 | `access_token_expire_minutes` | `1440` (24h) | `ACCESS_TOKEN_EXPIRE_MINUTES` | Token lifetime |
-| `smtp_host` | `""` | `SMTP_HOST` | SMTP server host |
-| `smtp_port` | `587` | `SMTP_PORT` | SMTP server port |
-| `smtp_user` | `""` | `SMTP_USER` | SMTP username |
-| `smtp_password` | `""` | `SMTP_PASSWORD` | SMTP password |
-| `from_email` | `noreply@forgestore.com` | `FROM_EMAIL` | Sender email |
 | `site_name` | `ForgeStore` | `SITE_NAME` | Brand name |
 | `site_tagline` | `Your One-Stop Marketplace` | `SITE_TAGLINE` | Tagline |
 | `site_base_url` | `http://127.0.0.1:8000` | `SITE_BASE_URL` | Public URL (used in emails) |
@@ -507,6 +508,14 @@ Functions:
 - `send_order_status_email(to_email, order_number, customer_name, status)` — Order status notifications
 - `send_password_reset_email(to_email, reset_link, customer_name)` — Password reset
 - `send_broadcast_campaign(subscriber_email, subject, html_content, campaign_id, subscriber_id)` — Newsletter broadcasts
+
+### SMS Notifications (`backend/app/core/notifications.py`)
+
+- **Provider:** Termii API (`https://api.ng.termii.com/api/sms/send`)
+- **Config:** `TERMII_API_KEY` and `TERMII_SENDER_ID` env vars
+- **Fallback:** Console logging when API key missing
+- Functions: `trigger_sms_tracking_alert(phone, message)`, `send_order_status_sms(phone, order_number, status)`, `send_payout_sms(phone, amount, status)`
+- **Wired into:** VendorFulfillment status changes in disputes router (PROCESSING, CANCELLED)
 
 ### Admin Notifications
 
@@ -1002,6 +1011,10 @@ Run: `python seed_settings.py`
 13. **Webhook idempotency** — `WebhookPayloadLog` prevents duplicate processing of payment events
 14. **Vendor wallet isolation** — `VendorWallet` model isolates per-vendor balances; `locked_escrow_balance` for pending payouts
 15. **Daily analytics materialization** — Pre-computed `DailyMarketplaceSnapshot` and `DailyVendorSnapshot` tables power dashboards without real-time aggregation
+16. **Split-payment engine** — `build_paystack_split_payload()` queries `market_commission_percentage` from Settings, deducts per-vendor `commission_rate`, maps to Paystack subaccounts via flat split with `bearer_type: "all"`. Returns `(url, headers, payload)` tuple for async httpx POST.
+17. **Mixed cart checkout** — `POST /api/orders/checkout` groups cart items by vendor, calculates per-vendor shipping/tax, creates parent `Order` + `VendorFulfillment` rows with `PENDING_PAYMENT` status, initializes Paystack split transaction at gateway level.
+18. **Weighted search** — `GET /api/v1/search` uses SQL scoring: name match +10, category +5, description +1. Results sorted by relevance score descending.
+19. **Redis cache layer** — Search results cached with MD5-hashed composite keys (`cache:search:{hash}`, 300s TTL). Homepage product grids (flagship, new arrivals, top products) cached in Redis with 300s TTL. `_rehydrate_products()` restores ORM objects from cached dicts.
 
 ---
 
@@ -1196,3 +1209,64 @@ When checkout cart contains items from multiple vendors:
 
 #### Core Email Engine
 - `backend/app/core/email.py` — **Complete rewrite.** Removed `aiosmtplib`, `brevo_python`, `MIMEMultipart`, DB-driven SMTP config (`_get_db_smtp_config`), and sync Brevo SDK wrapper (`_send_via_brevo_sync`). Now uses a single `httpx.AsyncClient` HTTPS POST to `https://api.brevo.com/v3/smtp/email` with `api-key` header auth. Console fallback on missing API key, HTTP rejection, or connection failure. `_resolve_config()` reads from Pydantic settings. Public API signatures (`send_platform_email`, `dispatch_email_background`) unchanged — all 8 consumer files compatible without modification.
+
+---
+
+### 2026-06-01: Homepage Copy Rewrite, Global Jinja2 Context, Vendor Low-Stock Alerts
+
+**Scope:** Terminology modernization, template context safety, and automated inventory monitoring.
+
+**Files Changed:**
+
+#### Homepage Copy Rewrite
+- `backend/app/templates/web/index.html` — 8 replacements: artisan→store owner, artisans→vendors, Artisan Shops→Vendor Shops, Master Craftspeople→Top Sellers. CSS class `card-artisan` left untouched.
+
+#### Global Jinja2 Context Pipeline
+- `backend/app/templates_shared.py` — Added `env.globals["site_settings_fallback"]` (callable Pydantic settings dict) and `env.globals["get_global_context"]` (DB-aware resolver with fallback). `render_template()` auto-injects `settings` if not in context — eliminates missing-variable template crashes.
+
+#### Vendor Low-Stock Alerts
+- `backend/app/routers/vendor_portal.py` — Added `GET /api/vendor/alerts/low-stock` endpoint. Reads `low_stock_limit` from Settings (default 5), queries products at/below threshold. Dashboard route now injects `low_stock_count` and `low_stock_items` into template context.
+- `backend/app/templates/vendor/dashboard.html` — Amber alert banner when products are low on stock, showing item names, stock counts, and "view all" link.
+
+---
+
+### 2026-06-01: Automated Payouts, Vendor Ad Campaigns, Weighted Search, SMS Tracking
+
+**Scope:** Bank payout automation, self-service ad creation, search performance optimization, and real-time SMS alerts.
+
+**Files Changed:**
+
+#### Automated Bank Payout Pipeline
+- `backend/app/services/payment_provider.py` — Added `BankTransferEngine` class with `create_transfer_recipient()` (POST `/transferrecipient`) and `initiate_transfer()` (POST `/transfer`). Factory `get_bank_transfer_engine()` returns engine if Paystack configured.
+- `backend/app/routers/vendor_portal.py` — Added `POST /api/vendor/payouts/request`. Validates accessible balance (balance - locked_escrow_balance), locks funds, creates `PayoutRequest` record.
+- `backend/app/routers/admin_api.py` — Added `POST /api/admin/payouts/{id}/approve`. Triggers automated Paystack transfer via `BankTransferEngine`, deducts `locked_escrow_balance` on success, sends email + SMS notifications.
+
+#### Self-Service Vendor Ad Campaigns
+- `backend/app/routers/vendor_portal.py` — Added `POST /api/vendor/ads/launch`. Validates vendor wallet balance, deducts budget, creates `AdCampaign` with `PENDING` status. Supports `ad_type`, `banner_url`, `start_date`, `end_date`, `budget`, `ad_subtype`, `banner_type`, `note`.
+- `backend/app/routers/web.py` — Homepage ad query ordered by `impressions` descending (budget/weight proxy) for bidding priority.
+
+#### Weighted Search Optimization
+- `backend/app/routers/search.py` — **New file.** `GET /api/v1/search` with SQL scoring: name match +10, category +5, description +1. Supports price/category filters, pagination, relevance-sorted results.
+
+#### SMS Tracking Alerts
+- `backend/app/core/notifications.py` — **New file.** `trigger_sms_tracking_alert()` via Termii API (`https://api.ng.termii.com/api/sms/send`) with console fallback. `send_order_status_sms()` and `send_payout_sms()` convenience functions.
+- `backend/app/routers/disputes.py` — SMS hooks wired into `VendorFulfillment` status changes (PROCESSING, CANCELLED) — triggers order status SMS to customer when dispute resolution changes fulfillment state.
+
+---
+
+### 2026-06-01: Paystack Split-Payments, Mixed Cart Checkout, Redis Cache Layer
+
+**Scope:** Gateway-level split-payment routing, multi-vendor cart refactor, and Redis caching for search + homepage.
+
+**Files Changed:**
+
+#### Split-Payment Engine
+- `backend/app/services/split_payments.py` — **Complete rewrite.** Core function `build_paystack_split_payload(db, email, order_reference, total_amount_kobo, items_by_vendor)` queries `market_commission_percentage` from Settings, calculates per-vendor commission deduction using `retailer.commission_rate`, resolves `paystack_subaccount_code`, builds flat-split Paystack payload with `bearer_type: "all"`. Returns `(url, headers, payload)` tuple for async httpx POST. Retained `calculate_vendor_splits_sync()`, `create_transfer_recipient_sync()`, `initiate_transfer_sync()` for non-async contexts.
+
+#### Mixed Cart Checkout Router
+- `backend/app/routers/orders.py` — **New file.** `POST /api/orders/checkout` accepts `{"items": [...], "email", "name", "phone", "address"}`, groups cart items by vendor, calculates per-vendor shipping/tax, creates parent `Order` + `VendorFulfillment` rows with `PENDING_PAYMENT` status, calls `build_paystack_split_payload`, executes async Paystack initialization, returns checkout URL.
+
+#### Redis Cache Layer
+- `backend/app/routers/search.py` — Search results cached with MD5-hashed composite keys (`cache:search:{hash}`, 300s TTL). Returns `cache_hit` flag. Added `GET /api/v1/categories/cached` endpoint with 300s TTL.
+- `backend/app/routers/web.py` — Homepage product grids (flagship, new arrivals, top products) cached in Redis with 300s TTL. Added `_product_dict()` serializer and `_rehydrate_products()` ORM rehydrator for cache-to-template pipeline.
+- `backend/app/main.py` — Registered `orders_router`.
