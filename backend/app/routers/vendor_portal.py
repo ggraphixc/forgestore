@@ -39,7 +39,12 @@ def _require_retailer(request: Request, db: Session):
 @router.get("/vendor/apply", response_class=HTMLResponse)
 def vendor_apply_page(request: Request, db: Session = Depends(get_db)):
     """Public page for vendor applications."""
-    return render_template("web/apply-vendor.html", {"request": request})
+    from app.config import get_site_settings
+    site_settings = get_site_settings(db)
+    return render_template("web/apply-vendor.html", {
+        "request": request,
+        "settings": site_settings,
+    })
 
 
 @router.get("/vendor/dashboard", response_class=HTMLResponse)
