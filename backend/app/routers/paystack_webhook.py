@@ -8,7 +8,7 @@ Handles:
 import json
 import logging
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, BackgroundTasks
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
@@ -19,6 +19,7 @@ from app.models import (
     VendorWallet, VendorWalletTransaction, VendorNotification, Settings,
 )
 from app.services.paystack_service import verify_webhook_signature, verify_payment
+from app.core.notifications import send_platform_email, send_whatsapp_interactive_alert
 
 logger = logging.getLogger("forgestore.paystack_webhook")
 
@@ -96,7 +97,7 @@ def _create_vendor_low_stock_alert(db: Session, retailer_id: str, product_id: st
 
 
 @router.post("/paystack/webhook")
-async def paystack_webhook(request: Request):
+async def paystack_webhook(request: Request, background_tasks: BackgroundTasks = None):
     """
     Receive Paystack webhook events with idempotency guard.
     """
@@ -223,14 +224,39 @@ async def paystack_webhook(request: Request):
         )
         db.add(notif)
 
-        # Send payment confirmation email
-        from app.services.email_service import send_order_status_email
+        # Send payment confirmation email + WhatsApp notification
         customer = db.query(User).filter(User.id == order.customer_id).first()
-        if customer and customer.email:
-            try:
-                send_order_status_email(customer.email, order.order_number, customer.name or "Customer", "PAID")
-            except Exception:
-                logger.exception("Failed to send payment email")
+        customer_email = customer.email if customer else None
+        customer_phone = metadata.get("phone", "")
+        if customer and not customer_phone:
+            customer_phone = getattr(customer, "phone", "") or ""
+
+        if customer_email:
+            email_body = f"""
+            <h2>Order Payment Confirmed!</h2>
+            <p>Your transaction reference <strong>{reference}</strong> has been successfully verified.</p>
+            <p>Our vendors have been notified and are currently preparing your goods for dispatch.</p>
+            """
+            if background_tasks:
+                background_tasks.add_task(
+                    send_platform_email,
+                    to_email=customer_email,
+                    subject=f"ForgeStore Order Confirmed — {reference}",
+                    html_content=email_body,
+                )
+            else:
+                try:
+                    await send_platform_email(customer_email, f"ForgeStore Order Confirmed — {reference}", email_body)
+                except Exception:
+                    logger.exception("Failed to send payment email")
+
+        if customer_phone and background_tasks:
+            background_tasks.add_task(
+                send_whatsapp_interactive_alert,
+                to_phone=customer_phone,
+                template_name="order_payment_success",
+                parameters=[reference, "Processing"],
+            )
 
         # Mark webhook as processed
         wl = db.query(WebhookPayloadLog).filter(WebhookPayloadLog.event_id == str(event_id)).first()
