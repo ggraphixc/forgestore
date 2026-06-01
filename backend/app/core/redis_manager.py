@@ -212,13 +212,16 @@ class _NullRedisAsync:
 
 # ─── Singleton ──────────────────────────────────────────────────────
 
+import os
+
+# Read the Render private network string, falling back to local machine loop only in development
+redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+
+
 @lru_cache()
 def get_redis() -> RedisManager:
     """Get the singleton Redis manager instance."""
-    from app.config import get_settings
-    settings = get_settings()
-    url = getattr(settings, "redis_url", None) or "redis://localhost:6379/0"
-    return RedisManager(url=url)
+    return RedisManager(url=redis_url)
 
 
 # Module-level convenience reference for easy imports
