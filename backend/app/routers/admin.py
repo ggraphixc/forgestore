@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, Form, UploadFile, File
+from fastapi import APIRouter, Depends, Request, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
@@ -10,17 +10,12 @@ import uuid
 from app.database import get_db
 from app.models import (
     AdminUser, Product, Category, Retailer, Order, OrderItem,
-    User, Settings, OrderStatus, NewsletterSubscriber,
+    User, Settings, NewsletterSubscriber,
     BroadcastCampaign, BroadcastTemplate,
-    Shipment, ShipmentEvent, DeliveryAgent, Affiliate, AffiliateCommission,
-    VendorAnalytics, VendorPayout, NotificationQueue, AdCampaign, PromoAd, OrderEarning,
-    ProductChatMessage, ChatModeration
+    Shipment, Affiliate, AdCampaign, PromoAd,
+    ProductChatMessage,
 )
-from app.schemas import (
-    ProductCreate, ProductUpdate, CategoryCreate, CategoryUpdate,
-    RetailerCreate, RetailerUpdate,
-)
-from app.auth import hash_password, verify_password, get_current_user_from_cookie, has_permission, AdminRole, log_admin_action
+from app.auth import hash_password, verify_password, get_current_user_from_cookie, has_permission, log_admin_action
 from app.config import get_settings
 from app.templates_shared import render_template
 
@@ -913,7 +908,6 @@ def ads_settings_page(request: Request, db: Session = Depends(get_db)):
         site_settings[key] = s.value if s else ""
 
     # Get promo ad counts by subtype
-    from sqlalchemy import func
     subtype_counts = dict(
         db.query(PromoAd.ad_subtype, func.count(PromoAd.id))
         .group_by(PromoAd.ad_subtype)
