@@ -15,13 +15,6 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 1440  # 24 hours
     upload_dir: str = "app/static/uploads/products"
 
-    # SMTP Settings for transactional emails
-    smtp_host: str = ""
-    smtp_port: int = 587
-    smtp_user: str = ""
-    smtp_password: str = ""
-    from_email: str = "noreply@forgestore.com"
-
     # Site branding (used in emails, templates)
     site_name: str = "ForgeStore"
     site_tagline: str = "Your One-Stop Marketplace"
@@ -78,12 +71,10 @@ class Settings(BaseSettings):
             warnings.append("DATABASE_URL is using SQLite — set to PostgreSQL for production")
         if "change-this-to" in self.secret_key.lower():
             warnings.append("SECRET_KEY is still the default value — generate a strong random key for production")
-        if not self.smtp_host or not self.smtp_user:
-            warnings.append("SMTP is not configured — transactional emails will print to console only")
         if not self.site_base_url or "127.0.0.1" in self.site_base_url:
             warnings.append("SITE_BASE_URL is set to localhost — update for production")
-        if not self.brevo_api_key:
-            warnings.append("BREVO_API_KEY is not set — transactional emails will use SMTP or fall back to console")
+        if not self.brevo_api_key and not self.mail_console_fallback:
+            warnings.append("BREVO_API_KEY is not set and console fallback is off — emails will fail")
         if not self.paystack_secret_key:
             warnings.append("PAYSTACK_SECRET_KEY is not set — payment gateway will be unavailable")
         if not self.paystack_public_key:
