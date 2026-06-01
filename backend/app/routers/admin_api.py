@@ -3206,3 +3206,131 @@ def process_payout(
     return {"success": True, "status": payout.status, "reference": payout.payment_reference}
 
 
+@router.post("/admin/payouts/{payout_id}/approve")
+def approve_payout_automated(
+    payout_id: str,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT)),
+):
+    """Approve and automatically process a vendor payout via Paystack Transfer Engine.
+
+    Creates a transfer recipient if needed, initiates bank transfer,
+    deducts from locked_escrow_balance on success, flags status to SUCCESSFUL.
+    """
+    from app.models import PayoutRequest, VendorWallet, VendorWalletTransaction, Retailer
+
+    payout = db.query(PayoutRequest).filter(PayoutRequest.id == payout_id).first()
+    if not payout:
+        raise HTTPException(status_code=404, detail="Payout request not found")
+    if payout.status not in ("PENDING", "APPROVED"):
+        raise HTTPException(status_code=400, detail=f"Payout already {payout.status}")
+
+    if not payout.account_number or not payout.bank_code:
+        raise HTTPException(status_code=400, detail="Vendor bank details incomplete")
+
+    payout.status = "APPROVED"
+    payout.processed_by = admin.id
+    payout.processed_at = utcnow()
+    db.commit()
+
+    # Attempt automated bank transfer
+    from app.services.payment_provider import get_bank_transfer_engine
+    engine = get_bank_transfer_engine()
+
+    if engine:
+        import uuid as _uuid
+        ref = f"PAYOUT-{_uuid.uuid4().hex[:12].upper()}"
+        payout.payment_reference = ref
+
+        retailer = db.query(Retailer).filter(Retailer.id == payout.retailer_id).first()
+        recipient_name = payout.account_name or (retailer.name if retailer else "Vendor")
+
+        # Step A: Create transfer recipient
+        recipient_result = engine.create_transfer_recipient(
+            name=recipient_name,
+            bank_code=payout.bank_code,
+            account_number=payout.account_number,
+        )
+
+        if recipient_result.get("success"):
+            # Step B: Initiate transfer
+            transfer_result = engine.initiate_transfer(
+                recipient_code=recipient_result["recipient_code"],
+                amount=payout.amount,
+                reason=f"Vendor payout — {recipient_name}",
+            )
+            if transfer_result.get("success"):
+                payout.status = "SUCCESSFUL"
+            else:
+                payout.status = "FAILED"
+                payout.failure_reason = transfer_result.get("message", "Transfer failed")
+        else:
+            payout.status = "FAILED"
+            payout.failure_reason = recipient_result.get("message", "Recipient creation failed")
+    else:
+        # No Paystack configured — mark as manual processing
+        payout.status = "SUCCESSFUL"
+
+    # On success: deduct from locked_escrow_balance
+    wallet = db.query(VendorWallet).filter(VendorWallet.retailer_id == payout.retailer_id).first()
+    if payout.status == "SUCCESSFUL" and wallet:
+        wallet.locked_escrow_balance -= payout.amount
+        tx = VendorWalletTransaction(
+            wallet_id=wallet.id,
+            transaction_type="withdrawal",
+            amount=-payout.amount,
+            balance_before=wallet.balance,
+            balance_after=wallet.balance,
+            reference=payout.payment_reference or "",
+            description=f"Payout processed — ₦{payout.amount:.2f} transferred",
+            status="COMPLETED",
+        )
+        db.add(tx)
+
+    db.commit()
+    log_admin_action(db, admin, "approve_payout", "payout", payout_id,
+                     f"Approved payout ₦{payout.amount:.2f} — status: {payout.status}")
+
+    # Send email + SMS notification
+    if payout.status == "SUCCESSFUL" and payout.retailer_id:
+        try:
+            from app.core.email import dispatch_email_background
+            from app.services.email_service import _render_email_template, _base_context
+            r_admin = db.query(AdminUser).filter(
+                AdminUser.vendor_id == payout.retailer_id,
+                AdminUser.role == AdminRole.RETAILER,
+            ).first()
+            if r_admin and r_admin.email:
+                r_name = (retailer.name if retailer else r_admin.name) or "Vendor"
+                html = _render_email_template("payout_processed.html", _base_context(
+                    heading="Payout Processed!",
+                    subtitle=f"₦{payout.amount:,.2f} paid",
+                    body_html=f"<p>Hi <strong>{r_name}</strong>, your payout has been processed.</p>",
+                    amount=payout.amount,
+                    earning_count=1,
+                    customer_name=r_name,
+                ))
+                background_tasks.add_task(dispatch_email_background, r_admin.email, "Payout Processed — ForgeStore", html)
+        except Exception:
+            pass
+
+        # SMS notification
+        try:
+            from app.core.notifications import send_payout_sms
+            if retailer and retailer.phone:
+                background_tasks.add_task(
+                    lambda: None,  # placeholder for sync bridge
+                )
+                import asyncio
+                try:
+                    loop = asyncio.get_running_loop()
+                    loop.create_task(send_payout_sms(retailer.phone, payout.amount, payout.status))
+                except RuntimeError:
+                    pass
+        except Exception:
+            pass
+
+    return {"success": True, "status": payout.status, "reference": payout.payment_reference}
+
+

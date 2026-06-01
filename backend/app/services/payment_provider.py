@@ -352,3 +352,128 @@ def get_payment_provider(
         pk = public_key or ""
 
     return cls(secret_key=sk, public_key=pk)
+
+
+# ── Automated Bank Transfer Engine ──────────────────────────────────
+
+class BankTransferEngine:
+    """Async Paystack Transfer Engine — creates recipients and initiates transfers."""
+
+    API_BASE = "https://api.paystack.co"
+    TIMEOUT = 30
+
+    def __init__(self, secret_key: str):
+        self.secret_key = secret_key
+
+    def _headers(self) -> dict:
+        return {
+            "Authorization": f"Bearer {self.secret_key}",
+            "Content-Type": "application/json",
+        }
+
+    def create_transfer_recipient(
+        self,
+        name: str,
+        bank_code: str,
+        account_number: str,
+        currency: str = "NGN",
+    ) -> dict:
+        """Step A: Create a transfer recipient on Paystack."""
+        import requests
+
+        payload = {
+            "type": "nuban",
+            "name": name,
+            "account_number": account_number,
+            "bank_code": bank_code,
+            "currency": currency,
+        }
+        try:
+            resp = requests.post(
+                f"{self.API_BASE}/transferrecipient",
+                headers=self._headers(),
+                json=payload,
+                timeout=self.TIMEOUT,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            if data.get("status"):
+                recipient_code = data["data"]["recipient_code"]
+                logger.info("Transfer recipient created: %s", recipient_code)
+                return {"success": True, "recipient_code": recipient_code}
+            return {"success": False, "message": data.get("message", "Recipient creation failed")}
+        except Exception as exc:
+            logger.error("Paystack recipient creation error: %s", exc)
+            return {"success": False, "message": str(exc)}
+
+    def initiate_transfer(
+        self,
+        recipient_code: str,
+        amount: float,
+        reason: str = "Vendor payout",
+        currency: str = "NGN",
+    ) -> dict:
+        """Step B: Initiate a transfer to a recipient."""
+        import requests
+
+        payload = {
+            "source": "balance",
+            "amount": int(round(amount * 100)),
+            "recipient": recipient_code,
+            "reason": reason,
+            "currency": currency,
+        }
+        try:
+            resp = requests.post(
+                f"{self.API_BASE}/transfer",
+                headers=self._headers(),
+                json=payload,
+                timeout=self.TIMEOUT,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            if data.get("status"):
+                transfer_code = data["data"].get("transfer_code", "")
+                logger.info("Transfer initiated: %s — ₦%.2f", transfer_code, amount)
+                return {
+                    "success": True,
+                    "transfer_code": transfer_code,
+                    "status": data["data"].get("status", "pending"),
+                    "reference": data["data"].get("reference", ""),
+                }
+            return {"success": False, "message": data.get("message", "Transfer failed")}
+        except Exception as exc:
+            logger.error("Paystack transfer error: %s", exc)
+            return {"success": False, "message": str(exc)}
+
+    def verify_transfer(self, transfer_code: str) -> dict:
+        """Verify transfer status."""
+        import requests
+
+        try:
+            resp = requests.get(
+                f"{self.API_BASE}/transfer/{transfer_code}",
+                headers=self._headers(),
+                timeout=self.TIMEOUT,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            if data.get("status"):
+                return {
+                    "success": True,
+                    "status": data["data"].get("status", ""),
+                    "transfer_code": transfer_code,
+                }
+            return {"success": False, "message": data.get("message", "Verify failed")}
+        except Exception as exc:
+            logger.error("Paystack transfer verify error: %s", exc)
+            return {"success": False, "message": str(exc)}
+
+
+def get_bank_transfer_engine() -> Optional[BankTransferEngine]:
+    """Factory: return a BankTransferEngine if Paystack is configured."""
+    from app.config import get_settings
+    cfg = get_settings()
+    if cfg.paystack_secret_key:
+        return BankTransferEngine(secret_key=cfg.paystack_secret_key)
+    return None

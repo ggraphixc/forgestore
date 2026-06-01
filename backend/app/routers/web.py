@@ -110,10 +110,11 @@ def homepage(request: Request, background_tasks: BackgroundTasks, db: Session = 
     top_products = db.query(Product).order_by(desc(Product.rating)).limit(8).all()
 
     # Active ad campaigns for homepage banners — chronological expiration enforced
+    # Ordered by impressions (proxy for budget/weight) descending for bidding priority
     active_ads = db.query(AdCampaign).filter(
         AdCampaign.status == "ACTIVE",
         AdCampaign.end_date > utcnow()
-    ).order_by(desc(AdCampaign.created_at)).limit(5).all()
+    ).order_by(desc(AdCampaign.impressions), desc(AdCampaign.created_at)).limit(5).all()
 
     # Track impressions asynchronously — avoids blocking page load
     if active_ads:

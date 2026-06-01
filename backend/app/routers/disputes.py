@@ -154,6 +154,24 @@ def reject_dispute(
         vf = db.query(VendorFulfillment).filter(VendorFulfillment.id == dispute.vendor_fulfillment_id).first()
         if vf:
             vf.status = "PROCESSING"
+            # SMS alert on fulfillment status change
+            try:
+                from app.core.notifications import send_order_status_sms
+                order_obj = db.query(Order).filter(Order.id == dispute.order_id).first()
+                if order_obj and order_obj.customer_id:
+                    from app.models import User
+                    cust = db.query(User).filter(User.id == order_obj.customer_id).first()
+                    if cust and cust.phone:
+                        import asyncio
+                        try:
+                            loop = asyncio.get_running_loop()
+                            loop.create_task(send_order_status_sms(
+                                cust.phone, order_obj.order_number, "PROCESSING"
+                            ))
+                        except RuntimeError:
+                            pass
+            except Exception:
+                pass
 
     # Credit vendor wallet (release escrowed funds)
     if dispute.retailer_id:
@@ -232,6 +250,24 @@ def approve_refund(
         vf = db.query(VendorFulfillment).filter(VendorFulfillment.id == dispute.vendor_fulfillment_id).first()
         if vf:
             vf.status = "CANCELLED"
+            # SMS alert on fulfillment cancellation
+            try:
+                from app.core.notifications import send_order_status_sms
+                order_obj = db.query(Order).filter(Order.id == dispute.order_id).first()
+                if order_obj and order_obj.customer_id:
+                    from app.models import User
+                    cust = db.query(User).filter(User.id == order_obj.customer_id).first()
+                    if cust and cust.phone:
+                        import asyncio
+                        try:
+                            loop = asyncio.get_running_loop()
+                            loop.create_task(send_order_status_sms(
+                                cust.phone, order_obj.order_number, "CANCELLED"
+                            ))
+                        except RuntimeError:
+                            pass
+            except Exception:
+                pass
 
     # Deduct from vendor locked escrow
     if dispute.retailer_id:

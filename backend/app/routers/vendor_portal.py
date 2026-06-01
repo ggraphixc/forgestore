@@ -531,3 +531,200 @@ def vendor_mark_all_notifications_read(
     db.commit()
 
     return {"success": True, "marked": updated}
+
+
+# ── Vendor Payout Request (Bank Transfer) ──
+
+@router.post("/api/vendor/payouts/request")
+def vendor_request_payout(
+    data: dict,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """Request payout of cleared wallet balance to verified bank account.
+
+    Validates available balance (balance - locked_escrow_balance) is sufficient.
+    Deducts from balance, locks into escrow, creates PayoutRequest record.
+    """
+    admin = get_current_user_from_cookie(request, db)
+    if not admin:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    role_val = admin.role.value if hasattr(admin.role, 'value') else admin.role
+    if role_val != "RETAILER" and role_val != AR.RETAILER.value:
+        raise HTTPException(status_code=403, detail="Only vendors can request payouts")
+    if not admin.vendor_id:
+        raise HTTPException(status_code=400, detail="No vendor profile linked")
+
+    amount = float(data.get("amount", 0))
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be positive")
+
+    wallet = db.query(VendorWallet).filter(VendorWallet.retailer_id == admin.vendor_id).first()
+    if not wallet:
+        raise HTTPException(status_code=400, detail="Vendor wallet not found")
+
+    accessible = wallet.balance - wallet.locked_escrow_balance
+    if amount > accessible:
+        raise HTTPException(status_code=400, detail=f"Insufficient accessible balance. Available: ₦{accessible:.2f}")
+
+    # Get bank details
+    retailer = db.query(Retailer).filter(Retailer.id == admin.vendor_id).first()
+    bank_name = data.get("bank_name") or (retailer.bank_name if retailer else "")
+    account_number = data.get("account_number") or (retailer.account_number if retailer else "")
+    bank_code = data.get("bank_code") or (retailer.bank_code if retailer else "")
+    account_name = data.get("account_name") or (retailer.account_name if retailer else "")
+
+    if not account_number or not bank_code:
+        raise HTTPException(status_code=400, detail="Bank account number and bank code are required")
+
+    # Lock funds
+    balance_before = wallet.balance
+    wallet.balance -= amount
+    wallet.locked_escrow_balance += amount
+
+    tx = VendorWalletTransaction(
+        wallet_id=wallet.id,
+        transaction_type="withdrawal",
+        amount=-amount,
+        balance_before=balance_before,
+        balance_after=wallet.balance,
+        reference=f"PAYOUT-{uuid.uuid4().hex[:12].upper()}",
+        description=f"Payout request for ₦{amount:.2f}",
+        status="PENDING",
+    )
+    db.add(tx)
+
+    payout = PayoutRequest(
+        retailer_id=admin.vendor_id,
+        amount=amount,
+        locked_amount=amount,
+        status="PENDING",
+        bank_name=bank_name,
+        account_number=account_number,
+        bank_code=bank_code,
+        account_name=account_name,
+    )
+    db.add(payout)
+    db.commit()
+    db.refresh(payout)
+
+    log_admin_action(db, admin, "payout_request", "payout", payout.id,
+                     f"Vendor requested payout of ₦{amount:.2f}")
+
+    return {"success": True, "payout_id": payout.id, "locked": amount, "remaining_balance": wallet.balance}
+
+
+# ── Vendor Self-Service Ad Campaign Launch ──
+
+@router.post("/api/vendor/ads/launch")
+def vendor_launch_ad_campaign(
+    data: dict,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """Launch a self-service ad campaign for a vendor's product.
+
+    Expects: product_id, ad_type (PRODUCT/SHOP), banner_url, start_date, end_date, budget.
+    Deducts budget from vendor wallet, creates PENDING_REVIEW AdCampaign.
+    """
+    admin = get_current_user_from_cookie(request, db)
+    if not admin:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    role_val = admin.role.value if hasattr(admin.role, 'value') else admin.role
+    if role_val != "RETAILER" and role_val != AR.RETAILER.value:
+        raise HTTPException(status_code=403, detail="Only vendors can launch ad campaigns")
+    if not admin.vendor_id:
+        raise HTTPException(status_code=400, detail="No vendor profile linked")
+
+    product_id = data.get("product_id")
+    ad_type = data.get("ad_type", "PRODUCT")
+    banner_url = data.get("banner_url", "")
+    start_date_str = data.get("start_date")
+    end_date_str = data.get("end_date")
+    budget = float(data.get("budget", 0))
+    ad_subtype = data.get("ad_subtype")
+    banner_type = data.get("banner_type", "banner")
+    note = data.get("note", "")
+
+    if not banner_url:
+        raise HTTPException(status_code=400, detail="banner_url is required")
+    if budget <= 0:
+        raise HTTPException(status_code=400, detail="Budget must be positive")
+
+    # Validate product ownership if PRODUCT ad
+    if ad_type == "PRODUCT" and product_id:
+        product = db.query(Product).filter(
+            Product.id == product_id,
+            Product.retailer_id == admin.vendor_id,
+        ).first()
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found or not owned by you")
+
+    # Check wallet balance
+    wallet = db.query(VendorWallet).filter(VendorWallet.retailer_id == admin.vendor_id).first()
+    if not wallet:
+        raise HTTPException(status_code=400, detail="Vendor wallet not found")
+    if wallet.balance < budget:
+        raise HTTPException(status_code=400, detail=f"Insufficient wallet balance. Required: ₦{budget:.2f}, Available: ₦{wallet.balance:.2f}")
+
+    # Deduct budget from wallet
+    balance_before = wallet.balance
+    wallet.balance -= budget
+
+    tx = VendorWalletTransaction(
+        wallet_id=wallet.id,
+        transaction_type="fee",
+        amount=-budget,
+        balance_before=balance_before,
+        balance_after=wallet.balance,
+        reference=f"AD-{uuid.uuid4().hex[:12].upper()}",
+        description=f"Ad campaign budget for {ad_type} ad",
+        status="COMPLETED",
+    )
+    db.add(tx)
+
+    # Parse dates
+    from datetime import datetime as _dt
+    start_date = None
+    end_date = None
+    if start_date_str:
+        try:
+            start_date = _dt.fromisoformat(start_date_str.replace("Z", "+00:00")).replace(tzinfo=None)
+        except (ValueError, AttributeError):
+            pass
+    if end_date_str:
+        try:
+            end_date = _dt.fromisoformat(end_date_str.replace("Z", "+00:00")).replace(tzinfo=None)
+        except (ValueError, AttributeError):
+            pass
+
+    import uuid as _uuid
+    ref = f"ADV-{_uuid.uuid4().hex[:12].upper()}"
+
+    campaign = AdCampaign(
+        retailer_id=admin.vendor_id,
+        product_id=product_id if ad_type == "PRODUCT" else None,
+        ad_type=ad_type,
+        status="PENDING",
+        banner_url=banner_url,
+        start_date=start_date or utcnow(),
+        end_date=end_date,
+        payment_reference=ref,
+        ad_subtype=ad_subtype,
+        banner_type=banner_type,
+        note=note,
+    )
+    db.add(campaign)
+    db.commit()
+    db.refresh(campaign)
+
+    log_admin_action(db, admin, "launch_ad_campaign", "ad_campaign", campaign.id,
+                     f"Vendor launched {ad_type} ad campaign (budget: ₦{budget:.2f})")
+
+    return {
+        "success": True,
+        "campaign_id": campaign.id,
+        "status": "PENDING",
+        "budget_deducted": budget,
+        "remaining_balance": wallet.balance,
+    }

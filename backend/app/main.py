@@ -130,8 +130,10 @@ app.include_router(logistics_portal.router)
 # New system routers: Chat, Disputes
 from app.routers.chat import router as chat_router
 from app.routers.disputes import router as disputes_router
+from app.routers.search import router as search_router
 app.include_router(chat_router)
 app.include_router(disputes_router)
+app.include_router(search_router)
 
 # Structured logging middleware
 from app.core.logger import RequestTimingMiddleware, setup_structured_logging
