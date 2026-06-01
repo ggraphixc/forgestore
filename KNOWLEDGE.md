@@ -63,7 +63,7 @@ forgestore/
 │   │   │   ├── __init__.py
 │   │   │   └── security.py           # JWT, password hashing, RBAC, dependencies
 │   │   ├── routers/
-│   │   │   ├── auth.py               # /api/auth/* (login, signup, logout, me)
+│   │   │   ├── auth.py               # /api/auth/* (login, signup, logout, me, google OAuth)
 │   │   │   ├── admin.py              # /admin/* (dashboard, CRUD pages)
 │   │   │   ├── admin_api.py          # /api/admin/* (REST APIs for admin panel)
 │   │   │   ├── web.py                # /shop/* (storefront pages)
@@ -1154,3 +1154,18 @@ When checkout cart contains items from multiple vendors:
 **Setup Required:**
 - Add Google OAuth credentials to Render environment variables
 - Configure Authorized redirect URI in Google Cloud Console: `https://forgestore1.onrender.com/api/auth/google/callback`
+
+---
+
+### 2026-06-01: Vendor Apply Page Redesign & Admin.py Cleanup
+
+**Scope:** Premium vendor application page, type-checker fixes, and template context bug fix.
+
+**Files Changed:**
+
+#### Vendor Apply Page
+- `backend/app/templates/web/apply-vendor.html` — Complete redesign with split-screen layout (55% dark gradient showcase / 45% form), matching login/signup aesthetic. Left panel: brand, "Grow Your Artisan Business" headline, 4 vendor perks grid (90%+ commission, secure payouts, instant tools, global reach), testimonial. Right panel: clean form with business name, email/phone row, description, category, banking details section, animated success state. Now extends `web/base.html` instead of `base.html`.
+- `backend/app/routers/vendor_portal.py` — Fixed `vendor_apply_page` route to pass `settings` context via `get_site_settings(db)` (required by `web/base.html` template).
+
+#### Admin Cleanup
+- `backend/app/routers/admin.py` — Removed 18 unused imports (`HTTPException`, `Form`, `OrderStatus`, `ShipmentEvent`, `DeliveryAgent`, `AffiliateCommission`, `VendorAnalytics`, `VendorPayout`, `NotificationQueue`, `OrderEarning`, `ChatModeration`, `ProductCreate`, `ProductUpdate`, `CategoryCreate`, `CategoryUpdate`, `RetailerCreate`, `RetailerUpdate`, `AdminRole`). Removed redundant `from sqlalchemy import func` inside `ads_settings_page()`.
