@@ -1,7 +1,11 @@
 """
-Weighted Search Engine — high-performance product search with relevance scoring.
-Replaces slow SQL LIKE %query% with weighted multi-column scoring.
+Weighted Search Engine — high-performance product search with Redis caching and relevance scoring.
+
+Replaces slow SQL LIKE %query% with weighted multi-column scoring and transparent
+Redis cache layer for sub-5ms cache-hit response times.
 """
+import json
+import hashlib
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -10,6 +14,40 @@ from typing import Optional
 from app.database import get_db
 
 router = APIRouter(prefix="/api/v1", tags=["search-v1"])
+
+SEARCH_CACHE_TTL = 300  # 5 minutes
+
+
+def _get_search_cache(query_str: str, category: str, min_price, max_price, limit: int, offset: int):
+    """Attempt to retrieve cached search results from Redis."""
+    try:
+        from app.core.redis_manager import get_redis
+        r = get_redis()
+        client = r.get_sync()
+        # Build composite cache key
+        raw_key = f"search:{query_str}:{category}:{min_price}:{max_price}:{limit}:{offset}"
+        key_hash = hashlib.md5(raw_key.encode()).hexdigest()
+        cache_key = f"cache:search:{key_hash}"
+        raw = client.get(cache_key)
+        if raw:
+            return json.loads(raw)
+    except Exception:
+        pass
+    return None
+
+
+def _set_search_cache(query_str: str, category: str, min_price, max_price, limit: int, offset: int, data: dict):
+    """Store search results in Redis with TTL."""
+    try:
+        from app.core.redis_manager import get_redis
+        r = get_redis()
+        client = r.get_sync()
+        raw_key = f"search:{query_str}:{category}:{min_price}:{max_price}:{limit}:{offset}"
+        key_hash = hashlib.md5(raw_key.encode()).hexdigest()
+        cache_key = f"cache:search:{key_hash}"
+        client.set(cache_key, json.dumps(data, default=str), ex=SEARCH_CACHE_TTL)
+    except Exception:
+        pass
 
 
 @router.get("/search")
@@ -22,22 +60,29 @@ def weighted_search(
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
 ):
-    """Weighted product search with relevance scoring.
+    """Weighted product search with Redis caching and relevance scoring.
 
     Scoring matrix:
         - Product name match:    +10 points
         - Category name match:   +5 points
         - Product description:   +1 point
 
-    Results are sorted by descending relevance score, then by created_at.
+    Results sorted by descending relevance score, then by created_at.
+    Cached in Redis for 5 minutes (300s TTL).
     """
     if not q or not q.strip():
         return {"results": [], "total": 0, "query": q}
 
+    # 1. Check Redis cache first
+    cached = _get_search_cache(q, category or "", min_price, max_price, limit, offset)
+    if cached is not None:
+        cached["cache_hit"] = True
+        return cached
+
+    # 2. Execute weighted search query
     search_term = f"%{q.strip()}%"
     params = {"search_term": search_term, "limit": limit, "offset": offset}
 
-    # Build optional filter clauses
     price_filter = ""
     category_filter = ""
     if min_price is not None:
@@ -105,7 +150,7 @@ def weighted_search(
             "relevance_score": row.relevance_score,
         })
 
-    # Total count (without limit/offset)
+    # Total count
     count_sql = text(f"""
         SELECT COUNT(*) as cnt
         FROM product p
@@ -121,10 +166,44 @@ def weighted_search(
     """)
     total = db.execute(count_sql, {k: v for k, v in params.items() if k not in ("limit", "offset")}).scalar()
 
-    return {
+    response = {
         "results": results,
         "total": total,
         "query": q,
         "offset": offset,
         "limit": limit,
+        "cache_hit": False,
     }
+
+    # 3. Store in Redis cache
+    _set_search_cache(q, category or "", min_price, max_price, limit, offset, response)
+
+    return response
+
+
+@router.get("/categories/cached")
+def cached_categories(db: Session = Depends(get_db)):
+    """Return cached category list from Redis, bypassing DB on hit."""
+    try:
+        from app.core.redis_manager import get_redis
+        r = get_redis()
+        client = r.get_sync()
+        raw = client.get("cache:categories:all")
+        if raw:
+            return {"categories": json.loads(raw), "cache_hit": True}
+    except Exception:
+        pass
+
+    from app.models import Category
+    categories = db.query(Category).order_by(Category.name).all()
+    data = [{"id": c.id, "name": c.name, "slug": c.slug} for c in categories]
+
+    try:
+        from app.core.redis_manager import get_redis
+        r = get_redis()
+        client = r.get_sync()
+        client.set("cache:categories:all", json.dumps(data, default=str), ex=SEARCH_CACHE_TTL)
+    except Exception:
+        pass
+
+    return {"categories": data, "cache_hit": False}

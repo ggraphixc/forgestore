@@ -131,9 +131,11 @@ app.include_router(logistics_portal.router)
 from app.routers.chat import router as chat_router
 from app.routers.disputes import router as disputes_router
 from app.routers.search import router as search_router
+from app.routers.orders import router as orders_router
 app.include_router(chat_router)
 app.include_router(disputes_router)
 app.include_router(search_router)
+app.include_router(orders_router)
 
 # Structured logging middleware
 from app.core.logger import RequestTimingMiddleware, setup_structured_logging

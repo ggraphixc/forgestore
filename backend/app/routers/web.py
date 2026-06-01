@@ -48,6 +48,39 @@ def _render_page(template: str, request: Request, db: Session, context: dict = N
     return render_template(template, page_context, status_code=status_code)
 
 
+def _product_dict(p) -> dict:
+    """Serialize a Product ORM object to a cacheable dict."""
+    return {
+        "id": p.id,
+        "slug": p.slug,
+        "name": p.name,
+        "price": p.price,
+        "discount_price": p.discount_price,
+        "images": p.images or [],
+        "rating": p.rating or 0,
+        "review_count": p.review_count or 0,
+        "inventory": p.inventory,
+        "is_flagship": p.is_flagship,
+        "is_new_arrival": p.is_new_arrival,
+        "retailer_id": p.retailer_id,
+        "category_id": p.category_id,
+        "brand": p.brand,
+    }
+
+
+def _rehydrate_products(db: Session, product_dicts: list[dict]) -> list:
+    """Rehydrate product dicts from cache into Product ORM objects for template rendering."""
+    if not product_dicts:
+        return []
+    ids = [d["id"] for d in product_dicts if d.get("id")]
+    if not ids:
+        return []
+    products = db.query(Product).filter(Product.id.in_(ids)).all()
+    # Preserve original cache order
+    product_map = {p.id: p for p in products}
+    return [product_map[pid] for pid in ids if pid in product_map]
+
+
 def _require_customer(request: Request, db: Session):
     customer = _get_current_customer(request, db)
     if customer:
@@ -96,8 +129,66 @@ def homepage(request: Request, background_tasks: BackgroundTasks, db: Session = 
 
     currency = get_currency(db)
 
-    flagship_products = db.query(Product).filter(Product.is_flagship == True).order_by(desc(Product.created_at)).limit(5).all()
-    new_arrivals = db.query(Product).filter(Product.is_new_arrival == True).order_by(desc(Product.created_at)).limit(8).all()
+    # Try Redis cache for product grids — falls back to DB on miss
+    import json as _json
+    flagship_products = None
+    new_arrivals = None
+    top_products = None
+
+    try:
+        from app.core.redis_manager import get_redis
+        r = get_redis()
+        client = r.get_sync()
+
+        raw_flagship = client.get("cache:homepage:flagship")
+        if raw_flagship:
+            flagship_products_data = _json.loads(raw_flagship)
+            # Rehydrate as detached Product-like dicts for template rendering
+            flagship_products = _rehydrate_products(db, flagship_products_data)
+
+        raw_new = client.get("cache:homepage:new_arrivals")
+        if raw_new:
+            new_arrivals_data = _json.loads(raw_new)
+            new_arrivals = _rehydrate_products(db, new_arrivals_data)
+
+        raw_top = client.get("cache:homepage:top_products")
+        if raw_top:
+            top_products_data = _json.loads(raw_top)
+            top_products = _rehydrate_products(db, top_products_data)
+    except Exception:
+        pass
+
+    # DB fallback for any cache misses
+    if flagship_products is None:
+        flagship_products = db.query(Product).filter(Product.is_flagship == True).order_by(desc(Product.created_at)).limit(5).all()
+        try:
+            from app.core.redis_manager import get_redis
+            r = get_redis()
+            client = r.get_sync()
+            client.set("cache:homepage:flagship", _json.dumps([_product_dict(p) for p in flagship_products], default=str), ex=300)
+        except Exception:
+            pass
+
+    if new_arrivals is None:
+        new_arrivals = db.query(Product).filter(Product.is_new_arrival == True).order_by(desc(Product.created_at)).limit(8).all()
+        try:
+            from app.core.redis_manager import get_redis
+            r = get_redis()
+            client = r.get_sync()
+            client.set("cache:homepage:new_arrivals", _json.dumps([_product_dict(p) for p in new_arrivals], default=str), ex=300)
+        except Exception:
+            pass
+
+    if top_products is None:
+        top_products = db.query(Product).order_by(desc(Product.rating)).limit(8).all()
+        try:
+            from app.core.redis_manager import get_redis
+            r = get_redis()
+            client = r.get_sync()
+            client.set("cache:homepage:top_products", _json.dumps([_product_dict(p) for p in top_products], default=str), ex=300)
+        except Exception:
+            pass
+
     featured_retailers = db.query(Retailer).filter(Retailer.status == "ACTIVE").order_by(desc(Retailer.rating)).limit(6).all()
     categories = db.query(Category).all()
 
@@ -105,9 +196,6 @@ def homepage(request: Request, background_tasks: BackgroundTasks, db: Session = 
     retailer_counts = {}
     for r in featured_retailers:
         retailer_counts[r.id] = db.query(func.count(Product.id)).filter(Product.retailer_id == r.id).scalar() or 0
-
-    # Top rated products for marketplace section
-    top_products = db.query(Product).order_by(desc(Product.rating)).limit(8).all()
 
     # Active ad campaigns for homepage banners — chronological expiration enforced
     # Ordered by impressions (proxy for budget/weight) descending for bidding priority
