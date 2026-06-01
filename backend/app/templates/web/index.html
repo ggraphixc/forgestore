@@ -36,7 +36,7 @@
 
       <!-- Subtitle -->
       <p class="text-sm sm:text-lg md:text-xl text-stone-400 leading-relaxed max-w-xl mb-8 sm:mb-12 reveal" style="animation-delay: 200ms;">
-        Explore handcrafted treasures from master artisans. Each piece tells a story of skill, passion, and tradition passed down through generations.
+        Explore handcrafted treasures from master store owners. Each piece tells a story of skill, passion, and tradition passed down through generations.
       </p>
 
       <!-- CTA Buttons -->
@@ -46,7 +46,7 @@
           <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
         </a>
         <a href="/shop/shops" class="btn-glass group">
-          Meet Our Artisans
+          Meet Our Vendors
           <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
         </a>
       </div>
@@ -55,7 +55,7 @@
       <div class="flex flex-wrap items-center gap-6 sm:gap-8 md:gap-12 mt-12 sm:mt-16 pt-8 sm:pt-10 border-t border-white/5 reveal" style="animation-delay: 400ms;">
         <div>
           <p class="text-xl sm:text-2xl md:text-3xl font-bold text-white">500+</p>
-          <p class="text-[10px] sm:text-xs text-stone-500 mt-1">Artisan Shops</p>
+          <p class="text-[10px] sm:text-xs text-stone-500 mt-1">Vendor Shops</p>
         </div>
         <div>
           <p class="text-xl sm:text-2xl md:text-3xl font-bold text-white">10K+</p>
@@ -138,7 +138,7 @@
                {% if ad.retailer %}{{ ad.retailer.name }}{% else %}Featured Shop{% endif %}
              </h3>
              <p class="text-sm text-stone-400 mt-1 line-clamp-2">
-               {% if ad.retailer and ad.retailer.bio %}{{ ad.retailer.bio|truncate(100) }}{% else %}Visit this artisan's shop and explore their handcrafted collection.{% endif %}
+                {% if ad.retailer and ad.retailer.bio %}{{ ad.retailer.bio|truncate(100) }}{% else %}Visit this vendor's shop and explore their collection.{% endif %}
              </p>
              <span class="inline-flex items-center gap-1.5 text-sm font-medium text-amber-400 mt-3 group-hover:gap-2.5 transition-all">
                Visit Shop
@@ -160,12 +160,12 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 reveal">
       <div>
-        <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Master Craftspeople</span>
-        <h2 class="text-3xl sm:text-4xl md:text-5xl font-black text-stone-900 dark:text-stone-100 font-display">Featured <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Artisans</span></h2>
-        <p class="text-sm sm:text-base text-stone-500 dark:text-stone-400 mt-3 max-w-lg">Master craftspeople who bring passion to every piece they create</p>
+        <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Top Sellers</span>
+        <h2 class="text-3xl sm:text-4xl md:text-5xl font-black text-stone-900 dark:text-stone-100 font-display">Featured <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Vendors</span></h2>
+        <p class="text-sm sm:text-base text-stone-500 dark:text-stone-400 mt-3 max-w-lg">Sellers who bring passion to every product they offer</p>
       </div>
       <a href="/shop/shops" class="btn-ghost mt-4 md:mt-0">
-        View All Artisans
+        View All Vendors
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
       </a>
     </div>
@@ -257,7 +257,7 @@
       <div>
         <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Discover</span>
         <h2 class="text-3xl sm:text-4xl md:text-5xl font-black text-stone-900 dark:text-stone-100 font-display">The <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Market</span></h2>
-        <p class="text-sm sm:text-base text-stone-500 dark:text-stone-400 mt-3 max-w-lg">Discover unique products from our community of master artisans</p>
+        <p class="text-sm sm:text-base text-stone-500 dark:text-stone-400 mt-3 max-w-lg">Discover unique products from our community of store owners</p>
       </div>
       <a href="/shop/marketplace" class="btn-ghost mt-4 md:mt-0">
         View All Products
@@ -331,7 +331,7 @@
       <span class="font-handwriting text-4xl sm:text-5xl md:text-7xl text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500">Something Handcrafted</span>
     </h2>
     <p class="text-sm sm:text-lg text-stone-400 mb-10 max-w-2xl mx-auto leading-relaxed reveal" style="animation-delay: 200ms;">
-      Whether you're a collector seeking the extraordinary or an artisan ready to share your craft with the world, there's a place for you at the forge.
+      Whether you're a collector seeking the extraordinary or a store owner ready to share your craft with the world, there's a place for you at the forge.
     </p>
     <div class="flex flex-wrap justify-center gap-4 reveal" style="animation-delay: 300ms;">
       <a href="/shop/marketplace" class="btn-forge text-base group">
@@ -339,7 +339,7 @@
         <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
       </a>
       <a href="/shop/shops" class="btn-glass">
-        Meet the Artisans
+        Meet the Vendors
       </a>
     </div>
   </div>

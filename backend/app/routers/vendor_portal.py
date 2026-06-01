@@ -57,6 +57,8 @@ def vendor_dashboard(request: Request, db: Session = Depends(get_db)):
     total_orders = 0
     total_revenue = 0.0
     recent_orders = []
+    low_stock_count = 0
+    low_stock_items = []
 
     if retailer:
         total_products = db.query(func.count(Product.id)).filter(Product.retailer_id == retailer.id).scalar() or 0
@@ -66,6 +68,20 @@ def vendor_dashboard(request: Request, db: Session = Depends(get_db)):
             total_revenue = db.query(func.coalesce(func.sum(Order.total_amount), 0)).filter(Order.id.in_(order_ids)).scalar() or 0
             recent_orders = db.query(Order).filter(Order.id.in_(order_ids)).order_by(desc(Order.created_at)).limit(5).all()
 
+        # Low-stock check
+        from app.models import Settings as SettingsModel
+        threshold_setting = db.query(SettingsModel).filter(SettingsModel.key == "low_stock_limit").first()
+        try:
+            threshold_value = int(threshold_setting.value) if threshold_setting else 5
+        except (ValueError, TypeError):
+            threshold_value = 5
+
+        low_stock_items = db.query(Product).filter(
+            Product.retailer_id == retailer.id,
+            Product.inventory <= threshold_value,
+        ).all()
+        low_stock_count = len(low_stock_items)
+
     return render_template("vendor/dashboard.html", {
         "request": request,
         "admin": admin,
@@ -74,6 +90,8 @@ def vendor_dashboard(request: Request, db: Session = Depends(get_db)):
         "total_orders": total_orders,
         "total_revenue": float(total_revenue),
         "recent_orders": recent_orders,
+        "low_stock_count": low_stock_count,
+        "low_stock_items": low_stock_items[:5],
         "has_permission": has_permission,
     })
 
@@ -421,6 +439,52 @@ def vendor_notifications(
             for n in notifications
         ],
         "unread_count": unread_count,
+    }
+
+
+# ── Low-Stock Alerts ──
+
+@router.get("/api/vendor/alerts/low-stock")
+def vendor_low_stock_alerts(
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """Get products at or below the low-stock threshold for this vendor."""
+    admin = get_current_user_from_cookie(request, db)
+    if not admin:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    role_val = admin.role.value if hasattr(admin.role, 'value') else admin.role
+    if role_val != "RETAILER" and role_val != AR.RETAILER.value:
+        raise HTTPException(status_code=403, detail="Only vendors can access low-stock alerts")
+    if not admin.vendor_id:
+        raise HTTPException(status_code=400, detail="No vendor profile linked")
+
+    from app.models import Settings as SettingsModel
+    threshold_setting = db.query(SettingsModel).filter(SettingsModel.key == "low_stock_limit").first()
+    try:
+        threshold_value = int(threshold_setting.value) if threshold_setting else 5
+    except (ValueError, TypeError):
+        threshold_value = 5
+
+    low_stock_items = db.query(Product).filter(
+        Product.retailer_id == admin.vendor_id,
+        Product.inventory <= threshold_value,
+        Product.is_active == True if hasattr(Product, 'is_active') else True,
+    ).all()
+
+    return {
+        "threshold_evaluated": threshold_value,
+        "count": len(low_stock_items),
+        "items": [
+            {
+                "id": p.id,
+                "name": p.name,
+                "slug": p.slug,
+                "current_stock": p.inventory,
+                "price": p.price,
+            }
+            for p in low_stock_items
+        ],
     }
 
 
