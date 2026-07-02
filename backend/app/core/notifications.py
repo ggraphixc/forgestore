@@ -1,13 +1,12 @@
 """
-Unified Notification Engine — Brevo HTTPS Email + Meta WhatsApp Cloud API + Termii SMS
+Unified Notification Engine — Brevo HTTPS Email + Meta WhatsApp Cloud API
 
 Resolution order for each channel:
-  1. Environment variables (BREVO_API_KEY, WHATSAPP_ACCESS_TOKEN, TERMII_API_KEY)
+  1. Environment variables (BREVO_API_KEY, WHATSAPP_ACCESS_TOKEN)
   2. Console stdout dump (dev fallback when no API key or fallback enabled)
 
 All email transmission via HTTPS POST to Brevo v3 endpoint.
-All WhatsApp transmission via Meta Graph API v20.0 template messages.
-All SMS transmission via Termii API.
+All WhatsApp transmission via Meta Graph API v17.0 template messages.
 """
 import os
 import sys
@@ -70,7 +69,7 @@ async def send_whatsapp_interactive_alert(to_phone: str, template_name: str, par
         sys.stdout.flush()
         return
 
-    url = f"https://graph.facebook.com/v20.0/{phone_number_id}/messages"
+    url = f"https://graph.facebook.com/v17.0/{phone_number_id}/messages"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
@@ -107,52 +106,32 @@ async def send_whatsapp_interactive_alert(to_phone: str, template_name: str, par
         logger.error("Failed to connect to Meta Graph API: %s", str(exc))
 
 
-# ─── Termii SMS ───────────────────────────────────────────────────
-
-async def trigger_sms_tracking_alert(recipient_phone: str, message_text: str):
-    """Send an operational SMS alert via Termii API."""
-    termii_api_key = os.getenv("TERMII_API_KEY", "").strip()
-    termii_sender_id = os.getenv("TERMII_SENDER_ID", "ForgeStore")
-
-    if not termii_api_key:
-        logger.info("[SMS CONSOLE FALLBACK] To: %s | Msg: %s", recipient_phone, message_text)
-        return
-
-    url = "https://api.ng.termii.com/api/sms/send"
-    payload = {
-        "to": recipient_phone,
-        "from": termii_sender_id,
-        "sms": message_text,
-        "type": "plain",
-        "channel": "generic",
-        "api_key": termii_api_key,
+async def send_order_status_whatsapp(phone: str, order_number: str, status: str, vendor_name: str = ""):
+    """Send order status tracking notification via WhatsApp template."""
+    status_map = {
+        "PROCESSING": "Processing",
+        "SHIPPED": "Shipped",
+        "DELIVERED": "Delivered",
+        "CANCELLED": "Cancelled",
     }
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            res = await client.post(url, json=payload)
-            logger.info("SMS delivery status logged: %s", res.status_code)
-    except Exception as e:
-        logger.error("Failed to transmit operational SMS update: %s", str(e))
+    template_status = status_map.get(status, status)
+    await send_whatsapp_interactive_alert(
+        to_phone=phone,
+        template_name="order_status_update",
+        parameters=[order_number, template_status],
+    )
 
 
-async def send_order_status_sms(phone: str, order_number: str, status: str, vendor_name: str = ""):
-    """Send order status tracking SMS to customer."""
-    status_messages = {
-        "PROCESSING": f"Your order #{order_number} is being prepared by {vendor_name or 'the vendor'}. Track it on ForgeStore.",
-        "SHIPPED": f"Great news! Your order #{order_number} has been shipped and is on its way to you.",
-        "DELIVERED": f"Your order #{order_number} has been delivered. Thank you for shopping with ForgeStore!",
-        "CANCELLED": f"Your order #{order_number} has been cancelled. Contact support if you need help.",
-    }
-    message = status_messages.get(status, f"Order #{order_number} status update: {status}")
-    await trigger_sms_tracking_alert(phone, message)
-
-
-async def send_payout_sms(phone: str, amount: float, status: str):
-    """Send payout notification SMS to vendor."""
+async def send_payout_whatsapp(phone: str, amount: float, status: str):
+    """Send payout notification to vendor via WhatsApp template."""
     if status == "SUCCESSFUL":
-        message = f"Your payout of ₦{amount:,.2f} has been processed and sent to your bank account. — ForgeStore"
+        msg_status = "Successful"
     elif status == "FAILED":
-        message = f"Your payout of ₦{amount:,.2f} could not be processed. Please check your bank details. — ForgeStore"
+        msg_status = "Failed"
     else:
-        message = f"Your payout of ₦{amount:,.2f} is being reviewed. — ForgeStore"
-    await trigger_sms_tracking_alert(phone, message)
+        msg_status = "Pending"
+    await send_whatsapp_interactive_alert(
+        to_phone=phone,
+        template_name="payout_notification",
+        parameters=[f"₦{amount:,.2f}", msg_status],
+    )

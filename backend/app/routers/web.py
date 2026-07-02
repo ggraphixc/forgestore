@@ -41,7 +41,6 @@ def _render_page(template: str, request: Request, db: Session, context: dict = N
         "user": customer,
         "categories": categories,
         "paystack_public_key": _cfg.paystack_public_key,
-        "flutterwave_public_key": _cfg.flutterwave_public_key,
         "default_payment_provider": _cfg.default_payment_provider or "paystack",
     }
     page_context.update(context)

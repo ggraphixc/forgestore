@@ -154,9 +154,9 @@ def reject_dispute(
         vf = db.query(VendorFulfillment).filter(VendorFulfillment.id == dispute.vendor_fulfillment_id).first()
         if vf:
             vf.status = "PROCESSING"
-            # SMS alert on fulfillment status change
+            # WhatsApp alert on fulfillment status change
             try:
-                from app.core.notifications import send_order_status_sms
+                from app.core.notifications import send_order_status_whatsapp
                 order_obj = db.query(Order).filter(Order.id == dispute.order_id).first()
                 if order_obj and order_obj.customer_id:
                     from app.models import User
@@ -165,7 +165,7 @@ def reject_dispute(
                         import asyncio
                         try:
                             loop = asyncio.get_running_loop()
-                            loop.create_task(send_order_status_sms(
+                            loop.create_task(send_order_status_whatsapp(
                                 cust.phone, order_obj.order_number, "PROCESSING"
                             ))
                         except RuntimeError:
@@ -250,9 +250,9 @@ def approve_refund(
         vf = db.query(VendorFulfillment).filter(VendorFulfillment.id == dispute.vendor_fulfillment_id).first()
         if vf:
             vf.status = "CANCELLED"
-            # SMS alert on fulfillment cancellation
+            # WhatsApp alert on fulfillment cancellation
             try:
-                from app.core.notifications import send_order_status_sms
+                from app.core.notifications import send_order_status_whatsapp
                 order_obj = db.query(Order).filter(Order.id == dispute.order_id).first()
                 if order_obj and order_obj.customer_id:
                     from app.models import User
@@ -261,7 +261,7 @@ def approve_refund(
                         import asyncio
                         try:
                             loop = asyncio.get_running_loop()
-                            loop.create_task(send_order_status_sms(
+                            loop.create_task(send_order_status_whatsapp(
                                 cust.phone, order_obj.order_number, "CANCELLED"
                             ))
                         except RuntimeError:

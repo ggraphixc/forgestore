@@ -1644,21 +1644,6 @@ def retailer_bank_setup(
             retailer.paystack_subaccount_code = subaccount_id
         except ValueError as e:
             raise HTTPException(status_code=400, detail=f"Subaccount creation failed: {str(e)}")
-    elif provider_name == "flutterwave":
-        if not cfg.flutterwave_secret_key:
-            raise HTTPException(status_code=400, detail="Flutterwave secret key is not configured")
-        from app.services.wallet_service import FlutterwaveProvider
-        provider = FlutterwaveProvider(cfg.flutterwave_secret_key)
-        try:
-            subaccount_id = provider.create_subaccount(
-                business_name=retailer.name or account_name,
-                bank_code=bank_code,
-                account_number=account_number,
-                bank_name=bank_name or None,
-            )
-            retailer.flutterwave_subaccount_id = subaccount_id
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=f"Subaccount creation failed: {str(e)}")
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported payment provider: {provider_name}")
 
@@ -1702,10 +1687,9 @@ def retailer_banking_status(
         "account_name": retailer.account_name,
         "bank_code": retailer.bank_code,
         "paystack_subaccount_code": retailer.paystack_subaccount_code,
-        "flutterwave_subaccount_id": retailer.flutterwave_subaccount_id,
         "commission_rate": retailer.commission_rate,
         "has_banking": bool(retailer.account_number and retailer.bank_code),
-        "has_subaccount": bool(retailer.paystack_subaccount_code or retailer.flutterwave_subaccount_id),
+        "has_subaccount": bool(retailer.paystack_subaccount_code),
     }
 
 
@@ -2047,7 +2031,7 @@ def get_payment_provider_setting(
     return {
         "active_provider": active_provider,
         "source": "database" if db_provider else "environment",
-        "available_providers": ["paystack", "flutterwave"],
+        "available_providers": ["paystack"],
     }
 
 
@@ -2061,7 +2045,7 @@ def set_payment_provider(
     Toggle the active payment provider.
 
     Request body:
-        - provider: "paystack" or "flutterwave"
+        - provider: "paystack"
 
     This updates the ``default_payment_provider`` key in the Settings table.
     The change takes effect immediately for all subsequent payment operations.
@@ -2071,10 +2055,10 @@ def set_payment_provider(
 
     provider = (data.get("provider") or "").strip().lower()
 
-    if provider not in ("paystack", "flutterwave"):
+    if provider not in ("paystack",):
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid provider '{provider}'. Must be 'paystack' or 'flutterwave'."
+            detail=f"Invalid provider '{provider}'. Must be 'paystack'."
         )
 
     setting = db.query(SettingsModel).filter(

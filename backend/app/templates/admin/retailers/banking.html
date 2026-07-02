@@ -44,7 +44,7 @@
       <div class="flex justify-between py-2">
         <span class="text-stone-500">Subaccount</span>
         <span class="font-semibold text-stone-900 dark:text-stone-100">
-          {% if retailer.paystack_subaccount_code or retailer.flutterwave_subaccount_id %}
+          {% if retailer.paystack_subaccount_code %}
           <span class="text-emerald-600 dark:text-emerald-400">Active</span>
           {% else %}—{% endif %}
         </span>
@@ -81,7 +81,7 @@
         <p class="text-xs text-stone-400 mt-1">10-digit NUBAN account number</p>
       </div>
 
-      <!-- Bank Name (optional, for Flutterwave) -->
+      <!-- Bank Name -->
       <div>
         <label for="bank_name" class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">Bank Name <span class="text-stone-400 font-normal">(optional)</span></label>
         <input type="text" id="bank_name" name="bank_name" value="{{ retailer.bank_name or '' }}"

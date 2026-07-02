@@ -62,7 +62,7 @@ forgestore/
 │   │   ├── core/
 │   │   │   ├── __init__.py
 │   │   │   ├── security.py           # JWT, password hashing, RBAC, dependencies
-│   │   │   ├── notifications.py      # SMS alerts via Termii API
+│   │   │   ├── notifications.py      # WhatsApp Cloud API + Brevo Email notifications
 │   │   │   ├── cache.py              # Redis cache-aside pattern (search, homepage)
 │   │   │   └── redis_manager.py      # Singleton Redis connection pool
 │   │   ├── routers/
@@ -509,13 +509,15 @@ Functions:
 - `send_password_reset_email(to_email, reset_link, customer_name)` — Password reset
 - `send_broadcast_campaign(subscriber_email, subject, html_content, campaign_id, subscriber_id)` — Newsletter broadcasts
 
-### SMS Notifications (`backend/app/core/notifications.py`)
+### WhatsApp Cloud API Notifications (`backend/app/core/notifications.py`)
 
-- **Provider:** Termii API (`https://api.ng.termii.com/api/sms/send`)
-- **Config:** `TERMII_API_KEY` and `TERMII_SENDER_ID` env vars
-- **Fallback:** Console logging when API key missing
-- Functions: `trigger_sms_tracking_alert(phone, message)`, `send_order_status_sms(phone, order_number, status)`, `send_payout_sms(phone, amount, status)`
-- **Wired into:** VendorFulfillment status changes in disputes router (PROCESSING, CANCELLED)
+- **Provider:** Meta WhatsApp Cloud API (`https://graph.facebook.com/v17.0/{PHONE_ID}/messages`)
+- **Config:** `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_CONSOLE_FALLBACK` env vars
+- **Fallback:** Console logging when access token or phone number ID missing, or when `WHATSAPP_CONSOLE_FALLBACK=True`
+- **Auth:** Bearer token via `Authorization` header
+- **Templates:** Template-based messages with language code `en_US` and body parameters
+- Functions: `send_whatsapp_interactive_alert(to_phone, template_name, parameters)`, `send_order_status_whatsapp(phone, order_number, status)`, `send_payout_whatsapp(phone, amount, status)`
+- **Wired into:** Paystack webhook (order_payment_success), VendorFulfillment status changes in disputes router (PROCESSING, CANCELLED), vendor payout approvals
 
 ### Admin Notifications
 
@@ -1270,3 +1272,30 @@ When checkout cart contains items from multiple vendors:
 - `backend/app/routers/search.py` — Search results cached with MD5-hashed composite keys (`cache:search:{hash}`, 300s TTL). Returns `cache_hit` flag. Added `GET /api/v1/categories/cached` endpoint with 300s TTL.
 - `backend/app/routers/web.py` — Homepage product grids (flagship, new arrivals, top products) cached in Redis with 300s TTL. Added `_product_dict()` serializer and `_rehydrate_products()` ORM rehydrator for cache-to-template pipeline.
 - `backend/app/main.py` — Registered `orders_router`.
+
+---
+
+### 2026-06-02: Termii SMS Purge & WhatsApp Cloud API Standardization
+
+**Scope:** Removed all Termii SMS logic, standardized notification system on Meta WhatsApp Cloud API exclusively.
+
+**Files Changed:**
+
+#### Environment
+- `backend/.env` — Removed `TERMII_API_KEY` and `TERMII_SENDER_ID` variables. WhatsApp vars (`WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_CONSOLE_FALLBACK`) retained as official production config.
+
+#### Core Notification Engine
+- `backend/app/core/notifications.py` — **Major refactor.** Removed all Termii SMS functions (`trigger_sms_tracking_alert`, `send_order_status_sms`, `send_payout_sms`). Updated WhatsApp Graph API endpoint from `v20.0` → `v17.0`. Added `send_order_status_whatsapp(phone, order_number, status)` and `send_payout_whatsapp(phone, amount, status)` convenience functions that dispatch WhatsApp template messages. Added strict response validation logging for error monitoring.
+
+#### Payment Webhook
+- `backend/app/routers/paystack_webhook.py` — Already used `send_whatsapp_interactive_alert` with `order_payment_success` template — no changes needed. WhatsApp call passes `reference` as {{1}} and `"Processing"` as {{2}}.
+
+#### Dispute Resolution
+- `backend/app/routers/disputes.py` — Replaced 2× `send_order_status_sms` calls with `send_order_status_whatsapp` (PROCESSING and CANCELLED fulfillment status changes).
+
+#### Vendor Payouts
+- `backend/app/routers/admin_api.py` — Replaced `send_payout_sms` call with `send_payout_whatsapp` in payout approval flow. Removed unused `lambda: None` placeholder bridge.
+
+#### Verification
+- Zero orphan `termii`/`TERMII`/`send_*_sms` references remain in `app/`.
+- All modified files pass Python syntax check (`py_compile`).

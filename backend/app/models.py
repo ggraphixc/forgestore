@@ -55,7 +55,6 @@ class Retailer(Base):
     bank_code = Column(String(20), nullable=True)
     account_name = Column(String(255), nullable=True)
     paystack_subaccount_code = Column(String(100), nullable=True)
-    flutterwave_subaccount_id = Column(String(100), nullable=True)
     commission_rate = Column(Float, nullable=False, default=10.0)
 
     # Affiliate: vendor-to-vendor referral tracking
@@ -1447,7 +1446,7 @@ class VendorSettlement(Base):
     is_settled = Column(Boolean, nullable=False, default=False)
     settled_at = Column(DateTime, nullable=True)
     payment_reference = Column(String(255), nullable=True)
-    provider = Column(String(50), nullable=True)  # paystack, flutterwave
+    provider = Column(String(50), nullable=True)  # paystack
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
     order: "Order" = relationship("Order")
@@ -1465,7 +1464,7 @@ class WebhookPayloadLog(Base):
 
     id = Column(String, primary_key=True, default=_uuid)
     event_id = Column(String(255), nullable=False, unique=True, index=True)
-    provider = Column(String(50), nullable=False)  # paystack, flutterwave
+    provider = Column(String(50), nullable=False)  # paystack
     event_type = Column(String(100), nullable=True)
     payload_json = Column(Text, nullable=True)
     order_id = Column(String, nullable=True)

@@ -16,7 +16,6 @@ from app.models import AdCampaign, Retailer, Product, AdminUser, AdminRole
 from app.services.wallet_service import (
     PaymentProviderInterface,
     PaystackProvider,
-    FlutterwaveProvider,
     CryptoProvider,
     PaymentGatewayFactory,
 )
@@ -210,11 +209,6 @@ class TestPaymentProviderInterface:
         provider = PaystackProvider("test_key")
         assert isinstance(provider, PaymentProviderInterface)
 
-    def test_flutterwave_provider_implements_interface(self):
-        """FlutterwaveProvider satisfies PaymentProviderInterface."""
-        provider = FlutterwaveProvider("test_key")
-        assert isinstance(provider, PaymentProviderInterface)
-
     def test_crypto_provider_implements_interface(self):
         """CryptoProvider satisfies PaymentProviderInterface."""
         provider = CryptoProvider()
@@ -273,26 +267,6 @@ class TestPaymentProviderInterface:
             split_config={"subaccount": "SUB_xxxxx", "transaction_charge": 0},
         )
         assert result["status"] is True
-
-    def test_flutterwave_initialize_payment_with_split(self, monkeypatch):
-        """Flutterwave initialize_payment passes subaccount split_config."""
-        provider = FlutterwaveProvider("test_key")
-
-        def mock_post(url, json, headers):
-            class MockResponse:
-                def json(self):
-                    return {"status": "success", "data": {"link": "https://flutterwave.com/..."}}
-            return MockResponse()
-
-        monkeypatch.setattr("requests.post", mock_post)
-        result = provider.initialize_payment(
-            amount=10000,
-            currency="NGN",
-            reference="TEST-REF",
-            metadata={"order_id": "order-1"},
-            split_config={"subaccounts": [{"id": "RS_xxxx", "split_ratio": 90}]},
-        )
-        assert result["status"] == "success"
 
     def test_payment_gateway_factory_crypto(self):
         """Factory returns CryptoProvider for 'crypto'."""
@@ -573,7 +547,6 @@ class TestBankingModel:
         assert sample_retailer.bank_code is None
         assert sample_retailer.account_name is None
         assert sample_retailer.paystack_subaccount_code is None
-        assert sample_retailer.flutterwave_subaccount_id is None
         assert sample_retailer.commission_rate == 10.0  # default
 
     def test_retailer_set_banking_details(self, db, sample_retailer):

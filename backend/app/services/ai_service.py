@@ -473,6 +473,10 @@ SETTINGS_DEFINITIONS: List[Dict[str, Any]] = [
      "description": "Maximum allowed discount percentage.", "default": "70"},
     {"key": "wishlist_enabled", "category": "optional", "type": "boolean", "label": "Wishlist Feature",
      "description": "Enable product wishlist for customers.", "default": "true"},
+    {"key": "ai_assistant_enabled", "category": "optional", "type": "boolean", "label": "AI Shopping Assistant",
+     "description": "Enable the AI-powered shopping assistant that helps customers find products, compare options, and get personalized recommendations via chat.", "default": "true"},
+    {"key": "ai_recommendations_enabled", "category": "optional", "type": "boolean", "label": "AI Product Recommendations",
+     "description": "Show AI-powered product recommendations on product pages and throughout the store based on browsing history, cart contents, and popular items.", "default": "true"},
 
     # ── Developer ──
     {"key": "brevo_api_key", "category": "developer", "type": "password", "label": "Brevo API Key",
@@ -523,8 +527,7 @@ SETTINGS_DEFINITIONS: List[Dict[str, Any]] = [
     {"key": "default_payment_provider", "category": "developer", "type": "select", "label": "Default Payment Provider",
      "description": "Which payment gateway to use as the primary option.",
      "default": "paystack",
-     "options": [{"value": "paystack", "label": "Paystack"},
-                 {"value": "flutterwave", "label": "Flutterwave"}]},
+     "options": [{"value": "paystack", "label": "Paystack"}]},
 
     # ── Logistics ──
     {"key": "default_shipping_fee", "category": "logistics", "type": "number", "label": "Default Shipping Fee",

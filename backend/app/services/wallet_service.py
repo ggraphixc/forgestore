@@ -22,7 +22,6 @@ class PaymentProviderInterface(ABC):
         Args:
             split_config: Subaccount split info, e.g.
                 Paystack: {"subaccount": "SUB_xxxxx", "transaction_charge": 0}
-                Flutterwave: {"subaccounts": [{"id": "RS_xxxx", "split_ratio": 90}]}
         """
         pass
 
@@ -113,70 +112,6 @@ class PaystackProvider(PaymentProviderInterface):
         return data["data"]["subaccount_code"]
 
 
-class FlutterwaveProvider(PaymentProviderInterface):
-    """Flutterwave payment provider implementation."""
-
-    def __init__(self, secret_key: str) -> None:
-        self.secret_key = secret_key
-
-    def initialize_payment(self, amount: float, currency: str, reference: str, metadata: dict, split_config: Optional[dict] = None) -> dict:
-        import requests
-        payload: dict[str, object] = {
-            "tx_ref": reference,
-            "amount": amount,
-            "currency": currency,
-            "meta": metadata,
-        }
-        if split_config and "subaccounts" in split_config:
-            payload["subaccounts"] = split_config["subaccounts"]
-        resp = requests.post(
-            "https://api.flutterwave.com/v3/payments",
-            json=payload,
-            headers={"Authorization": f"Bearer {self.secret_key}"},
-        )
-        return resp.json()
-
-    def verify_payment(self, reference: str) -> dict:
-        import requests
-        resp = requests.get(
-            f"https://api.flutterwave.com/v3/transactions/verify_by_reference?tx_ref={reference}",
-            headers={"Authorization": f"Bearer {self.secret_key}"},
-        )
-        return resp.json()
-
-    def refund_payment(self, reference: str, amount: Optional[float] = None) -> dict:
-        import requests
-        data = {}
-        if amount:
-            data["amount"] = amount
-        resp = requests.post(
-            f"https://api.flutterwave.com/v3/transactions/{reference}/refund",
-            json=data,
-            headers={"Authorization": f"Bearer {self.secret_key}"},
-        )
-        return resp.json()
-
-    def create_subaccount(self, business_name: str, bank_code: str, account_number: str, bank_name: Optional[str] = None) -> str:
-        """Create a Flutterwave subaccount for split payments."""
-        import requests
-        body: dict[str, object] = {
-            "business_name": business_name,
-            "account_bank": bank_code,
-            "account_number": account_number,
-        }
-        if bank_name:
-            body["bank_name"] = bank_name
-        resp = requests.post(
-            "https://api.flutterwave.com/v3/subaccounts",
-            json=body,
-            headers={"Authorization": f"Bearer {self.secret_key}"},
-        )
-        data = resp.json()
-        if data.get("status") != "success":
-            raise ValueError(f"Flutterwave subaccount creation failed: {data.get('message', 'Unknown error')}")
-        return str(data["data"]["id"])
-
-
 class CryptoProvider(PaymentProviderInterface):
     """Crypto payment placeholder for future integration."""
 
@@ -203,7 +138,6 @@ class PaymentGatewayFactory:
     def get_provider(provider_name: str, config: Optional[dict] = None) -> PaymentProviderInterface:
         providers = {
             "paystack": lambda c: PaystackProvider(c.get("secret_key", "") if c else ""),
-            "flutterwave": lambda c: FlutterwaveProvider(c.get("secret_key", "") if c else ""),
             "crypto": lambda c: CryptoProvider(),
         }
         factory_fn = providers.get(provider_name.lower())
