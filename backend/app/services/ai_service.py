@@ -22,52 +22,12 @@ PROVIDER_CONFIGS: dict[str, dict[str, Any]] = {
         "model_setting": "openai_model",
         "default_model": "gpt-4o-mini",
     },
-    "deepseek": {
-        "label": "DeepSeek (DeepSeek-V3, DeepSeek-R1)",
-        "sdk": "openai",  # OpenAI-compatible API
-        "base_url": "https://api.deepseek.com/v1",
-        "api_key_setting": "deepseek_api_key",
-        "model_setting": "deepseek_model",
-        "default_model": "deepseek-chat",
-    },
-    "groq": {
-        "label": "Groq (Llama 3, Mixtral, Gemma)",
-        "sdk": "openai",  # OpenAI-compatible API
-        "base_url": "https://api.groq.com/openai/v1",
-        "api_key_setting": "groq_api_key",
-        "model_setting": "groq_model",
-        "default_model": "llama3-70b-8192",
-    },
-    "anthropic": {
-        "label": "Anthropic (Claude 3 Haiku, Sonnet, Opus)",
-        "sdk": "anthropic",
-        "base_url": None,
-        "api_key_setting": "anthropic_api_key",
-        "model_setting": "anthropic_model",
-        "default_model": "claude-3-haiku-20240307",
-    },
-    "openrouter": {
-        "label": "OpenRouter (Mistral, Gemini, Llama free models)",
-        "sdk": "openai",  # OpenAI-compatible API
-        "base_url": "https://openrouter.ai/api/v1",
-        "api_key_setting": "openrouter_api_key",
-        "model_setting": "openrouter_model",
-        "default_model": "mistralai/mistral-7b-instruct:free",
-    },
-    "siliconflow": {
-        "label": "SiliconFlow (Qwen, GLM, DeepSeek models)",
-        "sdk": "openai",  # OpenAI-compatible API
-        "base_url": "https://api.siliconflow.cn/v1",
-        "api_key_setting": "siliconflow_api_key",
-        "model_setting": "siliconflow_model",
-        "default_model": "Qwen/Qwen2-7B-Instruct",
-    },
-    "mimo": {
-        "label": "Xiaomi MiMo (MiMo-V2.5 multimodal, free tier)",
+    "opencode_zen": {
+        "label": "OpenCode Zen (MiMo-V2.5, DeepSeek-V4 free, Nemotron free, North-Mini free)",
         "sdk": "openai",  # OpenAI-compatible API
         "base_url": "https://opencode.ai/zen/v1",
-        "api_key_setting": "mimo_api_key",
-        "model_setting": "mimo_model",
+        "api_key_setting": "opencode_zen_api_key",
+        "model_setting": "opencode_zen_model",
         "default_model": "mimo-v2.5-free",
     },
 }
@@ -118,10 +78,6 @@ def get_ai_client() -> Any:
                 kwargs["base_url"] = config["base_url"]
             return openai.OpenAI(**kwargs)  # type: ignore[arg-type]
 
-        elif config["sdk"] == "anthropic":
-            import anthropic
-            return anthropic.Anthropic(api_key=api_key)
-
     except Exception as e:
         logger.error(f"Failed to init {provider} client: {e}")
         return None
@@ -161,55 +117,35 @@ def _call_llm_sync(
     config = PROVIDER_CONFIGS.get(provider)
 
     try:
-        if config and config["sdk"] == "anthropic":
-            # Anthropic SDK format
-            content = [{"type": "text", "text": user_prompt}]
-            if images:
-                for img_url in images:
-                    content.append({
-                        "type": "image",
-                        "source": {"type": "url", "url": img_url},
-                    })
-            resp = client.messages.create(
-                model=model,
-                system=system_prompt,
-                messages=[{"role": "user", "content": content}],
-                temperature=temperature,
-                max_tokens=max_tokens,
-            )
-            return resp.content[0].text.strip()
+        # OpenAI-compatible SDK format (OpenAI, OpenCode Zen)
+        user_content = [{"type": "text", "text": user_prompt}]
+        if images:
+            for img_url in images:
+                user_content.append({
+                    "type": "image_url",
+                    "image_url": {"url": img_url},
+                })
 
+        if images:
+            # Multimodal: use content array
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content},
+            ]
         else:
-            # OpenAI-compatible SDK format (OpenAI, DeepSeek, Groq,
-            # OpenRouter, SiliconFlow, MiMo, etc.)
-            user_content = [{"type": "text", "text": user_prompt}]
-            if images:
-                for img_url in images:
-                    user_content.append({
-                        "type": "image_url",
-                        "image_url": {"url": img_url},
-                    })
+            # Text-only: simpler format
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ]
 
-            if images:
-                # Multimodal: use content array
-                messages = [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_content},
-                ]
-            else:
-                # Text-only: simpler format
-                messages = [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ]
-
-            resp = client.chat.completions.create(
-                model=model,
-                messages=messages,
-                temperature=temperature,
-                max_tokens=max_tokens,
-            )
-            return resp.choices[0].message.content.strip()
+        resp = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+        return resp.choices[0].message.content.strip()
 
     except Exception as e:
         logger.error(f"LLM call failed ({provider}/{model}): {e}")
@@ -523,42 +459,17 @@ SETTINGS_DEFINITIONS: List[Dict[str, Any]] = [
      "description": "When enabled, all emails are printed to terminal instead of sending via API (useful for development).", "default": "true"},
     {"key": "ai_provider", "category": "developer", "type": "select", "label": "AI Provider",
      "description": "Which AI provider to use for product descriptions, search, and recommendations.",
-     "default": "mimo",
-     "options": [{"value": "mimo", "label": "Xiaomi MiMo (MiMo-V2.5 free multimodal)"},
-                 {"value": "openai", "label": "OpenAI (GPT-4o, GPT-4o-mini)"},
-                 {"value": "deepseek", "label": "DeepSeek (DeepSeek-V3, R1)"},
-                 {"value": "groq", "label": "Groq (Llama 3, Mixtral, Gemma)"},
-                 {"value": "anthropic", "label": "Anthropic (Claude 3 Haiku, Sonnet, Opus)"},
-                 {"value": "openrouter", "label": "OpenRouter (Mistral, Gemini, Llama free models)"},
-                 {"value": "siliconflow", "label": "SiliconFlow (Qwen, GLM, DeepSeek models)"}]},
-    {"key": "mimo_api_key", "category": "developer", "type": "password", "label": "MiMo API Key",
-     "description": "Xiaomi MiMo API key (opencode.ai/zen). Free tier available.", "default": ""},
-    {"key": "mimo_model", "category": "developer", "type": "text", "label": "MiMo Model",
-     "description": "e.g. mimo-v2.5-free, mimo-v2.5, mimo-v2.5-pro", "default": "mimo-v2.5-free"},
+     "default": "opencode_zen",
+     "options": [{"value": "opencode_zen", "label": "OpenCode Zen (MiMo-V2.5 free multimodal)"},
+                 {"value": "openai", "label": "OpenAI (GPT-4o, GPT-4o-mini)"}]},
+    {"key": "opencode_zen_api_key", "category": "developer", "type": "password", "label": "OpenCode Zen API Key",
+     "description": "API key from opencode.ai/zen. Free tier available.", "default": ""},
+    {"key": "opencode_zen_model", "category": "developer", "type": "text", "label": "OpenCode Zen Model",
+     "description": "Free models: mimo-v2.5-free, deepseek-v4-flash-free, nemotron-3-ultra-free, north-mini-code-free", "default": "mimo-v2.5-free"},
     {"key": "openai_api_key", "category": "developer", "type": "password", "label": "OpenAI API Key",
      "description": "Required for OpenAI provider.", "default": ""},
     {"key": "openai_model", "category": "developer", "type": "text", "label": "OpenAI Model",
      "description": "e.g. gpt-4o-mini, gpt-4o, gpt-4-turbo", "default": "gpt-4o-mini"},
-    {"key": "deepseek_api_key", "category": "developer", "type": "password", "label": "DeepSeek API Key",
-     "description": "Required for DeepSeek provider.", "default": ""},
-    {"key": "deepseek_model", "category": "developer", "type": "text", "label": "DeepSeek Model",
-     "description": "e.g. deepseek-chat, deepseek-reasoner", "default": "deepseek-chat"},
-    {"key": "groq_api_key", "category": "developer", "type": "password", "label": "Groq API Key",
-     "description": "Required for Groq provider.", "default": ""},
-    {"key": "groq_model", "category": "developer", "type": "text", "label": "Groq Model",
-     "description": "e.g. llama3-70b-8192, mixtral-8x7b-32768", "default": "llama3-70b-8192"},
-    {"key": "anthropic_api_key", "category": "developer", "type": "password", "label": "Anthropic API Key",
-     "description": "Required for Anthropic provider.", "default": ""},
-    {"key": "anthropic_model", "category": "developer", "type": "text", "label": "Anthropic Model",
-     "description": "e.g. claude-3-haiku-20240307, claude-3-sonnet-20240229", "default": "claude-3-haiku-20240307"},
-    {"key": "openrouter_api_key", "category": "developer", "type": "password", "label": "OpenRouter API Key",
-     "description": "Required for OpenRouter provider.", "default": ""},
-    {"key": "openrouter_model", "category": "developer", "type": "text", "label": "OpenRouter Model",
-     "description": "e.g. mistralai/mistral-7b-instruct:free, google/gemini-flash-1.5-8b:free", "default": "mistralai/mistral-7b-instruct:free"},
-    {"key": "siliconflow_api_key", "category": "developer", "type": "password", "label": "SiliconFlow API Key",
-     "description": "Required for SiliconFlow provider.", "default": ""},
-    {"key": "siliconflow_model", "category": "developer", "type": "text", "label": "SiliconFlow Model",
-     "description": "e.g. Qwen/Qwen2-7B-Instruct, deepseek-ai/deepseek-v2-chat", "default": "Qwen/Qwen2-7B-Instruct"},
     {"key": "debug_mode", "category": "developer", "type": "boolean", "label": "Debug Mode",
      "description": "Enable detailed error logging.", "default": "false"},
     {"key": "cors_origins", "category": "developer", "type": "text", "label": "CORS Origins",
