@@ -3,6 +3,7 @@ import os
 import secrets
 import hashlib
 import hmac
+from app.core.image_compressor import compress_image
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, UploadFile, File
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
@@ -775,13 +776,14 @@ async def post_product_chat_message(
                 raise HTTPException(status_code=400, detail="Image must be jpg, png, gif, or webp")
             upload_dir = os.path.join("app", "static", "uploads", "chat")
             os.makedirs(upload_dir, exist_ok=True)
+            raw = await upload_file.read()
+            if len(raw) > 5 * 1024 * 1024:
+                raise HTTPException(status_code=400, detail="Image must be under 5MB")
+            compressed, ext = compress_image(raw)
             unique_name = f"chat-{int(utcnow().timestamp())}-{uuid.uuid4().hex[:8]}.{ext}"
             file_path = os.path.join(upload_dir, unique_name)
-            file_content = await upload_file.read()
-            if len(file_content) > 5 * 1024 * 1024:
-                raise HTTPException(status_code=400, detail="Image must be under 5MB")
             with open(file_path, "wb") as f:
-                f.write(file_content)
+                f.write(compressed)
             image_url = f"/static/uploads/chat/{unique_name}"
     else:
         data = await request.json()

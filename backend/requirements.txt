@@ -27,3 +27,6 @@ async-timeout>=5.0.0
 # --- Email ---
 brevo-python>=3.0.0
 aiosmtplib>=3.0.0
+
+# --- Image Processing ---
+Pillow>=10.0.0

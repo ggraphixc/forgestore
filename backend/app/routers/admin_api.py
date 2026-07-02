@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List
+from app.core.image_compressor import compress_image
 import os
 import uuid
 import json
@@ -2685,13 +2686,13 @@ async def upload_file(files: List[UploadFile] = File(...)):
 
     urls = []
     for file in files:
-        ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+        raw = await file.read()
+        compressed, ext = compress_image(raw)
         unique_name = f"{int(utcnow().timestamp())}-{uuid.uuid4().hex[:8]}.{ext}"
         file_path = os.path.join(upload_dir, unique_name)
 
-        content = await file.read()
         with open(file_path, "wb") as f:
-            f.write(content)
+            f.write(compressed)
 
         urls.append(f"/static/uploads/products/{unique_name}")
 
@@ -3315,17 +3316,14 @@ def approve_payout_automated(
         except Exception:
             pass
 
-        # SMS notification
+        # WhatsApp notification
         try:
-            from app.core.notifications import send_payout_sms
+            from app.core.notifications import send_payout_whatsapp
             if retailer and retailer.phone:
-                background_tasks.add_task(
-                    lambda: None,  # placeholder for sync bridge
-                )
                 import asyncio
                 try:
                     loop = asyncio.get_running_loop()
-                    loop.create_task(send_payout_sms(retailer.phone, payout.amount, payout.status))
+                    loop.create_task(send_payout_whatsapp(retailer.phone, payout.amount, payout.status))
                 except RuntimeError:
                     pass
         except Exception:

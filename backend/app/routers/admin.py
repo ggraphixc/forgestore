@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from app.utils import utcnow
+from app.core.image_compressor import compress_image
 import json
 import os
 import uuid
@@ -173,12 +174,12 @@ async def product_create(
         upload_dir = os.path.join("app", "static", "uploads", "products")
         os.makedirs(upload_dir, exist_ok=True)
         for file in files:
-            ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+            raw = await file.read()
+            compressed, ext = compress_image(raw)
             unique_name = f"{int(utcnow().timestamp())}-{uuid.uuid4().hex[:8]}.{ext}"
             file_path = os.path.join(upload_dir, unique_name)
-            content = await file.read()
             with open(file_path, "wb") as f:
-                f.write(content)
+                f.write(compressed)
             images.append(f"/static/uploads/products/{unique_name}")
 
     # RETAILER role can only create products for their own retailer
