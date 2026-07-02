@@ -11,6 +11,8 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+from sqlalchemy import text
+
 MIGRATIONS = {
     "001": "migrations.001_add_retailer_bank_fields",
     "002": "migrations.002_extend_ad_campaign",
@@ -51,9 +53,23 @@ def run_pending_migrations(print_func=print):
 
 
 def run_all():
-    """Run all migrations in order."""
+    """Run all migrations in order.
+
+    Each migration gets a fresh connection so a failed migration
+    doesn't poison subsequent ones.
+    """
+    from app.database import get_engine
+    engine = get_engine()
+
     for mid in sorted(MIGRATIONS.keys()):
         print(f"\n--- Running migration {mid} ---")
+        try:
+            # Reset any broken transaction state before each migration
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+                conn.commit()
+        except Exception:
+            pass
         run_migration(mid)
 
 
