@@ -36,19 +36,22 @@ def upgrade(force_sqlite: bool = False):
 
 def _upgrade_postgres(engine):
     """PostgreSQL: ALTER TABLE + CREATE TABLE."""
-    with engine.connect() as conn:
-        # Add new columns to product_chat_message
-        for col, col_def in [
-            ("image_url", "VARCHAR(500)"),
-            ("is_flagged", "BOOLEAN NOT NULL DEFAULT FALSE"),
-            ("is_hidden", "BOOLEAN NOT NULL DEFAULT FALSE"),
-        ]:
-            try:
+    # Use separate connections so each ALTER/CREATE is independent.
+    # PostgreSQL enters a failed transaction state after any error,
+    # and a bare `except` doesn't reset that state.
+    for col, col_def in [
+        ("image_url", "VARCHAR(500)"),
+        ("is_flagged", "BOOLEAN NOT NULL DEFAULT FALSE"),
+        ("is_hidden", "BOOLEAN NOT NULL DEFAULT FALSE"),
+    ]:
+        try:
+            with engine.connect() as conn:
                 conn.execute(text(f"ALTER TABLE product_chat_message ADD COLUMN {col} {col_def}"))
-            except Exception:
-                print(f"  Skipped (exists): product_chat_message.{col}")
+                conn.commit()
+        except Exception:
+            print(f"  Skipped (exists): product_chat_message.{col}")
 
-        # Create chat_moderation table
+    with engine.connect() as conn:
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS chat_moderation (
                 id VARCHAR PRIMARY KEY,
