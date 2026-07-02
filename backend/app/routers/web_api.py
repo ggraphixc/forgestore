@@ -1060,6 +1060,59 @@ def checkout(
     )
     from app.core.email import dispatch_email_background
 
+    # ── WhatsApp order notifications (non-blocking) ──
+    try:
+        from app.core.notifications import (
+            send_order_placed_whatsapp,
+            send_new_order_vendor_whatsapp,
+        )
+        import asyncio
+
+        # Get customer phone from shipping address or user profile
+        customer_phone = shipping.phone or ""
+        if not customer_phone and customer.phone:
+            customer_phone = customer.phone
+
+        # Build items summary for WhatsApp
+        items_summary = ", ".join([
+            f"{i['name']} x{i['quantity']}"
+            for fd in fulfillments_data
+            for i in fd.get("items", [])[:3]
+        ])
+        if len(fulfillments_data) > 0:
+            total_items = sum(len(fd.get("items", [])) for fd in fulfillments_data)
+            if total_items > 3:
+                items_summary += f" (+{total_items - 3} more)"
+
+        # Send to customer
+        if customer_phone:
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(send_order_placed_whatsapp(
+                    customer_phone, order.order_number, total, items_summary
+                ))
+            except RuntimeError:
+                pass
+
+        # Send to each vendor
+        for fd in fulfillments_data:
+            if fd["retailer_id"]:
+                retailer_obj = db.query(Retailer).filter(Retailer.id == fd["retailer_id"]).first()
+                if retailer_obj and retailer_obj.phone:
+                    vendor_items = ", ".join([
+                        f"{i['name']} x{i['quantity']}" for i in fd.get("items", [])[:3]
+                    ])
+                    try:
+                        loop = asyncio.get_running_loop()
+                        loop.create_task(send_new_order_vendor_whatsapp(
+                            retailer_obj.phone, order.order_number,
+                            shipping.name, vendor_items, fd["subtotal"]
+                        ))
+                    except RuntimeError:
+                        pass
+    except Exception as e:
+        logger.warning(f"WhatsApp notification dispatch failed: {e}")
+
     # Customer confirmation email (async)
     vendor_sections_for_email = []
     for fd in fulfillments_data:

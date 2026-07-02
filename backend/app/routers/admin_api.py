@@ -8,8 +8,11 @@ import os
 import uuid
 import json
 import asyncio
+import logging
 from datetime import datetime
 from app.utils import utcnow
+
+logger = logging.getLogger("forgestore.admin")
 
 from app.database import get_db
 from app.models import Product, Category, Retailer, Order, OrderItem, OrderStatus, User, WishlistItem, Review
@@ -467,6 +470,39 @@ def update_order_status(
             tracking_number="",
         ))
         dispatch_email_background(customer.email, f"Order {status.title()} — {order.order_number}", html)
+
+    # ── WhatsApp order status notifications (non-blocking) ──
+    try:
+        from app.core.notifications import (
+            send_order_confirmed_whatsapp,
+            send_order_shipped_whatsapp,
+            send_order_delivered_whatsapp,
+            send_order_cancelled_whatsapp,
+        )
+        import asyncio
+
+        customer_phone = ""
+        if customer:
+            customer_phone = getattr(customer, "phone", "") or ""
+            if not customer_phone:
+                shipping_data = order.shipping_address or {}
+                customer_phone = shipping_data.get("phone", "")
+
+        if customer_phone:
+            try:
+                loop = asyncio.get_running_loop()
+                if status == "PROCESSING":
+                    loop.create_task(send_order_confirmed_whatsapp(customer_phone, order.order_number))
+                elif status == "SHIPPED":
+                    loop.create_task(send_order_shipped_whatsapp(customer_phone, order.order_number))
+                elif status == "DELIVERED":
+                    loop.create_task(send_order_delivered_whatsapp(customer_phone, order.order_number))
+                elif status == "CANCELLED":
+                    loop.create_task(send_order_cancelled_whatsapp(customer_phone, order.order_number))
+            except RuntimeError:
+                pass
+    except Exception as e:
+        logger.warning(f"WhatsApp status notification failed: {e}")
 
     log_admin_action(db, admin, "update", "order", order_id, f"Updated order {order.order_number} to {status}")
     return {"success": True}

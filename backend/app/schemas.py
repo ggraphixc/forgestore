@@ -8,6 +8,7 @@ class LoginRequest(BaseModel):
     email: str
     password: str
     name: Optional[str] = None
+    phone: Optional[str] = None
 
 
 class TokenResponse(BaseModel):

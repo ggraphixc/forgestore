@@ -62,6 +62,14 @@ PROVIDER_CONFIGS: dict[str, dict[str, Any]] = {
         "model_setting": "siliconflow_model",
         "default_model": "Qwen/Qwen2-7B-Instruct",
     },
+    "mimo": {
+        "label": "Xiaomi MiMo (MiMo-V2.5 multimodal, free tier)",
+        "sdk": "openai",  # OpenAI-compatible API
+        "base_url": "https://opencode.ai/zen/v1",
+        "api_key_setting": "mimo_api_key",
+        "model_setting": "mimo_model",
+        "default_model": "mimo-v2.5-free",
+    },
 }
 
 
@@ -137,9 +145,11 @@ def _call_llm_sync(
     user_prompt: str,
     temperature: float = 0.7,
     max_tokens: int = 400,
+    images: list[str] | None = None,
 ) -> Optional[str]:
     """
     Unified LLM call that works across all providers.
+    Supports multimodal (images) when provider supports it (e.g. MiMo-V2.5).
     Returns the text content of the response, or None on failure.
     """
     client = get_ai_client()
@@ -153,10 +163,17 @@ def _call_llm_sync(
     try:
         if config and config["sdk"] == "anthropic":
             # Anthropic SDK format
+            content = [{"type": "text", "text": user_prompt}]
+            if images:
+                for img_url in images:
+                    content.append({
+                        "type": "image",
+                        "source": {"type": "url", "url": img_url},
+                    })
             resp = client.messages.create(
                 model=model,
                 system=system_prompt,
-                messages=[{"role": "user", "content": user_prompt}],
+                messages=[{"role": "user", "content": content}],
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
@@ -164,13 +181,31 @@ def _call_llm_sync(
 
         else:
             # OpenAI-compatible SDK format (OpenAI, DeepSeek, Groq,
-            # OpenRouter, SiliconFlow, etc.)
-            resp = client.chat.completions.create(
-                model=model,
-                messages=[
+            # OpenRouter, SiliconFlow, MiMo, etc.)
+            user_content = [{"type": "text", "text": user_prompt}]
+            if images:
+                for img_url in images:
+                    user_content.append({
+                        "type": "image_url",
+                        "image_url": {"url": img_url},
+                    })
+
+            if images:
+                # Multimodal: use content array
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_content},
+                ]
+            else:
+                # Text-only: simpler format
+                messages = [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
-                ],
+                ]
+
+            resp = client.chat.completions.create(
+                model=model,
+                messages=messages,
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
@@ -186,13 +221,12 @@ def _call_llm(
     user_prompt: str,
     temperature: float = 0.7,
     max_tokens: int = 400,
+    images: list[str] | None = None,
 ) -> Optional[str]:
     """
     Synchronous LLM call — delegates to _call_llm_sync.
-    Exists as a thin wrapper so importers can use `_call_llm` without
-    changing their code after the sync→async refactor.
     """
-    return _call_llm_sync(system_prompt, user_prompt, temperature, max_tokens)
+    return _call_llm_sync(system_prompt, user_prompt, temperature, max_tokens, images)
 
 
 async def _call_llm_async(
@@ -200,11 +234,10 @@ async def _call_llm_async(
     user_prompt: str,
     temperature: float = 0.7,
     max_tokens: int = 400,
+    images: list[str] | None = None,
 ) -> Optional[str]:
     """
-    Async wrapper around _call_llm_sync that offloads the blocking
-    HTTP call to a thread pool, preventing the uvicorn worker from
-    being blocked during AI requests.
+    Async wrapper around _call_llm_sync.
     """
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(
@@ -214,6 +247,7 @@ async def _call_llm_async(
         user_prompt,
         temperature,
         max_tokens,
+        images,
     )
 
 
@@ -477,6 +511,8 @@ SETTINGS_DEFINITIONS: List[Dict[str, Any]] = [
      "description": "Enable the AI-powered shopping assistant that helps customers find products, compare options, and get personalized recommendations via chat.", "default": "true"},
     {"key": "ai_recommendations_enabled", "category": "optional", "type": "boolean", "label": "AI Product Recommendations",
      "description": "Show AI-powered product recommendations on product pages and throughout the store based on browsing history, cart contents, and popular items.", "default": "true"},
+    {"key": "whatsapp_notifications_enabled", "category": "optional", "type": "boolean", "label": "WhatsApp Order Notifications",
+     "description": "Send order status updates (placed, confirmed, shipped, delivered) to customers and vendors via WhatsApp free-form messages.", "default": "true"},
 
     # ── Developer ──
     {"key": "brevo_api_key", "category": "developer", "type": "password", "label": "Brevo API Key",
@@ -487,13 +523,18 @@ SETTINGS_DEFINITIONS: List[Dict[str, Any]] = [
      "description": "When enabled, all emails are printed to terminal instead of sending via API (useful for development).", "default": "true"},
     {"key": "ai_provider", "category": "developer", "type": "select", "label": "AI Provider",
      "description": "Which AI provider to use for product descriptions, search, and recommendations.",
-     "default": "openai",
-     "options": [{"value": "openai", "label": "OpenAI (GPT-4o, GPT-4o-mini)"},
+     "default": "mimo",
+     "options": [{"value": "mimo", "label": "Xiaomi MiMo (MiMo-V2.5 free multimodal)"},
+                 {"value": "openai", "label": "OpenAI (GPT-4o, GPT-4o-mini)"},
                  {"value": "deepseek", "label": "DeepSeek (DeepSeek-V3, R1)"},
                  {"value": "groq", "label": "Groq (Llama 3, Mixtral, Gemma)"},
                  {"value": "anthropic", "label": "Anthropic (Claude 3 Haiku, Sonnet, Opus)"},
                  {"value": "openrouter", "label": "OpenRouter (Mistral, Gemini, Llama free models)"},
                  {"value": "siliconflow", "label": "SiliconFlow (Qwen, GLM, DeepSeek models)"}]},
+    {"key": "mimo_api_key", "category": "developer", "type": "password", "label": "MiMo API Key",
+     "description": "Xiaomi MiMo API key (opencode.ai/zen). Free tier available.", "default": ""},
+    {"key": "mimo_model", "category": "developer", "type": "text", "label": "MiMo Model",
+     "description": "e.g. mimo-v2.5-free, mimo-v2.5, mimo-v2.5-pro", "default": "mimo-v2.5-free"},
     {"key": "openai_api_key", "category": "developer", "type": "password", "label": "OpenAI API Key",
      "description": "Required for OpenAI provider.", "default": ""},
     {"key": "openai_model", "category": "developer", "type": "text", "label": "OpenAI Model",

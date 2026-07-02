@@ -116,6 +116,7 @@ class User(Base):
     email = Column(String(255), nullable=False, unique=True)
     name = Column(String(255), nullable=True)
     password = Column(String(255), nullable=True)
+    phone = Column(String(50), nullable=True)
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 

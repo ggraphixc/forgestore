@@ -84,6 +84,7 @@ def signup(request: Request, data: LoginRequest, response: Response, background_
         email=data.email,
         password=hash_password(data.password),
         name=data.name or data.email.split('@')[0],
+        phone=data.phone or None,
     )
     db.add(customer)
     db.commit()
