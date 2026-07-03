@@ -152,16 +152,19 @@ def _call_llm_sync(
                 {"role": "user", "content": user_prompt},
             ]
 
+        logger.info(f"Calling LLM: provider={provider}, model={model}, base_url={config.get('base_url')}")
         resp = client.chat.completions.create(
             model=model,
             messages=messages,
             temperature=temperature,
             max_tokens=max_tokens,
         )
-        return resp.choices[0].message.content.strip()
+        result = resp.choices[0].message.content.strip()
+        logger.info(f"LLM response length: {len(result)}")
+        return result
 
     except Exception as e:
-        logger.error(f"LLM call failed ({provider}/{model}): {e}")
+        logger.error(f"LLM call failed ({provider}/{model}): {type(e).__name__}: {e}")
         return None
 
 
