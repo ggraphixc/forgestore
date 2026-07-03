@@ -27,16 +27,15 @@
                 </div>
                 {% endif %}
                 <div class="flex-1 pt-4">
-                    <div class="flex items-center justify-between">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
                             <h1 class="text-2xl font-heading font-bold text-stone-900">{{ retailer.name }}</h1>
                             <p class="text-sm text-stone-400">{{ retailer.location or '' }}</p>
                         </div>
-                        <a href="/admin/retailers/{{ retailer.slug }}/edit" class="px-4 py-2.5 bg-gradient-to-r from-stone-800 to-stone-900 text-white text-sm font-bold rounded-xl hover:from-stone-900 hover:to-stone-950 transition-all shadow-md hover:shadow-lg">
-                            <span class="inline-flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                Edit Retailer
-                            </span>
+                        <a href="/admin/retailers/{{ retailer.slug }}/edit" class="min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-stone-800 to-stone-900 text-white text-sm font-bold rounded-xl hover:from-stone-900 hover:to-stone-950 transition-all shadow-md hover:shadow-lg">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            <span class="hidden sm:inline">Edit Retailer</span>
+                            <span class="sm:hidden">Edit</span>
                         </a>
                     </div>
                 </div>
@@ -85,8 +84,8 @@
                             <tr class="border-b border-stone-50 bg-stone-50/50">
                                 <th class="text-left px-6 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Product</th>
                                 <th class="text-left px-6 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Price</th>
-                                <th class="text-left px-6 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Stock</th>
-                                <th class="text-left px-6 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Status</th>
+                                <th class="text-left px-6 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 hidden sm:table-cell">Stock</th>
+                                <th class="text-left px-6 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 hidden sm:table-cell">Status</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-stone-50">
@@ -105,8 +104,8 @@
                                     </a>
                                 </td>
                                 <td class="px-6 py-3 text-sm text-stone-600">₦{{ "%.2f"|format(p.price) }}</td>
-                                <td class="px-6 py-3 text-sm text-stone-500">{{ p.inventory or 0 }}</td>
-                                <td class="px-6 py-3">
+                                <td class="px-6 py-3 text-sm text-stone-500 hidden sm:table-cell">{{ p.inventory or 0 }}</td>
+                                <td class="px-6 py-3 hidden sm:table-cell">
                                     <span class="px-2 py-0.5 text-[10px] font-medium rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50">{% if p.inventory and p.inventory > 0 %}In Stock{% else %}Out of Stock{% endif %}</span>
                                 </td>
                             </tr>

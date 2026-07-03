@@ -87,12 +87,12 @@
       <!-- Add to Cart -->
       <div class="flex items-center gap-4">
         <div class="flex items-center border border-stone-200 dark:border-stone-700 rounded-xl overflow-hidden">
-          <button onclick="event.preventDefault(); updateQuantity(-1)" class="w-10 h-10 flex items-center justify-center text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors cursor-pointer" aria-label="Decrease quantity">
+          <button onclick="event.preventDefault(); updateQuantity(-1)" class="w-10 h-10 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors cursor-pointer" aria-label="Decrease quantity">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
           </button>
           <input type="number" id="product-qty" value="1" min="1" max="99" readonly
-            class="w-12 h-10 text-center text-sm font-semibold text-stone-900 dark:text-stone-100 bg-transparent border-x border-stone-200 dark:border-stone-700 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-          <button onclick="event.preventDefault(); updateQuantity(1)" class="w-10 h-10 flex items-center justify-center text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors cursor-pointer" aria-label="Increase quantity">
+            class="w-12 h-10 min-h-[44px] text-center text-sm font-semibold text-stone-900 dark:text-stone-100 bg-transparent border-x border-stone-200 dark:border-stone-700 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+          <button onclick="event.preventDefault(); updateQuantity(1)" class="w-10 h-10 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors cursor-pointer" aria-label="Increase quantity">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
           </button>
         </div>

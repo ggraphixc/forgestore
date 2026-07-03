@@ -42,10 +42,10 @@
           <tr class="bg-stone-50 dark:bg-stone-800/50 border-b border-stone-200 dark:border-stone-700">
             <th class="text-left px-4 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider">Type</th>
             <th class="text-left px-4 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider">Retailer</th>
-            <th class="text-left px-4 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider">Product</th>
+            <th class="text-left px-4 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider hidden sm:table-cell">Product</th>
             <th class="text-left px-4 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider">Status</th>
-            <th class="text-left px-4 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider">Banner</th>
-            <th class="text-left px-4 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider">Performance</th>
+            <th class="text-left px-4 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider hidden md:table-cell">Banner</th>
+            <th class="text-left px-4 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider hidden md:table-cell">Performance</th>
             <th class="text-left px-4 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
@@ -64,7 +64,7 @@
             <td class="px-4 py-3">
               <span class="font-medium text-stone-900 dark:text-stone-100">{{ retailer.name if retailer else 'Unknown' }}</span>
             </td>
-            <td class="px-4 py-3 text-stone-600 dark:text-stone-400 text-xs">
+            <td class="px-4 py-3 text-stone-600 dark:text-stone-400 text-xs hidden sm:table-cell">
               {{ product.name if product else '—' }}
             </td>
             <td class="px-4 py-3">
@@ -76,14 +76,14 @@
                 {{ c.status }}
               </span>
             </td>
-            <td class="px-4 py-3">
+            <td class="px-4 py-3 hidden md:table-cell">
               {% if c.banner_url %}
               <img src="{{ c.banner_url }}" alt="Banner" class="h-10 w-20 object-cover rounded-lg border border-stone-200 dark:border-stone-700">
               {% else %}
               <span class="text-xs text-stone-400">None</span>
               {% endif %}
             </td>
-            <td class="px-4 py-3">
+            <td class="px-4 py-3 hidden md:table-cell">
               <div class="text-xs text-stone-600 dark:text-stone-400">
                 <span class="font-mono font-medium">{{ c.clicks }}</span> clicks
                 <span class="mx-1">·</span>

@@ -46,7 +46,7 @@
                         <td class="px-4 sm:px-5 py-3 sm:py-4 text-right font-medium text-stone-900 text-xs sm:text-sm">₦{{ "{:,.2f}".format(order.total_amount) }}</td>
                         <td class="px-4 sm:px-5 py-3 sm:py-4 text-stone-500 hidden md:table-cell text-xs">{{ order.created_at.strftime('%b %d, %Y %H:%M') if order.created_at else 'N/A' }}</td>
                         <td class="px-4 sm:px-5 py-3 sm:py-4 text-right">
-                            <a href="/admin/orders/{{ order.id }}" class="inline-flex items-center gap-1 px-2 sm:px-3 py-1.5 text-xs font-medium text-stone-500 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-all md:opacity-0 md:group-hover:opacity-100">
+                            <a href="/admin/orders/{{ order.id }}" class="min-h-[44px] inline-flex items-center gap-1 px-2 sm:px-3 py-1.5 text-xs font-medium text-stone-500 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-all md:opacity-0 md:group-hover:opacity-100">
                                 View
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </a>

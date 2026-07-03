@@ -139,7 +139,7 @@
   }
 
   .btn-ghost {
-    @apply inline-flex items-center gap-2 px-4 py-2 text-stone-600 font-medium 
+    @apply inline-flex items-center gap-2 px-4 py-2 min-h-[44px] text-stone-600 font-medium 
            rounded-lg hover:bg-stone-100 hover:text-stone-900 transition-all duration-200 cursor-pointer;
   }
 
@@ -499,7 +499,7 @@
 
   /* ===== TOAST ===== */
   .toast-container {
-    @apply fixed bottom-6 right-6 flex flex-col gap-3;
+    @apply fixed bottom-4 right-4 sm:bottom-6 sm:right-6 flex flex-col gap-3;
     z-index: var(--z-toast);
   }
 
@@ -735,6 +735,9 @@
   }
   @media (min-width: 1024px) {
     .masonry { column-count: 4; }
+  }
+  @media (max-width: 400px) {
+    .masonry { column-count: 1; }
   }
 }
 

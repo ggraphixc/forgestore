@@ -8,7 +8,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead><tr class="border-b border-stone-100 dark:border-stone-700 text-left text-xs font-bold uppercase tracking-wider text-stone-400">
-                    <th class="px-5 py-3">Order #</th><th class="px-5 py-3">Customer</th><th class="px-5 py-3">Total</th><th class="px-5 py-3">Status</th><th class="px-5 py-3">Date</th>
+                    <th class="px-5 py-3">Order #</th><th class="px-5 py-3">Customer</th><th class="px-5 py-3">Total</th><th class="px-5 py-3 hidden sm:table-cell">Status</th><th class="px-5 py-3 hidden sm:table-cell">Date</th>
                 </tr></thead>
                 <tbody class="divide-y divide-stone-100 dark:divide-stone-700">
                 {% for o in orders %}
@@ -16,12 +16,12 @@
                     <td class="px-5 py-3 font-semibold text-stone-900 dark:text-stone-100">#{{ o.order_number }}</td>
                     <td class="px-5 py-3 text-stone-600">{{ customers.get(o.id, 'Unknown') }}</td>
                     <td class="px-5 py-3">₦{{ "{:,.2f}".format(o.total_amount) }}</td>
-                    <td class="px-5 py-3"><span class="text-[10px] font-bold px-2 py-0.5 rounded-full
+                    <td class="px-5 py-3 hidden sm:table-cell"><span class="text-xs font-bold px-2 py-0.5 rounded-full
                         {% if o.status.value == 'DELIVERED' %}bg-emerald-100 text-emerald-700
                         {% elif o.status.value == 'SHIPPED' %}bg-blue-100 text-blue-700
                         {% elif o.status.value == 'PROCESSING' %}bg-amber-100 text-amber-700
                         {% else %}bg-stone-100 text-stone-600{% endif %}">{{ o.status.value }}</span></td>
-                    <td class="px-5 py-3 text-stone-500 text-xs">{{ o.created_at.strftime('%b %d, %Y') if o.created_at else '' }}</td>
+                    <td class="px-5 py-3 hidden sm:table-cell text-stone-500 text-xs">{{ o.created_at.strftime('%b %d, %Y') if o.created_at else '' }}</td>
                 </tr>
                 {% endfor %}
                 </tbody>

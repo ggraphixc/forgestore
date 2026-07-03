@@ -5,14 +5,13 @@
 {% block body %}
 <script>!function(){var e="sidebar-collapsed",t=localStorage.getItem(e)==="true";if(t&&window.innerWidth>=1024){var n=document.getElementById("sidebar");n&&n.classList.add("sidebar-collapsed")}}()</script>
 <div class="flex h-full min-h-screen bg-stone-50/50 overflow-x-clip">
-    <aside id="sidebar" class="fixed lg:relative inset-y-0 left-0 w-80 max-w-[85vw] lg:w-64 bg-gradient-to-b from-white to-stone-50/80 dark:from-stone-900 dark:to-stone-950 border-r border-stone-200 dark:border-stone-800 transform -translate-x-full lg:translate-x-0 transition-all duration-300 ease-out flex flex-col shadow-2xl shadow-stone-900/15 overflow-y-auto" style="z-index: var(--z-sidebar);">
+    <aside id="sidebar" class="fixed lg:relative inset-y-0 left-0 w-80 max-w-[85vw] lg:w-64 bg-white dark:bg-stone-900 border-r border-stone-200 dark:border-stone-800 transform -translate-x-full lg:translate-x-0 transition-all duration-300 ease-out flex flex-col shadow-2xl shadow-stone-900/15 overflow-y-auto" style="z-index: var(--z-sidebar);">
         <!-- Premium header with gradient accent -->
-        <div class="relative flex items-center gap-3 px-6 h-16 border-b border-stone-100 dark:border-stone-800 overflow-hidden sidebar-header">
-            <div class="absolute inset-0 bg-gradient-to-r from-amber-50/30 to-transparent dark:from-amber-900/10"></div>
-            <div class="w-9 h-9 bg-gradient-to-br from-stone-900 to-stone-700 dark:from-amber-600 dark:to-amber-700 rounded-xl flex items-center justify-center shadow-sm relative z-10 flex-shrink-0">
+        <div class="flex items-center gap-3 px-6 h-16 border-b border-stone-100 dark:border-stone-800 sidebar-header">
+            <div class="w-9 h-9 bg-gradient-to-br from-stone-900 to-stone-700 dark:from-amber-600 dark:to-amber-700 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
                 <span class="text-white text-sm font-display font-black">FS</span>
             </div>
-            <div class="relative z-10 sidebar-header-text min-w-0">
+            <div class="sidebar-header-text min-w-0">
                 <span class="text-sm font-display font-black text-stone-900 dark:text-stone-100 truncate block">ForgeStore</span>
                 <span class="block text-[10px] font-medium text-amber-600 dark:text-amber-400 uppercase tracking-[0.15em] truncate">Admin Panel</span>
             </div>
@@ -22,13 +21,10 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
                 </svg>
             </button>
-            <!-- Subtle accent dot -->
-            <span class="absolute top-3 right-6 w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse sidebar-accent-dot"></span>
         </div>
         
         <!-- Admin Profile Card (clickable → /admin/me) -->
-        <a href="/admin/me" class="relative mx-3 mt-3 mb-2 rounded-xl bg-gradient-to-br from-stone-50 to-stone-100/50 dark:from-stone-800 dark:to-stone-800/50 border border-stone-200 dark:border-stone-700 p-3.5 overflow-hidden hover:shadow-md hover:border-amber-200 dark:hover:border-amber-700 transition-all duration-200 cursor-pointer group block">
-            <div class="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-amber-500/10 transition-colors duration-200"></div>
+        <a href="/admin/me" class="relative mx-3 mt-3 mb-2 rounded-xl bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 p-3.5 hover:shadow-md hover:border-amber-200 dark:hover:border-amber-700 transition-all duration-200 cursor-pointer group block">
             <div class="flex items-center gap-3 relative">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ring-2 ring-offset-1 ring-offset-white dark:ring-offset-stone-900 shadow-sm
                     {% if admin and admin.role.value == 'DIR_ADMIN' %}bg-purple-600 ring-purple-400/30
@@ -258,7 +254,7 @@
             </div>
             {% endif %}
         </nav>
-        <div class="px-3 py-4 border-t border-stone-100 bg-gradient-to-r from-stone-50 to-transparent">
+        <div class="px-3 py-4 border-t border-stone-100">
             <a href="/admin/logout" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-stone-500 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-150 group">
                 <svg class="w-5 h-5 text-stone-400 group-hover:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                 Sign Out
