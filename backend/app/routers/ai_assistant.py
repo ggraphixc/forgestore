@@ -18,6 +18,13 @@ from typing import Optional
 
 from app.database import get_db
 from app.auth import get_current_customer_from_cookie
+from app.services.ai_chat_service import AIChatService, RecommendationService
+from app.services.ai_service import get_ai_client, _call_llm, get_active_model, get_active_provider
+from app.models import Product, Category
+
+logger = logging.getLogger("forgestore.ai")
+
+router = APIRouter(prefix="/api/ai", tags=["ai-assistant"])
 
 
 @router.get("/debug/ai-status")
@@ -36,13 +43,6 @@ def debug_ai_status():
         "client_ok": client is not None,
         "base_url": config.get("base_url"),
     }
-from app.services.ai_chat_service import AIChatService, RecommendationService
-from app.services.ai_service import get_ai_client, _call_llm, get_active_model, get_active_provider
-from app.models import Product, Category
-
-logger = logging.getLogger("forgestore.ai")
-
-router = APIRouter(prefix="/api/ai", tags=["ai-assistant"])
 
 
 class ChatRequest(BaseModel):
