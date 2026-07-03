@@ -30,18 +30,26 @@ router = APIRouter(prefix="/api/ai", tags=["ai-assistant"])
 @router.get("/debug/ai-status")
 def debug_ai_status():
     """Debug endpoint — shows AI provider config. Remove after debugging."""
-    from app.services.ai_service import get_active_provider, get_active_model, get_ai_client, _get_db_setting, PROVIDER_CONFIGS
+    from app.services.ai_service import get_active_provider, get_active_model, _get_db_setting, PROVIDER_CONFIGS
     provider = get_active_provider()
     config = PROVIDER_CONFIGS.get(provider, {})
     api_key = _get_db_setting(config.get("api_key_setting", ""))
-    client = get_ai_client()
+    client = None
+    client_error = ""
+    try:
+        from app.services.ai_service import get_ai_client
+        client = get_ai_client()
+    except Exception as e:
+        client_error = str(e)
     return {
         "provider": provider,
         "model": get_active_model(),
         "api_key_set": bool(api_key),
         "api_key_preview": api_key[:15] + "..." if api_key else "",
         "client_ok": client is not None,
+        "client_error": client_error,
         "base_url": config.get("base_url"),
+        "sdk": config.get("sdk"),
     }
 
 
