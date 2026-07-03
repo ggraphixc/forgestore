@@ -1,5 +1,5 @@
 <!-- ===== AI Shopping Assistant Chat Widget ===== -->
-<div id="ai-chat-widget" class="fixed bottom-6 right-6 sm:bottom-8 sm:right-8" style="z-index: 9999;">
+<div id="ai-chat-widget" class="fixed bottom-6 left-6 sm:bottom-8 sm:left-8" style="z-index: 9998;">
     <!-- Floating Button -->
     <button id="ai-chat-toggle" onclick="aiChat.toggle()" class="relative w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 rounded-full shadow-2xl shadow-amber-500/40 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group" aria-label="Chat with AI Assistant">
         <svg id="ai-chat-icon-open" class="w-6 h-6 sm:w-7 sm:h-7 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -10,13 +10,13 @@
         </svg>
     </button>
     <!-- Label tooltip -->
-    <div id="ai-chat-label" class="absolute bottom-full right-0 mb-3 px-3 py-1.5 bg-stone-900 dark:bg-stone-700 text-white text-xs font-medium rounded-lg whitespace-nowrap shadow-lg opacity-0 pointer-events-none transition-opacity duration-300">
+    <div id="ai-chat-label" class="absolute bottom-full left-0 mb-3 px-3 py-1.5 bg-stone-900 dark:bg-stone-700 text-white text-xs font-medium rounded-lg whitespace-nowrap shadow-lg opacity-0 pointer-events-none transition-opacity duration-300">
         Ask AI Assistant
-        <div class="absolute top-full right-6 w-0 h-0 border-l-[5px] border-r-[5px] border-t-[5px] border-l-transparent border-r-transparent border-t-stone-900 dark:border-t-stone-700"></div>
+        <div class="absolute top-full left-6 w-0 h-0 border-l-[5px] border-r-[5px] border-t-[5px] border-l-transparent border-r-transparent border-t-stone-900 dark:border-t-stone-700"></div>
     </div>
 
-    <!-- Chat Panel -->
-    <div id="ai-chat-panel" class="hidden absolute bottom-20 right-0 w-[calc(100vw-2rem)] sm:w-[420px] max-h-[75vh] sm:max-h-[600px] bg-white dark:bg-stone-900 rounded-3xl shadow-2xl shadow-stone-900/20 border border-stone-200 dark:border-stone-700 overflow-hidden flex flex-col transition-all duration-300 origin-bottom-right scale-95 opacity-0">
+    <!-- Chat Panel — slides up from button -->
+    <div id="ai-chat-panel" class="hidden absolute bottom-20 left-0 w-[calc(100vw-3rem)] sm:w-[420px] max-h-[75vh] sm:max-h-[600px] bg-white dark:bg-stone-900 rounded-3xl shadow-2xl shadow-stone-900/20 border border-stone-200 dark:border-stone-700 overflow-hidden flex flex-col transition-all duration-300 origin-bottom-left translate-y-4 opacity-0">
         <!-- Header -->
         <div class="bg-gradient-to-r from-stone-900 to-stone-800 dark:from-stone-800 dark:to-stone-900 px-5 py-4 flex items-center gap-3 flex-shrink-0">
             <div class="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -96,15 +96,15 @@
             if (this.isOpen) {
                 panel.classList.remove('hidden');
                 requestAnimationFrame(() => {
-                    panel.classList.remove('scale-95', 'opacity-0');
-                    panel.classList.add('scale-100', 'opacity-100');
+                    panel.classList.remove('translate-y-4', 'opacity-0');
+                    panel.classList.add('translate-y-0', 'opacity-100');
                 });
                 iconOpen.classList.add('hidden');
                 iconClose.classList.remove('hidden');
                 document.getElementById('ai-chat-input').focus();
             } else {
-                panel.classList.remove('scale-100', 'opacity-100');
-                panel.classList.add('scale-95', 'opacity-0');
+                panel.classList.remove('translate-y-0', 'opacity-100');
+                panel.classList.add('translate-y-4', 'opacity-0');
                 iconOpen.classList.remove('hidden');
                 iconClose.classList.add('hidden');
                 setTimeout(() => panel.classList.add('hidden'), 300);
