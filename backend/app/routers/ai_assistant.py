@@ -34,19 +34,27 @@ def debug_ai_status():
     provider = get_active_provider()
     config = PROVIDER_CONFIGS.get(provider, {})
     api_key = _get_db_setting(config.get("api_key_setting", ""))
-    client = None
+
+    # Try creating client directly to capture real error
     client_error = ""
+    client_ok = False
     try:
-        from app.services.ai_service import get_ai_client
-        client = get_ai_client()
+        if config.get("sdk") == "openai" and api_key:
+            import openai
+            kwargs = {"api_key": api_key}
+            if config.get("base_url"):
+                kwargs["base_url"] = config["base_url"]
+            c = openai.OpenAI(**kwargs)
+            client_ok = True
     except Exception as e:
-        client_error = str(e)
+        client_error = f"{type(e).__name__}: {e}"
+
     return {
         "provider": provider,
         "model": get_active_model(),
         "api_key_set": bool(api_key),
         "api_key_preview": api_key[:15] + "..." if api_key else "",
-        "client_ok": client is not None,
+        "client_ok": client_ok,
         "client_error": client_error,
         "base_url": config.get("base_url"),
         "sdk": config.get("sdk"),
