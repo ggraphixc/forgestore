@@ -132,65 +132,81 @@
         }
       </script>
 
-      <!-- Live Product Chat — Premium UI -->
+      <!-- Live Product Chat — Compact -->
       <div class="mt-12 pt-8 border-t border-stone-200 dark:border-stone-700" id="product-chat-section">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        <button onclick="toggleProductChat()" class="w-full flex items-center gap-3 mb-0 group">
+          <div class="w-9 h-9 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20 flex-shrink-0">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
           </div>
-          <div>
-            <h3 class="text-lg font-bold text-stone-900 dark:text-stone-100 font-display">Live Chat</h3>
-            <p class="text-xs text-stone-500 dark:text-stone-400">Ask questions and discuss this product with other shoppers.</p>
+          <div class="text-left flex-1">
+            <h3 class="text-sm font-bold text-stone-900 dark:text-stone-100 font-display">Product Chat</h3>
+            <p class="text-[11px] text-stone-500 dark:text-stone-400">Ask questions about this product</p>
           </div>
-          <div class="ml-auto flex items-center gap-1.5">
-            <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-            <span class="text-[11px] font-medium text-emerald-600 dark:text-emerald-400" id="chat-status">Connected</span>
+          <div class="flex items-center gap-2">
+            <span class="flex items-center gap-1">
+              <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+              <span class="text-[10px] font-medium text-emerald-600 dark:text-emerald-400" id="chat-status">Live</span>
+            </span>
+            <svg id="chat-chevron" class="w-4 h-4 text-stone-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </div>
-        </div>
+        </button>
 
-        <!-- Chat Messages Container -->
-        <div id="chat-messages" class="space-y-4 mb-6 max-h-[28rem] overflow-y-auto pr-2 rounded-2xl bg-stone-50 dark:bg-stone-800/30 border border-stone-100 dark:border-stone-700/50 p-4" style="scrollbar-width: thin;">
-          <div class="text-center py-10 text-stone-400 dark:text-stone-500 text-sm">
-            <svg class="w-10 h-10 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-            Loading messages...
-          </div>
-        </div>
-
-        <!-- Chat Input Area -->
-        <div class="relative">
-          <!-- Image Preview -->
-          <div id="chat-image-preview" class="hidden mb-3 p-2 bg-stone-100 dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700">
-            <div class="relative inline-block">
-              <img id="chat-preview-img" src="" alt="Preview" class="h-20 rounded-lg object-cover">
-              <button onclick="removeChatImage()" class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors shadow-md">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-              </button>
+        <div id="product-chat-body" class="hidden mt-4">
+          <!-- Chat Messages Container -->
+          <div id="chat-messages" class="space-y-3 mb-4 max-h-64 overflow-y-auto pr-2 rounded-xl bg-stone-50 dark:bg-stone-800/30 border border-stone-100 dark:border-stone-700/50 p-3" style="scrollbar-width: thin;">
+            <div class="text-center py-8 text-stone-400 dark:text-stone-500 text-xs">
+              <svg class="w-8 h-8 mx-auto mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+              Loading messages...
             </div>
           </div>
 
-          <div class="flex items-end gap-2">
-            <div class="flex-1 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-amber-500/30 focus-within:border-amber-400 dark:focus-within:border-amber-500 transition-all">
-              <div class="flex items-end">
-                <input type="text" id="chat-name" placeholder="Your name" value="{{ user.name if user else '' }}" maxlength="50"
-                  class="w-28 sm:w-32 text-xs py-2.5 px-4 bg-transparent border-r border-stone-100 dark:border-stone-700 focus:outline-none text-stone-900 dark:text-stone-100 placeholder-stone-400">
-                <input type="text" id="chat-input" placeholder="Type your message..." maxlength="1000"
-                  class="flex-1 text-sm py-2.5 px-4 bg-transparent focus:outline-none text-stone-900 dark:text-stone-100 placeholder-stone-400"
+          <!-- Chat Input Area -->
+          <div class="relative">
+            <div id="chat-image-preview" class="hidden mb-2 p-1.5 bg-stone-100 dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700">
+              <div class="relative inline-block">
+                <img id="chat-preview-img" src="" alt="Preview" class="h-14 rounded-md object-cover">
+                <button onclick="removeChatImage()" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] hover:bg-red-600 transition-colors shadow">
+                  <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="flex-1 flex bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl shadow-sm focus-within:ring-2 focus-within:ring-amber-500/30 focus-within:border-amber-400 transition-all">
+                <input type="text" id="chat-name" placeholder="Name" value="{{ user.name if user else '' }}" maxlength="50"
+                  class="w-20 text-[11px] py-2 px-3 bg-transparent border-r border-stone-100 dark:border-stone-700 focus:outline-none text-stone-900 dark:text-stone-100 placeholder-stone-400">
+                <input type="text" id="chat-input" placeholder="Ask about this product..." maxlength="1000"
+                  class="flex-1 text-xs py-2 px-3 bg-transparent focus:outline-none text-stone-900 dark:text-stone-100 placeholder-stone-400"
                   onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendChatMessage()}">
-                <label class="flex items-center justify-center w-10 h-10 mr-1 cursor-pointer text-stone-400 hover:text-amber-500 transition-colors" title="Attach image">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <label class="flex items-center justify-center w-8 cursor-pointer text-stone-400 hover:text-amber-500 transition-colors" title="Attach image">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                   <input type="file" id="chat-image-input" accept="image/jpeg,image/png,image/gif,image/webp" class="hidden" onchange="previewChatImage(this)">
                 </label>
               </div>
+              <button onclick="sendChatMessage()" id="chat-send-btn"
+                class="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-xl shadow-lg shadow-amber-500/25 hover:shadow-xl active:scale-95 transition-all duration-200 flex-shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+              </button>
             </div>
-            <button onclick="sendChatMessage()" id="chat-send-btn"
-              class="flex items-center justify-center w-11 h-11 bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-xl shadow-lg shadow-amber-500/25 hover:shadow-xl hover:from-amber-600 hover:to-orange-700 active:scale-95 transition-all duration-200 flex-shrink-0">
-<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
-            </button>
           </div>
         </div>
       </div>
 
       <script>
+        function toggleProductChat() {
+          const body = document.getElementById('product-chat-body');
+          const chevron = document.getElementById('chat-chevron');
+          const isHidden = body.classList.contains('hidden');
+          if (isHidden) {
+            body.classList.remove('hidden');
+            chevron.style.transform = 'rotate(180deg)';
+            loadChatMessages();
+            connectChatWebSocket();
+          } else {
+            body.classList.add('hidden');
+            chevron.style.transform = '';
+          }
+        }
+
         const PRODUCT_ID = '{{ product.id }}';
         let chatWs = null;
         let chatReconnectTimer = null;
@@ -372,8 +388,7 @@
         // ── Lifecycle ───────────────────────────────────────────────
 
         document.addEventListener('DOMContentLoaded', function() {
-          loadChatMessages();
-          connectChatWebSocket();
+          // Chat starts collapsed — don't auto-connect
         });
 
         window.addEventListener('beforeunload', function() {
@@ -390,37 +405,6 @@
       </script>
     </div>
   </div>
-
-  <!-- Related Products -->
-  {% if related %}
-  <div class="mt-16 pt-12 border-t border-stone-200 dark:border-stone-700">
-    <div class="flex items-center justify-between mb-8">
-      <h2 class="text-xl font-bold text-stone-900 dark:text-stone-100 font-display">More from {{ retailer.name if retailer else 'this artisan' }}</h2>
-      <a href="/shop/shops/{{ retailer.slug }}" class="text-sm font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors">View Shop</a>
-    </div>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-      {% for p in related %}
-      <div class="card-product group relative">
-        <a href="/shop/products/{{ p.slug }}">
-          <div class="aspect-[3/4] overflow-hidden bg-stone-50 dark:bg-stone-700">
-            {% if p.images and p.images|length > 0 %}
-            <img loading="lazy" src="{{ p.images[0] }}" alt="{{ p.name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
-            {% else %}
-            <div class="w-full h-full flex items-center justify-center text-stone-300 dark:text-stone-500">
-              <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-            </div>
-            {% endif %}
-          </div>
-          <div class="p-3">
-            <h3 class="text-xs font-semibold text-stone-900 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors line-clamp-1">{{ p.name }}</h3>
-            <span class="text-xs font-bold text-amber-600 dark:text-amber-400 font-mono mt-1 block">{{ format_price(p.price, currency) }}</span>
-          </div>
-        </a>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
 
   <!-- AI-Powered Similar Products -->
   <div id="ai-product-recs" class="mt-16 pt-12 border-t border-stone-200 dark:border-stone-700" style="display: none;">

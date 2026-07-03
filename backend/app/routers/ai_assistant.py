@@ -11,6 +11,8 @@ Endpoints:
 import json
 import logging
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -25,14 +27,18 @@ logger = logging.getLogger("forgestore.ai")
 router = APIRouter(prefix="/api/ai", tags=["ai-assistant"])
 
 
+class ChatRequest(BaseModel):
+    session_id: str
+    message: str
+    image_url: Optional[str] = None
+
+
 # ===== AI Shopping Assistant =====
 
 @router.post("/assistant/chat")
 def ai_assistant_chat(
+    body: ChatRequest,
     request: Request,
-    session_id: str,
-    message: str,
-    image_url: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
     """
@@ -54,7 +60,7 @@ def ai_assistant_chat(
     user_id = customer.id if customer else None
 
     service = AIChatService(db)
-    return service.chat(session_id, message, user_id, image_url=image_url)
+    return service.chat(body.session_id, body.message, user_id, image_url=body.image_url)
 
 
 @router.get("/assistant/products")

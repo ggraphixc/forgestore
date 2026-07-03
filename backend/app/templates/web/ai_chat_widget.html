@@ -8,7 +8,6 @@
         <svg id="ai-chat-icon-close" class="w-6 h-6 sm:w-7 sm:h-7 hidden group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
-        <!-- Pulse indicator -->
         <span class="absolute -top-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-white animate-pulse"></span>
     </button>
 
@@ -34,7 +33,6 @@
 
         <!-- Messages -->
         <div id="ai-chat-messages" class="flex-1 overflow-y-auto px-4 py-4 space-y-4 scroll-smooth">
-            <!-- Welcome message -->
             <div class="flex gap-3">
                 <div class="w-8 h-8 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
                     <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -76,6 +74,7 @@
         isOpen: false,
         sessionId: null,
         isLoading: false,
+        loadingEl: null,
 
         init() {
             this.sessionId = 'ai_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
@@ -126,12 +125,18 @@
                         message: message,
                     }),
                 });
+
+                if (!res.ok) {
+                    throw new Error('Server returned ' + res.status);
+                }
+
                 const data = await res.json();
                 this.addMessage(data.response || "I couldn't process that request. Please try again.", 'assistant');
                 if (data.suggestions && data.suggestions.length > 0) {
                     this.showSuggestions(data.suggestions);
                 }
             } catch (err) {
+                console.error('AI chat error:', err);
                 this.addMessage("Sorry, I'm having trouble connecting. Please try again later.", 'assistant');
             } finally {
                 this.setLoading(false);
@@ -146,7 +151,7 @@
         addMessage(text, role) {
             const container = document.getElementById('ai-chat-messages');
             const div = document.createElement('div');
-            div.className = 'flex gap-3 ' + (role === 'user' ? 'flex-row-reverse' : '');
+            div.className = 'flex gap-3';
 
             const avatar = role === 'user'
                 ? '<div class="w-8 h-8 bg-stone-200 dark:bg-stone-700 rounded-lg flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg></div>'
@@ -161,12 +166,24 @@
             container.scrollTop = container.scrollHeight;
         },
 
+        addLoadingDots() {
+            const container = document.getElementById('ai-chat-messages');
+            const div = document.createElement('div');
+            div.id = 'ai-chat-loading';
+            div.className = 'flex gap-3';
+            div.innerHTML = '<div class="w-8 h-8 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg></div><div class="bg-stone-100 dark:bg-stone-800 rounded-2xl rounded-tl-md px-4 py-3"><div class="flex items-center gap-1.5"><span class="w-2 h-2 bg-stone-400 rounded-full animate-bounce" style="animation-delay:0ms"></span><span class="w-2 h-2 bg-stone-400 rounded-full animate-bounce" style="animation-delay:150ms"></span><span class="w-2 h-2 bg-stone-400 rounded-full animate-bounce" style="animation-delay:300ms"></span></div></div>';
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        },
+
+        removeLoadingDots() {
+            const el = document.getElementById('ai-chat-loading');
+            if (el) el.remove();
+        },
+
         formatResponse(text) {
-            // Basic markdown-like formatting
             let html = this.escapeHtml(text);
-            // Bold
             html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            // Line breaks
             html = html.replace(/\n/g, '<br>');
             return html;
         },
@@ -185,10 +202,9 @@
             input.disabled = loading;
 
             if (loading) {
-                this.addMessage('...', 'assistant-loading');
+                this.addLoadingDots();
             } else {
-                const loadingMsg = document.querySelector('.ai-loading');
-                if (loadingMsg) loadingMsg.closest('.flex.gap-3')?.remove();
+                this.removeLoadingDots();
             }
         },
 
@@ -215,28 +231,12 @@
         }
     };
 
-    // Init and expose globally
     chat.init();
     window.aiChat = chat;
 
-    // Auto-resize input
     const input = document.getElementById('ai-chat-input');
     if (input) {
         input.addEventListener('input', function() { chat.autoResize(this); });
     }
 })();
 </script>
-
-<style>
-/* Loading animation */
-.ai-loading-dots::after {
-    content: '';
-    animation: dots 1.4s steps(4, end) infinite;
-}
-@keyframes dots {
-    0%, 20% { content: ''; }
-    40% { content: '.'; }
-    60% { content: '..'; }
-    80%, 100% { content: '...'; }
-}
-</style>
