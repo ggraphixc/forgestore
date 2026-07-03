@@ -8,6 +8,7 @@ Multimodal AI-powered shopping assistant with:
 """
 import json
 import logging
+import re
 import uuid
 from datetime import datetime
 from app.utils import utcnow
