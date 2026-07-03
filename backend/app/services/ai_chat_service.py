@@ -175,27 +175,27 @@ class AIChatService:
         }, default=str)
 
     def _build_system_prompt(self, context: dict) -> str:
-        """Build the system prompt with shopping context and tool definitions."""
+        """Build the system prompt with shopping context."""
         catalog = self._get_catalog_context()
         user_ctx = self._get_user_context(context.get("user_id"))
 
         return f"""You are ForgeAI, the intelligent shopping assistant for ForgeStore — a multi-vendor e-commerce marketplace.
 
+CRITICAL RULES:
+- You are a TEXT-ONLY assistant. NEVER output code, XML, JSON, tool_call tags, function calls, or any markup.
+- NEVER use <tool_call>, <function=..., </function>, or similar tags. This is strictly forbidden.
+- Respond ONLY in plain conversational text with simple formatting (bold, bullet points).
+- The full product catalog is provided below — reference products directly from it.
+- If you cannot find a product the user asks about, say so honestly and suggest alternatives from the catalog.
+
 Your capabilities:
-- Help customers find products they'll love
+- Help customers find products they'll love from the catalog below
 - Compare products across different vendors
 - Provide personalized recommendations based on preferences and order history
 - Answer questions about products, orders, shipping, and policies
 - Analyze product images when customers share them (multimodal)
-- Search the catalog using natural language
 
-Available tools (call these when needed):
-- search_products: Search the product catalog by name, category, or keywords
-- get_product_details: Get detailed info about a specific product
-- compare_products: Compare 2-3 products side by side
-- get_recommendations: Get personalized product recommendations
-
-Product Catalog:
+Available products:
 {catalog}
 
 User Context:
@@ -205,11 +205,12 @@ Guidelines:
 - Be helpful, concise, and friendly
 - When recommending products, include the product name, price, and a brief reason
 - Ask clarifying questions to narrow down preferences
-- Never make up pricing or product details — only use what's in the catalog
-- If you don't know something, offer to search the catalog
+- Never make up pricing or product details — only use what's in the catalog above
+- If you can't find what the user wants, suggest the closest matches from the catalog
 - Keep responses under 200 words unless detailed comparison is needed
 - Format product recommendations clearly with product names and prices
-- When the user shares an image, analyze it and suggest relevant products"""
+- When the user shares an image, analyze it and suggest relevant products
+- NEVER output any code, XML, JSON, or tool_call tags — respond ONLY in natural language"""
 
     def chat(self, session_id: str, message: str, user_id: Optional[str] = None,
              image_url: Optional[str] = None) -> dict:
@@ -255,6 +256,15 @@ Guidelines:
 
             if not response_text:
                 response_text = "I apologize, but I'm having trouble processing your request right now. Please try again, or browse our catalog directly."
+
+            # Strip any tool_call XML that the model might output
+            response_text = re.sub(r'tool_call.*?/tool_call', '', response_text, flags=re.DOTALL)
+            response_text = re.sub(r'function=.*?/function', '', response_text, flags=re.DOTALL)
+            response_text = re.sub(r'parameter=.*?/parameter', '', response_text, flags=re.DOTALL)
+            response_text = response_text.strip()
+
+            if not response_text:
+                response_text = "I'd be happy to help you find what you're looking for! Could you tell me more about what you need?"
 
             tokens = len(response_text.split()) * 2  # rough estimate
 
