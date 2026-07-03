@@ -27,40 +27,6 @@ logger = logging.getLogger("forgestore.ai")
 router = APIRouter(prefix="/api/ai", tags=["ai-assistant"])
 
 
-@router.get("/debug/ai-status")
-def debug_ai_status():
-    """Debug endpoint — shows AI provider config. Remove after debugging."""
-    from app.services.ai_service import get_active_provider, get_active_model, _get_db_setting, PROVIDER_CONFIGS
-    provider = get_active_provider()
-    config = PROVIDER_CONFIGS.get(provider, {})
-    api_key = _get_db_setting(config.get("api_key_setting", ""))
-
-    # Try creating client directly to capture real error
-    client_error = ""
-    client_ok = False
-    try:
-        if config.get("sdk") == "openai" and api_key:
-            import openai
-            kwargs = {"api_key": api_key}
-            if config.get("base_url"):
-                kwargs["base_url"] = config["base_url"]
-            c = openai.OpenAI(**kwargs)
-            client_ok = True
-    except Exception as e:
-        client_error = f"{type(e).__name__}: {e}"
-
-    return {
-        "provider": provider,
-        "model": get_active_model(),
-        "api_key_set": bool(api_key),
-        "api_key_preview": api_key[:15] + "..." if api_key else "",
-        "client_ok": client_ok,
-        "client_error": client_error,
-        "base_url": config.get("base_url"),
-        "sdk": config.get("sdk"),
-    }
-
-
 class ChatRequest(BaseModel):
     session_id: str
     message: str
