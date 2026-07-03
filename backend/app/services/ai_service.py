@@ -41,7 +41,9 @@ def _get_db_setting(key: str) -> str:
         db = SessionLocal()
         try:
             setting = db.query(SettingsModel).filter(SettingsModel.key == key).first()
-            return setting.value if setting else ""
+            val = setting.value if setting else ""
+            logger.info(f"DB setting '{key}' = '{val[:20]}...' " if len(val) > 20 else f"DB setting '{key}' = '{val}'")
+            return val
         finally:
             db.close()
     except Exception as e:
@@ -50,8 +52,19 @@ def _get_db_setting(key: str) -> str:
 
 
 def get_active_provider() -> str:
-    """Get the currently selected AI provider from DB settings."""
-    return _get_db_setting("ai_provider") or "openai"
+    """Get the currently selected AI provider from DB settings.
+    Falls back to opencode_zen if the configured provider has no API key."""
+    configured = _get_db_setting("ai_provider") or "opencode_zen"
+    config = PROVIDER_CONFIGS.get(configured)
+    if config:
+        api_key = _get_db_setting(config["api_key_setting"])
+        if api_key:
+            return configured
+        # Configured provider has no key — try opencode_zen
+        zen_config = PROVIDER_CONFIGS.get("opencode_zen")
+        if zen_config and _get_db_setting(zen_config["api_key_setting"]):
+            return "opencode_zen"
+    return configured
 
 
 def get_ai_client() -> Any:

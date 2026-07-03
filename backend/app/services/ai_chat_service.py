@@ -231,7 +231,12 @@ Guidelines:
         system_prompt = self._build_system_prompt(context)
 
         try:
-            from app.services.ai_service import _call_llm, get_ai_client, get_active_provider
+            from app.services.ai_service import _call_llm, get_ai_client, get_active_provider, get_active_model
+
+            provider = get_active_provider()
+            model = get_active_model()
+            client = get_ai_client()
+            logger.info(f"AI chat: provider={provider}, model={model}, client={'ok' if client else 'NONE'}")
 
             # Build user prompt (with optional image)
             user_prompt = message
@@ -245,6 +250,8 @@ Guidelines:
                 max_tokens=600,
                 images=images,
             )
+
+            logger.info(f"AI chat response length: {len(response_text) if response_text else 0}")
 
             if not response_text:
                 response_text = "I apologize, but I'm having trouble processing your request right now. Please try again, or browse our catalog directly."
