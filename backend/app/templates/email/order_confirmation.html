@@ -1,11 +1,30 @@
 {% extends "email/base.html" %}
 {% block body %}
-<p style="font-size:14px;color:#57534e;text-align:center;margin:0 0 20px;">Hi <strong>{{ customer_name }}</strong>,</p>
-<p style="font-size:14px;color:#57534e;line-height:1.6;text-align:center;margin:0 0 20px;">
-  Your order <strong>{{ order_number }}</strong> has been placed successfully.
-  We'll notify you when each vendor begins fulfillment.
+<p style="font-size:15px;color:#57534e;text-align:center;margin:0 0 8px;line-height:1.7;">
+  Hi <strong style="color:#1c1917;">{{ customer_name }}</strong>,
 </p>
-{% if vendor_sections %}
-<p style="font-size:12px;color:#78716c;text-align:center;margin:0 0 4px;">This order includes items from {{ vendor_sections|length }} vendor(s):</p>
+<p style="font-size:15px;color:#57534e;text-align:center;margin:0 0 28px;line-height:1.7;">
+  Your order <strong style="color:#1c1917;">{{ order_number }}</strong> has been placed successfully. We'll keep you updated as each vendor begins processing your items.
+</p>
+
+{% if vendor_sections and vendor_sections|length > 0 %}
+<!-- Vendor breakdown -->
+<div style="background:#faf9f7;border-radius:14px;padding:20px 22px;margin:0 0 20px;">
+  <p style="font-size:11px;font-weight:700;color:#a8a29e;text-transform:uppercase;letter-spacing:1px;margin:0 0 14px;">Items from {{ vendor_sections|length }} vendor{{ 's' if vendor_sections|length > 1 else '' }}</p>
+  {% for vs in vendor_sections %}
+  <div style="padding:10px 0;{% if not loop.last %}border-bottom:1px solid #f5f5f4;{% endif %}">
+    <p style="font-size:13px;font-weight:700;color:#1c1917;margin:0;">{{ vs.vendor_name }}</p>
+    {% if vs.items %}
+    <p style="font-size:12px;color:#78716c;margin:4px 0 0;">
+      {% for item in vs.items %}{{ item.name }}{% if not loop.last %}, {% endif %}{% endfor %}
+    </p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
 {% endif %}
+
+<p style="font-size:13px;color:#a8a29e;text-align:center;margin:0;line-height:1.5;">
+  You'll receive an email each time your order status changes.
+</p>
 {% endblock %}

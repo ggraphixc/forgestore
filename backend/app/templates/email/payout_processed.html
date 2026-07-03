@@ -1,12 +1,20 @@
 {% extends "email/base.html" %}
 {% block body %}
-<p style="font-size:14px;color:#57534e;text-align:center;margin:0 0 20px;">Hi <strong>{{ customer_name }}</strong>,</p>
-<p style="font-size:14px;color:#57534e;line-height:1.6;text-align:center;margin:0 0 20px;">
-  Your payout of <strong>₦{{ "{:,.2f}".format(amount) }}</strong> has been processed.
+<p style="font-size:15px;color:#57534e;text-align:center;margin:0 0 8px;line-height:1.7;">
+  Hi <strong style="color:#1c1917;">{{ customer_name }}</strong>,
 </p>
-<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;margin:20px 0;text-align:center;">
-  <p style="font-size:11px;color:#166534;margin:0;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Amount Paid</p>
-  <p style="font-size:28px;font-weight:800;color:#14532d;margin:8px 0 0;">₦{{ "{:,.2f}".format(amount) }}</p>
-  <p style="font-size:12px;color:#a8a29e;margin:8px 0 0;">{{ earning_count }} earning(s) included</p>
+<p style="font-size:15px;color:#57534e;text-align:center;margin:0 0 28px;line-height:1.7;">
+  Your payout has been processed and is on its way!
+</p>
+
+<!-- Amount card -->
+<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:16px;padding:28px 24px;margin:0 0 20px;text-align:center;">
+  <p style="font-size:11px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 10px;">Amount Paid</p>
+  <p style="font-size:36px;font-weight:800;color:#14532d;margin:0 0 8px;letter-spacing:-1px;">₦{{ "{:,.2f}".format(amount) }}</p>
+  <p style="font-size:12px;color:#78716c;margin:0;">{{ earning_count }} earning{{ 's' if earning_count != 1 else '' }} included</p>
 </div>
+
+<p style="font-size:13px;color:#a8a29e;text-align:center;margin:0;line-height:1.5;">
+  The funds should arrive in your account within 1-2 business days.
+</p>
 {% endblock %}

@@ -60,24 +60,14 @@ def send_order_confirmation_email(
     summary_lines: Optional[list] = None,
 ) -> bool:
     """Send order confirmation email (async background dispatch)."""
-    body_html = f"""
-    <p style="font-size:14px;color:#57534e;text-align:center;margin:0 0 20px;">Hi <strong>{customer_name}</strong>,</p>
-    <p style="font-size:14px;color:#57534e;line-height:1.6;text-align:center;margin:0 0 20px;">
-      Your order <strong>{order_number}</strong> has been placed successfully.
-      We'll notify you when each vendor begins fulfillment.
-    </p>
-    """
-    if vendor_sections:
-        body_html += f'<p style="font-size:12px;color:#78716c;text-align:center;margin:0 0 4px;">This order includes items from {len(vendor_sections)} vendor(s):</p>'
-
     return _dispatch(
         to_email,
         f"Order Confirmed — {order_number}",
         "order_confirmation.html",
         {
             "heading": "Order Confirmed!",
-            "subtitle": f"Order {order_number}",
-            "body_html": body_html,
+            "subtitle": f"Thank you, {customer_name}. Your order has been placed successfully.",
+            "icon": {"emoji": "✅", "bg": "#f0fdf4"},
             "cta_url": f"{settings.site_base_url.rstrip('/')}/shop/account/orders",
             "cta_label": "View My Orders",
             "customer_name": customer_name,
@@ -99,20 +89,14 @@ def send_vendor_new_order_email(
     commission_pct: float,
 ) -> bool:
     """Send new order notification to vendor (async background dispatch)."""
-    body_html = f"""
-    <p style="font-size:14px;color:#57534e;text-align:center;margin:0 0 20px;">Hi <strong>{vendor_name}</strong>,</p>
-    <p style="font-size:14px;color:#57534e;line-height:1.6;text-align:center;margin:0 0 20px;">
-      You have a new order to fulfill! Order <strong>{order_number}</strong>.
-    </p>
-    """
     return _dispatch(
         to_email,
         f"New Order — {order_number}",
         "vendor_new_order.html",
         {
-            "heading": "New Order Received",
-            "subtitle": f"Order {order_number}",
-            "body_html": body_html,
+            "heading": "New Order Received!",
+            "subtitle": f"A customer has placed an order with your shop.",
+            "icon": {"emoji": "🔔", "bg": "#fef3c7"},
             "vendor_name": vendor_name,
             "order_number": order_number,
             "items": items,
@@ -131,31 +115,65 @@ def send_order_status_email(
     tracking_number: Optional[str] = None,
 ) -> bool:
     """Send order status update email (async background dispatch)."""
-    status_emoji = {"PAID": "✅", "PROCESSING": "🔧", "SHIPPED": "📦", "DELIVERED": "🎉", "CANCELLED": "❌"}
-    emoji = status_emoji.get(status, "📋")
+    status_map = {
+        "PAID": {
+            "emoji": "✅", "label": "Payment Confirmed",
+            "bg": "#f0fdf4", "border": "#bbf7d0", "color": "#166534",
+            "icon_bg": "#f0fdf4",
+        },
+        "PROCESSING": {
+            "emoji": "🔧", "label": "Being Prepared",
+            "bg": "#eff6ff", "border": "#bfdbfe", "color": "#1e40af",
+            "icon_bg": "#eff6ff",
+        },
+        "SHIPPED": {
+            "emoji": "📦", "label": "Shipped",
+            "bg": "#fef3c7", "border": "#fde68a", "color": "#92400e",
+            "icon_bg": "#fef3c7",
+        },
+        "DELIVERED": {
+            "emoji": "🎉", "label": "Delivered",
+            "bg": "#f0fdf4", "border": "#bbf7d0", "color": "#166534",
+            "icon_bg": "#f0fdf4",
+        },
+        "CANCELLED": {
+            "emoji": "❌", "label": "Cancelled",
+            "bg": "#fef2f2", "border": "#fecaca", "color": "#991b1b",
+            "icon_bg": "#fef2f2",
+        },
+    }
+    s = status_map.get(status, {
+        "emoji": "📋", "label": status.title(),
+        "bg": "#f5f5f4", "border": "#e7e5e4", "color": "#57534e",
+        "icon_bg": "#f5f5f4",
+    })
 
-    body_html = f"""
-    <p style="font-size:14px;color:#57534e;text-align:center;margin:0 0 20px;">Hi <strong>{customer_name}</strong>,</p>
-    <p style="font-size:14px;color:#57534e;line-height:1.6;text-align:center;margin:0 0 20px;">
-      Your order <strong>{order_number}</strong> has been updated to <strong>{status}</strong>.
-    </p>
-    """
-    if tracking_number:
-        body_html += f"""
-        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;margin:16px 0;text-align:center;">
-          <p style="font-size:12px;color:#166534;margin:0;font-weight:600;">Tracking Number</p>
-          <p style="font-size:16px;color:#14532d;margin:4px 0 0;font-weight:800;font-family:monospace;">{tracking_number}</p>
-        </div>
-        """
+    # Build status timeline for common flows
+    timeline = None
+    if status in ("PAID", "PROCESSING", "SHIPPED", "DELIVERED"):
+        steps = [
+            {"icon": "✓", "label": "Order Placed", "active": True},
+            {"icon": "✓", "label": "Payment Confirmed", "active": status in ("PROCESSING", "SHIPPED", "DELIVERED")},
+            {"icon": "→", "label": "Processing", "active": status in ("SHIPPED", "DELIVERED")},
+            {"icon": "→", "label": "Shipped", "active": status == "DELIVERED"},
+            {"icon": "○", "label": "Delivered", "active": False},
+        ]
+        timeline = steps[:({"PAID": 2, "PROCESSING": 3, "SHIPPED": 4, "DELIVERED": 5}.get(status, 2))]
 
     return _dispatch(
         to_email,
         f"Order {status.title()} — {order_number}",
         "order_status.html",
         {
-            "heading": f"{emoji} Order {status.title()}!",
-            "subtitle": f"Order {order_number}",
-            "body_html": body_html,
+            "heading": f"{s['emoji']} {s['label']}!",
+            "subtitle": f"Order {order_number} has been updated.",
+            "icon": {"emoji": s["emoji"], "bg": s["icon_bg"]},
+            "status_banner": {"text": s["label"], "bg": s["bg"], "border": s["border"], "color": s["color"]},
+            "status_bg": s["bg"],
+            "status_border": s["border"],
+            "status_color": s["color"],
+            "status_label": s["label"],
+            "status_timeline": timeline,
             "cta_url": f"{settings.site_base_url.rstrip('/')}/shop/account/orders",
             "cta_label": "View My Orders",
             "customer_name": customer_name,
@@ -168,20 +186,16 @@ def send_order_status_email(
 
 def send_password_reset_email(to_email: str, reset_link: str) -> bool:
     """Send password reset email (async background dispatch)."""
-    body_html = f"""
-    <p style="font-size:14px;color:#57534e;line-height:1.6;text-align:center;margin:0 0 20px;">
-      Click the button below to set a new password. This link expires in 1 hour.
-    </p>
-    """
     return _dispatch(
         to_email,
         "Reset Your ForgeStore Password",
         "password_reset.html",
         {
             "heading": "Reset Your Password",
-            "body_html": body_html,
+            "subtitle": "We received a request to reset your password.",
+            "icon": {"emoji": "🔒", "bg": "#fef2f2"},
             "cta_url": reset_link,
-            "cta_label": "Reset Password",
+            "cta_label": "Set New Password",
             "footer_text": "If you didn't request a password reset, you can safely ignore this email.",
         },
     )
@@ -189,28 +203,14 @@ def send_password_reset_email(to_email: str, reset_link: str) -> bool:
 
 def send_welcome_email(to_email: str, customer_name: str) -> bool:
     """Send welcome email (async background dispatch)."""
-    body_html = f"""
-    <p style="font-size:14px;color:#57534e;text-align:center;margin:0 0 20px;">Hi <strong>{customer_name}</strong>,</p>
-    <p style="font-size:14px;color:#57534e;line-height:1.6;text-align:center;margin:0 0 20px;">
-      Welcome to <strong>{settings.site_name or 'ForgeStore'}</strong>! Your account is ready.
-    </p>
-    <div style="background:#f5f5f4;border-radius:12px;padding:20px;margin:20px 0;">
-      <p style="font-size:13px;color:#57534e;margin:0 0 8px;font-weight:600;">What you can do now:</p>
-      <ul style="font-size:13px;color:#78716c;margin:0;padding-left:18px;line-height:1.8;">
-        <li>Browse our multi-vendor marketplace</li>
-        <li>Save favourites to your wishlist</li>
-        <li>Track your orders in real time</li>
-        <li>Share products and earn referral points</li>
-      </ul>
-    </div>
-    """
     return _dispatch(
         to_email,
         f"Welcome to {settings.site_name or 'ForgeStore'}!",
         "welcome.html",
         {
-            "heading": "Welcome to the Workshop!",
-            "body_html": body_html,
+            "heading": f"Welcome, {customer_name}!",
+            "subtitle": f"Your {settings.site_name or 'ForgeStore'} account is ready. Here's what you can do:",
+            "icon": {"emoji": "👋", "bg": "#fef3c7"},
             "cta_url": f"{settings.site_base_url.rstrip('/')}/shop",
             "cta_label": "Start Shopping",
             "customer_name": customer_name,
@@ -220,19 +220,14 @@ def send_welcome_email(to_email: str, customer_name: str) -> bool:
 
 def send_newsletter_confirmation_email(to_email: str, confirm_url: str) -> bool:
     """Send newsletter confirmation email (async background dispatch)."""
-    body_html = f"""
-    <p style="font-size:14px;color:#57534e;line-height:1.6;text-align:center;margin:0 0 20px;">
-      You (or someone) signed up for the newsletter with this email.
-      Click the button below to confirm your subscription.
-    </p>
-    """
     return _dispatch(
         to_email,
         f"Confirm your newsletter subscription — {settings.site_name or 'ForgeStore'}",
         "newsletter_confirm.html",
         {
-            "heading": "Almost there!",
-            "body_html": body_html,
+            "heading": "Almost There!",
+            "subtitle": "",
+            "icon": {"emoji": "✉️", "bg": "#eff6ff"},
             "cta_url": confirm_url,
             "cta_label": "Confirm Subscription",
             "footer_text": "If you didn't sign up, you can safely ignore this email.",
@@ -247,27 +242,18 @@ def send_payout_email(
     earning_count: int,
 ) -> bool:
     """Send payout processed email (async background dispatch)."""
-    body_html = f"""
-    <p style="font-size:14px;color:#57534e;text-align:center;margin:0 0 20px;">Hi <strong>{retailer_name}</strong>,</p>
-    <p style="font-size:14px;color:#57534e;line-height:1.6;text-align:center;margin:0 0 20px;">
-      Your payout of <strong>₦{total_amount:,.2f}</strong> has been processed.
-    </p>
-    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;margin:20px 0;text-align:center;">
-      <p style="font-size:11px;color:#166534;margin:0;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Amount Paid</p>
-      <p style="font-size:28px;font-weight:800;color:#14532d;margin:8px 0 0;">₦{total_amount:,.2f}</p>
-      <p style="font-size:12px;color:#a8a29e;margin:8px 0 0;">{earning_count} earning(s) included</p>
-    </div>
-    """
     return _dispatch(
         to_email,
         f"Payout Processed — {settings.site_name or 'ForgeStore'}",
         "payout_processed.html",
         {
-            "heading": "Payout Processed!",
-            "body_html": body_html,
+            "heading": "Payout Sent!",
+            "subtitle": f"Hi {retailer_name}, your earnings have been processed.",
+            "icon": {"emoji": "💸", "bg": "#f0fdf4"},
             "amount": total_amount,
             "earning_count": earning_count,
             "customer_name": retailer_name,
+            "show_divider": False,
         },
     )
 
@@ -295,23 +281,37 @@ def send_newsletter_broadcast(
     unsubscribe_html = ""
     if unsubscribe_url:
         unsubscribe_html = f"""
-        <div style="margin-top:32px;padding-top:20px;border-top:1px solid #e7e5e4;font-size:11px;color:#a8a29e;text-align:center;">
+        <div style="margin-top:32px;padding-top:20px;border-top:1px solid #f5f5f4;font-size:11px;color:#a8a29e;text-align:center;">
           <p style="margin:0 0 6px 0;">You're receiving this because you subscribed to {settings.site_name or 'ForgeStore'} newsletters.</p>
           <a href="{unsubscribe_url}" style="color:#a8a29e;text-decoration:underline;">Unsubscribe instantly</a>
         </div>
         """
 
     full_html = f"""
-    <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#fafaf9;border-radius:16px;">
-      <div style="text-align:center;margin-bottom:24px;">
-        <div style="display:inline-block;background:#1c1917;color:white;font-weight:800;font-size:20px;padding:10px 18px;border-radius:12px;">
-          {settings.site_name or 'ForgeStore'}
-        </div>
-      </div>
-      {html_body}
-      {tracking_pixel}
-      {unsubscribe_html}
-    </div>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+    <body style="margin:0;padding:0;background:#faf9f7;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#faf9f7;padding:40px 20px;">
+    <tr><td align="center">
+    <table width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+      <tr><td style="background:linear-gradient(135deg,#1c1917 0%,#292524 50%,#44403c 100%);padding:36px 40px 32px;text-align:center;">
+        <span style="color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px;">{settings.site_name or 'ForgeStore'}</span>
+        <div style="margin:20px auto 0;width:48px;height:3px;background:linear-gradient(90deg,#f59e0b,#d97706);border-radius:2px;"></div>
+      </td></tr>
+      <tr><td style="padding:40px;">
+        {html_body}
+        {tracking_pixel}
+        {unsubscribe_html}
+      </td></tr>
+      <tr><td style="padding:28px 40px 36px;text-align:center;">
+        <p style="font-size:11px;color:#d6d3d1;margin:0;">&copy; 2026 {settings.site_name or 'ForgeStore'}. All rights reserved.</p>
+      </td></tr>
+    </table>
+    </td></tr>
+    </table>
+    </body>
+    </html>
     """
     return _dispatch_raw(to_email, subject, full_html)
 

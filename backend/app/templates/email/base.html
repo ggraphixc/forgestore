@@ -1,79 +1,153 @@
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f5f5f4;font-family:'Helvetica Neue',Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f4;padding:32px 16px;">
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>{{ heading|default('ForgeStore') }}</title>
+</head>
+<body style="margin:0;padding:0;background:#faf9f7;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+
+<!-- Outer wrapper -->
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#faf9f7;padding:40px 20px;">
 <tr><td align="center">
-<table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
-  <!-- Header -->
-  <tr><td style="background:#1c1917;padding:24px 32px;text-align:center;">
-    <span style="color:#ffffff;font-size:20px;font-weight:800;letter-spacing:-0.5px;">{{ site_name|default('ForgeStore') }}</span>
+
+<!-- Email container -->
+<table width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+
+  <!-- ═══ Header ═══ -->
+  <tr><td style="background:linear-gradient(135deg,#1c1917 0%,#292524 50%,#44403c 100%);padding:36px 40px 32px;text-align:center;">
+    <!-- Brand name -->
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td align="center">
+        <span style="color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">{{ site_name|default('ForgeStore') }}</span>
+        {% if site_tagline %}
+        <br><span style="color:#d6d3d1;font-size:11px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;display:inline-block;">{{ site_tagline }}</span>
+        {% endif %}
+      </td>
+    </tr></table>
+    <!-- Accent bar -->
+    <div style="margin:20px auto 0;width:48px;height:3px;background:linear-gradient(90deg,#f59e0b,#d97706);border-radius:2px;"></div>
   </td></tr>
 
-  <!-- Body -->
-  <tr><td style="padding:32px;">
-    <h1 style="font-size:22px;font-weight:700;color:#1c1917;margin:0 0 8px;text-align:center;">{{ heading }}</h1>
-    {% if subtitle %}
-    <p style="font-size:14px;color:#57534e;text-align:center;margin:0 0 24px;">{{ subtitle }}</p>
-    {% endif %}
+  <!-- ═══ Status Banner (optional) ═══ -->
+  {% if status_banner %}
+  <tr><td style="padding:0;">
+    <div style="background:{{ status_banner.bg|default('#f0fdf4') }};padding:16px 40px;text-align:center;border-bottom:1px solid {{ status_banner.border|default('#bbf7d0') }};">
+      <span style="font-size:13px;font-weight:700;color:{{ status_banner.color|default('#166534') }};letter-spacing:0.3px;">{{ status_banner.text }}</span>
+    </div>
+  </td></tr>
+  {% endif %}
 
-    {{ body_html }}
-
-    {% if cta_url and cta_label %}
-    <div style="text-align:center;margin:28px 0;">
-      <a href="{{ cta_url }}" style="display:inline-block;padding:14px 32px;background:#1c1917;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;border-radius:12px;">{{ cta_label }}</a>
+  <!-- ═══ Body ═══ -->
+  <tr><td style="padding:40px 40px 16px;">
+    {% if icon %}
+    <div style="text-align:center;margin:0 0 24px;">
+      <div style="display:inline-block;width:56px;height:56px;background:{{ icon.bg|default('#fef3c7') }};border-radius:16px;line-height:56px;text-align:center;font-size:24px;">{{ icon.emoji|default('✨') }}</div>
     </div>
     {% endif %}
 
-    {% if items_table %}
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;border:1px solid #e7e5e4;border-radius:12px;overflow:hidden;">
-      <thead><tr style="background:#f5f5f4;">
-        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:700;color:#78716c;text-transform:uppercase;letter-spacing:0.5px;">Item</th>
-        <th style="padding:10px 16px;text-align:center;font-size:12px;font-weight:700;color:#78716c;text-transform:uppercase;letter-spacing:0.5px;">Qty</th>
-        <th style="padding:10px 16px;text-align:right;font-size:12px;font-weight:700;color:#78716c;text-transform:uppercase;letter-spacing:0.5px;">Price</th>
+    <h1 style="font-size:24px;font-weight:800;color:#1c1917;margin:0 0 8px;text-align:center;letter-spacing:-0.3px;line-height:1.3;">{{ heading }}</h1>
+
+    {% if subtitle %}
+    <p style="font-size:14px;color:#78716c;text-align:center;margin:0 0 28px;line-height:1.5;">{{ subtitle }}</p>
+    {% endif %}
+
+    {{ body_html }}
+  </td></tr>
+
+  <!-- ═══ CTA Button ═══ -->
+  {% if cta_url and cta_label %}
+  <tr><td style="padding:8px 40px 32px;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td align="center">
+        <a href="{{ cta_url }}" style="display:inline-block;padding:16px 40px;background:#1c1917;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;border-radius:12px;letter-spacing:0.2px;mso-padding-alt:0;text-align:center;">{{ cta_label }}</a>
+      </td>
+    </tr></table>
+  </td></tr>
+  {% endif %}
+
+  <!-- ═══ Items Table ═══ -->
+  {% if items_table %}
+  <tr><td style="padding:0 40px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #f5f5f4;border-radius:14px;overflow:hidden;">
+      <thead><tr style="background:#faf9f7;">
+        <th style="padding:12px 18px;text-align:left;font-size:11px;font-weight:700;color:#a8a29e;text-transform:uppercase;letter-spacing:1px;">Item</th>
+        <th style="padding:12px 18px;text-align:center;font-size:11px;font-weight:700;color:#a8a29e;text-transform:uppercase;letter-spacing:1px;">Qty</th>
+        <th style="padding:12px 18px;text-align:right;font-size:11px;font-weight:700;color:#a8a29e;text-transform:uppercase;letter-spacing:1px;">Price</th>
       </tr></thead>
       <tbody>
       {% for item in items_table %}
-      <tr style="border-top:1px solid #f5f5f4;">
-        <td style="padding:10px 16px;font-size:13px;color:#1c1917;">{{ item.name }}</td>
-        <td style="padding:10px 16px;font-size:13px;color:#57534e;text-align:center;">{{ item.quantity }}</td>
-        <td style="padding:10px 16px;font-size:13px;color:#1c1917;text-align:right;font-weight:600;">₦{{ "{:,.2f}".format(item.price) }}</td>
+      <tr style="border-top:1px solid #faf9f7;">
+        <td style="padding:14px 18px;font-size:13px;color:#1c1917;font-weight:500;">{{ item.name }}</td>
+        <td style="padding:14px 18px;font-size:13px;color:#78716c;text-align:center;">{{ item.quantity }}</td>
+        <td style="padding:14px 18px;font-size:13px;color:#1c1917;text-align:right;font-weight:700;">₦{{ "{:,.2f}".format(item.price) }}</td>
       </tr>
       {% endfor %}
       </tbody>
     </table>
-    {% endif %}
+  </td></tr>
+  {% endif %}
 
-    {% if summary_lines %}
-    <div style="background:#f5f5f4;border-radius:12px;padding:20px;margin:20px 0;">
+  <!-- ═══ Summary Lines ═══ -->
+  {% if summary_lines %}
+  <tr><td style="padding:0 40px 24px;">
+    <div style="background:#faf9f7;border-radius:14px;padding:20px 22px;">
       {% for line in summary_lines %}
-      <div style="display:flex;justify-content:space-between;padding:4px 0;{% if loop.last %}border-top:1px solid #d6d3d1;margin-top:8px;padding-top:8px;{% endif %}">
-        <span style="font-size:13px;color:{{ '#1c1917;font-weight:700;' if loop.last else '#78716c;' }}">{{ line.label }}</span>
-        <span style="font-size:13px;color:{{ '#1c1917;font-weight:800;' if loop.last else '#1c1917;font-weight:600;' }}">{{ line.value }}</span>
-      </div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="{% if loop.last %}margin-top:10px;padding-top:10px;border-top:1px solid #e7e5e4;{% endif %}">
+        <tr>
+          <td style="font-size:13px;color:{{ '#1c1917;font-weight:700;' if loop.last else '#78716c;' }}padding:3px 0;">{{ line.label }}</td>
+          <td style="font-size:13px;color:{{ '#1c1917;font-weight:800;' if loop.last else '#1c1917;font-weight:600;' }}text-align:right;padding:3px 0;">{{ line.value }}</td>
+        </tr>
+      </table>
       {% endfor %}
     </div>
-    {% endif %}
+  </td></tr>
+  {% endif %}
 
-    {% if vendor_section %}
-    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:20px;margin:20px 0;">
-      <p style="font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 12px;">Vendor Fulfillment Details</p>
+  <!-- ═══ Vendor Section ═══ -->
+  {% if vendor_section %}
+  <tr><td style="padding:0 40px 24px;">
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:14px;padding:20px 22px;">
+      <p style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:1px;margin:0 0 14px;">Vendor Fulfillment</p>
       {% for vf in vendor_section %}
-      <div style="border-bottom:1px solid #fde68a;padding:8px 0;{% if loop.last %}border-bottom:none;{% endif %}">
-        <p style="font-size:13px;font-weight:600;color:#1c1917;margin:0;">{{ vf.vendor_name }}</p>
-        <p style="font-size:12px;color:#78716c;margin:4px 0 0;">Subtotal: ₦{{ "{:,.2f}".format(vf.subtotal) }} · Shipping: ₦{{ "{:,.2f}".format(vf.shipping_fee) }}</p>
+      <div style="padding:10px 0;{% if not loop.last %}border-bottom:1px solid #fde68a;{% endif %}">
+        <p style="font-size:13px;font-weight:700;color:#1c1917;margin:0;">{{ vf.vendor_name }}</p>
+        <p style="font-size:12px;color:#92400e;margin:4px 0 0;">Subtotal: ₦{{ "{:,.2f}".format(vf.subtotal) }} &middot; Shipping: ₦{{ "{:,.2f}".format(vf.shipping_fee) }}</p>
       </div>
       {% endfor %}
     </div>
-    {% endif %}
+  </td></tr>
+  {% endif %}
+
+  <!-- ═══ Info Box (optional) ═══ -->
+  {% if info_box %}
+  <tr><td style="padding:0 40px 24px;">
+    <div style="background:{{ info_box.bg|default('#f0f9ff') }};border:1px solid {{ info_box.border|default('#bae6fd') }};border-radius:14px;padding:18px 22px;">
+      <p style="font-size:12px;color:{{ info_box.color|default('#0c4a6e') }};margin:0;line-height:1.6;">{{ info_box.text }}</p>
+    </div>
+  </td></tr>
+  {% endif %}
+
+  <!-- ═══ Divider ═══ -->
+  {% if show_divider|default(true) %}
+  <tr><td style="padding:0 40px;">
+    <div style="border-top:1px solid #f5f5f4;margin:0;"></div>
+  </td></tr>
+  {% endif %}
+
+  <!-- ═══ Footer ═══ -->
+  <tr><td style="padding:28px 40px 36px;text-align:center;">
+    <p style="font-size:12px;color:#a8a29e;margin:0 0 8px;line-height:1.6;">{{ footer_text|default('Thank you for shopping at ' ~ (site_name|default('ForgeStore')) ~ '.') }}</p>
+    <p style="font-size:11px;color:#d6d3d1;margin:0;">&copy; 2026 {{ site_name|default('ForgeStore') }}. All rights reserved.</p>
   </td></tr>
 
-  <!-- Footer -->
-  <tr><td style="padding:20px 32px;border-top:1px solid #f5f5f4;text-align:center;">
-    <p style="font-size:11px;color:#a8a29e;margin:0;">{{ footer_text|default('Thank you for shopping at ' ~ (site_name|default('ForgeStore')) ~ '.') }}</p>
-  </td></tr>
 </table>
+<!-- /Email container -->
+
 </td></tr>
 </table>
+<!-- /Outer wrapper -->
+
 </body>
 </html>

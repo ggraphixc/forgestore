@@ -453,15 +453,23 @@ def update_order_status(
     from app.services.email_service import _render_email_template, _base_context
     customer = db.query(User).filter(User.id == order.customer_id).first()
     if customer and customer.email:
-        status_emoji = {"PAID": "✅", "PROCESSING": "🔧", "SHIPPED": "📦", "DELIVERED": "🎉", "CANCELLED": "❌"}
-        emoji = status_emoji.get(status, "📋")
+        status_map = {
+            "PAID": {"emoji": "✅", "label": "Payment Confirmed", "bg": "#f0fdf4", "border": "#bbf7d0", "color": "#166534", "icon_bg": "#f0fdf4"},
+            "PROCESSING": {"emoji": "🔧", "label": "Being Prepared", "bg": "#eff6ff", "border": "#bfdbfe", "color": "#1e40af", "icon_bg": "#eff6ff"},
+            "SHIPPED": {"emoji": "📦", "label": "Shipped", "bg": "#fef3c7", "border": "#fde68a", "color": "#92400e", "icon_bg": "#fef3c7"},
+            "DELIVERED": {"emoji": "🎉", "label": "Delivered", "bg": "#f0fdf4", "border": "#bbf7d0", "color": "#166534", "icon_bg": "#f0fdf4"},
+            "CANCELLED": {"emoji": "❌", "label": "Cancelled", "bg": "#fef2f2", "border": "#fecaca", "color": "#991b1b", "icon_bg": "#fef2f2"},
+        }
+        s = status_map.get(status, {"emoji": "📋", "label": status.title(), "bg": "#f5f5f4", "border": "#e7e5e4", "color": "#57534e", "icon_bg": "#f5f5f4"})
         html = _render_email_template("order_status.html", _base_context(
-            heading=f"{emoji} Order {status.title()}!",
-            subtitle=f"Order {order.order_number}",
-            body_html=f"""<p style="font-size:14px;color:#57534e;text-align:center;margin:0 0 20px;">Hi <strong>{customer.name or 'Customer'}</strong>,</p>
-            <p style="font-size:14px;color:#57534e;line-height:1.6;text-align:center;margin:0 0 20px;">
-              Your order <strong>{order.order_number}</strong> has been updated to <strong>{status}</strong>.
-            </p>""",
+            heading=f"{s['emoji']} {s['label']}!",
+            subtitle=f"Order {order.order_number} has been updated.",
+            icon={"emoji": s["emoji"], "bg": s["icon_bg"]},
+            status_banner={"text": s["label"], "bg": s["bg"], "border": s["border"], "color": s["color"]},
+            status_bg=s["bg"],
+            status_border=s["border"],
+            status_color=s["color"],
+            status_label=s["label"],
             cta_url=f"{settings.site_base_url.rstrip('/')}/shop/account/orders",
             cta_label="View My Orders",
             customer_name=customer.name or "Customer",
@@ -2585,12 +2593,13 @@ def request_earnings_payout(
             from app.core.email import dispatch_email_background
             from app.services.email_service import _render_email_template, _base_context
             html = _render_email_template("payout_processed.html", _base_context(
-                heading="Payout Processed!",
-                subtitle=f"₦{total_net:,.2f} paid",
-                body_html=f"<p>Hi <strong>{retailer_name}</strong>, your payout has been processed.</p>",
+                heading="Payout Sent!",
+                subtitle=f"Hi {retailer_name}, your earnings have been processed.",
+                icon={"emoji": "💸", "bg": "#f0fdf4"},
                 amount=total_net,
                 earning_count=len(earnings),
                 customer_name=retailer_name,
+                show_divider=False,
             ))
             dispatch_email_background(admin.email, f"Payout Processed — ForgeStore", html)
         except Exception:
@@ -2678,12 +2687,13 @@ def batch_mark_earnings_paid(
             retailer_name = retailer.name if retailer else r_admin.name or "Retailer"
             try:
                 html = _render_email_template("payout_processed.html", _base_context(
-                    heading="Payout Processed!",
-                    subtitle=f"₦{r_total_net:,.2f} paid",
-                    body_html=f"<p>Hi <strong>{retailer_name}</strong>, your payout has been processed.</p>",
+                    heading="Payout Sent!",
+                    subtitle=f"Hi {retailer_name}, your earnings have been processed.",
+                    icon={"emoji": "💸", "bg": "#f0fdf4"},
                     amount=r_total_net,
                     earning_count=len(r_earnings),
                     customer_name=retailer_name,
+                    show_divider=False,
                 ))
                 dispatch_email_background(r_admin.email, f"Payout Processed — ForgeStore", html)
             except Exception:
@@ -3213,12 +3223,13 @@ def process_payout(
                 retailer_obj = db.query(Retailer).filter(Retailer.id == payout.retailer_id).first()
                 r_name = retailer_obj.name if retailer_obj else r_admin.name or "Vendor"
                 html = _render_email_template("payout_processed.html", _base_context(
-                    heading="Payout Processed!",
-                    subtitle=f"₦{payout.amount:,.2f} paid",
-                    body_html=f"<p>Hi <strong>{r_name}</strong>, your payout has been processed.</p>",
+                    heading="Payout Sent!",
+                    subtitle=f"Hi {r_name}, your earnings have been processed.",
+                    icon={"emoji": "💸", "bg": "#f0fdf4"},
                     amount=payout.amount,
                     earning_count=1,
                     customer_name=r_name,
+                    show_divider=False,
                 ))
                 background_tasks.add_task(dispatch_email_background, r_admin.email, f"Payout Processed — ForgeStore", html)
         except Exception:
@@ -3325,12 +3336,13 @@ def approve_payout_automated(
             if r_admin and r_admin.email:
                 r_name = (retailer.name if retailer else r_admin.name) or "Vendor"
                 html = _render_email_template("payout_processed.html", _base_context(
-                    heading="Payout Processed!",
-                    subtitle=f"₦{payout.amount:,.2f} paid",
-                    body_html=f"<p>Hi <strong>{r_name}</strong>, your payout has been processed.</p>",
+                    heading="Payout Sent!",
+                    subtitle=f"Hi {r_name}, your earnings have been processed.",
+                    icon={"emoji": "💸", "bg": "#f0fdf4"},
                     amount=payout.amount,
                     earning_count=1,
                     customer_name=r_name,
+                    show_divider=False,
                 ))
                 background_tasks.add_task(dispatch_email_background, r_admin.email, "Payout Processed — ForgeStore", html)
         except Exception:
