@@ -18,6 +18,24 @@ from typing import Optional
 
 from app.database import get_db
 from app.auth import get_current_customer_from_cookie
+
+
+@router.get("/debug/ai-status")
+def debug_ai_status():
+    """Debug endpoint — shows AI provider config. Remove after debugging."""
+    from app.services.ai_service import get_active_provider, get_active_model, get_ai_client, _get_db_setting, PROVIDER_CONFIGS
+    provider = get_active_provider()
+    config = PROVIDER_CONFIGS.get(provider, {})
+    api_key = _get_db_setting(config.get("api_key_setting", ""))
+    client = get_ai_client()
+    return {
+        "provider": provider,
+        "model": get_active_model(),
+        "api_key_set": bool(api_key),
+        "api_key_preview": api_key[:15] + "..." if api_key else "",
+        "client_ok": client is not None,
+        "base_url": config.get("base_url"),
+    }
 from app.services.ai_chat_service import AIChatService, RecommendationService
 from app.services.ai_service import get_ai_client, _call_llm, get_active_model, get_active_provider
 from app.models import Product, Category
