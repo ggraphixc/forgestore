@@ -16,7 +16,7 @@
     </div>
 
     <!-- Chat Panel — slides up from button -->
-    <div id="ai-chat-panel" class="hidden absolute bottom-20 left-0 w-[calc(100vw-3rem)] sm:w-[420px] max-h-[75vh] sm:max-h-[600px] bg-white dark:bg-stone-900 rounded-3xl shadow-2xl shadow-stone-900/20 border border-stone-200 dark:border-stone-700 overflow-hidden flex flex-col transition-all duration-300 origin-bottom-left translate-y-4 opacity-0">
+    <div id="ai-chat-panel" class="hidden absolute bottom-20 left-0 w-[calc(100vw-3rem)] sm:w-[420px] max-h-[75vh] sm:max-h-[600px] bg-white dark:bg-stone-900 rounded-3xl shadow-2xl shadow-stone-900/20 border border-stone-200 dark:border-stone-700 overflow-hidden flex flex-col transition-all duration-300 ease-out" style="transform: translateY(16px); opacity: 0;">
         <!-- Header -->
         <div class="bg-gradient-to-r from-stone-900 to-stone-800 dark:from-stone-800 dark:to-stone-900 px-5 py-4 flex items-center gap-3 flex-shrink-0">
             <div class="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -95,16 +95,16 @@
 
             if (this.isOpen) {
                 panel.classList.remove('hidden');
-                requestAnimationFrame(() => {
-                    panel.classList.remove('translate-y-4', 'opacity-0');
-                    panel.classList.add('translate-y-0', 'opacity-100');
-                });
+                // Force reflow so transition fires from the initial state
+                void panel.offsetHeight;
+                panel.style.transform = 'translateY(0)';
+                panel.style.opacity = '1';
                 iconOpen.classList.add('hidden');
                 iconClose.classList.remove('hidden');
                 document.getElementById('ai-chat-input').focus();
             } else {
-                panel.classList.remove('translate-y-0', 'opacity-100');
-                panel.classList.add('translate-y-4', 'opacity-0');
+                panel.style.transform = 'translateY(16px)';
+                panel.style.opacity = '0';
                 iconOpen.classList.remove('hidden');
                 iconClose.classList.add('hidden');
                 setTimeout(() => panel.classList.add('hidden'), 300);
