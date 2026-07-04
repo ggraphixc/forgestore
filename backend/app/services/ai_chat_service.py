@@ -109,31 +109,35 @@ class AIChatService:
 
     def _get_catalog_context(self) -> str:
         """Build product catalog context for the AI."""
-        products = self.db.query(Product).filter(
-            Product.inventory > 0
-        ).order_by(Product.rating.desc(), Product.review_count.desc()).limit(30).all()
+        try:
+            products = self.db.query(Product).filter(
+                Product.inventory > 0
+            ).order_by(Product.rating.desc(), Product.review_count.desc()).limit(30).all()
 
-        categories = self.db.query(Category).limit(20).all()
+            categories = self.db.query(Category).limit(20).all()
 
-        catalog = {
-            "categories": [{"name": c.name, "slug": c.slug} for c in categories],
-            "top_products": [
-                {
-                    "id": p.id,
-                    "name": p.name,
-                    "brand": p.brand or "",
-                    "category": p.category.name if p.category else "",
-                    "price": p.price,
-                    "discount_price": p.discount_price,
-                    "rating": p.rating,
-                    "review_count": p.review_count,
-                    "in_stock": p.inventory > 0,
-                    "description": (p.description or "")[:120],
-                }
-                for p in products
-            ],
-        }
-        return json.dumps(catalog, default=str)
+            catalog = {
+                "categories": [{"name": c.name, "slug": c.slug} for c in categories],
+                "top_products": [
+                    {
+                        "id": p.id,
+                        "name": p.name,
+                        "brand": p.brand or "",
+                        "category": p.category.name if p.category else "",
+                        "price": p.price,
+                        "discount_price": p.discount_price,
+                        "rating": p.rating,
+                        "review_count": p.review_count,
+                        "in_stock": p.inventory > 0,
+                        "description": (p.description or "")[:120],
+                    }
+                    for p in products
+                ],
+            }
+            return json.dumps(catalog, default=str)
+        except Exception as e:
+            logger.error(f"Catalog context error: {e}")
+            return json.dumps({"categories": [], "top_products": []})
 
     def _get_user_context(self, user_id: Optional[str]) -> str:
         """Build user-specific context (preferences, order history)."""
@@ -180,50 +184,49 @@ class AIChatService:
         from app.utils import utcnow
         from datetime import timedelta
 
-        now = utcnow()
-        thirty_days_ago = now - timedelta(days=30)
+        try:
+            now = utcnow()
+            thirty_days_ago = now - timedelta(days=30)
 
-        # Revenue stats
-        total_revenue = self.db.query(func.coalesce(func.sum(Order.total_amount), 0)).filter(
-            Order.status.in_(["DELIVERED", "COMPLETED"]),
-            Order.created_at >= thirty_days_ago,
-        ).scalar()
+            total_revenue = self.db.query(func.coalesce(func.sum(Order.total_amount), 0)).filter(
+                Order.status.in_(["DELIVERED", "COMPLETED"]),
+                Order.created_at >= thirty_days_ago,
+            ).scalar()
 
-        # Order stats
-        total_orders = self.db.query(func.count(Order.id)).filter(
-            Order.created_at >= thirty_days_ago
-        ).scalar()
-        pending_orders = self.db.query(func.count(Order.id)).filter(
-            Order.status.in_(["PENDING", "PROCESSING"])
-        ).scalar()
-        disputed_orders = self.db.query(func.count(Order.id)).filter(
-            Order.status.in_(["DISPUTED", "REFUNDED", "CANCELLED"])
-        ).scalar()
+            total_orders = self.db.query(func.count(Order.id)).filter(
+                Order.created_at >= thirty_days_ago
+            ).scalar()
+            pending_orders = self.db.query(func.count(Order.id)).filter(
+                Order.status.in_(["PENDING", "PROCESSING"])
+            ).scalar()
+            disputed_orders = self.db.query(func.count(Order.id)).filter(
+                Order.status.in_(["DISPUTED", "REFUNDED", "CANCELLED"])
+            ).scalar()
 
-        # Vendor stats
-        total_vendors = self.db.query(func.count(Retailer.id)).scalar()
-        active_vendors = self.db.query(func.count(Retailer.id)).filter(
-            Retailer.status == "APPROVED"
-        ).scalar()
+            total_vendors = self.db.query(func.count(Retailer.id)).scalar()
+            active_vendors = self.db.query(func.count(Retailer.id)).filter(
+                Retailer.status == "APPROVED"
+            ).scalar()
 
-        # Low stock products
-        low_stock = self.db.query(func.count(Product.id)).filter(
-            Product.inventory > 0, Product.inventory < 10
-        ).scalar()
+            low_stock = self.db.query(func.count(Product.id)).filter(
+                Product.inventory > 0, Product.inventory < 10
+            ).scalar()
 
-        # Customer stats
-        total_customers = self.db.query(func.count(User.id)).filter(
-            User.role == "customer"
-        ).scalar()
+            total_customers = self.db.query(func.count(User.id)).filter(
+                User.role == "customer"
+            ).scalar()
 
-        return json.dumps({
-            "period": "last_30_days",
-            "revenue": {"total": float(total_revenue), "currency": "NGN"},
-            "orders": {"total": total_orders, "pending": pending_orders, "disputed": disputed_orders},
-            "vendors": {"total": total_vendors, "active": active_vendors},
-            "customers": {"total": total_customers},
-            "low_stock_products": low_stock,
-        }, default=str)
+            return json.dumps({
+                "period": "last_30_days",
+                "revenue": {"total": float(total_revenue or 0), "currency": "NGN"},
+                "orders": {"total": total_orders or 0, "pending": pending_orders or 0, "disputed": disputed_orders or 0},
+                "vendors": {"total": total_vendors or 0, "active": active_vendors or 0},
+                "customers": {"total": total_customers or 0},
+                "low_stock_products": low_stock or 0,
+            }, default=str)
+        except Exception as e:
+            logger.error(f"Admin context error: {e}")
+            return json.dumps({"error": "Could not load admin context", "period": "last_30_days"})
 
     def _build_system_prompt(self, context: dict) -> str:
         """Build the system prompt with shopping context."""
@@ -299,30 +302,40 @@ Guidelines:
     def chat(self, session_id: str, message: str, user_id: Optional[str] = None,
              image_url: Optional[str] = None) -> dict:
         """Process a chat message and return AI response with context."""
-        conversation = self.memory.get_or_create_conversation(session_id, user_id)
-        self.memory.add_message(conversation.id, "user", message)
-
-        # Get conversation history
-        history = self.memory.get_history(conversation.id)
-
-        # Build context
-        context = self.memory.get_context(conversation.id)
-        context.update({
-            "user_id": user_id,
-            "session_id": session_id,
-            "last_query": message,
-        })
-
-        # Build system prompt
-        system_prompt = self._build_system_prompt(context)
-
         try:
+            conversation = self.memory.get_or_create_conversation(session_id, user_id)
+            self.memory.add_message(conversation.id, "user", message)
+
+            # Get conversation history
+            history = self.memory.get_history(conversation.id)
+
+            # Build context
+            context = self.memory.get_context(conversation.id)
+            context.update({
+                "user_id": user_id,
+                "session_id": session_id,
+                "last_query": message,
+            })
+
+            # Build system prompt
+            system_prompt = self._build_system_prompt(context)
+
             from app.services.ai_service import _call_llm, get_ai_client, get_active_provider, get_active_model
 
             provider = get_active_provider()
             model = get_active_model()
             client = get_ai_client()
             logger.info(f"AI chat: provider={provider}, model={model}, client={'ok' if client else 'NONE'}")
+
+            if not client:
+                response_text = "AI provider is not configured. Please check the admin settings."
+                self.memory.add_message(conversation.id, "assistant", response_text)
+                return {
+                    "conversation_id": conversation.id,
+                    "response": response_text,
+                    "tokens_used": 0,
+                    "suggestions": ["Check admin settings"],
+                }
 
             # Build user prompt (with optional image)
             user_prompt = message
@@ -370,9 +383,10 @@ Guidelines:
             }
 
         except Exception as e:
-            logger.error(f"AI chat error: {e}")
+            logger.error(f"AI chat error: {type(e).__name__}: {e}")
+            conv_id = conversation.id if 'conversation' in dir() and conversation else None
             return {
-                "conversation_id": conversation.id,
+                "conversation_id": conv_id,
                 "response": "I apologize, but I'm having trouble processing your request right now. Please try again, or browse our catalog directly.",
                 "tokens_used": 0,
                 "suggestions": ["Browse categories", "View recommendations", "Track my order"],
