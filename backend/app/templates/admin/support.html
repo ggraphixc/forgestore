@@ -1,0 +1,1236 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Support Tickets — ForgeStore Admin{% endblock %}
+
+{% block content %}
+<style>
+  :root {
+    --amber-50: #fffbeb;
+    --amber-100: #fef3c7;
+    --amber-200: #fde68a;
+    --amber-500: #f59e0b;
+    --amber-600: #d97706;
+    --amber-700: #b45309;
+    --stone-50: #fafaf9;
+    --stone-100: #f5f5f4;
+    --stone-200: #e7e5e4;
+    --stone-300: #d6d3d1;
+    --stone-400: #a8a29e;
+    --stone-500: #78716c;
+    --stone-600: #57534e;
+    --stone-700: #44403c;
+    --stone-900: #1c1917;
+    --emerald-50: #ecfdf5;
+    --emerald-100: #d1fae5;
+    --emerald-200: #a7f3d0;
+    --emerald-600: #059669;
+    --emerald-700: #047857;
+    --blue-50: #eff6ff;
+    --blue-100: #dbeafe;
+    --blue-200: #bfdbfe;
+    --blue-600: #2563eb;
+    --blue-700: #1d4ed8;
+    --purple-50: #faf5ff;
+    --purple-100: #f3e8ff;
+    --purple-200: #e9d5ff;
+    --purple-600: #9333ea;
+    --purple-700: #7e22ce;
+    --red-50: #fef2f2;
+    --red-100: #fee2e2;
+    --red-200: #fecaca;
+    --red-600: #dc2626;
+    --red-700: #b91c1c;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-full: 9999px;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,.06);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,.08);
+    --transition-fast: 150ms ease;
+    --transition-base: 200ms ease;
+  }
+
+  .support-page {
+    max-width: 96rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--stone-900);
+    line-height: 1.5;
+  }
+
+  /* ── Page Header ── */
+  .support-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .support-header h1 {
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: var(--stone-900);
+    margin: 0;
+    letter-spacing: -0.025em;
+  }
+  .support-header p {
+    font-size: 0.875rem;
+    color: var(--stone-500);
+    margin: 0.35rem 0 0;
+  }
+
+  /* ── Stats Grid ── */
+  .support-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .support-stat {
+    background: #fff;
+    border: 1px solid var(--stone-200);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-base), border-color var(--transition-base);
+    cursor: default;
+  }
+  .support-stat:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--stone-300);
+  }
+  .support-stat-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .support-stat-icon svg {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+  .support-stat-icon--amber { background: var(--amber-100); color: var(--amber-600); }
+  .support-stat-icon--blue { background: var(--blue-50); color: var(--blue-600); }
+  .support-stat-icon--green { background: var(--emerald-50); color: var(--emerald-600); }
+  .support-stat-icon--red { background: var(--red-50); color: var(--red-600); }
+  .support-stat-value {
+    font-size: 1.375rem;
+    font-weight: 800;
+    color: var(--stone-900);
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+  }
+  .support-stat-label {
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--stone-400);
+    margin-top: 0.1rem;
+  }
+
+  /* ── Two-Panel Layout ── */
+  .support-panels {
+    display: flex;
+    gap: 1rem;
+    min-height: calc(100vh - 280px);
+  }
+  .support-panel-left {
+    width: 40%;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid var(--stone-200);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .support-panel-right {
+    width: 60%;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid var(--stone-200);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* ── Panel Header ── */
+  .support-panel-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--stone-100);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  .support-panel-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--stone-900);
+    white-space: nowrap;
+  }
+
+  /* ── Search & Filters ── */
+  .support-filters {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--stone-100);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+  .support-search {
+    width: 100%;
+    padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+    min-height: 40px;
+    background: var(--stone-50);
+    border: 1px solid var(--stone-200);
+    border-radius: var(--radius-md);
+    font-size: 0.8125rem;
+    color: var(--stone-900);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    font-family: inherit;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%23a8a29e' viewBox='0 0 24 24'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 0.625rem center;
+  }
+  .support-search:focus {
+    outline: none;
+    border-color: var(--amber-500);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+    background-color: #fff;
+  }
+  .support-search::placeholder { color: var(--stone-400); }
+  .support-filter-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .support-filter-select {
+    flex: 1;
+    appearance: none;
+    padding: 0.4375rem 1.75rem 0.4375rem 0.625rem;
+    min-height: 36px;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='none' stroke='%2378716c' viewBox='0 0 24 24'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E") no-repeat right 0.5rem center;
+    border: 1px solid var(--stone-200);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--stone-700);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .support-filter-select:focus {
+    outline: none;
+    border-color: var(--amber-500);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+  }
+
+  /* ── Ticket List ── */
+  .support-ticket-list {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--stone-200) transparent;
+  }
+  .support-ticket-list::-webkit-scrollbar { width: 4px; }
+  .support-ticket-list::-webkit-scrollbar-track { background: transparent; }
+  .support-ticket-list::-webkit-scrollbar-thumb { background: var(--stone-200); border-radius: 4px; }
+
+  .support-ticket-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid var(--stone-50);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+    position: relative;
+  }
+  .support-ticket-item:hover { background: var(--stone-50); }
+  .support-ticket-item.active { background: var(--amber-50); }
+  .support-ticket-item.unread::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 60%;
+    background: var(--amber-500);
+    border-radius: 0 2px 2px 0;
+  }
+  .support-ticket-avatar {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--amber-100), var(--stone-200));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--stone-500);
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+  .support-ticket-info { min-width: 0; flex: 1; }
+  .support-ticket-subject {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--stone-900);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.15rem;
+  }
+  .support-ticket-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .support-ticket-creator {
+    font-size: 0.6875rem;
+    color: var(--stone-500);
+    white-space: nowrap;
+  }
+  .support-ticket-time {
+    font-size: 0.625rem;
+    color: var(--stone-400);
+    white-space: nowrap;
+  }
+  .support-ticket-preview {
+    font-size: 0.6875rem;
+    color: var(--stone-400);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 0.2rem;
+    max-width: 100%;
+  }
+  .support-ticket-badges {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+    flex-shrink: 0;
+  }
+
+  /* ── Badges ── */
+  .support-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 1px 6px;
+    border-radius: var(--radius-full);
+    font-size: 0.5625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    border: 1px solid;
+    line-height: 1.5;
+  }
+  .support-badge-dot {
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+  }
+  /* Status badges */
+  .support-badge--open { background: var(--amber-50); color: var(--amber-700); border-color: var(--amber-200); }
+  .support-badge--open .support-badge-dot { background: var(--amber-500); animation: pulse-dot 2s ease-in-out infinite; }
+  .support-badge--in_progress { background: var(--blue-50); color: var(--blue-700); border-color: var(--blue-200); }
+  .support-badge--in_progress .support-badge-dot { background: var(--blue-600); animation: pulse-dot 1.5s ease-in-out infinite; }
+  .support-badge--waiting_customer { background: var(--purple-50); color: var(--purple-700); border-color: var(--purple-200); }
+  .support-badge--waiting_customer .support-badge-dot { background: var(--purple-600); }
+  .support-badge--resolved { background: var(--emerald-50); color: var(--emerald-600); border-color: var(--emerald-200); }
+  .support-badge--resolved .support-badge-dot { background: var(--emerald-600); }
+  .support-badge--closed { background: var(--stone-100); color: var(--stone-500); border-color: var(--stone-200); }
+  .support-badge--closed .support-badge-dot { background: var(--stone-400); }
+  /* Priority badges */
+  .support-badge--low { background: var(--stone-100); color: var(--stone-500); border-color: var(--stone-200); }
+  .support-badge--medium { background: var(--amber-50); color: var(--amber-700); border-color: var(--amber-200); }
+  .support-badge--high { background: var(--red-50); color: var(--red-700); border-color: var(--red-200); }
+  .support-badge--urgent { background: var(--red-600); color: #fff; border-color: var(--red-700); }
+  /* Category badges */
+  .support-badge--category { background: var(--stone-50); color: var(--stone-600); border-color: var(--stone-200); font-size: 0.5rem; }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ── Empty States ── */
+  .support-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: var(--stone-400);
+  }
+  .support-empty svg {
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.4;
+  }
+  .support-empty p {
+    font-size: 0.8125rem;
+    color: var(--stone-400);
+    margin: 0;
+  }
+  .support-empty strong {
+    display: block;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--stone-500);
+    margin-bottom: 0.25rem;
+  }
+
+  /* ── Detail Panel ── */
+  .support-detail-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--stone-100);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .support-detail-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--stone-900);
+    flex: 1;
+    min-width: 0;
+  }
+  .support-detail-id {
+    font-size: 0.6875rem;
+    color: var(--stone-400);
+    font-family: 'SF Mono', SFMono-Regular, ui-monospace, monospace;
+  }
+  .support-detail-controls {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  .support-detail-select {
+    appearance: none;
+    padding: 0.375rem 1.5rem 0.375rem 0.5rem;
+    min-height: 34px;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='none' stroke='%2378716c' viewBox='0 0 24 24'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E") no-repeat right 0.375rem center;
+    border: 1px solid var(--stone-200);
+    border-radius: var(--radius-sm);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--stone-700);
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+    font-family: inherit;
+  }
+  .support-detail-select:focus {
+    outline: none;
+    border-color: var(--amber-500);
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.12);
+  }
+
+  /* ── Message Thread ── */
+  .support-thread {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--stone-200) transparent;
+  }
+  .support-thread::-webkit-scrollbar { width: 4px; }
+  .support-thread::-webkit-scrollbar-track { background: transparent; }
+  .support-thread::-webkit-scrollbar-thumb { background: var(--stone-200); border-radius: 4px; }
+
+  .support-msg {
+    display: flex;
+    gap: 0.625rem;
+    max-width: 85%;
+  }
+  .support-msg--customer { align-self: flex-start; }
+  .support-msg--admin { align-self: flex-end; flex-direction: row-reverse; }
+  .support-msg-avatar {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .support-msg--customer .support-msg-avatar {
+    background: linear-gradient(135deg, var(--stone-400), var(--stone-500));
+  }
+  .support-msg--admin .support-msg-avatar {
+    background: linear-gradient(135deg, var(--amber-500), var(--amber-600));
+  }
+  .support-msg-content {
+    min-width: 0;
+  }
+  .support-msg-sender {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--stone-500);
+    margin-bottom: 0.2rem;
+  }
+  .support-msg--admin .support-msg-sender { text-align: right; }
+  .support-msg-bubble {
+    padding: 0.625rem 0.875rem;
+    border-radius: var(--radius-lg);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--stone-900);
+    word-break: break-word;
+  }
+  .support-msg--customer .support-msg-bubble {
+    background: var(--stone-100);
+    border-bottom-left-radius: var(--radius-sm);
+  }
+  .support-msg--admin .support-msg-bubble {
+    background: var(--amber-50);
+    border-bottom-right-radius: var(--radius-sm);
+  }
+  .support-msg-time {
+    font-size: 0.5625rem;
+    color: var(--stone-400);
+    margin-top: 0.2rem;
+  }
+  .support-msg--admin .support-msg-time { text-align: right; }
+
+  .support-msg-unread-dot {
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: var(--radius-full);
+    background: var(--amber-500);
+    flex-shrink: 0;
+    margin-top: 0.4rem;
+  }
+
+  /* ── Date Divider ── */
+  .support-date-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: var(--stone-400);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.25rem 0;
+  }
+  .support-date-divider::before,
+  .support-date-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--stone-100);
+  }
+
+  /* ── Reply Form ── */
+  .support-reply {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--stone-100);
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+    flex-shrink: 0;
+    background: var(--stone-50);
+  }
+  .support-reply-input {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    min-height: 40px;
+    max-height: 120px;
+    background: #fff;
+    border: 1px solid var(--stone-200);
+    border-radius: var(--radius-md);
+    font-size: 0.8125rem;
+    color: var(--stone-900);
+    resize: none;
+    font-family: inherit;
+    line-height: 1.5;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  }
+  .support-reply-input:focus {
+    outline: none;
+    border-color: var(--amber-500);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+  }
+  .support-reply-input::placeholder { color: var(--stone-400); }
+  .support-reply-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    min-width: 40px;
+    min-height: 40px;
+    background: var(--amber-500);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background var(--transition-fast), transform var(--transition-fast);
+    flex-shrink: 0;
+  }
+  .support-reply-btn:hover { background: var(--amber-600); transform: translateY(-1px); }
+  .support-reply-btn:active { transform: translateY(0); }
+  .support-reply-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .support-reply-btn svg { width: 1rem; height: 1rem; }
+
+  /* ── Loading / Toast ── */
+  .support-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    color: var(--stone-400);
+    font-size: 0.8125rem;
+    gap: 0.5rem;
+  }
+  .support-spinner {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--stone-200);
+    border-top-color: var(--amber-500);
+    border-radius: var(--radius-full);
+    animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .support-toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--stone-900);
+    color: #fff;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(0.5rem);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+    max-width: 20rem;
+  }
+  .support-toast.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .support-toast--error { background: var(--red-700); }
+
+  /* ── Back to List (mobile) ── */
+  .support-back-btn {
+    display: none;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    min-height: 40px;
+    background: none;
+    border: 1px solid var(--stone-200);
+    border-radius: var(--radius-md);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--stone-600);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+  }
+  .support-back-btn:hover { background: var(--stone-50); border-color: var(--stone-300); }
+  .support-back-btn svg { width: 0.875rem; height: 0.875rem; }
+
+  /* ── Responsive ── */
+  @media (max-width: 1024px) {
+    .support-stats { grid-template-columns: repeat(2, 1fr); }
+    .support-panels {
+      flex-direction: column;
+      min-height: auto;
+    }
+    .support-panel-left,
+    .support-panel-right {
+      width: 100%;
+      min-height: 0;
+    }
+    .support-panel-right {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      border-radius: 0;
+      border: none;
+    }
+    .support-panel-right.mobile-open { display: flex; }
+    .support-back-btn { display: inline-flex; }
+  }
+  @media (max-width: 640px) {
+    .support-stats { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .support-stat { padding: 0.75rem 1rem; }
+    .support-stat-value { font-size: 1.125rem; }
+    .support-header h1 { font-size: 1.375rem; }
+    .support-filter-row { flex-direction: column; }
+    .support-msg { max-width: 92%; }
+    .support-toast { left: 1rem; right: 1rem; bottom: 1rem; max-width: none; }
+  }
+</style>
+
+<div class="support-page">
+
+  {# ── Page Header ── #}
+  <div class="support-header">
+    <div>
+      <h1>Support Tickets</h1>
+      <p>Manage customer support requests and inquiries.</p>
+    </div>
+  </div>
+
+  {# ── Stats Cards ── #}
+  <div class="support-stats">
+    <div class="support-stat">
+      <div class="support-stat-icon support-stat-icon--amber">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+      </div>
+      <div>
+        <div class="support-stat-value" id="stat-total">-</div>
+        <div class="support-stat-label">Total</div>
+      </div>
+    </div>
+    <div class="support-stat">
+      <div class="support-stat-icon support-stat-icon--blue">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <div>
+        <div class="support-stat-value" id="stat-open">-</div>
+        <div class="support-stat-label">Open</div>
+      </div>
+    </div>
+    <div class="support-stat">
+      <div class="support-stat-icon support-stat-icon--green">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </div>
+      <div>
+        <div class="support-stat-value" id="stat-in-progress">-</div>
+        <div class="support-stat-label">In Progress</div>
+      </div>
+    </div>
+    <div class="support-stat">
+      <div class="support-stat-icon support-stat-icon--red">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      </div>
+      <div>
+        <div class="support-stat-value" id="stat-urgent">-</div>
+        <div class="support-stat-label">Urgent</div>
+      </div>
+    </div>
+  </div>
+
+  {# ── Two-Panel Layout ── #}
+  <div class="support-panels">
+
+    {# ── Left Panel: Ticket List ── #}
+    <div class="support-panel-left" id="panel-left">
+      <div class="support-panel-header">
+        <span class="support-panel-title">Tickets</span>
+        <span style="font-size:0.6875rem;color:var(--stone-400);" id="ticket-count">0 tickets</span>
+      </div>
+
+      <div class="support-filters">
+        <input type="text" class="support-search" id="search-input" placeholder="Search tickets..." aria-label="Search tickets">
+        <div class="support-filter-row">
+          <select class="support-filter-select" id="filter-status" aria-label="Filter by status">
+            <option value="">All Statuses</option>
+            <option value="OPEN">Open</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="WAITING_CUSTOMER">Waiting</option>
+            <option value="RESOLVED">Resolved</option>
+            <option value="CLOSED">Closed</option>
+          </select>
+          <select class="support-filter-select" id="filter-category" aria-label="Filter by category">
+            <option value="">All Categories</option>
+            <option value="ORDER">Order</option>
+            <option value="SHIPPING">Shipping</option>
+            <option value="PRODUCT">Product</option>
+            <option value="TECHNICAL">Technical</option>
+            <option value="BILLING">Billing</option>
+            <option value="OTHER">Other</option>
+          </select>
+          <select class="support-filter-select" id="filter-priority" aria-label="Filter by priority">
+            <option value="">All Priorities</option>
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
+            <option value="URGENT">Urgent</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="support-ticket-list" id="ticket-list">
+        <div class="support-loading" id="list-loading">
+          <div class="support-spinner"></div>
+          Loading tickets...
+        </div>
+      </div>
+    </div>
+
+    {# ── Right Panel: Ticket Detail ── #}
+    <div class="support-panel-right" id="panel-right">
+      <div id="detail-empty" class="support-empty">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        <strong>No ticket selected</strong>
+        <p>Select a ticket from the list to view its details and conversation.</p>
+      </div>
+
+      <div id="detail-loading" class="support-loading" style="display:none;">
+        <div class="support-spinner"></div>
+        Loading ticket...
+      </div>
+
+      <div id="detail-content" style="display:none;flex-direction:column;height:100%;">
+        <div class="support-detail-header">
+          <div style="flex:1;min-width:0;">
+            <button class="support-back-btn" id="back-btn" onclick="closeDetail()" aria-label="Back to ticket list">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+              Back
+            </button>
+            <div class="support-detail-title" id="detail-subject"></div>
+            <div class="support-detail-id" id="detail-id"></div>
+          </div>
+          <div class="support-detail-controls">
+            <select class="support-detail-select" id="detail-status" aria-label="Change status">
+              <option value="OPEN">Open</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              <option value="WAITING_CUSTOMER">Waiting</option>
+              <option value="RESOLVED">Resolved</option>
+              <option value="CLOSED">Closed</option>
+            </select>
+            <select class="support-detail-select" id="detail-assign" aria-label="Assign to admin">
+              <option value="">Unassigned</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="support-thread" id="thread-container"></div>
+
+        <div class="support-reply">
+          <textarea class="support-reply-input" id="reply-input" placeholder="Type your reply..." rows="1" aria-label="Reply message"></textarea>
+          <button class="support-reply-btn" id="reply-btn" onclick="replyToTicket()" aria-label="Send reply">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="support-toast" id="toast"></div>
+
+<script>
+(function() {
+  var currentTicketId = null;
+  var searchTimeout = null;
+  var adminList = [];
+  var refreshInterval = null;
+
+  // ── Utility: Format date ──
+  window.formatDate = function(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    var now = new Date();
+    var diff = now - d;
+    var mins = Math.floor(diff / 60000);
+    var hrs = Math.floor(diff / 3600000);
+    var days = Math.floor(diff / 86400000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return mins + 'm ago';
+    if (hrs < 24) return hrs + 'h ago';
+    if (days < 7) return days + 'd ago';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+  };
+
+  function formatFullDate(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
+
+  // ── Utility: Toast ──
+  function showToast(msg, isError) {
+    var t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.className = 'support-toast' + (isError ? ' support-toast--error' : '');
+    void t.offsetWidth;
+    t.classList.add('visible');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function() { t.classList.remove('visible'); }, 3500);
+  }
+
+  // ── Utility: Status/Priority/Category label ──
+  function statusLabel(s) {
+    return { OPEN: 'Open', IN_PROGRESS: 'In Progress', WAITING_CUSTOMER: 'Waiting', RESOLVED: 'Resolved', CLOSED: 'Closed' }[s] || s;
+  }
+  function categoryLabel(c) {
+    return { ORDER: 'Order', SHIPPING: 'Shipping', PRODUCT: 'Product', TECHNICAL: 'Technical', BILLING: 'Billing', OTHER: 'Other' }[c] || c;
+  }
+  function priorityLabel(p) {
+    return { LOW: 'Low', MEDIUM: 'Medium', HIGH: 'High', URGENT: 'Urgent' }[p] || p;
+  }
+
+  // ── Load Stats ──
+  window.loadStats = async function() {
+    try {
+      var res = await fetch('/api/admin/support/stats');
+      if (!res.ok) throw new Error('Failed to load stats');
+      var data = await res.json();
+      document.getElementById('stat-total').textContent = data.total || 0;
+      document.getElementById('stat-open').textContent = data.open || 0;
+      document.getElementById('stat-in-progress').textContent = data.in_progress || 0;
+      document.getElementById('stat-urgent').textContent = data.urgent || 0;
+    } catch (e) {
+      console.error('loadStats error:', e);
+    }
+  };
+
+  // ── Load Admins (for assign dropdown) ──
+  window.loadAdmins = async function() {
+    try {
+      var res = await fetch('/api/admin/support/admins');
+      if (!res.ok) throw new Error('Failed to load admins');
+      adminList = await res.json();
+      var sel = document.getElementById('detail-assign');
+      if (!sel) return;
+      var current = sel.value;
+      sel.innerHTML = '<option value="">Unassigned</option>';
+      adminList.forEach(function(a) {
+        var opt = document.createElement('option');
+        opt.value = a.id;
+        opt.textContent = a.name || a.email;
+        sel.appendChild(opt);
+      });
+      if (current) sel.value = current;
+    } catch (e) {
+      console.error('loadAdmins error:', e);
+    }
+  };
+
+  // ── Load Tickets ──
+  window.loadTickets = async function() {
+    var list = document.getElementById('ticket-list');
+    var loading = document.getElementById('list-loading');
+    var search = document.getElementById('search-input').value.trim();
+    var status = document.getElementById('filter-status').value;
+    var category = document.getElementById('filter-category').value;
+    var priority = document.getElementById('filter-priority').value;
+
+    if (loading) loading.style.display = 'flex';
+
+    var params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (status) params.set('status', status);
+    if (category) params.set('category', category);
+    if (priority) params.set('priority', priority);
+
+    try {
+      var res = await fetch('/api/admin/support/tickets?' + params.toString());
+      if (!res.ok) throw new Error('Failed to load tickets');
+      var tickets = await res.json();
+
+      list.innerHTML = '';
+      if (loading) loading.remove();
+
+      document.getElementById('ticket-count').textContent = tickets.length + ' ticket' + (tickets.length !== 1 ? 's' : '');
+
+      if (tickets.length === 0) {
+        list.innerHTML = '<div class="support-empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg><strong>No tickets found</strong><p>Try adjusting your filters or search term.</p></div>';
+        return;
+      }
+
+      tickets.forEach(function(t) {
+        var item = document.createElement('div');
+        item.className = 'support-ticket-item' + (t.id === currentTicketId ? ' active' : '') + (t.has_unread ? ' unread' : '');
+        item.setAttribute('data-id', t.id);
+        item.onclick = function() { selectTicket(t.id); };
+
+        var initials = (t.creator_name || t.customer_name || 'U').substring(0, 2).toUpperCase();
+
+        item.innerHTML =
+          '<div class="support-ticket-avatar">' + initials + '</div>' +
+          '<div class="support-ticket-info">' +
+            '<div class="support-ticket-subject">' + escapeHtml(t.subject || 'Untitled') + '</div>' +
+            '<div class="support-ticket-meta">' +
+              '<span class="support-ticket-creator">' + escapeHtml(t.creator_name || t.customer_name || 'Unknown') + '</span>' +
+              '<span class="support-ticket-time">' + formatDate(t.created_at) + '</span>' +
+            '</div>' +
+            (t.last_message_preview ? '<div class="support-ticket-preview">' + escapeHtml(t.last_message_preview) + '</div>' : '') +
+          '</div>' +
+          '<div class="support-ticket-badges">' +
+            '<span class="support-badge support-badge--' + t.status.toLowerCase() + '"><span class="support-badge-dot"></span>' + statusLabel(t.status) + '</span>' +
+            '<span class="support-badge support-badge--' + t.priority.toLowerCase() + '">' + priorityLabel(t.priority) + '</span>' +
+          '</div>';
+
+        list.appendChild(item);
+      });
+
+    } catch (e) {
+      console.error('loadTickets error:', e);
+      list.innerHTML = '<div class="support-empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><strong>Error loading tickets</strong><p>' + escapeHtml(e.message) + '</p></div>';
+      if (loading) loading.remove();
+    }
+  };
+
+  // ── Select Ticket ──
+  window.selectTicket = async function(id) {
+    currentTicketId = id;
+
+    // Highlight in list
+    document.querySelectorAll('.support-ticket-item').forEach(function(el) {
+      el.classList.toggle('active', el.getAttribute('data-id') === id);
+      if (el.getAttribute('data-id') === id) el.classList.remove('unread');
+    });
+
+    // Mobile: show detail panel
+    document.getElementById('panel-right').classList.add('mobile-open');
+
+    // Show loading
+    document.getElementById('detail-empty').style.display = 'none';
+    document.getElementById('detail-content').style.display = 'none';
+    document.getElementById('detail-loading').style.display = 'flex';
+
+    try {
+      var res = await fetch('/api/admin/support/tickets/' + id);
+      if (!res.ok) throw new Error('Failed to load ticket');
+      var ticket = await res.json();
+
+      document.getElementById('detail-loading').style.display = 'none';
+      document.getElementById('detail-content').style.display = 'flex';
+
+      document.getElementById('detail-subject').textContent = ticket.subject || 'Untitled';
+      document.getElementById('detail-id').textContent = '#' + (ticket.id || '').substring(0, 8);
+      document.getElementById('detail-status').value = ticket.status;
+      document.getElementById('detail-assign').value = ticket.assigned_admin_id || '';
+
+      // Build thread
+      var thread = document.getElementById('thread-container');
+      thread.innerHTML = '';
+
+      var messages = ticket.messages || [];
+      var lastDate = '';
+
+      messages.forEach(function(m) {
+        var msgDate = m.created_at ? new Date(m.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+        if (msgDate && msgDate !== lastDate) {
+          lastDate = msgDate;
+          var divider = document.createElement('div');
+          divider.className = 'support-date-divider';
+          divider.textContent = msgDate;
+          thread.appendChild(divider);
+        }
+
+        var isCustomer = !m.is_admin;
+        var senderName = isCustomer ? (ticket.creator_name || ticket.customer_name || 'Customer') : (m.admin_name || 'Admin');
+        var initials = senderName.substring(0, 1).toUpperCase();
+
+        var msgEl = document.createElement('div');
+        msgEl.className = 'support-msg ' + (isCustomer ? 'support-msg--customer' : 'support-msg--admin');
+
+        var bubbleHtml = '<div class="support-msg-bubble">' + escapeHtml(m.content || '').replace(/\n/g, '<br>') + '</div>';
+        if (m.image_url) {
+          bubbleHtml += '<div style="margin-top:0.375rem;"><img src="' + escapeHtml(m.image_url) + '" alt="Attachment" style="max-width:200px;border-radius:var(--radius-sm);"></div>';
+        }
+
+        var unreadHtml = (!m.is_admin && m.is_unread) ? '<div class="support-msg-unread-dot"></div>' : '';
+
+        msgEl.innerHTML =
+          '<div class="support-msg-avatar">' + initials + '</div>' +
+          '<div class="support-msg-content">' +
+            '<div class="support-msg-sender">' + escapeHtml(senderName) + '</div>' +
+            bubbleHtml +
+            '<div class="support-msg-time">' + formatFullDate(m.created_at) + '</div>' +
+          '</div>' +
+          unreadHtml;
+
+        thread.appendChild(msgEl);
+      });
+
+      // Scroll to bottom
+      setTimeout(function() { thread.scrollTop = thread.scrollHeight; }, 50);
+
+      // Focus reply
+      document.getElementById('reply-input').focus();
+
+    } catch (e) {
+      console.error('selectTicket error:', e);
+      document.getElementById('detail-loading').style.display = 'none';
+      document.getElementById('detail-empty').style.display = 'flex';
+      showToast('Failed to load ticket details', true);
+    }
+  };
+
+  // ── Reply to Ticket ──
+  window.replyToTicket = async function() {
+    if (!currentTicketId) return;
+    var input = document.getElementById('reply-input');
+    var content = input.value.trim();
+    if (!content) return;
+
+    var btn = document.getElementById('reply-btn');
+    btn.disabled = true;
+    input.disabled = true;
+
+    try {
+      var res = await fetch('/api/admin/support/tickets/' + currentTicketId + '/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: content })
+      });
+      if (!res.ok) {
+        var err = await res.json().catch(function() { return { detail: 'Failed to send reply' }; });
+        throw new Error(err.detail || 'Failed to send reply');
+      }
+
+      input.value = '';
+      showToast('Reply sent');
+      await selectTicket(currentTicketId);
+      await loadTickets();
+    } catch (e) {
+      console.error('replyToTicket error:', e);
+      showToast(e.message, true);
+    } finally {
+      btn.disabled = false;
+      input.disabled = false;
+      input.focus();
+    }
+  };
+
+  // ── Update Status ──
+  window.updateStatus = async function(id, status) {
+    try {
+      var res = await fetch('/api/admin/support/tickets/' + id + '/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: status })
+      });
+      if (!res.ok) throw new Error('Failed to update status');
+      showToast('Status updated to ' + statusLabel(status));
+      await loadTickets();
+      await loadStats();
+    } catch (e) {
+      console.error('updateStatus error:', e);
+      showToast(e.message, true);
+    }
+  };
+
+  // ── Assign Ticket ──
+  window.assignTicket = async function(id, adminId) {
+    try {
+      var res = await fetch('/api/admin/support/tickets/' + id + '/assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ admin_id: adminId || null })
+      });
+      if (!res.ok) throw new Error('Failed to assign ticket');
+      var label = adminId ? 'assigned' : 'unassigned';
+      showToast('Ticket ' + label);
+      await loadTickets();
+    } catch (e) {
+      console.error('assignTicket error:', e);
+      showToast(e.message, true);
+    }
+  };
+
+  // ── Close Detail (mobile) ──
+  window.closeDetail = function() {
+    document.getElementById('panel-right').classList.remove('mobile-open');
+    currentTicketId = null;
+    document.querySelectorAll('.support-ticket-item.active').forEach(function(el) { el.classList.remove('active'); });
+  };
+
+  // ── Escape HTML ──
+  function escapeHtml(str) {
+    if (!str) return '';
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
+  // ── Auto-resize textarea ──
+  var replyInput = document.getElementById('reply-input');
+  if (replyInput) {
+    replyInput.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+    replyInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        replyToTicket();
+      }
+    });
+  }
+
+  // ── Filter event listeners ──
+  document.getElementById('search-input').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(loadTickets, 300);
+  });
+  document.getElementById('filter-status').addEventListener('change', loadTickets);
+  document.getElementById('filter-category').addEventListener('change', loadTickets);
+  document.getElementById('filter-priority').addEventListener('change', loadTickets);
+
+  // ── Status/Assign change listeners ──
+  document.getElementById('detail-status').addEventListener('change', function() {
+    if (currentTicketId) updateStatus(currentTicketId, this.value);
+  });
+  document.getElementById('detail-assign').addEventListener('change', function() {
+    if (currentTicketId) assignTicket(currentTicketId, this.value);
+  });
+
+  // ── Keyboard shortcut ──
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeDetail();
+  });
+
+  // ── Init ──
+  loadStats();
+  loadAdmins();
+  loadTickets();
+  refreshInterval = setInterval(function() {
+    loadTickets();
+    loadStats();
+  }, 60000);
+
+})();
+</script>
+{% endblock %}

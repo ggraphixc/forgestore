@@ -590,6 +590,12 @@ def reset_password_page(request: Request, token: str, db: Session = Depends(get_
     return _render_page("web/reset-password.html", request, db, {"token": token})
 
 
+# --- Support ---
+@router.get("/support", response_class=HTMLResponse)
+def support_page(request: Request, db: Session = Depends(get_db)):
+    return _render_page("web/support.html", request, db)
+
+
 # --- Contact ---
 @router.get("/contact", response_class=HTMLResponse)
 def contact_page(request: Request, db: Session = Depends(get_db)):

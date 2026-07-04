@@ -1119,6 +1119,18 @@ def earnings_page(request: Request, db: Session = Depends(get_db)):
     })
 
 
+@router.get("/support", response_class=HTMLResponse)
+def admin_support_page(request: Request, db: Session = Depends(get_db)):
+    admin = get_current_user_from_cookie(request, db)
+    if not admin:
+        return RedirectResponse(url="/admin/login", status_code=302)
+    return render_template("admin/support.html", {
+        "request": request,
+        "admin": admin,
+        "has_permission": has_permission,
+    })
+
+
 @router.get("/logout")
 def admin_logout():
     resp = RedirectResponse(url="/admin/login", status_code=302)

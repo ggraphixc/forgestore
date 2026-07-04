@@ -1592,3 +1592,50 @@ class DailyVendorSnapshot(Base):
     created_at = Column(DateTime, nullable=False, default=utcnow)
 
     retailer: "Retailer" = relationship("Retailer")
+
+
+# ==============================================================================
+# SYSTEM 22: SUPPORT TICKET SYSTEM
+# ==============================================================================
+
+
+class SupportTicket(Base):
+    """Support ticket for user/vendor/admin communication."""
+    __tablename__ = "support_ticket"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    subject = Column(String(255), nullable=False)
+    description = Column(Text, nullable=False)
+    category = Column(String(50), nullable=False, default="OTHER")  # ORDER, SHIPPING, PRODUCT, TECHNICAL, BILLING, OTHER
+    status = Column(String(30), nullable=False, default="OPEN")  # OPEN, IN_PROGRESS, WAITING_CUSTOMER, RESOLVED, CLOSED
+    priority = Column(String(20), nullable=False, default="MEDIUM")  # LOW, MEDIUM, HIGH, URGENT
+    created_by = Column(String, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    assigned_to = Column(String, ForeignKey("admin_user.id", ondelete="SET NULL"), nullable=True)
+    retailer_id = Column(String, ForeignKey("retailer.id", ondelete="SET NULL"), nullable=True)
+    order_id = Column(String, ForeignKey("order.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+    resolved_at = Column(DateTime, nullable=True)
+
+    creator: "User" = relationship("User", foreign_keys=[created_by])
+    assignee: "AdminUser | None" = relationship("AdminUser", foreign_keys=[assigned_to])
+    retailer: "Retailer | None" = relationship("Retailer")
+    order: "Order | None" = relationship("Order")
+    messages: list["SupportMessage"] = relationship("SupportMessage", back_populates="ticket", order_by="SupportMessage.created_at")
+
+
+class SupportMessage(Base):
+    """Individual message within a support ticket."""
+    __tablename__ = "support_message"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    ticket_id = Column(String, ForeignKey("support_ticket.id", ondelete="CASCADE"), nullable=False)
+    sender_id = Column(String, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    sender_role = Column(String(20), nullable=False)  # USER, VENDOR, ADMIN
+    message = Column(Text, nullable=False)
+    attachment_url = Column(String(500), nullable=True)
+    is_read = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+
+    ticket: "SupportTicket" = relationship("SupportTicket", back_populates="messages")
+    sender: "User" = relationship("User")

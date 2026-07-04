@@ -137,6 +137,10 @@ app.include_router(search_router)
 app.include_router(orders_router)
 app.include_router(ai_assistant_router)
 
+# Support ticket system
+from app.routers.support import router as support_router
+app.include_router(support_router)
+
 # Structured logging middleware
 from app.core.logger import RequestTimingMiddleware, setup_structured_logging
 setup_structured_logging()

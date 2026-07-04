@@ -1,0 +1,750 @@
+{% extends "web/base.html" %}
+{% block title %}Support Center — ForgeStore{% endblock %}
+{% block content %}
+<style>
+:root {
+  --sp-amber-50: #fffbeb; --sp-amber-100: #fef3c7; --sp-amber-200: #fde68a;
+  --sp-amber-300: #fcd34d; --sp-amber-400: #fbbf24; --sp-amber-500: #f59e0b;
+  --sp-amber-600: #d97706; --sp-amber-700: #b45309; --sp-amber-800: #92400e;
+  --sp-stone-50: #fafaf9; --sp-stone-100: #f5f5f4; --sp-stone-200: #e7e5e3;
+  --sp-stone-300: #d6d3d1; --sp-stone-400: #a8a29e; --sp-stone-500: #78716c;
+  --sp-stone-600: #57534e; --sp-stone-700: #44403c; --sp-stone-800: #292524;
+  --sp-stone-900: #1c1917;
+  --sp-radius: 12px; --sp-radius-lg: 16px; --sp-radius-xl: 20px;
+  --sp-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --sp-shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.06);
+  --sp-shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.06);
+}
+:root { --sp-bg: #fff; --sp-surface: #fff; --sp-text: var(--sp-stone-900); --sp-text-muted: var(--sp-stone-500); --sp-border: var(--sp-stone-200); --sp-input-bg: var(--sp-stone-50); }
+.dark { --sp-bg: var(--sp-stone-900); --sp-surface: var(--sp-stone-800); --sp-text: var(--sp-stone-100); --sp-text-muted: var(--sp-stone-400); --sp-border: var(--sp-stone-700); --sp-input-bg: var(--sp-stone-800); }
+
+.support-page { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; }
+@media (min-width: 640px) { .support-page { padding: 3rem 1.5rem; } }
+@media (min-width: 1024px) { .support-page { padding: 4rem 2rem; } }
+
+.support-breadcrumb { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 2rem; font-size: 0.8125rem; }
+.support-breadcrumb a { color: var(--sp-amber-600); text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+.dark .support-breadcrumb a { color: var(--sp-amber-400); }
+.support-breadcrumb span { color: var(--sp-text-muted); }
+.support-breadcrumb .sep { color: var(--sp-stone-300); }
+
+.support-header { text-align: center; margin-bottom: 2.5rem; }
+.support-header-icon {
+  width: 64px; height: 64px; border-radius: var(--sp-radius-lg);
+  background: linear-gradient(135deg, var(--sp-amber-50), var(--sp-amber-100));
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1.25rem; border: 1px solid var(--sp-amber-200);
+}
+.dark .support-header-icon { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.25); }
+.support-header-icon svg { width: 28px; height: 28px; color: var(--sp-amber-600); }
+.dark .support-header-icon svg { color: var(--sp-amber-400); }
+.support-header h1 { font-size: 1.75rem; font-weight: 900; color: var(--sp-text); margin: 0 0 0.5rem; letter-spacing: -0.02em; }
+@media (min-width: 640px) { .support-header h1 { font-size: 2.25rem; } }
+.support-header p { color: var(--sp-text-muted); font-size: 0.9375rem; max-width: 480px; margin: 0 auto; line-height: 1.6; }
+
+.support-layout { display: flex; gap: 1.5rem; min-height: 520px; }
+@media (max-width: 767px) { .support-layout { flex-direction: column; min-height: auto; } }
+
+.support-sidebar {
+  width: 100%; max-width: 380px; flex-shrink: 0;
+  background: var(--sp-surface); border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-lg); overflow: hidden;
+  box-shadow: var(--sp-shadow); display: flex; flex-direction: column;
+}
+@media (max-width: 767px) { .support-sidebar { max-width: 100%; min-height: 320px; } }
+@media (min-width: 768px) and (max-width: 1023px) { .support-sidebar { max-width: 320px; } }
+
+.support-sidebar-header {
+  padding: 1rem 1.25rem; border-bottom: 1px solid var(--sp-border);
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  flex-shrink: 0;
+}
+.support-sidebar-header h2 { font-size: 0.9375rem; font-weight: 700; color: var(--sp-text); margin: 0; }
+
+.support-new-ticket-btn {
+  display: inline-flex; align-items: center; gap: 0.375rem;
+  padding: 0.5rem 0.875rem; font-size: 0.75rem; font-weight: 700;
+  background: linear-gradient(135deg, var(--sp-amber-500), var(--sp-amber-600));
+  color: #fff; border: none; border-radius: var(--sp-radius); cursor: pointer;
+  min-height: 36px; transition: opacity 0.2s, transform 0.1s; white-space: nowrap;
+}
+.dark .support-new-ticket-btn { background: linear-gradient(135deg, var(--sp-amber-500), var(--sp-amber-400)); color: var(--sp-stone-950); }
+.support-new-ticket-btn:hover { opacity: 0.9; }
+.support-new-ticket-btn:active { transform: scale(0.97); }
+.support-new-ticket-btn svg { width: 14px; height: 14px; }
+
+.support-filter-tabs {
+  display: flex; gap: 0; border-bottom: 1px solid var(--sp-border); flex-shrink: 0;
+  overflow-x: auto; -ms-overflow-style: none; scrollbar-width: none;
+}
+.support-filter-tabs::-webkit-scrollbar { display: none; }
+.support-filter-tab {
+  flex: 1; padding: 0.625rem 0.5rem; font-size: 0.6875rem; font-weight: 600;
+  background: none; border: none; border-bottom: 2px solid transparent;
+  color: var(--sp-text-muted); cursor: pointer; transition: all 0.2s;
+  min-height: 40px; white-space: nowrap; text-align: center;
+}
+.support-filter-tab:hover { color: var(--sp-text); background: rgba(0,0,0,0.02); }
+.dark .support-filter-tab:hover { background: rgba(255,255,255,0.03); }
+.support-filter-tab.active { color: var(--sp-amber-600); border-bottom-color: var(--sp-amber-500); font-weight: 700; }
+.dark .support-filter-tab.active { color: var(--sp-amber-400); }
+
+.support-ticket-list { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
+.support-ticket-item {
+  display: flex; align-items: flex-start; gap: 0.75rem;
+  padding: 0.875rem 1.25rem; border-bottom: 1px solid var(--sp-border);
+  cursor: pointer; transition: background 0.15s; min-height: 44px;
+}
+.support-ticket-item:hover { background: rgba(0,0,0,0.02); }
+.dark .support-ticket-item:hover { background: rgba(255,255,255,0.03); }
+.support-ticket-item.active { background: rgba(245,158,11,0.06); border-left: 3px solid var(--sp-amber-500); }
+.dark .support-ticket-item.active { background: rgba(245,158,11,0.1); }
+.support-ticket-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 6px;
+}
+.support-ticket-dot.open { background: #22c55e; }
+.support-ticket-dot.in-progress { background: var(--sp-amber-500); }
+.support-ticket-dot.resolved { background: var(--sp-stone-400); }
+.support-ticket-dot.closed { background: var(--sp-stone-300); }
+.dark .support-ticket-dot.closed { background: var(--sp-stone-600); }
+.support-ticket-info { flex: 1; min-width: 0; }
+.support-ticket-subject { font-size: 0.8125rem; font-weight: 600; color: var(--sp-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.support-ticket-meta { font-size: 0.6875rem; color: var(--sp-text-muted); margin-top: 0.125rem; display: flex; align-items: center; gap: 0.5rem; }
+.support-ticket-status-badge {
+  display: inline-flex; align-items: center; padding: 0.125rem 0.5rem;
+  font-size: 0.625rem; font-weight: 700; border-radius: 9999px; text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.support-ticket-status-badge.open { background: rgba(34,197,94,0.12); color: #16a34a; }
+.dark .support-ticket-status-badge.open { background: rgba(34,197,94,0.2); color: #4ade80; }
+.support-ticket-status-badge.in-progress { background: rgba(245,158,11,0.12); color: var(--sp-amber-700); }
+.dark .support-ticket-status-badge.in-progress { background: rgba(245,158,11,0.2); color: var(--sp-amber-400); }
+.support-ticket-status-badge.resolved { background: rgba(168,162,158,0.12); color: var(--sp-stone-600); }
+.dark .support-ticket-status-badge.resolved { background: rgba(168,162,158,0.2); color: var(--sp-stone-400); }
+.support-ticket-status-badge.closed { background: rgba(168,162,158,0.08); color: var(--sp-stone-500); }
+.dark .support-ticket-status-badge.closed { background: rgba(168,162,158,0.12); color: var(--sp-stone-500); }
+
+.support-main {
+  flex: 1; min-width: 0;
+  background: var(--sp-surface); border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-lg); overflow: hidden;
+  box-shadow: var(--sp-shadow); display: flex; flex-direction: column;
+}
+
+.support-empty {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 3rem 1.5rem; text-align: center;
+}
+.support-empty svg { width: 56px; height: 56px; color: var(--sp-stone-300); margin-bottom: 1rem; }
+.dark .support-empty svg { color: var(--sp-stone-600); }
+.support-empty h3 { font-size: 1rem; font-weight: 700; color: var(--sp-text); margin: 0 0 0.375rem; }
+.support-empty p { font-size: 0.8125rem; color: var(--sp-text-muted); margin: 0 0 1.25rem; }
+
+.support-empty-btn {
+  display: inline-flex; align-items: center; gap: 0.375rem;
+  padding: 0.625rem 1.25rem; font-size: 0.8125rem; font-weight: 700;
+  background: linear-gradient(135deg, var(--sp-stone-900), var(--sp-stone-800));
+  color: #fff; border: none; border-radius: var(--sp-radius); cursor: pointer;
+  min-height: 44px; transition: opacity 0.2s, transform 0.1s;
+}
+.dark .support-empty-btn { background: linear-gradient(135deg, var(--sp-amber-600), var(--sp-amber-500)); color: var(--sp-stone-950); }
+.support-empty-btn:hover { opacity: 0.9; }
+.support-empty-btn:active { transform: scale(0.97); }
+.support-empty-btn svg { width: 16px; height: 16px; }
+
+.support-conversation { display: none; flex-direction: column; height: 100%; }
+.support-conversation.visible { display: flex; }
+
+.support-convo-header {
+  padding: 1rem 1.25rem; border-bottom: 1px solid var(--sp-border);
+  flex-shrink: 0; display: flex; flex-direction: column; gap: 0.5rem;
+}
+@media (min-width: 640px) { .support-convo-header { flex-direction: row; align-items: center; justify-content: space-between; gap: 0.75rem; } }
+.support-convo-title { font-size: 0.9375rem; font-weight: 700; color: var(--sp-text); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.support-convo-badges { display: flex; align-items: center; gap: 0.375rem; flex-shrink: 0; flex-wrap: wrap; }
+.support-convo-admin { font-size: 0.75rem; color: var(--sp-text-muted); display: flex; align-items: center; gap: 0.375rem; }
+.support-convo-admin svg { width: 14px; height: 14px; }
+
+.support-messages {
+  flex: 1; overflow-y: auto; overscroll-behavior: contain;
+  padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;
+}
+
+.support-msg-group { display: flex; flex-direction: column; gap: 0.25rem; }
+.support-msg-group.admin { align-items: flex-start; }
+.support-msg-group.user { align-items: flex-end; }
+
+.support-msg-sender {
+  display: flex; align-items: center; gap: 0.375rem; font-size: 0.6875rem;
+  color: var(--sp-text-muted); padding: 0 0.25rem;
+}
+.support-msg-sender .role-badge {
+  display: inline-flex; padding: 0.0625rem 0.375rem; font-size: 0.5625rem;
+  font-weight: 700; border-radius: 9999px; text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.role-badge.admin { background: rgba(245,158,11,0.12); color: var(--sp-amber-700); }
+.dark .role-badge.admin { background: rgba(245,158,11,0.2); color: var(--sp-amber-400); }
+.role-badge.user { background: rgba(168,162,158,0.12); color: var(--sp-stone-600); }
+.dark .role-badge.user { background: rgba(168,162,158,0.2); color: var(--sp-stone-400); }
+
+.support-msg-bubble {
+  max-width: 85%; padding: 0.75rem 1rem; border-radius: var(--sp-radius-lg);
+  font-size: 0.8125rem; line-height: 1.65; word-break: break-word;
+}
+@media (min-width: 640px) { .support-msg-bubble { max-width: 70%; } }
+.support-msg-group.admin .support-msg-bubble {
+  background: var(--sp-stone-100); color: var(--sp-text);
+  border-bottom-left-radius: 4px;
+}
+.dark .support-msg-group.admin .support-msg-bubble { background: var(--sp-stone-700); }
+.support-msg-group.user .support-msg-bubble {
+  background: linear-gradient(135deg, var(--sp-amber-500), var(--sp-amber-600));
+  color: #fff; border-bottom-right-radius: 4px;
+}
+.dark .support-msg-group.user .support-msg-bubble { background: linear-gradient(135deg, var(--sp-amber-500), var(--sp-amber-400)); color: var(--sp-stone-950); }
+
+.support-msg-time { font-size: 0.625rem; color: var(--sp-stone-400); padding: 0 0.25rem; }
+
+.support-closed-banner {
+  display: none; padding: 0.75rem 1.25rem;
+  background: rgba(168,162,158,0.08); border-bottom: 1px solid var(--sp-border);
+  align-items: center; justify-content: space-between; gap: 0.75rem; flex-shrink: 0;
+}
+.support-closed-banner.visible { display: flex; }
+.support-closed-banner-text { font-size: 0.8125rem; color: var(--sp-text-muted); display: flex; align-items: center; gap: 0.5rem; }
+.support-closed-banner-text svg { width: 16px; height: 16px; flex-shrink: 0; }
+.support-reopen-btn {
+  display: inline-flex; align-items: center; gap: 0.375rem;
+  padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 700;
+  background: var(--sp-surface); border: 1px solid var(--sp-border);
+  color: var(--sp-text); border-radius: var(--sp-radius); cursor: pointer;
+  min-height: 36px; transition: all 0.2s; white-space: nowrap;
+}
+.support-reopen-btn:hover { border-color: var(--sp-amber-500); color: var(--sp-amber-600); }
+.dark .support-reopen-btn:hover { color: var(--sp-amber-400); border-color: var(--sp-amber-400); }
+.support-reopen-btn svg { width: 14px; height: 14px; }
+
+.support-reply-bar {
+  padding: 1rem 1.25rem; border-top: 1px solid var(--sp-border);
+  flex-shrink: 0; display: flex; gap: 0.75rem; align-items: flex-end;
+}
+.support-reply-bar textarea {
+  flex: 1; padding: 0.625rem 0.875rem; font-size: 0.8125rem;
+  background: var(--sp-input-bg); border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius); color: var(--sp-text); outline: none;
+  resize: none; min-height: 44px; max-height: 120px; font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.support-reply-bar textarea::placeholder { color: var(--sp-stone-400); }
+.support-reply-bar textarea:focus { border-color: var(--sp-amber-500); box-shadow: 0 0 0 3px rgba(245,158,11,0.12); }
+.support-reply-bar button {
+  display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--sp-amber-500), var(--sp-amber-600));
+  color: #fff; border: none; border-radius: var(--sp-radius); cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.dark .support-reply-bar button { background: linear-gradient(135deg, var(--sp-amber-500), var(--sp-amber-400)); color: var(--sp-stone-950); }
+.support-reply-bar button:hover { opacity: 0.9; }
+.support-reply-bar button:active { transform: scale(0.95); }
+.support-reply-bar button:disabled { opacity: 0.5; cursor: not-allowed; }
+.support-reply-bar button svg { width: 18px; height: 18px; }
+
+/* Modal */
+.support-modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 9999;
+  background: rgba(28,25,23,0.6); backdrop-filter: blur(8px);
+  align-items: center; justify-content: center; padding: 1rem;
+}
+.support-modal-overlay.visible { display: flex; }
+.support-modal {
+  background: var(--sp-surface); border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-xl); box-shadow: var(--sp-shadow-lg);
+  width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto;
+}
+.support-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--sp-border);
+}
+.support-modal-header h2 { font-size: 1rem; font-weight: 700; color: var(--sp-text); margin: 0; }
+.support-modal-close {
+  display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: 10px; border: none;
+  background: none; color: var(--sp-text-muted); cursor: pointer; transition: all 0.2s;
+}
+.support-modal-close:hover { background: rgba(0,0,0,0.04); color: var(--sp-text); }
+.dark .support-modal-close:hover { background: rgba(255,255,255,0.06); }
+.support-modal-close svg { width: 20px; height: 20px; }
+
+.support-modal-body { padding: 1.5rem; }
+.support-modal-footer {
+  display: flex; justify-content: flex-end; gap: 0.75rem;
+  padding: 1rem 1.5rem; border-top: 1px solid var(--sp-border);
+}
+
+.support-form-group { margin-bottom: 1rem; }
+.support-form-group:last-child { margin-bottom: 0; }
+.support-form-group label {
+  display: block; font-size: 0.75rem; font-weight: 700; color: var(--sp-text-muted);
+  text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem;
+}
+.support-form-group input,
+.support-form-group select,
+.support-form-group textarea {
+  width: 100%; padding: 0.75rem 1rem; font-size: 0.875rem;
+  background: var(--sp-input-bg); border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius); color: var(--sp-text); outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s; min-height: 44px; box-sizing: border-box;
+}
+.support-form-group input::placeholder,
+.support-form-group textarea::placeholder { color: var(--sp-stone-400); }
+.support-form-group input:focus,
+.support-form-group select:focus,
+.support-form-group textarea:focus {
+  border-color: var(--sp-amber-500);
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.12);
+}
+.support-form-group textarea { resize: vertical; min-height: 100px; font-family: inherit; line-height: 1.6; }
+.support-form-group select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2378716c' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 6l3.5 3.5L11.5 6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem;
+}
+
+.support-btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.625rem 1.5rem; font-size: 0.8125rem; font-weight: 700;
+  background: linear-gradient(135deg, var(--sp-amber-500), var(--sp-amber-600));
+  color: #fff; border: none; border-radius: var(--sp-radius); cursor: pointer;
+  min-height: 40px; transition: opacity 0.2s, transform 0.1s;
+}
+.dark .support-btn-primary { background: linear-gradient(135deg, var(--sp-amber-500), var(--sp-amber-400)); color: var(--sp-stone-950); }
+.support-btn-primary:hover { opacity: 0.9; }
+.support-btn-primary:active { transform: scale(0.98); }
+.support-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.support-btn-secondary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.625rem 1.5rem; font-size: 0.8125rem; font-weight: 700;
+  background: var(--sp-surface); border: 1px solid var(--sp-border);
+  color: var(--sp-text); border-radius: var(--sp-radius); cursor: pointer;
+  min-height: 40px; transition: all 0.2s;
+}
+.support-btn-secondary:hover { border-color: var(--sp-stone-400); }
+
+/* Toast */
+.support-toast {
+  position: fixed; top: 6rem; right: 1rem; z-index: 10000;
+  padding: 0.75rem 1.25rem; border-radius: var(--sp-radius);
+  box-shadow: var(--sp-shadow-lg); font-size: 0.8125rem; font-weight: 600;
+  color: #fff; opacity: 0; transform: translateY(-8px);
+  transition: opacity 0.3s, transform 0.3s; pointer-events: none;
+}
+.support-toast.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.support-toast.success { background: #059669; }
+.support-toast.error { background: #dc2626; }
+</style>
+
+<div class="support-page">
+  <nav class="support-breadcrumb" aria-label="Breadcrumb">
+    <a href="/shop">Home</a>
+    <span class="sep">/</span>
+    <span aria-current="page">Support</span>
+  </nav>
+
+  <div class="support-header">
+    <div class="support-header-icon">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+    </div>
+    <h1>Support Center</h1>
+    <p>We're here to help</p>
+  </div>
+
+  <div class="support-layout">
+    <!-- Sidebar -->
+    <div class="support-sidebar">
+      <div class="support-sidebar-header">
+        <h2>My Tickets</h2>
+        <button class="support-new-ticket-btn" onclick="openNewTicketModal()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          New Ticket
+        </button>
+      </div>
+      <div class="support-filter-tabs">
+        <button class="support-filter-tab active" data-status="all" onclick="filterTickets('all')">All</button>
+        <button class="support-filter-tab" data-status="open" onclick="filterTickets('open')">Open</button>
+        <button class="support-filter-tab" data-status="in_progress" onclick="filterTickets('in_progress')">In Progress</button>
+        <button class="support-filter-tab" data-status="resolved" onclick="filterTickets('resolved')">Resolved</button>
+      </div>
+      <div class="support-ticket-list" id="ticket-list">
+        <!-- Empty state -->
+        <div id="no-tickets" class="support-empty">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          <h3>No support tickets yet</h3>
+          <p>Create your first ticket to get help</p>
+          <button class="support-empty-btn" onclick="openNewTicketModal()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Create your first ticket
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Panel -->
+    <div class="support-main">
+      <!-- Empty state -->
+      <div id="no-ticket-selected" class="support-empty">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+        <h3>Select a ticket to view the conversation</h3>
+        <p>Choose a ticket from the list on the left</p>
+      </div>
+
+      <!-- Conversation View -->
+      <div id="conversation-view" class="support-conversation">
+        <div class="support-convo-header">
+          <div class="support-convo-title" id="convo-title"></div>
+          <div class="support-convo-badges" id="convo-badges"></div>
+        </div>
+
+        <div id="closed-banner" class="support-closed-banner">
+          <span class="support-closed-banner-text">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            This ticket is closed
+          </span>
+          <button class="support-reopen-btn" onclick="reopenTicket()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Reopen
+          </button>
+        </div>
+
+        <div id="messages-container" class="support-messages"></div>
+
+        <div id="reply-bar" class="support-reply-bar">
+          <textarea id="reply-text" placeholder="Type your reply..." rows="1" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();}"></textarea>
+          <button id="reply-send" onclick="replyToTicket()" aria-label="Send reply">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Ticket Modal -->
+<div id="new-ticket-modal" class="support-modal-overlay" onclick="if(event.target===this)closeNewTicketModal()">
+  <div class="support-modal">
+    <div class="support-modal-header">
+      <h2>Create New Ticket</h2>
+      <button class="support-modal-close" onclick="closeNewTicketModal()" aria-label="Close modal">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="support-modal-body">
+      <div class="support-form-group">
+        <label for="ticket-category">Category</label>
+        <select id="ticket-category" required>
+          <option value="">Select a category</option>
+          <option value="order">Order Issue</option>
+          <option value="shipping">Shipping</option>
+          <option value="product">Product Question</option>
+          <option value="technical">Technical</option>
+          <option value="billing">Billing</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="support-form-group">
+        <label for="ticket-subject">Subject</label>
+        <input id="ticket-subject" type="text" required placeholder="Brief description of your issue">
+      </div>
+      <div class="support-form-group">
+        <label for="ticket-description">Description</label>
+        <textarea id="ticket-description" required rows="4" placeholder="Please describe your issue in detail..."></textarea>
+      </div>
+      <div class="support-form-group">
+        <label for="ticket-order-id">Order ID <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
+        <input id="ticket-order-id" type="text" placeholder="e.g. ORD-12345">
+      </div>
+    </div>
+    <div class="support-modal-footer">
+      <button class="support-btn-secondary" onclick="closeNewTicketModal()">Cancel</button>
+      <button id="create-ticket-btn" class="support-btn-primary" onclick="createTicket()">Submit Ticket</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="support-toast" class="support-toast"></div>
+
+<script>
+let allTickets = [];
+let currentFilter = 'all';
+let selectedTicketId = null;
+
+function formatDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const now = new Date();
+  const diffMs = now - d;
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHr = Math.floor(diffMs / 3600000);
+  const diffDay = Math.floor(diffMs / 86400000);
+  if (diffMin < 1) return 'Just now';
+  if (diffMin < 60) return diffMin + 'm ago';
+  if (diffHr < 24) return diffHr + 'h ago';
+  if (diffDay < 7) return diffDay + 'd ago';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+}
+
+function showToast(message, type) {
+  const toast = document.getElementById('support-toast');
+  toast.textContent = message;
+  toast.className = 'support-toast ' + type;
+  requestAnimationFrame(() => toast.classList.add('visible'));
+  setTimeout(() => {
+    toast.classList.remove('visible');
+  }, 3500);
+}
+
+function renderTicketList() {
+  const list = document.getElementById('ticket-list');
+  const filtered = currentFilter === 'all' ? allTickets : allTickets.filter(t => t.status === currentFilter);
+  const noTickets = document.getElementById('no-tickets');
+
+  // Remove old ticket items (keep noTickets)
+  list.querySelectorAll('.support-ticket-item').forEach(el => el.remove());
+
+  if (filtered.length === 0) {
+    noTickets.style.display = '';
+    return;
+  }
+  noTickets.style.display = 'none';
+
+  filtered.forEach(ticket => {
+    const item = document.createElement('div');
+    item.className = 'support-ticket-item' + (ticket.id === selectedTicketId ? ' active' : '');
+    item.onclick = () => selectTicket(ticket.id);
+    const statusLabel = ticket.status.replace('_', ' ');
+    item.innerHTML = '<div class="support-ticket-dot ' + ticket.status + '"></div>' +
+      '<div class="support-ticket-info">' +
+        '<div class="support-ticket-subject">' + escapeHtml(ticket.subject) + '</div>' +
+        '<div class="support-ticket-meta">' +
+          '<span class="support-ticket-status-badge ' + ticket.status + '">' + statusLabel + '</span>' +
+          '<span>' + formatDate(ticket.created_at) + '</span>' +
+        '</div>' +
+      '</div>';
+    list.appendChild(item);
+  });
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+async function loadTickets() {
+  try {
+    const res = await fetch('/api/support/tickets');
+    if (!res.ok) throw new Error('Failed to load tickets');
+    const data = await res.json();
+    allTickets = data.tickets || [];
+    renderTicketList();
+  } catch (err) {
+    console.error('loadTickets error:', err);
+  }
+}
+
+async function selectTicket(id) {
+  selectedTicketId = id;
+  renderTicketList();
+  document.getElementById('no-ticket-selected').style.display = 'none';
+  const convo = document.getElementById('conversation-view');
+  convo.classList.add('visible');
+
+  try {
+    const res = await fetch('/api/support/tickets/' + id);
+    if (!res.ok) throw new Error('Failed to load ticket');
+    const data = await res.json();
+    const ticket = data.ticket || data;
+
+    document.getElementById('convo-title').textContent = ticket.subject;
+
+    const badges = document.getElementById('convo-badges');
+    const statusLabel = (ticket.status || '').replace('_', ' ');
+    let badgesHtml = '<span class="support-ticket-status-badge ' + ticket.status + '">' + statusLabel + '</span>';
+    if (ticket.priority) {
+      const priColors = { low: 'rgba(168,162,158,0.12)', medium: 'rgba(59,130,246,0.12)', high: 'rgba(239,68,68,0.12)', urgent: 'rgba(220,38,38,0.15)' };
+      const priTextColors = { low: '#78716c', medium: '#3b82f6', high: '#ef4444', urgent: '#dc2626' };
+      const darkPriColors = { low: 'rgba(168,162,158,0.2)', medium: 'rgba(59,130,246,0.2)', high: 'rgba(239,68,68,0.2)', urgent: 'rgba(220,38,38,0.25)' };
+      const darkPriTextColors = { low: '#a8a29e', medium: '#60a5fa', high: '#f87171', urgent: '#f87171' };
+      const pc = ticket.priority.toLowerCase();
+      badgesHtml += '<span style="display:inline-flex;padding:0.125rem 0.5rem;font-size:0.625rem;font-weight:700;border-radius:9999px;text-transform:uppercase;letter-spacing:0.05em;background:' + (priColors[pc] || priColors.low) + ';color:' + (priTextColors[pc] || priTextColors.low) + ';">' + ticket.priority + '</span>';
+    }
+    if (ticket.assigned_to_name) {
+      badgesHtml += '<span class="support-convo-admin"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>' + escapeHtml(ticket.assigned_to_name) + '</span>';
+    }
+    badges.innerHTML = badgesHtml;
+
+    const closedBanner = document.getElementById('closed-banner');
+    const replyBar = document.getElementById('reply-bar');
+    if (ticket.status === 'closed' || ticket.status === 'resolved') {
+      closedBanner.classList.add('visible');
+      if (ticket.status === 'closed') replyBar.style.display = 'none';
+      else replyBar.style.display = '';
+    } else {
+      closedBanner.classList.remove('visible');
+      replyBar.style.display = '';
+    }
+
+    renderMessages(ticket.messages || ticket.conversation || []);
+  } catch (err) {
+    console.error('selectTicket error:', err);
+    showToast('Failed to load ticket details', 'error');
+  }
+}
+
+function renderMessages(messages) {
+  const container = document.getElementById('messages-container');
+  container.innerHTML = '';
+  if (!messages.length) {
+    container.innerHTML = '<div class="support-empty" style="padding:2rem;"><p style="color:var(--sp-text-muted);font-size:0.8125rem;">No messages yet. Start the conversation below.</p></div>';
+    return;
+  }
+  messages.forEach(msg => {
+    const isAdmin = msg.role === 'admin' || msg.sender_role === 'admin';
+    const group = document.createElement('div');
+    group.className = 'support-msg-group ' + (isAdmin ? 'admin' : 'user');
+    const senderName = msg.sender_name || msg.name || (isAdmin ? 'Support' : 'You');
+    const roleName = isAdmin ? 'admin' : 'user';
+    group.innerHTML =
+      '<div class="support-msg-sender">' +
+        '<span>' + escapeHtml(senderName) + '</span>' +
+        '<span class="role-badge ' + roleName + '">' + roleName + '</span>' +
+      '</div>' +
+      '<div class="support-msg-bubble">' + escapeHtml(msg.content || msg.message || msg.body || '') + '</div>' +
+      '<span class="support-msg-time">' + formatDate(msg.created_at || msg.timestamp) + '</span>';
+    container.appendChild(group);
+  });
+  container.scrollTop = container.scrollHeight;
+}
+
+async function replyToTicket() {
+  const textarea = document.getElementById('reply-text');
+  const text = textarea.value.trim();
+  if (!text || !selectedTicketId) return;
+
+  const btn = document.getElementById('reply-send');
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/support/tickets/' + selectedTicketId + '/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: text })
+    });
+    if (!res.ok) throw new Error('Failed to send reply');
+    textarea.value = '';
+    await selectTicket(selectedTicketId);
+    showToast('Reply sent', 'success');
+  } catch (err) {
+    console.error('replyToTicket error:', err);
+    showToast('Failed to send reply', 'error');
+  }
+  btn.disabled = false;
+}
+
+async function createTicket() {
+  const category = document.getElementById('ticket-category').value;
+  const subject = document.getElementById('ticket-subject').value.trim();
+  const description = document.getElementById('ticket-description').value.trim();
+  const orderId = document.getElementById('ticket-order-id').value.trim();
+
+  if (!category || !subject || !description) {
+    showToast('Please fill in all required fields', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('create-ticket-btn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+  try {
+    const body = { category, subject, description };
+    if (orderId) body.order_id = orderId;
+    const res = await fetch('/api/support/tickets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error('Failed to create ticket');
+    closeNewTicketModal();
+    showToast('Ticket created successfully', 'success');
+    await loadTickets();
+  } catch (err) {
+    console.error('createTicket error:', err);
+    showToast('Failed to create ticket', 'error');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Submit Ticket';
+}
+
+function openNewTicketModal() {
+  document.getElementById('new-ticket-modal').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeNewTicketModal() {
+  document.getElementById('new-ticket-modal').classList.remove('visible');
+  document.body.style.overflow = '';
+  document.getElementById('ticket-category').value = '';
+  document.getElementById('ticket-subject').value = '';
+  document.getElementById('ticket-description').value = '';
+  document.getElementById('ticket-order-id').value = '';
+}
+
+function filterTickets(status) {
+  currentFilter = status;
+  document.querySelectorAll('.support-filter-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.status === status);
+  });
+  renderTicketList();
+}
+
+async function reopenTicket() {
+  if (!selectedTicketId) return;
+  try {
+    const res = await fetch('/api/support/tickets/' + selectedTicketId, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'open' })
+    });
+    if (!res.ok) throw new Error('Failed to reopen ticket');
+    showToast('Ticket reopened', 'success');
+    await selectTicket(selectedTicketId);
+    await loadTickets();
+  } catch (err) {
+    console.error('reopenTicket error:', err);
+    showToast('Failed to reopen ticket', 'error');
+  }
+}
+
+// Auto-resize reply textarea
+document.addEventListener('DOMContentLoaded', function() {
+  const textarea = document.getElementById('reply-text');
+  if (textarea) {
+    textarea.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+  }
+});
+
+// Close modal on Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeNewTicketModal();
+});
+
+// Load tickets on page load
+loadTickets();
+</script>
+{% endblock %}

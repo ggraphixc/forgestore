@@ -1,0 +1,263 @@
+<!-- ===== Admin AI Assistant Floating Widget ===== -->
+<style>
+@keyframes adminChatSlideUp {
+    from { opacity: 0; transform: translateY(16px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes adminChatSlideDown {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to   { opacity: 0; transform: translateY(16px) scale(0.97); }
+}
+@keyframes adminDotBounce {
+    0%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-6px); }
+}
+
+.admin-ai-btn {
+    position: fixed; bottom: 5.5rem; right: 1.5rem;
+    width: 3.5rem; height: 3.5rem; border-radius: 9999px; border: none; cursor: pointer;
+    background: linear-gradient(135deg, #1c1917, #44403c); color: #fbbf24;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px rgba(28,25,23,0.35);
+    transition: transform 0.3s, box-shadow 0.3s; z-index: 9998;
+}
+.admin-ai-btn:hover { transform: scale(1.1); box-shadow: 0 12px 32px rgba(28,25,23,0.45); }
+.admin-ai-btn:active { transform: scale(0.95); }
+.admin-ai-btn svg { width: 1.375rem; height: 1.375rem; pointer-events: none; }
+
+.admin-ai-panel {
+    position: fixed; bottom: 9.5rem; right: 1.5rem;
+    width: min(calc(100vw - 3rem), 440px); max-height: min(78vh, 640px);
+    background: #fff; border-radius: 1.25rem; overflow: hidden;
+    box-shadow: 0 25px 60px -12px rgba(28,25,23,0.25);
+    border: 1px solid #e7e5e4; display: none; flex-direction: column;
+    z-index: 9999;
+}
+.admin-ai-panel.open { display: flex; animation: adminChatSlideUp 0.25s ease-out; }
+.admin-ai-panel.closing { animation: adminChatSlideDown 0.2s ease-in forwards; }
+.dark .admin-ai-panel { background: #1c1917; border-color: #44403c; }
+
+.admin-ai-header {
+    padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(135deg, #1c1917, #292524); color: #fff; flex-shrink: 0;
+}
+.admin-ai-header-left { display: flex; align-items: center; gap: 0.625rem; }
+.admin-ai-header-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: rgba(251,191,36,0.15); display: flex; align-items: center; justify-content: center;
+}
+.admin-ai-header-icon svg { width: 18px; height: 18px; color: #fbbf24; }
+.admin-ai-header-title { font-weight: 700; font-size: 0.9375rem; }
+.admin-ai-header-sub { font-size: 0.6875rem; color: #a8a29e; }
+.admin-ai-close {
+    width: 32px; height: 32px; border-radius: 8px; border: none; background: rgba(255,255,255,0.08);
+    color: #a8a29e; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+}
+.admin-ai-close:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+.admin-ai-messages {
+    flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem;
+    min-height: 280px; max-height: 50vh;
+}
+.admin-ai-msg {
+    max-width: 85%; padding: 0.75rem 1rem; border-radius: 1rem; font-size: 0.8125rem;
+    line-height: 1.6; word-break: break-word;
+}
+.admin-ai-msg--user {
+    align-self: flex-end; background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #1c1917; border-bottom-right-radius: 4px;
+}
+.admin-ai-msg--bot {
+    align-self: flex-start; background: #f5f5f4; color: #1c1917;
+    border-bottom-left-radius: 4px;
+}
+.dark .admin-ai-msg--bot { background: #292524; color: #e7e5e4; }
+
+.admin-ai-loading { display: flex; gap: 4px; padding: 0.75rem 1rem; }
+.admin-ai-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #a8a29e;
+    animation: adminDotBounce 1.2s ease-in-out infinite;
+}
+.admin-ai-dot:nth-child(2) { animation-delay: 0.15s; }
+.admin-ai-dot:nth-child(3) { animation-delay: 0.3s; }
+
+.admin-ai-actions {
+    padding: 0.625rem 1rem; display: flex; flex-wrap: wrap; gap: 0.375rem; border-top: 1px solid #f5f5f4;
+    flex-shrink: 0;
+}
+.dark .admin-ai-actions { border-color: #44403c; }
+.admin-ai-action {
+    padding: 0.375rem 0.75rem; border-radius: 9999px; border: 1px solid #e7e5e4;
+    background: #fff; color: #57534e; font-size: 0.6875rem; cursor: pointer;
+    transition: all 0.2s; white-space: nowrap;
+}
+.admin-ai-action:hover { background: #fef3c7; border-color: #fbbf24; color: #92400e; }
+.dark .admin-ai-action { background: #292524; border-color: #44403c; color: #a8a29e; }
+.dark .admin-ai-action:hover { background: rgba(245,158,11,0.15); border-color: #f59e0b; color: #fbbf24; }
+
+.admin-ai-input-wrap {
+    padding: 0.75rem 1rem; border-top: 1px solid #f5f5f4; display: flex; gap: 0.5rem; align-items: flex-end;
+    flex-shrink: 0;
+}
+.dark .admin-ai-input-wrap { border-color: #44403c; }
+.admin-ai-input {
+    flex: 1; padding: 0.625rem 0.875rem; border-radius: 0.75rem; border: 1px solid #e7e5e4;
+    background: #fafaf9; color: #1c1917; font-size: 0.8125rem; resize: none;
+    min-height: 40px; max-height: 96px; outline: none; font-family: inherit;
+    transition: border-color 0.2s;
+}
+.admin-ai-input:focus { border-color: #f59e0b; }
+.dark .admin-ai-input { background: #292524; border-color: #44403c; color: #e7e5e4; }
+.admin-ai-send {
+    width: 40px; height: 40px; border-radius: 0.75rem; border: none; flex-shrink: 0;
+    background: linear-gradient(135deg, #f59e0b, #d97706); color: #1c1917; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: transform 0.2s;
+}
+.admin-ai-send:hover { transform: scale(1.05); }
+.admin-ai-send:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.admin-ai-send svg { width: 16px; height: 16px; }
+</style>
+
+<div id="admin-ai-widget">
+    <button id="admin-ai-toggle" class="admin-ai-btn" onclick="AdminAI.toggle()" aria-label="AI Assistant">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"/></svg>
+    </button>
+
+    <div id="admin-ai-panel" class="admin-ai-panel">
+        <div class="admin-ai-header">
+            <div class="admin-ai-header-left">
+                <div class="admin-ai-header-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+                </div>
+                <div>
+                    <div class="admin-ai-header-title">ForgeAI Admin</div>
+                    <div class="admin-ai-header-sub">Business intelligence assistant</div>
+                </div>
+            </div>
+            <button class="admin-ai-close" onclick="AdminAI.toggle()" aria-label="Close">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <div id="admin-ai-messages" class="admin-ai-messages">
+            <div class="admin-ai-msg admin-ai-msg--bot">
+                Hello! I'm your AI admin assistant. I can help you analyze sales, generate reports, check for issues, and manage store settings. What would you like to know?
+            </div>
+        </div>
+
+        <div id="admin-ai-actions" class="admin-ai-actions">
+            <button class="admin-ai-action" onclick="AdminAI.send('Analyze my sales for the last 30 days')">Sales Analysis</button>
+            <button class="admin-ai-action" onclick="AdminAI.send('Generate a summary report of key metrics')">Summary Report</button>
+            <button class="admin-ai-action" onclick="AdminAI.send('What issues need my attention right now?')">Check Issues</button>
+            <button class="admin-ai-action" onclick="AdminAI.send('How is customer satisfaction trending?')">Satisfaction</button>
+        </div>
+
+        <div class="admin-ai-input-wrap">
+            <textarea id="admin-ai-input" class="admin-ai-input" rows="1" placeholder="Ask about your business..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();AdminAI.submit()}" oninput="AdminAI.autoResize(this)"></textarea>
+            <button id="admin-ai-send" class="admin-ai-send" onclick="AdminAI.submit()" aria-label="Send">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const AI = {
+        sessionId: 'admin-' + Date.now(),
+        isOpen: false,
+
+        toggle() {
+            const panel = document.getElementById('admin-ai-panel');
+            if (this.isOpen) {
+                panel.classList.add('closing');
+                setTimeout(() => { panel.classList.remove('open', 'closing'); }, 200);
+            } else {
+                panel.classList.remove('closing');
+                panel.classList.add('open');
+                document.getElementById('admin-ai-input').focus();
+            }
+            this.isOpen = !this.isOpen;
+        },
+
+        async send(text) {
+            const input = document.getElementById('admin-ai-input');
+            input.value = text;
+            this.submit();
+        },
+
+        async submit() {
+            const input = document.getElementById('admin-ai-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            this.addMessage(text, 'user');
+            input.value = '';
+            input.style.height = 'auto';
+            this.hideActions();
+            this.setLoading(true);
+
+            try {
+                const res = await fetch('/api/ai/assistant/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: this.sessionId, message: text }),
+                });
+                const data = await res.json();
+                this.addMessage(data.response || data.detail || 'Sorry, I could not process that.', 'bot');
+            } catch (e) {
+                this.addMessage('Network error. Please try again.', 'bot');
+            }
+            this.setLoading(false);
+        },
+
+        addMessage(text, role) {
+            const container = document.getElementById('admin-ai-messages');
+            const div = document.createElement('div');
+            div.className = 'admin-ai-msg admin-ai-msg--' + role;
+            div.innerHTML = this.formatResponse(text);
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        },
+
+        formatResponse(text) {
+            return text
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\n/g, '<br>');
+        },
+
+        setLoading(on) {
+            const btn = document.getElementById('admin-ai-send');
+            const input = document.getElementById('admin-ai-input');
+            btn.disabled = on;
+            input.disabled = on;
+            if (on) {
+                const container = document.getElementById('admin-ai-messages');
+                const dots = document.createElement('div');
+                dots.className = 'admin-ai-loading';
+                dots.id = 'admin-ai-loading';
+                dots.innerHTML = '<span class="admin-ai-dot"></span><span class="admin-ai-dot"></span><span class="admin-ai-dot"></span>';
+                container.appendChild(dots);
+                container.scrollTop = container.scrollHeight;
+            } else {
+                const dots = document.getElementById('admin-ai-loading');
+                if (dots) dots.remove();
+            }
+        },
+
+        hideActions() {
+            const a = document.getElementById('admin-ai-actions');
+            if (a) a.style.display = 'none';
+        },
+
+        autoResize(el) {
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, 96) + 'px';
+        }
+    };
+
+    window.AdminAI = AI;
+})();
+</script>

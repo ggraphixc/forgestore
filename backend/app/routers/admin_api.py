@@ -3364,3 +3364,51 @@ def approve_payout_automated(
     return {"success": True, "status": payout.status, "reference": payout.payment_reference}
 
 
+# --- AI Chat History ---
+
+@router.get("/ai-chats")
+async def list_ai_chats(db: Session = Depends(get_db)):
+    """List all AI chat sessions with metadata."""
+    from app.models import AIMessage, AIConversation
+    try:
+        sessions = db.query(AIConversation).order_by(AIConversation.updated_at.desc()).limit(100).all()
+        result = []
+        for s in sessions:
+            msg_count = db.query(func.count(AIMessage.id)).filter(AIMessage.conversation_id == s.id).scalar()
+            result.append({
+                "id": s.id,
+                "session_id": s.session_id,
+                "user_id": s.user_id,
+                "message_count": msg_count,
+                "created_at": s.created_at.isoformat() if s.created_at else None,
+                "updated_at": s.updated_at.isoformat() if s.updated_at else None,
+                "last_message_at": s.updated_at.isoformat() if s.updated_at else None,
+            })
+        return {"chats": result}
+    except Exception as e:
+        return {"chats": [], "error": str(e)}
+
+
+@router.get("/ai-chats/{session_id}/messages")
+async def get_ai_chat_messages(session_id: str, db: Session = Depends(get_db)):
+    """Get messages for a specific AI chat session."""
+    from app.models import AIMessage, AIConversation
+    try:
+        conv = db.query(AIConversation).filter(AIConversation.session_id == session_id).first()
+        if not conv:
+            return {"messages": []}
+        messages = db.query(AIMessage).filter(AIMessage.conversation_id == conv.id).order_by(AIMessage.created_at.asc()).all()
+        return {
+            "messages": [
+                {
+                    "id": m.id,
+                    "role": m.role,
+                    "content": m.content,
+                    "created_at": m.created_at.isoformat() if m.created_at else None,
+                }
+                for m in messages
+            ]
+        }
+    except Exception as e:
+        return {"messages": [], "error": str(e)}
+
