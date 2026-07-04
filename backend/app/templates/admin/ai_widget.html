@@ -159,7 +159,13 @@
             <button class="admin-ai-action" onclick="AdminAI.send('How is customer satisfaction trending?')">Satisfaction</button>
         </div>
 
+        <!-- Image preview -->
+        <div id="admin-ai-image-preview" style="display:none;padding:8px 12px 0;gap:8px;flex-wrap:wrap;"></div>
         <div class="admin-ai-input-wrap">
+            <input type="file" id="admin-ai-file" accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xlsx" style="display:none;" onchange="AdminAI.onFileSelect(event)">
+            <button type="button" id="admin-ai-attach" onclick="document.getElementById('admin-ai-file').click()" aria-label="Attach image or file" style="width:32px;height:32px;border-radius:8px;border:none;background:var(--color-surface);color:var(--color-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            </button>
             <textarea id="admin-ai-input" class="admin-ai-input" rows="1" placeholder="Ask about your business..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();AdminAI.submit()}" oninput="AdminAI.autoResize(this)"></textarea>
             <button id="admin-ai-send" class="admin-ai-send" onclick="AdminAI.submit()" aria-label="Send">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
@@ -173,6 +179,34 @@
     const AI = {
         sessionId: 'admin-' + Date.now(),
         isOpen: false,
+        pendingImage: null,
+
+        onFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const preview = document.getElementById('admin-ai-image-preview');
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    this.pendingImage = { type: 'image', data: ev.target.result, name: file.name };
+                    preview.innerHTML = '<div style="position:relative;display:inline-block;border-radius:8px;overflow:hidden;border:1px solid var(--color-border);"><img src="' + ev.target.result + '" style="max-height:60px;max-width:120px;display:block;"><button onclick="AdminAI.removeImage()" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.6);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;">&times;</button></div>';
+                    preview.style.display = 'flex';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                this.pendingImage = { type: 'file', data: null, name: file.name, mime: file.type };
+                preview.innerHTML = '<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:6px;border:1px solid var(--color-border);"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><span style="font-size:11px;">' + file.name + '</span><button onclick="AdminAI.removeImage()" style="margin-left:auto;width:16px;height:16px;border-radius:50%;background:var(--color-border);color:var(--color-dark);border:none;cursor:pointer;font-size:10px;">&times;</button></div>';
+                preview.style.display = 'flex';
+            }
+            e.target.value = '';
+        },
+
+        removeImage() {
+            this.pendingImage = null;
+            const preview = document.getElementById('admin-ai-image-preview');
+            preview.innerHTML = '';
+            preview.style.display = 'none';
+        },
 
         toggle() {
             const panel = document.getElementById('admin-ai-panel');
@@ -196,13 +230,25 @@
         async submit() {
             const input = document.getElementById('admin-ai-input');
             const text = input.value.trim();
-            if (!text) return;
+            const image = this.pendingImage;
+            if (!text && !image) return;
 
-            this.addMessage(text, 'user');
+            this.addMessage(text || (image ? '📎 ' + image.name : ''), 'user');
             input.value = '';
             input.style.height = 'auto';
+            this.removeImage();
             this.hideActions();
             this.setLoading(true);
+
+            const body = { session_id: this.sessionId, message: text || 'Analyze this file' };
+
+            if (image) {
+                if (image.type === 'image' && image.data) {
+                    body.image_url = image.data;
+                } else if (image.type === 'file') {
+                    body.message = (text || 'Analyze this file') + ' [Attached: ' + image.name + ']';
+                }
+            }
 
             try {
                 const controller = new AbortController();
@@ -210,7 +256,7 @@
                 const res = await fetch('/api/ai/assistant/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ session_id: this.sessionId, message: text }),
+                    body: JSON.stringify(body),
                     signal: controller.signal,
                 });
                 clearTimeout(timeoutId);

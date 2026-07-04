@@ -159,7 +159,14 @@ def _call_llm_sync(
             temperature=temperature,
             max_tokens=max_tokens,
         )
-        result = resp.choices[0].message.content.strip()
+        if not resp.choices or not resp.choices[0].message:
+            logger.error(f"LLM returned empty response: {resp}")
+            return None
+        result = resp.choices[0].message.content
+        if not result:
+            logger.error("LLM returned None content")
+            return None
+        result = result.strip()
         logger.info(f"LLM response length: {len(result)}")
         return result
 

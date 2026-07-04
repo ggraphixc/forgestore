@@ -10,7 +10,7 @@ Endpoints:
 """
 import json
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -45,22 +45,66 @@ def ai_assistant_chat(
     Chat with the AI shopping assistant.
     Supports text-only and multimodal (text + image) queries.
     """
-    # Check if AI assistant is enabled
-    from app.models import Settings
-    setting = db.query(Settings).filter(Settings.key == "ai_assistant_enabled").first()
-    if setting and setting.value == "false":
+    try:
+        # Check if AI assistant is enabled
+        from app.models import Settings
+        setting = db.query(Settings).filter(Settings.key == "ai_assistant_enabled").first()
+        if setting and setting.value == "false":
+            return {
+                "conversation_id": None,
+                "response": "The AI assistant is currently disabled. Please browse our catalog directly.",
+                "tokens_used": 0,
+                "suggestions": ["Browse categories", "View all products"],
+            }
+
+        customer = get_current_customer_from_cookie(request, db)
+        user_id = customer.id if customer else None
+
+        service = AIChatService(db)
+        return service.chat(body.session_id, body.message, user_id, image_url=body.image_url)
+    except Exception as e:
+        logger.error(f"AI chat endpoint error: {type(e).__name__}: {e}")
         return {
             "conversation_id": None,
-            "response": "The AI assistant is currently disabled. Please browse our catalog directly.",
+            "response": "I apologize, but I'm having trouble right now. Please try again in a moment.",
             "tokens_used": 0,
-            "suggestions": ["Browse categories", "View all products"],
+            "suggestions": ["Browse categories", "View recommendations"],
         }
 
-    customer = get_current_customer_from_cookie(request, db)
-    user_id = customer.id if customer else None
 
-    service = AIChatService(db)
-    return service.chat(body.session_id, body.message, user_id, image_url=body.image_url)
+@router.post("/assistant/upload")
+async def ai_assistant_upload(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    """Upload a file for AI analysis. Returns a URL that can be sent with chat."""
+    import base64
+    import os
+    from app.core.image_compressor import compress_image
+
+    allowed_types = [
+        "image/jpeg", "image/png", "image/gif", "image/webp",
+        "application/pdf",
+        "text/plain", "text/csv",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ]
+    if file.content_type not in allowed_types:
+        raise HTTPException(400, f"File type {file.content_type} not supported. Allowed: images, PDF, text, CSV, DOCX, XLSX.")
+
+    contents = await file.read()
+    if len(contents) > 10 * 1024 * 1024:  # 10MB limit
+        raise HTTPException(400, "File too large. Maximum size is 10MB.")
+
+    if file.content_type.startswith("image/"):
+        compressed = compress_image(contents, file.filename)
+        b64 = base64.b64encode(compressed).decode("utf-8")
+        data_url = f"data:{file.content_type};base64,{b64}"
+        return {"url": data_url, "type": "image", "name": file.filename}
+
+    b64 = base64.b64encode(contents).decode("utf-8")
+    data_url = f"data:{file.content_type};base64,{b64}"
+    return {"url": data_url, "type": "file", "name": file.filename, "mime": file.content_type}
 
 
 @router.get("/assistant/products")

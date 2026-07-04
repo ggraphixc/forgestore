@@ -279,7 +279,13 @@
 
         <!-- Input -->
         <div class="ai-chat-input-area">
+            <!-- Image preview -->
+            <div id="ai-chat-image-preview" class="hidden" style="padding:8px 12px 0;display:flex;gap:8px;flex-wrap:wrap;"></div>
             <form id="ai-chat-form" onsubmit="aiChat.submit(event)" class="ai-chat-input-wrap">
+                <input type="file" id="ai-chat-file" accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xlsx" style="display:none;" onchange="aiChat.onFileSelect(event)">
+                <button type="button" id="ai-chat-attach" class="ai-chat-attach" onclick="document.getElementById('ai-chat-file').click()" aria-label="Attach image or file" style="width:36px;height:36px;border-radius:8px;border:none;background:var(--c-stone-800);color:var(--c-stone-400);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                </button>
                 <div class="flex-1 relative">
                     <textarea id="ai-chat-input" rows="1" placeholder="Ask about products, get recommendations..." class="ai-chat-input" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();aiChat.submit(event)}"></textarea>
                 </div>
@@ -300,9 +306,37 @@
         sessionId: null,
         isLoading: false,
         loadingEl: null,
+        pendingImage: null,
 
         init() {
             this.sessionId = 'ai_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+        },
+
+        onFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const preview = document.getElementById('ai-chat-image-preview');
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    this.pendingImage = { type: 'image', data: ev.target.result, name: file.name };
+                    preview.innerHTML = '<div style="position:relative;display:inline-block;border-radius:8px;overflow:hidden;border:1px solid var(--c-stone-600);"><img src="' + ev.target.result + '" style="max-height:80px;max-width:160px;display:block;"><button onclick="aiChat.removeImage()" style="position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.6);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;">&times;</button><div style="padding:2px 6px;font-size:10px;color:var(--c-stone-400);background:var(--c-stone-800);">' + file.name + '</div></div>';
+                    preview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                this.pendingImage = { type: 'file', data: null, name: file.name, mime: file.type };
+                preview.innerHTML = '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;border:1px solid var(--c-stone-600);background:var(--c-stone-800);"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><span style="font-size:11px;color:var(--c-stone-300);">' + file.name + '</span><button onclick="aiChat.removeImage()" style="margin-left:auto;width:18px;height:18px;border-radius:50%;background:var(--c-stone-600);color:#fff;border:none;cursor:pointer;font-size:11px;">&times;</button></div>';
+                preview.classList.remove('hidden');
+            }
+            e.target.value = '';
+        },
+
+        removeImage() {
+            this.pendingImage = null;
+            const preview = document.getElementById('ai-chat-image-preview');
+            preview.innerHTML = '';
+            preview.classList.add('hidden');
         },
 
         toggle() {
@@ -335,13 +369,25 @@
             if (this.isLoading) return;
             const input = document.getElementById('ai-chat-input');
             const message = text || input.value.trim();
-            if (!message) return;
+            const image = this.pendingImage;
+            if (!message && !image) return;
 
             input.value = '';
             this.autoResize(input);
-            this.addMessage(message, 'user');
+            this.removeImage();
+            this.addMessage(message || (image ? '📎 ' + image.name : ''), 'user');
             this.setLoading(true);
             this.hideSuggestions();
+
+            const body = { session_id: this.sessionId, message: message || 'Analyze this file' };
+
+            if (image) {
+                if (image.type === 'image' && image.data) {
+                    body.image_url = image.data;
+                } else if (image.type === 'file') {
+                    body.message = (message || 'Analyze this file') + ' [Attached: ' + image.name + ']';
+                }
+            }
 
             try {
                 const controller = new AbortController();
@@ -349,10 +395,7 @@
                 const res = await fetch('/api/ai/assistant/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        session_id: this.sessionId,
-                        message: message,
-                    }),
+                    body: JSON.stringify(body),
                     signal: controller.signal,
                 });
                 clearTimeout(timeoutId);
