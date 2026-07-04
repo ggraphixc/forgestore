@@ -344,6 +344,8 @@
             this.hideSuggestions();
 
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 120000);
                 const res = await fetch('/api/ai/assistant/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -351,7 +353,9 @@
                         session_id: this.sessionId,
                         message: message,
                     }),
+                    signal: controller.signal,
                 });
+                clearTimeout(timeoutId);
 
                 if (!res.ok) {
                     throw new Error('Server returned ' + res.status);

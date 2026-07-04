@@ -315,9 +315,6 @@ def shop_detail(request: Request, slug: str, db: Session = Depends(get_db)):
 # --- Product Detail ---
 @router.get("/products/{slug}", response_class=HTMLResponse)
 def product_detail(request: Request, slug: str, db: Session = Depends(get_db)):
-    customer = _require_customer(request, db)
-    if isinstance(customer, RedirectResponse):
-        return customer
 
     currency = get_currency(db)
     product = db.query(Product).filter(Product.slug == slug).first()

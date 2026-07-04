@@ -21,6 +21,9 @@
     box-shadow: 0 8px 24px rgba(28,25,23,0.35);
     transition: transform 0.3s, box-shadow 0.3s; z-index: 9998;
 }
+@media (max-width: 768px) {
+    .admin-ai-btn { bottom: 6.5rem; right: 1rem; width: 3rem; height: 3rem; }
+}
 .admin-ai-btn:hover { transform: scale(1.1); box-shadow: 0 12px 32px rgba(28,25,23,0.45); }
 .admin-ai-btn:active { transform: scale(0.95); }
 .admin-ai-btn svg { width: 1.375rem; height: 1.375rem; pointer-events: none; }
@@ -32,6 +35,9 @@
     box-shadow: 0 25px 60px -12px rgba(28,25,23,0.25);
     border: 1px solid #e7e5e4; display: none; flex-direction: column;
     z-index: 9999;
+}
+@media (max-width: 768px) {
+    .admin-ai-panel { bottom: 10.5rem; right: 0.75rem; width: min(calc(100vw - 1.5rem), 400px); max-height: 60vh; }
 }
 .admin-ai-panel.open { display: flex; animation: adminChatSlideUp 0.25s ease-out; }
 .admin-ai-panel.closing { animation: adminChatSlideDown 0.2s ease-in forwards; }
@@ -199,15 +205,29 @@
             this.setLoading(true);
 
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 120000);
                 const res = await fetch('/api/ai/assistant/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ session_id: this.sessionId, message: text }),
+                    signal: controller.signal,
                 });
+                clearTimeout(timeoutId);
+                if (!res.ok) {
+                    const errText = await res.text().catch(() => 'Server error');
+                    this.addMessage('Server error (' + res.status + '). Please try again.', 'bot');
+                    this.setLoading(false);
+                    return;
+                }
                 const data = await res.json();
                 this.addMessage(data.response || data.detail || 'Sorry, I could not process that.', 'bot');
             } catch (e) {
-                this.addMessage('Network error. Please try again.', 'bot');
+                console.error('Admin AI chat error:', e);
+                const msg = e.name === 'AbortError'
+                    ? 'AI assistant timed out. The provider may be slow — try again.'
+                    : 'Network error — ' + (e.message || 'Please try again.');
+                this.addMessage(msg, 'bot');
             }
             this.setLoading(false);
         },
