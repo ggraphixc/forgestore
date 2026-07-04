@@ -13,7 +13,7 @@
 
 /* ===== Header — Floating Glass Navbar ===== */
 .web-header {
-  position: fixed; top: 0; left: 0; right: 0;
+  position: sticky; top: 0; left: 0; right: 0;
   z-index: 999;
   padding: 12px 16px;
 }
@@ -115,7 +115,7 @@
 /* Guarantee banner */
 .web-guarantee {
   background: #1c1917; color: #fff; padding: 0.5rem 0; text-align: center;
-  font-size: 0.75rem; letter-spacing: 0.02em; position: sticky; top: 0; z-index: 1000;
+  font-size: 0.75rem; letter-spacing: 0.02em; position: relative; z-index: 1;
 }
 .web-guarantee-inner {
   display: flex; align-items: center; justify-content: center; gap: 2rem;
@@ -856,8 +856,7 @@ document.addEventListener('scroll', function() {
 </script>
 
 <!-- Spacer -->
-<div class="web-header-spacer"></div>
-<style>.web-header-spacer{height:110px;}@media(min-width:640px){.web-header-spacer{height:114px;}}@media(min-width:1024px){.web-header-spacer{height:118px;}}</style>
+
 
 <!-- Main Content -->
 <main style="min-height:60vh;max-width:100%;overflow-x:hidden;">
