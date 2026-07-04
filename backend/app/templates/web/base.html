@@ -34,13 +34,6 @@
 @media (min-width: 640px) { .web-header-inner { height: 60px; padding: 0 16px; border-radius: 18px; } }
 @media (min-width: 1024px) { .web-header-inner { height: 64px; padding: 0 20px; border-radius: 20px; } }
 
-@media (prefers-color-scheme: dark) {
-  .web-header-inner {
-    background: rgba(28,25,23,0.82);
-    border-color: rgba(255,255,255,0.06);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.15);
-  }
-}
 .dark .web-header-inner {
   background: rgba(28,25,23,0.82);
   border-color: rgba(255,255,255,0.06);
@@ -157,6 +150,11 @@
 .web-action-link--hidden { display: none; }
 @media (min-width: 768px) {
   .web-action-link--md { display: flex; }
+}
+
+/* Desktop: hide mobile-only elements */
+@media (min-width: 1024px) {
+  #search-toggle, #mobile-menu-toggle { display: none !important; }
 }
 
 /* Search overlay */
@@ -493,8 +491,6 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
         </svg>
       </button>
-      <style>@media(min-width:1024px){"#search-toggle"{display:none!important;}}</style>
-
       <!-- Cart -->
       <a href="/shop/cart" class="web-action-link" aria-label="Shopping Cart">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -537,7 +533,6 @@
         </svg>
         <span class="web-hamburger-badge cart-count-mobile" style="display:none;">0</span>
       </button>
-      <style>@media(min-width:1024px){"#mobile-menu-toggle"{display:none!important;}}</style>
     </div>
   </div>
 </header>
