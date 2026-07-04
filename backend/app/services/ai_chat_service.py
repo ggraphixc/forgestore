@@ -18,7 +18,7 @@ from sqlalchemy import desc, func
 
 from app.models import (
     AIConversation, AIMessage, UserPreferenceVector, RecommendationCache,
-    Product, Category, User, Review, Order, OrderItem,
+    Product, Category, User, Review, Order, OrderItem, Retailer,
 )
 from app.config import get_settings
 
@@ -175,10 +175,93 @@ class AIChatService:
             "recent_orders": recent_orders,
         }, default=str)
 
+    def _get_admin_context(self) -> str:
+        """Build admin-specific context (revenue, orders, issues)."""
+        from app.utils import utcnow
+        from datetime import timedelta
+
+        now = utcnow()
+        thirty_days_ago = now - timedelta(days=30)
+
+        # Revenue stats
+        total_revenue = self.db.query(func.coalesce(func.sum(Order.total_amount), 0)).filter(
+            Order.status.in_(["DELIVERED", "COMPLETED"]),
+            Order.created_at >= thirty_days_ago,
+        ).scalar()
+
+        # Order stats
+        total_orders = self.db.query(func.count(Order.id)).filter(
+            Order.created_at >= thirty_days_ago
+        ).scalar()
+        pending_orders = self.db.query(func.count(Order.id)).filter(
+            Order.status.in_(["PENDING", "PROCESSING"])
+        ).scalar()
+        disputed_orders = self.db.query(func.count(Order.id)).filter(
+            Order.status.in_(["DISPUTED", "REFUNDED", "CANCELLED"])
+        ).scalar()
+
+        # Vendor stats
+        total_vendors = self.db.query(func.count(Retailer.id)).scalar()
+        active_vendors = self.db.query(func.count(Retailer.id)).filter(
+            Retailer.status == "APPROVED"
+        ).scalar()
+
+        # Low stock products
+        low_stock = self.db.query(func.count(Product.id)).filter(
+            Product.inventory > 0, Product.inventory < 10
+        ).scalar()
+
+        # Customer stats
+        total_customers = self.db.query(func.count(User.id)).filter(
+            User.role == "customer"
+        ).scalar()
+
+        return json.dumps({
+            "period": "last_30_days",
+            "revenue": {"total": float(total_revenue), "currency": "NGN"},
+            "orders": {"total": total_orders, "pending": pending_orders, "disputed": disputed_orders},
+            "vendors": {"total": total_vendors, "active": active_vendors},
+            "customers": {"total": total_customers},
+            "low_stock_products": low_stock,
+        }, default=str)
+
     def _build_system_prompt(self, context: dict) -> str:
         """Build the system prompt with shopping context."""
+        session_id = context.get("session_id", "")
+        is_admin = session_id.startswith("admin-")
+
         catalog = self._get_catalog_context()
         user_ctx = self._get_user_context(context.get("user_id"))
+
+        if is_admin:
+            admin_ctx = self._get_admin_context()
+            return f"""You are ForgeAI Admin Assistant — an AI analytics and operations assistant for the ForgeStore admin team.
+
+CRITICAL RULES:
+- You are a TEXT-ONLY assistant. NEVER output code, XML, JSON, tool_call tags, or any markup.
+- Respond ONLY in plain conversational text with simple formatting (bold, bullet points).
+- You have access to real-time business data below — use it to answer admin questions.
+- Be concise and data-driven. Focus on actionable insights.
+
+Your capabilities:
+- Analyze sales trends, revenue, and order patterns
+- Identify issues (disputes, low stock, pending orders)
+- Provide business insights and recommendations
+- Answer questions about vendors, customers, and operations
+- Summarize performance metrics
+
+Business Data (Last 30 Days):
+{admin_ctx}
+
+Available products (for context):
+{catalog}
+
+Guidelines:
+- Lead with numbers and trends
+- Flag anything that needs immediate attention
+- Keep responses under 150 words unless detailed analysis is requested
+- Use plain text formatting — bold key metrics, bullet point lists
+- NEVER output any code, XML, JSON, or tool_call tags"""
 
         return f"""You are ForgeAI, the intelligent shopping assistant for ForgeStore — a multi-vendor e-commerce marketplace.
 
@@ -226,6 +309,7 @@ Guidelines:
         context = self.memory.get_context(conversation.id)
         context.update({
             "user_id": user_id,
+            "session_id": session_id,
             "last_query": message,
         })
 
