@@ -1,63 +1,372 @@
 {% extends "admin/base.html" %}
 {% block title %}Edit {{ product.name }} — ForgeStore Admin{% endblock %}
 {% block content %}
-<div class="max-w-3xl mx-auto">
-    <!-- Breadcrumb -->
-    <nav class="flex items-center gap-2 text-sm text-stone-400 mb-6">
-        <a href="/admin/catalog" class="hover:text-amber-600 transition-colors">Catalog</a>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
-        <a href="/admin/catalog/{{ product.id }}" class="hover:text-amber-600 transition-colors">{{ product.name[:20] }}{% if product.name|length > 20 %}...{% endif %}</a>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
-        <span class="text-stone-600 font-medium">Edit</span>
+<style>
+  :root {
+    --amber-50: #fffbeb; --amber-100: #fef3c7; --amber-200: #fde68a;
+    --amber-300: #fcd34d; --amber-400: #fbbf24; --amber-500: #f59e0b;
+    --amber-600: #d97706; --amber-700: #b45309;
+    --stone-50: #fafaf9; --stone-100: #f5f5f4; --stone-200: #e7e5e4;
+    --stone-300: #d6d3d1; --stone-400: #a8a29e; --stone-500: #78716c;
+    --stone-600: #57534e; --stone-700: #44403c; --stone-800: #292524;
+    --stone-900: #1c1917;
+    --red-50: #fef2f2; --red-200: #fecaca; --red-600: #dc2626;
+  }
+
+  .admin-page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--stone-900);
+  }
+
+  .admin-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .admin-page-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--stone-900);
+    margin: 0;
+  }
+
+  .admin-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--stone-400);
+    margin-bottom: 24px;
+  }
+  .admin-breadcrumb a {
+    color: var(--stone-400);
+    text-decoration: none;
+    transition: color .15s;
+  }
+  .admin-breadcrumb a:hover {
+    color: var(--amber-600);
+  }
+  .admin-breadcrumb svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+  .admin-breadcrumb-current {
+    color: var(--stone-600);
+    font-weight: 500;
+  }
+
+  .admin-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid var(--stone-200);
+    padding: 24px 32px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    transition: box-shadow .15s;
+  }
+  .admin-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  }
+
+  .admin-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .admin-card-title svg {
+    width: 16px;
+    height: 16px;
+    color: var(--stone-400);
+  }
+  .admin-card-title h2 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--stone-900);
+    margin: 0;
+  }
+
+  .admin-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .admin-form-group {
+    margin-bottom: 16px;
+  }
+
+  .admin-form-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .15em;
+    color: var(--stone-500);
+    margin-bottom: 8px;
+  }
+
+  .admin-form-input,
+  .admin-form-select,
+  .admin-form-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    background: #fff;
+    border: 1px solid var(--stone-300);
+    border-radius: 12px;
+    font-size: 14px;
+    color: var(--stone-900);
+    transition: all .15s;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+  .admin-form-input:focus,
+  .admin-form-select:focus,
+  .admin-form-textarea:focus {
+    outline: none;
+    border-color: var(--amber-500);
+    box-shadow: 0 0 0 3px rgba(245,158,11,.12);
+  }
+  .admin-form-textarea {
+    resize: none;
+    min-height: 90px;
+  }
+  .admin-form-select {
+    cursor: pointer;
+    appearance: auto;
+  }
+
+  .admin-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  @media (min-width: 768px) {
+    .admin-grid-2 { grid-template-columns: 1fr 1fr; }
+    .admin-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  }
+  .admin-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .admin-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+  .admin-checkbox-row input {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border-color: var(--stone-300);
+    accent-color: var(--amber-600);
+    cursor: pointer;
+  }
+  .admin-checkbox-row span {
+    font-size: 14px;
+    color: var(--stone-600);
+    transition: color .15s;
+  }
+  .admin-checkbox-row:hover span {
+    color: var(--stone-900);
+  }
+
+  .admin-dropzone {
+    border: 2px dashed var(--stone-300);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .admin-dropzone:hover {
+    border-color: rgba(251,191,36,.5);
+    background: rgba(255,251,235,.3);
+  }
+  .admin-dropzone svg {
+    width: 40px;
+    height: 40px;
+    color: var(--stone-300);
+    margin: 0 auto 12px;
+  }
+
+  .admin-preview-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .admin-preview-list img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid var(--stone-200);
+  }
+
+  .admin-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid var(--stone-100);
+  }
+
+  .admin-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s;
+    min-height: 44px;
+    text-decoration: none;
+  }
+  .admin-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+  .admin-btn-primary {
+    background: linear-gradient(135deg, var(--stone-800), var(--stone-900));
+    color: #fff;
+  }
+  .admin-btn-primary:hover {
+    background: linear-gradient(135deg, var(--stone-900), #1a1512);
+    box-shadow: 0 4px 12px rgba(0,0,0,.12);
+  }
+  .admin-btn-ghost {
+    padding: 12px 24px;
+    background: none;
+    color: var(--stone-500);
+    font-weight: 500;
+    border-radius: 12px;
+    transition: all .15s;
+  }
+  .admin-btn-ghost:hover {
+    color: var(--stone-900);
+    background: var(--stone-50);
+  }
+  .admin-btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+  }
+
+  .admin-badge {
+    display: inline-flex;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 9999px;
+  }
+
+  .admin-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s;
+  }
+  .admin-modal.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .admin-modal-content {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+
+  @media (max-width: 640px) {
+    .admin-page { padding: 16px; }
+    .admin-card { padding: 16px; }
+    .admin-page-header h1 { font-size: 20px; }
+  }
+</style>
+
+<div class="admin-page">
+    <nav class="admin-breadcrumb">
+        <a href="/admin/catalog">Catalog</a>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
+        <a href="/admin/catalog/{{ product.id }}">{{ product.name[:20] }}{% if product.name|length > 20 %}...{% endif %}</a>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
+        <span class="admin-breadcrumb-current">Edit</span>
     </nav>
 
-    <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-heading font-bold text-stone-900">Edit Product</h1>
-        <a href="/admin/catalog/{{ product.id }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 rounded-lg transition-all">Cancel</a>
+    <div class="admin-page-header">
+        <h1>Edit Product</h1>
+        <a href="/admin/catalog/{{ product.id }}" class="admin-btn admin-btn-ghost">Cancel</a>
     </div>
 
-    <div class="bg-white rounded-2xl border border-stone-200 p-6 md:p-8 shadow-sm hover:shadow-md transition-shadow">
-        <form id="edit-product-form" class="space-y-6" onsubmit="event.preventDefault(); submitEditProduct(this)">
+    <div class="admin-card">
+        <form id="edit-product-form" class="admin-stack" onsubmit="event.preventDefault(); submitEditProduct(this)">
             <input type="hidden" name="id" value="{{ product.id }}">
 
-            <div>
-                <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2" for="name">Product Name</label>
-                <input id="name" name="name" value="{{ product.name }}" required class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="name">Product Name</label>
+                <input id="name" name="name" value="{{ product.name }}" required class="admin-form-input">
             </div>
 
-            <div>
-                <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2" for="description">Description</label>
-                <textarea id="description" name="description" rows="4" class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">{{ product.description or '' }}</textarea>
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="description">Description</label>
+                <textarea id="description" name="description" rows="4" class="admin-form-textarea">{{ product.description or '' }}</textarea>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2" for="price">Price (₦)</label>
-                    <input id="price" name="price" type="number" step="0.01" value="{{ product.price }}" required class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">
+            <div class="admin-grid-3">
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="price">Price (₦)</label>
+                    <input id="price" name="price" type="number" step="0.01" value="{{ product.price }}" required class="admin-form-input">
                 </div>
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2" for="discount_price">Discount Price (₦)</label>
-                    <input id="discount_price" name="discount_price" type="number" step="0.01" value="{{ product.discount_price or '' }}" class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all" placeholder="Optional">
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="discount_price">Discount Price (₦)</label>
+                    <input id="discount_price" name="discount_price" type="number" step="0.01" value="{{ product.discount_price or '' }}" class="admin-form-input" placeholder="Optional">
                 </div>
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2" for="inventory">Stock</label>
-                    <input id="inventory" name="inventory" type="number" value="{{ product.inventory or 0 }}" class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="inventory">Stock</label>
+                    <input id="inventory" name="inventory" type="number" value="{{ product.inventory or 0 }}" class="admin-form-input">
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2">Category</label>
-                    <select name="category_id" class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all cursor-pointer">
+            <div class="admin-grid-2">
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Category</label>
+                    <select name="category_id" class="admin-form-select">
                         <option value="">None</option>
                         {% for cat in categories %}
                         <option value="{{ cat.id }}" {% if product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2">Retailer</label>
-                    <select name="retailer_id" class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all cursor-pointer">
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Retailer</label>
+                    <select name="retailer_id" class="admin-form-select">
                         <option value="">None</option>
                         {% for r in retailers %}
                         <option value="{{ r.id }}" {% if product.retailer_id == r.id %}selected{% endif %}>{{ r.name }}</option>
@@ -66,49 +375,47 @@
                 </div>
             </div>
 
-            <div>
-                <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-3">Flags</label>
-                <div class="flex flex-wrap gap-6">
+            <div class="admin-form-group">
+                <label class="admin-form-label">Flags</label>
+                <div style="display:flex;flex-wrap:wrap;gap:24px;">
                     {% for flag in [('is_flagship', 'Flagship'), ('is_new_arrival', 'New Arrival')] %}
-                    <label class="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" name="{{ flag[0] }}" value="1" {% if product[flag[0]] %}checked{% endif %} class="w-4 h-4 rounded border-stone-300 text-amber-600 focus:ring-amber-500/20">
-                        <span class="text-sm text-stone-600 group-hover:text-stone-900 transition-colors">{{ flag[1] }}</span>
+                    <label class="admin-checkbox-row">
+                        <input type="checkbox" name="{{ flag[0] }}" value="1" {% if product[flag[0]] %}checked{% endif %}>
+                        <span>{{ flag[1] }}</span>
                     </label>
                     {% endfor %}
                 </div>
             </div>
 
-            <div>
-                <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2" for="brand">Brand</label>
-                <input id="brand" name="brand" value="{{ product.brand or '' }}" class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all" placeholder="e.g. Artisan Crafts Co.">
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="brand">Brand</label>
+                <input id="brand" name="brand" value="{{ product.brand or '' }}" class="admin-form-input" placeholder="e.g. Artisan Crafts Co.">
             </div>
 
-            <div>
-                <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2" for="image-input">Product Images</label>
-                <div class="border-2 border-dashed border-stone-300 rounded-xl p-4 text-center hover:border-amber-400/50 hover:bg-amber-50/30 transition-all cursor-pointer" onclick="document.getElementById('image-input').click()">
-                    <input type="file" id="image-input" name="image_files" multiple accept="image/*" class="hidden">
-                    <svg class="w-10 h-10 text-stone-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    <p class="text-sm font-medium text-stone-700">Click to upload images</p>
-                    <p class="text-xs text-stone-400 mt-1">PNG, JPG up to 5MB</p>
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="image-input">Product Images</label>
+                <div class="admin-dropzone" onclick="document.getElementById('image-input').click()">
+                    <input type="file" id="image-input" name="image_files" multiple accept="image/*" class="hidden" style="display:none;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <p style="font-size:14px;font-weight:500;color:var(--stone-700);margin:0;">Click to upload images</p>
+                    <p style="font-size:12px;color:var(--stone-400);margin:4px 0 0;">PNG, JPG up to 5MB</p>
                 </div>
-                <div id="image-preview" class="mt-4 flex flex-wrap gap-3">
+                <div id="image-preview" class="admin-preview-list">
                     {% if product.images %}
                         {% for img in product.images %}
-                        <img src="{{ img }}" alt="{{ product.name }}" class="w-20 h-20 rounded-xl object-cover border border-stone-200">
+                        <img src="{{ img }}" alt="{{ product.name }}">
                         {% endfor %}
                     {% endif %}
                 </div>
                 <input type="hidden" id="images-input" name="images" value="{% if product.images %}{{ product.images|join('\n') }}{% endif %}">
             </div>
 
-            <div class="flex items-center gap-3 pt-4 border-t border-stone-100">
-                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-stone-800 to-stone-900 text-white text-sm font-bold rounded-xl hover:from-stone-900 hover:to-stone-950 transition-all shadow-md hover:shadow-lg">
-                    <span class="inline-flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Save Changes
-                    </span>
+            <div class="admin-btn-group">
+                <button type="submit" class="admin-btn admin-btn-primary">
+                    <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Save Changes
                 </button>
-                <a href="/admin/catalog" class="px-6 py-3 text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 rounded-xl transition-all">Cancel</a>
+                <a href="/admin/catalog" class="admin-btn admin-btn-ghost">Cancel</a>
             </div>
         </form>
     </div>
@@ -118,11 +425,10 @@
 async function submitEditProduct(form) {
     const btn = form.querySelector('button[type="submit"]');
     btn.disabled = true;
-    btn.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Saving...</span>';
+    btn.innerHTML = '<svg class="animate-spin" style="width:16px;height:16px;" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Saving...';
 
     const formData = new FormData(form);
     const data = {};
-
     for (const [key, rawVal] of formData.entries()) {
         if (key === 'id') continue;
         if (key === 'is_flagship' || key === 'is_new_arrival') {
@@ -131,10 +437,8 @@ async function submitEditProduct(form) {
             data[key] = rawVal;
         }
     }
-
     const imagesRaw = document.getElementById('images-input').value;
     data.images = imagesRaw ? imagesRaw.split('\n').filter(l => l.trim()) : [];
-
     if (data.price) data.price = parseFloat(data.price);
     if (data.discount_price) data.discount_price = parseFloat(data.discount_price) || null;
     if (data.inventory) data.inventory = parseInt(data.inventory) || 0;
@@ -152,22 +456,17 @@ async function submitEditProduct(form) {
         showToast('Failed to update product', 'error');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Save Changes</span>';
+        btn.innerHTML = '<svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Save Changes';
     }
 }
 
 document.getElementById('image-input').addEventListener('change', async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
-
     const uploadForm = new FormData();
     files.forEach(file => uploadForm.append('files', file));
-
     try {
-        const res = await fetch('/api/admin/upload', {
-            method: 'POST',
-            body: uploadForm,
-        });
+        const res = await fetch('/api/admin/upload', { method: 'POST', body: uploadForm });
         const data = await res.json();
         if (data.urls && data.urls.length) {
             const preview = document.getElementById('image-preview');
@@ -175,12 +474,10 @@ document.getElementById('image-input').addEventListener('change', async (e) => {
             const existing = hiddenInput.value ? hiddenInput.value.split('\n').filter(l => l.trim()) : [];
             existing.push(...data.urls);
             hiddenInput.value = existing.join('\n');
-
             data.urls.forEach(url => {
                 const img = document.createElement('img');
                 img.src = url;
                 img.alt = 'Uploaded image';
-                img.className = 'w-20 h-20 rounded-xl object-cover border border-stone-200';
                 preview.appendChild(img);
             });
         }
@@ -190,4 +487,4 @@ document.getElementById('image-input').addEventListener('change', async (e) => {
     e.target.value = '';
 });
 </script>
-{% endblock %}
+{% endblock %}

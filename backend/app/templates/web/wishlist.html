@@ -1,24 +1,101 @@
 {% extends "web/base.html" %}
 {% block title %}My Wishlist — ForgeStore{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-    <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 reveal">
-        <div>
-            <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Saved Items</span>
-            <h1 class="text-2xl sm:text-3xl md:text-4xl xl:text-5xl font-black text-stone-900 dark:text-stone-100 font-display">
-                My <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Wishlist</span>
-            </h1>
-            <p class="text-stone-500 dark:text-stone-400 mt-2" id="wishlist-count">Loading your saved pieces...</p>
-        </div>
-    </div>
+<style>
+  :root {
+    --ws-amber-50: #fffbeb; --ws-amber-100: #fef3c7; --ws-amber-200: #fde68a;
+    --ws-amber-400: #fbbf24; --ws-amber-500: #f59e0b; --ws-amber-600: #d97706;
+    --ws-amber-700: #b45309; --ws-stone-50: #fafaf9; --ws-stone-100: #f5f5f4;
+    --ws-stone-200: #e7e5e3; --ws-stone-300: #d6d3d1; --ws-stone-400: #a8a29e;
+    --ws-stone-500: #78716c; --ws-stone-600: #57534e; --ws-stone-700: #44403c;
+    --ws-stone-800: #292524; --ws-stone-900: #1c1917;
+    --ws-radius: 16px; --ws-radius-sm: 12px;
+    --ws-shadow-lg: 0 10px 25px -3px rgba(0,0,0,.08), 0 4px 6px rgba(0,0,0,.04);
+    --ws-transition: .25s cubic-bezier(.4,0,.2,1);
+  }
+  .ws-page { max-width: 80rem; margin: 0 auto; padding: 2rem 1rem; }
+  @media (min-width: 640px) { .ws-page { padding: 3rem 1.5rem; } }
+  .ws-page-header { margin-bottom: 2.5rem; }
+  .ws-page-label { display: block; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .2em; color: var(--ws-amber-600); margin-bottom: .5rem; }
+  .ws-page-title { font-size: 1.75rem; font-weight: 900; color: var(--ws-stone-900); line-height: 1.1; }
+  .ws-page-title em { font-style: normal; background: linear-gradient(135deg, var(--ws-amber-600), var(--ws-amber-500)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .ws-page-sub { color: var(--ws-stone-500); margin-top: .5rem; font-size: .9375rem; }
+  @media (min-width: 640px) { .ws-page-title { font-size: 2rem; } }
+  @media (min-width: 768px) { .ws-page-title { font-size: 2.5rem; } }
+  @media (min-width: 1280px) { .ws-page-title { font-size: 3rem; } }
+  .ws-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+  @media (min-width: 640px) { .ws-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; } }
+  @media (min-width: 768px) { .ws-grid { grid-template-columns: repeat(3, 1fr); gap: 1.5rem; } }
+  @media (min-width: 1024px) { .ws-grid { grid-template-columns: repeat(4, 1fr); } }
+  .ws-product { position: relative; background: #fff; border: 1px solid var(--ws-stone-200); border-radius: var(--ws-radius); overflow: hidden; transition: border-color var(--ws-transition), box-shadow var(--ws-transition); }
+  .ws-product:hover { border-color: var(--ws-amber-300); box-shadow: var(--ws-shadow-lg); }
+  .ws-product a { text-decoration: none; color: inherit; display: block; }
+  .ws-product-img { aspect-ratio: 3/4; overflow: hidden; background: var(--ws-stone-50); position: relative; }
+  .ws-product-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s cubic-bezier(.4,0,.2,1); }
+  .ws-product:hover .ws-product-img img { transform: scale(1.1); }
+  .ws-product-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--ws-stone-300); }
+  .ws-product-placeholder svg { width: 48px; height: 48px; }
+  .ws-wishlist-btn { position: absolute; top: .75rem; right: .75rem; z-index: 10; width: 36px; height: 36px; background: rgba(255,255,255,.9); backdrop-filter: blur(4px); border-radius: 50%; box-shadow: var(--ws-shadow-lg); display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: transform var(--ws-transition); }
+  .ws-wishlist-btn:hover { transform: scale(1.1); }
+  .ws-wishlist-btn svg { width: 20px; height: 20px; color: #ef4444; fill: #ef4444; }
+  .ws-product-info { padding: .75rem; }
+  @media (min-width: 640px) { .ws-product-info { padding: 1rem; } }
+  .ws-product-name { font-size: .75rem; font-weight: 600; color: var(--ws-stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color var(--ws-transition); }
+  @media (min-width: 640px) { .ws-product-name { font-size: .875rem; } }
+  .ws-product:hover .ws-product-name { color: var(--ws-amber-700); }
+  .ws-product-price-row { display: flex; align-items: center; justify-content: space-between; margin-top: .5rem; }
+  .ws-product-price { font-size: .875rem; font-weight: 700; color: var(--ws-stone-900); font-family: monospace; }
+  .ws-product-price-old { font-size: .75rem; color: var(--ws-stone-400); text-decoration: line-through; font-family: monospace; margin-left: .375rem; }
+  .ws-product-rating { font-size: .75rem; color: var(--ws-stone-400); display: flex; align-items: center; gap: .25rem; }
+  .ws-product-rating svg { width: 12px; height: 12px; fill: var(--ws-amber-500); }
+  .ws-add-btn { position: absolute; bottom: 1rem; right: .75rem; width: 36px; height: 36px; background: #fff; border: 1px solid var(--ws-stone-200); border-radius: 50%; box-shadow: var(--ws-shadow-lg); display: flex; align-items: center; justify-content: center; color: var(--ws-amber-600); border: none; cursor: pointer; transition: all var(--ws-transition); opacity: 0; transform: translateY(8px); }
+  .ws-product:hover .ws-add-btn { opacity: 1; transform: translateY(0); }
+  .ws-add-btn:hover { background: var(--ws-amber-500); color: #fff; border-color: var(--ws-amber-500); }
+  .ws-add-btn svg { width: 16px; height: 16px; }
+  .ws-empty { grid-column: 1 / -1; text-align: center; padding: 5rem 1rem; }
+  .ws-empty-icon { width: 96px; height: 96px; background: linear-gradient(135deg, #fff1f2, var(--ws-amber-50)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; }
+  .ws-empty-icon svg { width: 48px; height: 48px; color: #fca5a5; }
+  .ws-empty h2 { font-size: 1.25rem; font-weight: 700; color: var(--ws-stone-900); margin-bottom: .5rem; }
+  .ws-empty p { font-size: .875rem; color: var(--ws-stone-400); margin-bottom: 2rem; max-width: 24rem; margin-left: auto; margin-right: auto; }
+  .ws-btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 44px; padding: 0 1.5rem; font-size: .875rem; font-weight: 600; border-radius: var(--ws-radius-sm); border: none; cursor: pointer; transition: all var(--ws-transition); text-decoration: none; }
+  .ws-btn-primary { background: linear-gradient(135deg, var(--ws-amber-500), #f97316); color: #fff; box-shadow: 0 2px 8px rgba(245,158,11,.25); }
+  .ws-btn-primary:hover { background: linear-gradient(135deg, var(--ws-amber-600), #ea580c); box-shadow: 0 4px 12px rgba(245,158,11,.35); transform: translateY(-1px); }
+  .ws-spinner { width: 32px; height: 32px; border: 2px solid var(--ws-amber-500); border-top-color: transparent; border-radius: 50%; animation: ws-spin .6s linear infinite; margin: 0 auto 1rem; }
+  @keyframes ws-spin { to { transform: rotate(360deg); } }
+  .ws-loading-text { font-size: .875rem; color: var(--ws-stone-400); }
+  @media (prefers-color-scheme: dark) {
+    .ws-page-title { color: var(--ws-stone-100); }
+    .ws-page-sub { color: var(--ws-stone-400); }
+    .ws-page-label { color: var(--ws-amber-400); }
+    .ws-product { background: var(--ws-stone-800); border-color: var(--ws-stone-700); }
+    .ws-product:hover { border-color: var(--ws-amber-600); }
+    .ws-product-img { background: var(--ws-stone-700); }
+    .ws-product-placeholder { color: var(--ws-stone-500); }
+    .ws-product-name { color: var(--ws-stone-100); }
+    .ws-product:hover .ws-product-name { color: var(--ws-amber-400); }
+    .ws-product-price { color: var(--ws-stone-100); }
+    .ws-wishlist-btn { background: rgba(41,37,36,.9); }
+    .ws-add-btn { background: var(--ws-stone-800); border-color: var(--ws-stone-600); color: var(--ws-amber-400); }
+    .ws-empty h2 { color: var(--ws-stone-100); }
+    .ws-empty p { color: var(--ws-stone-400); }
+    .ws-empty-icon { background: linear-gradient(135deg, rgba(239,68,68,.1), var(--ws-stone-800)); }
+    .ws-empty-icon svg { color: rgba(252,165,165,.5); }
+  }
+</style>
 
-    <!-- Wishlist Grid -->
-    <div id="wishlist-grid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-        <div class="col-span-full text-center py-20">
-            <div class="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p class="text-sm text-stone-400">Loading wishlist...</p>
-        </div>
+<div class="ws-page">
+  <div class="ws-page-header">
+    <span class="ws-page-label">Saved Items</span>
+    <h1 class="ws-page-title">My <em>Wishlist</em></h1>
+    <p class="ws-page-sub" id="wishlist-count">Loading your saved pieces...</p>
+  </div>
+
+  <div id="wishlist-grid" class="ws-grid">
+    <div class="ws-empty">
+      <div class="ws-spinner"></div>
+      <p class="ws-loading-text">Loading wishlist...</p>
     </div>
+  </div>
 </div>
 
 <script>
@@ -34,32 +111,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             countEl.textContent = `${data.items.length} saved piece${data.items.length !== 1 ? 's' : ''}`;
 
             grid.innerHTML = data.items.map(p => `
-                <div class="card-product group reveal-scale relative wishlist-item-${p.id}">
+                <div class="ws-product wishlist-item-${p.id}">
                     <a href="/shop/products/${p.slug}">
-                        <div class="aspect-[3/4] overflow-hidden bg-stone-50 dark:bg-stone-700 relative">
+                        <div class="ws-product-img">
                             ${p.images && p.images.length > 0
-                                ? `<img loading="lazy" src="${p.images[0]}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">`
-                                : `<div class="w-full h-full flex items-center justify-center text-stone-300 dark:text-stone-500">
-                                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                ? `<img loading="lazy" src="${p.images[0]}" alt="${p.name}">`
+                                : `<div class="ws-product-placeholder">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                                    </div>`
                             }
-                            <button onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist('${p.id}', this)" class="absolute top-3 right-3 w-9 h-9 bg-white/90 dark:bg-stone-800/90 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform duration-200 z-10" aria-label="Remove from wishlist">
-                                <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-                                </svg>
-                            </button>
                         </div>
-                        <div class="p-3 sm:p-4">
-                            <h3 class="text-xs sm:text-sm font-semibold text-stone-900 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors line-clamp-1">${p.name}</h3>
-                            <div class="flex items-center justify-between mt-2">
-                                <span class="text-sm font-bold text-stone-900 dark:text-stone-100 font-mono">${formatCurrency(p.discount_price || p.price)}</span>
+                        <div class="ws-product-info">
+                            <h3 class="ws-product-name">${p.name}</h3>
+                            <div class="ws-product-price-row">
+                                <span class="ws-product-price">${formatCurrency(p.discount_price || p.price)}</span>
                                 ${p.discount_price && p.discount_price < p.price
-                                    ? `<span class="text-xs text-stone-400 line-through ml-1.5 font-mono">${formatCurrency(p.price)}</span>`
+                                    ? `<span class="ws-product-price-old">${formatCurrency(p.price)}</span>`
                                     : ''
                                 }
                                 ${p.rating && p.rating > 0
-                                    ? `<span class="text-xs text-stone-400 flex items-center gap-1">
-                                        <svg class="w-3 h-3 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                    ? `<span class="ws-product-rating">
+                                        <svg viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                                         ${parseFloat(p.rating).toFixed(1)}
                                        </span>`
                                     : ''
@@ -67,24 +139,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                             </div>
                         </div>
                     </a>
-                    <button onclick="quickAddToCart('${p.id}', this)" class="absolute bottom-4 right-3 w-9 h-9 bg-white dark:bg-stone-800 rounded-full shadow-lg border border-stone-200 dark:border-stone-600 flex items-center justify-center text-amber-600 dark:text-amber-400 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all duration-200 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0" aria-label="Quick add to cart" title="Add to Cart">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <button onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist('${p.id}', this)" class="ws-wishlist-btn" aria-label="Remove from wishlist">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                        </svg>
+                    </button>
+                    <button onclick="quickAddToCart('${p.id}', this)" class="ws-add-btn" aria-label="Quick add to cart" title="Add to Cart">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     </button>
                 </div>
             `).join('');
         } else {
             countEl.textContent = 'Your wishlist is empty';
             grid.innerHTML = `
-                <div class="col-span-full text-center py-20">
-                    <div class="w-24 h-24 bg-gradient-to-br from-rose-50 to-amber-50 dark:from-stone-800 dark:to-stone-800 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <svg class="w-12 h-12 text-rose-300 dark:text-rose-400/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="ws-empty">
+                    <div class="ws-empty-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
                         </svg>
                     </div>
-                    <h2 class="text-xl font-display font-bold text-stone-900 dark:text-stone-100 mb-2">Your wishlist is empty</h2>
-                    <p class="text-sm text-stone-400 dark:text-stone-500 mb-8 max-w-sm mx-auto">Save products you love by tapping the heart icon. Start exploring our marketplace!</p>
-                    <a href="/shop/marketplace" class="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-xl transition-all duration-200 shadow-lg shadow-amber-500/20">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <h2>Your wishlist is empty</h2>
+                    <p>Save products you love by tapping the heart icon. Start exploring our marketplace!</p>
+                    <a href="/shop/marketplace" class="ws-btn ws-btn-primary">
+                        <svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         Browse Products
                     </a>
                 </div>
@@ -92,8 +169,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (err) {
         document.getElementById('wishlist-grid').innerHTML = `
-            <div class="col-span-full text-center py-20">
-                <p class="text-red-500">Failed to load wishlist. Please try again.</p>
+            <div class="ws-empty">
+                <p style="color:#ef4444">Failed to load wishlist. Please try again.</p>
             </div>
         `;
     }

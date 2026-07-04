@@ -590,6 +590,30 @@ def reset_password_page(request: Request, token: str, db: Session = Depends(get_
     return _render_page("web/reset-password.html", request, db, {"token": token})
 
 
+# --- Contact ---
+@router.get("/contact", response_class=HTMLResponse)
+def contact_page(request: Request, db: Session = Depends(get_db)):
+    return _render_page("web/contact.html", request, db)
+
+
+# --- Shipping ---
+@router.get("/shipping", response_class=HTMLResponse)
+def shipping_page(request: Request, db: Session = Depends(get_db)):
+    return _render_page("web/shipping.html", request, db)
+
+
+# --- Returns ---
+@router.get("/returns", response_class=HTMLResponse)
+def returns_page(request: Request, db: Session = Depends(get_db)):
+    return _render_page("web/returns.html", request, db)
+
+
+# --- FAQ ---
+@router.get("/faq", response_class=HTMLResponse)
+def faq_page(request: Request, db: Session = Depends(get_db)):
+    return _render_page("web/faq.html", request, db)
+
+
 # --- Wishlist ---
 @router.get("/wishlist", response_class=HTMLResponse)
 def wishlist_page(request: Request, db: Session = Depends(get_db)):

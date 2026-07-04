@@ -1,30 +1,335 @@
 {% extends "admin/base.html" %}
 {% block title %}Earnings{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+<style>
+:root {
+  --amber-50: #fffbeb;
+  --amber-100: #fef3c7;
+  --amber-200: #fde68a;
+  --amber-500: #f59e0b;
+  --amber-600: #d97706;
+  --amber-700: #b45309;
+  --stone-50: #fafaf9;
+  --stone-100: #f5f5f4;
+  --stone-200: #e7e5e4;
+  --stone-300: #d6d3d1;
+  --stone-400: #a8a29e;
+  --stone-500: #78716c;
+  --stone-600: #57534e;
+  --stone-700: #44403c;
+  --stone-800: #292524;
+  --stone-900: #1c1917;
+  --emerald-500: #10b981;
+  --emerald-600: #059669;
+  --emerald-100: #d1fae5;
+  --red-500: #ef4444;
+  --red-600: #dc2626;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+}
+
+.er-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.er-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .er-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.er-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--stone-900);
+  margin: 0;
+}
+
+.er-subtitle {
+  font-size: 0.875rem;
+  color: var(--stone-500);
+  margin-top: 4px;
+}
+
+.er-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.er-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  min-height: 44px;
+  transition: all var(--transition-base);
+}
+
+.er-btn-amber {
+  background: var(--amber-600);
+  color: white;
+}
+
+.er-btn-amber:hover {
+  background: var(--amber-700);
+}
+
+.er-btn-amber:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.er-btn-ghost {
+  background: transparent;
+  color: var(--stone-500);
+  border: 1px solid var(--stone-200);
+}
+
+.er-btn-ghost:hover {
+  background: var(--stone-100);
+  border-color: var(--stone-300);
+}
+
+.er-btn-ghost:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.er-summary {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (min-width: 640px) {
+  .er-summary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.er-card-stat {
+  background: #fff;
+  border: 1px solid var(--stone-200);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.er-card-stat-label {
+  font-size: 0.875rem;
+  color: var(--stone-500);
+  margin: 0 0 8px 0;
+}
+
+.er-card-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--stone-900);
+  margin: 0;
+}
+
+.er-card-stat-value.amber {
+  color: var(--amber-600);
+}
+
+.er-card-stat-value.emerald {
+  color: var(--emerald-600);
+}
+
+.er-loading {
+  text-align: center;
+  padding: 48px 16px;
+}
+
+.er-spinner {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--amber-500);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: er-spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes er-spin {
+  to { transform: rotate(360deg); }
+}
+
+.er-loading-text {
+  font-size: 0.875rem;
+  color: var(--stone-500);
+}
+
+.er-empty {
+  text-align: center;
+  padding: 64px 16px;
+  background: #fff;
+  border: 1px solid var(--stone-200);
+  border-radius: var(--radius-lg);
+}
+
+.er-empty-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  color: var(--stone-300);
+}
+
+.er-empty-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--stone-900);
+  margin: 0 0 8px 0;
+}
+
+.er-empty-text {
+  font-size: 0.875rem;
+  color: var(--stone-500);
+}
+
+.er-table-wrapper {
+  background: #fff;
+  border: 1px solid var(--stone-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.er-table {
+  width: 100%;
+  font-size: 0.875rem;
+  border-collapse: collapse;
+}
+
+.er-table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-weight: 600;
+  color: var(--stone-500);
+  background: var(--stone-100);
+  border-bottom: 1px solid var(--stone-200);
+}
+
+.er-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--stone-100);
+  color: var(--stone-900);
+}
+
+.er-table tr:hover {
+  background: var(--stone-50);
+}
+
+.er-table .text-right {
+  text-align: right;
+}
+
+.er-table .text-center {
+  text-align: center;
+}
+
+.er-table .mono {
+  font-family: monospace;
+  font-size: 0.75rem;
+}
+
+.er-table .text-muted {
+  color: var(--stone-500);
+}
+
+.er-table .text-amber {
+  color: var(--amber-600);
+}
+
+.er-table .text-emerald {
+  color: var(--emerald-600);
+  font-weight: 600;
+}
+
+.er-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  text-transform: uppercase;
+}
+
+.er-badge-pending {
+  background: var(--amber-100);
+  color: var(--amber-600);
+}
+
+.er-badge-paid {
+  background: var(--emerald-100);
+  color: var(--emerald-600);
+}
+
+.er-badge-scheduled {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.er-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1px solid var(--stone-300);
+  accent-color: var(--amber-600);
+  cursor: pointer;
+}
+</style>
+
+<div class="er-container">
+    <div class="er-header">
         <div>
-            <h1 class="text-2xl font-display font-bold text-stone-900 dark:text-stone-100">Earnings</h1>
-            <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">Track your order earnings and payouts</p>
+            <h1 class="er-title">Earnings</h1>
+            <p class="er-subtitle">Track your order earnings and payouts</p>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="er-actions">
             {% if admin.role.value == 'RETAILER' %}
-            <button id="request-payout-btn" onclick="requestPayout()" class="btn-amber text-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button id="request-payout-btn" onclick="requestPayout()" class="er-btn er-btn-amber">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4l4-4-4-4m6 0V7a2 2 0 012-2h4a2 2 0 012 2v6a2 2 0 01-2 2h-4"/>
                 </svg>
                 Request Payout
             </button>
             {% else %}
-            <button id="mark-paid-btn" onclick="batchMarkPaid()" class="btn-amber text-sm hidden">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button id="mark-paid-btn" onclick="batchMarkPaid()" class="er-btn er-btn-amber" style="display:none">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
                 Mark Selected as Paid
             </button>
-            <button onclick="markAllPendingPaid()" class="btn-glass text-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button onclick="markAllPendingPaid()" class="er-btn er-btn-ghost">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 Mark All Pending as Paid
@@ -33,52 +338,50 @@
         </div>
     </div>
 
-    <!-- Summary Cards -->
-    <div id="summary-container" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div class="card-stat">
-            <p class="text-sm text-stone-500 dark:text-stone-400">Total Revenue</p>
-            <p id="total-amount" class="text-2xl font-bold text-stone-900 dark:text-stone-100">₦0.00</p>
+    <div id="summary-container" class="er-summary">
+        <div class="er-card-stat">
+            <p class="er-card-stat-label">Total Revenue</p>
+            <p id="total-amount" class="er-card-stat-value">₦0.00</p>
         </div>
-        <div class="card-stat">
-            <p class="text-sm text-stone-500 dark:text-stone-400">Platform Commission</p>
-            <p id="total-commission" class="text-2xl font-bold text-amber-600">₦0.00</p>
+        <div class="er-card-stat">
+            <p class="er-card-stat-label">Platform Commission</p>
+            <p id="total-commission" class="er-card-stat-value amber">₦0.00</p>
         </div>
-        <div class="card-stat">
-            <p class="text-sm text-stone-500 dark:text-stone-400">Net Earnings</p>
-            <p id="total-net" class="text-2xl font-bold text-emerald-600">₦0.00</p>
+        <div class="er-card-stat">
+            <p class="er-card-stat-label">Net Earnings</p>
+            <p id="total-net" class="er-card-stat-value emerald">₦0.00</p>
         </div>
     </div>
 
-    <!-- Earnings Table -->
-    <div id="earnings-loading" class="text-center py-12">
-        <div class="inline-block w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-        <p class="text-sm text-stone-500 dark:text-stone-400">Loading earnings...</p>
+    <div id="earnings-loading" class="er-loading">
+        <div class="er-spinner"></div>
+        <p class="er-loading-text">Loading earnings...</p>
     </div>
 
-    <div id="earnings-content" class="hidden">
-        <div id="earnings-empty" class="card-artisan text-center py-16 hidden">
-            <svg class="w-16 h-16 mx-auto text-stone-300 dark:text-stone-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div id="earnings-content" style="display:none">
+        <div id="earnings-empty" class="er-empty" style="display:none">
+            <svg class="er-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            <h3 class="text-lg font-semibold text-stone-900 dark:text-stone-100 mb-2">No Earnings Yet</h3>
-            <p class="text-sm text-stone-500 dark:text-stone-400">Earnings will appear here once customers place orders for your products</p>
+            <h3 class="er-empty-title">No Earnings Yet</h3>
+            <p class="er-empty-text">Earnings will appear here once customers place orders for your products</p>
         </div>
 
-        <div class="card-artisan overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
+        <div class="er-table-wrapper">
+            <div style="overflow-x:auto">
+                <table class="er-table">
                     <thead>
-                        <tr class="border-b border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50">
-                            <th class="text-left px-4 py-3 font-semibold text-stone-600 dark:text-stone-400 w-10">
-                                <input type="checkbox" id="select-all" onchange="toggleSelectAll()" class="rounded border-stone-300 dark:border-stone-600 text-amber-600 focus:ring-amber-500">
+                        <tr>
+                            <th style="width:48px">
+                                <input type="checkbox" id="select-all" onchange="toggleSelectAll()" class="er-checkbox">
                             </th>
-                            <th class="text-left px-4 py-3 font-semibold text-stone-600 dark:text-stone-400">Order</th>
-                            <th class="text-left px-4 py-3 font-semibold text-stone-600 dark:text-stone-400">Product</th>
-                            <th class="text-right px-4 py-3 font-semibold text-stone-600 dark:text-stone-400">Amount</th>
-                            <th class="text-right px-4 py-3 font-semibold text-stone-600 dark:text-stone-400">Commission</th>
-                            <th class="text-right px-4 py-3 font-semibold text-stone-600 dark:text-stone-400">Net</th>
-                            <th class="text-center px-4 py-3 font-semibold text-stone-600 dark:text-stone-400">Status</th>
-                            <th class="text-right px-4 py-3 font-semibold text-stone-600 dark:text-stone-400">Date</th>
+                            <th>Order</th>
+                            <th>Product</th>
+                            <th class="text-right">Amount</th>
+                            <th class="text-right">Commission</th>
+                            <th class="text-right">Net</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-right">Date</th>
                         </tr>
                     </thead>
                     <tbody id="earnings-table-body">
@@ -105,58 +408,52 @@ function loadEarnings() {
     const totalCommissionEl = document.getElementById('total-commission');
     const totalNetEl = document.getElementById('total-net');
 
-    loadingEl.classList.remove('hidden');
-    contentEl.classList.add('hidden');
+    loadingEl.style.display = 'block';
+    contentEl.style.display = 'none';
 
     fetch('/api/admin/earnings')
         .then(r => r.json())
         .then(data => {
-            loadingEl.classList.add('hidden');
-            contentEl.classList.remove('hidden');
+            loadingEl.style.display = 'none';
+            contentEl.style.display = 'block';
 
-            // Update summary
             totalAmountEl.textContent = `₦${(data.summary?.total_amount || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
             totalCommissionEl.textContent = `₦${(data.summary?.total_commission || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
             totalNetEl.textContent = `₦${(data.summary?.total_net || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
             const earnings = data.earnings || [];
             if (earnings.length === 0) {
-                emptyEl.classList.remove('hidden');
+                emptyEl.style.display = 'block';
                 return;
             }
-            emptyEl.classList.add('hidden');
+            emptyEl.style.display = 'none';
 
             tableBody.innerHTML = earnings.map(e => {
-                const statusBadge = {
-                    'PENDING': 'badge-amber',
-                    'PAID': 'badge-emerald',
-                    'SCHEDULED': 'badge-blue',
-                }[e.status] || 'badge-glass';
-
-                return `                        <tr class="border-b border-stone-100 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-800/30 transition-colors">
-                            <td class="px-4 py-3 w-10">
-                                ${e.status !== 'PAID' ? `<input type="checkbox" class="earning-checkbox rounded border-stone-300 dark:border-stone-600 text-amber-600 focus:ring-amber-500" value="${e.id}">` : ''}
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="font-mono text-xs text-stone-500">#${e.order_number || e.order_id?.slice(0, 8) || '—'}</span>
-                            </td>
-                            <td class="px-4 py-3 text-stone-700 dark:text-stone-300">${e.product_name || 'Unknown'}</td>
-                            <td class="px-4 py-3 text-right font-mono text-stone-700 dark:text-stone-300">₦${(e.amount || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                            <td class="px-4 py-3 text-right font-mono text-amber-600">₦${(e.commission || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                            <td class="px-4 py-3 text-right font-mono text-emerald-600 font-semibold">₦${(e.net_amount || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                            <td class="px-4 py-3 text-center">
-                                <span class="badge-glass text-xs ${statusBadge}">${e.status}</span>
-                            </td>
-                            <td class="px-4 py-3 text-right text-xs text-stone-500 dark:text-stone-400">
-                                ${e.created_at ? new Date(e.created_at).toLocaleDateString() : '—'}
-                            </td>
-                        </tr>
-                `;
+                const statusBadge = e.status === 'PAID' ? 'er-badge-paid' :
+                                   e.status === 'SCHEDULED' ? 'er-badge-scheduled' : 'er-badge-pending';
+                return `<tr>
+                    <td>
+                        ${e.status !== 'PAID' ? `<input type="checkbox" class="er-checkbox earning-checkbox" value="${e.id}">` : ''}
+                    </td>
+                    <td>
+                        <span class="mono text-muted">#${e.order_number || e.order_id?.slice(0, 8) || '—'}</span>
+                    </td>
+                    <td>${e.product_name || 'Unknown'}</td>
+                    <td class="text-right mono">₦${(e.amount || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td class="text-right mono text-amber">₦${(e.commission || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td class="text-right mono text-emerald">₦${(e.net_amount || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td class="text-center">
+                        <span class="er-badge ${statusBadge}">${e.status}</span>
+                    </td>
+                    <td class="text-right text-muted">
+                        ${e.created_at ? new Date(e.created_at).toLocaleDateString() : '—'}
+                    </td>
+                </tr>`;
             }).join('');
         })
         .catch(err => {
-            loadingEl.classList.add('hidden');
-            loadingEl.innerHTML = '<p class="text-sm text-red-500">Failed to load earnings. Please try again.</p>';
+            loadingEl.style.display = 'none';
+            loadingEl.innerHTML = '<p style="color:var(--red-500);font-size:0.875rem">Failed to load earnings. Please try again.</p>';
         });
 }
 
@@ -168,7 +465,8 @@ function toggleSelectAll() {
 
 function updateMarkPaidButton() {
     const checked = document.querySelectorAll('.earning-checkbox:checked');
-    document.getElementById('mark-paid-btn').classList.toggle('hidden', checked.length === 0);
+    const btn = document.getElementById('mark-paid-btn');
+    if (btn) btn.style.display = checked.length > 0 ? 'inline-flex' : 'none';
 }
 
 function batchMarkPaid() {
@@ -180,7 +478,7 @@ function batchMarkPaid() {
 
     const btn = document.getElementById('mark-paid-btn');
     btn.disabled = true;
-    btn.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Processing...';
+    btn.innerHTML = '<span class="er-spinner" style="width:16px;height:16px;border-width:2px;margin:0"></span> Processing...';
 
     fetch('/api/admin/earnings/batch-mark-paid', {
         method: 'POST',
@@ -198,7 +496,7 @@ function batchMarkPaid() {
     .catch(err => alert('Error: ' + err.message))
     .finally(() => {
         btn.disabled = false;
-        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Mark Selected as Paid';
+        btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Mark Selected as Paid';
     });
 }
 
@@ -207,7 +505,7 @@ function requestPayout() {
 
     const btn = document.getElementById('request-payout-btn');
     btn.disabled = true;
-    btn.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-amber-600 border-t-transparent rounded-full animate-spin"></span> Processing...';
+    btn.innerHTML = '<span class="er-spinner" style="width:16px;height:16px;border-width:2px;margin:0;border-top-color:transparent;border-color:var(--amber-500);border-top-color:transparent"></span> Processing...';
 
     fetch('/api/admin/earnings/request-payout', {
         method: 'POST',
@@ -218,7 +516,7 @@ function requestPayout() {
         if (data.success) {
             loadEarnings();
             if (data.marked > 0) {
-                alert(`✅ Requested payout for ${data.marked} earning(s) — ₦${(data.total_net || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}`);
+                alert(`Requested payout for ${data.marked} earning(s) — ₦${(data.total_net || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}`);
             }
         } else {
             alert('Failed: ' + (data.detail || 'Unknown error'));
@@ -227,7 +525,7 @@ function requestPayout() {
     .catch(err => alert('Error: ' + err.message))
     .finally(() => {
         btn.disabled = false;
-        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4l4-4-4-4m6 0V7a2 2 0 012-2h4a2 2 0 012 2v6a2 2 0 01-2 2h-4"/></svg> Request Payout';
+        btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4l4-4-4-4m6 0V7a2 2 0 012-2h4a2 2 0 012 2v6a2 2 0 01-2 2h-4"/></svg> Request Payout';
     });
 }
 
@@ -236,7 +534,7 @@ function markAllPendingPaid() {
 
     const btn = document.querySelector('button[onclick="markAllPendingPaid()"]');
     btn.disabled = true;
-    btn.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-amber-600 border-t-transparent rounded-full animate-spin"></span> Processing...';
+    btn.innerHTML = '<span class="er-spinner" style="width:16px;height:16px;border-width:2px;margin:0"></span> Processing...';
 
     fetch('/api/admin/earnings/batch-mark-paid', {
         method: 'POST',
@@ -254,7 +552,7 @@ function markAllPendingPaid() {
     .catch(err => alert('Error: ' + err.message))
     .finally(() => {
         btn.disabled = false;
-        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Mark All Pending as Paid';
+        btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Mark All Pending as Paid';
     });
 }
 </script>

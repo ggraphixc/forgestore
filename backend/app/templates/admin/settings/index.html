@@ -3,35 +3,563 @@
 {% block title %}Settings — ForgeStore Admin{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="flex items-center justify-between mb-8">
+<style>
+  :root {
+    --amber-50: #fffbeb;
+    --amber-100: #fef3c7;
+    --amber-200: #fde68a;
+    --amber-500: #f59e0b;
+    --amber-600: #d97706;
+    --amber-700: #b45309;
+    --stone-50: #fafaf9;
+    --stone-100: #f5f5f4;
+    --stone-200: #e7e5e4;
+    --stone-300: #d6d3d1;
+    --stone-400: #a8a29e;
+    --stone-500: #78716c;
+    --stone-600: #57534e;
+    --stone-700: #44403c;
+    --stone-800: #292524;
+    --stone-900: #1c1917;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 16px;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,.06);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,.08);
+    --transition-fast: 150ms ease;
+    --transition-base: 200ms ease;
+  }
+
+  .admin-page {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 0 1rem 5rem;
+  }
+
+  .admin-page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.5rem 0;
+    flex-wrap: wrap;
+  }
+  .admin-page-header h1 {
+    font-size: 1.625rem;
+    font-weight: 700;
+    color: var(--stone-900);
+    margin: 0;
+    letter-spacing: -0.015em;
+  }
+  .admin-page-header p {
+    font-size: 0.8125rem;
+    color: var(--stone-500);
+    margin: 0.25rem 0 0;
+    line-height: 1.4;
+  }
+
+  .admin-settings-tabs {
+    display: flex;
+    gap: 0.375rem;
+    margin-bottom: 1.75rem;
+    padding: 0.375rem;
+    background: var(--stone-100);
+    border-radius: var(--radius-lg);
+    overflow-x: auto;
+    position: sticky;
+    top: 5rem;
+    z-index: 40;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    border: 1px solid var(--stone-200);
+  }
+  .admin-settings-tabs::-webkit-scrollbar { display: none; }
+
+  .admin-settings-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.875rem;
+    min-height: 44px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    white-space: nowrap;
+    text-decoration: none;
+    transition: all var(--transition-fast);
+    border: 2px solid transparent;
+    flex-shrink: 0;
+    cursor: pointer;
+    user-select: none;
+  }
+  .admin-settings-tab:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
+  }
+  .admin-settings-tab.active {
+    border-color: var(--stone-800);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+  .admin-settings-tab svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+
+  .admin-settings-search-wrap {
+    position: relative;
+    margin-bottom: 1.5rem;
+  }
+  .admin-settings-search {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.75rem;
+    min-height: 44px;
+    background: #fff;
+    border: 1.5px solid var(--stone-300);
+    border-radius: var(--radius-lg);
+    font-size: 0.875rem;
+    color: var(--stone-900);
+    outline: none;
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+    box-sizing: border-box;
+  }
+  .admin-settings-search:focus {
+    border-color: var(--amber-600);
+    box-shadow: 0 0 0 3px rgba(217,119,6,0.15);
+  }
+  .admin-settings-search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: var(--stone-400);
+    pointer-events: none;
+  }
+  .admin-settings-clear-btn {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0.375rem;
+    min-width: 44px;
+    min-height: 44px;
+    background: none;
+    border: none;
+    color: var(--stone-400);
+    cursor: pointer;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+  }
+  .admin-settings-clear-btn.visible { display: flex; }
+  .admin-settings-clear-btn:hover {
+    color: var(--stone-600);
+    background: var(--stone-100);
+  }
+  .admin-settings-clear-btn svg { width: 16px; height: 16px; }
+
+  .admin-settings-section,
+  .admin-settings-card {
+    background: #fff;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--stone-200);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-base);
+  }
+  .admin-settings-section:hover,
+  .admin-settings-card:hover {
+    box-shadow: var(--shadow-md);
+  }
+  .admin-settings-section.hidden-section { display: none; }
+
+  .admin-settings-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--stone-100);
+    background: var(--stone-50);
+  }
+  .admin-settings-section-icon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: var(--radius-md);
+    background: var(--stone-200);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .admin-settings-section-icon svg {
+    width: 18px;
+    height: 18px;
+    color: var(--stone-500);
+  }
+  .admin-settings-section-header h2 {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--stone-900);
+    margin: 0;
+  }
+  .admin-settings-section-header p {
+    font-size: 0.75rem;
+    color: var(--stone-400);
+    margin: 0.125rem 0 0;
+    line-height: 1.3;
+  }
+  .admin-settings-section-count {
+    margin-left: auto;
+    font-size: 0.6875rem;
+    color: var(--stone-400);
+    font-family: ui-monospace, monospace;
+    white-space: nowrap;
+  }
+
+  .admin-settings-section-body > div {
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    border-bottom: 1px solid var(--stone-100);
+    transition: background var(--transition-fast);
+  }
+  .admin-settings-section-body > div:last-child { border-bottom: none; }
+  .admin-settings-section-body > div:hover { background: rgba(250,250,249,0.6); }
+  .admin-settings-section-body > div.hidden-field { display: none; }
+  .admin-settings-section-body > div.disabled-field { opacity: 0.5; pointer-events: none; }
+
+  .admin-settings-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .admin-settings-group .admin-settings-field {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .admin-settings-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--stone-800);
+    line-height: 1.4;
+  }
+  .admin-settings-desc {
+    font-size: 0.75rem;
+    color: var(--stone-400);
+    margin: 0.125rem 0 0;
+    line-height: 1.4;
+  }
+
+  .admin-settings-input,
+  .admin-settings-select,
+  .admin-settings-textarea {
+    width: 100%;
+    max-width: 340px;
+    padding: 0.625rem 0.875rem;
+    min-height: 44px;
+    background: #fff;
+    border: 1.5px solid var(--stone-300);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    color: var(--stone-900);
+    outline: none;
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+    box-sizing: border-box;
+    line-height: 1.4;
+  }
+  .admin-settings-input:focus,
+  .admin-settings-select:focus,
+  .admin-settings-textarea:focus {
+    border-color: var(--amber-600);
+    box-shadow: 0 0 0 3px rgba(217,119,6,0.15);
+  }
+  .admin-settings-input::placeholder { color: var(--stone-400); }
+
+  .admin-settings-select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2378716c' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 6l3.5 4 3.5-4z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2.25rem;
+  }
+
+  .admin-settings-textarea {
+    min-height: 72px;
+    resize: vertical;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+  }
+
+  .admin-settings-input.mono,
+  .admin-settings-select.mono {
+    font-family: ui-monospace, SFMono-Regular, monospace;
+  }
+
+  .admin-settings-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: flex-end;
+  }
+  .admin-settings-toggle input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .admin-settings-toggle-track {
+    width: 48px;
+    height: 26px;
+    background: var(--stone-300);
+    border-radius: 9999px;
+    position: relative;
+    transition: background 0.25s ease;
+    flex-shrink: 0;
+  }
+  .admin-settings-toggle input:checked + .admin-settings-toggle-track {
+    background: var(--amber-600);
+  }
+  .admin-settings-toggle-knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border: 2px solid var(--stone-400);
+    border-radius: 9999px;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .admin-settings-toggle input:checked + .admin-settings-toggle-track .admin-settings-toggle-knob {
+    transform: translateX(22px);
+    border-color: #fff;
+  }
+  .admin-settings-toggle-knob::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    background: var(--stone-300);
+    transition: background 0.25s;
+  }
+  .admin-settings-toggle input:checked + .admin-settings-toggle-track .admin-settings-toggle-knob::after {
+    background: var(--amber-600);
+  }
+
+  .admin-settings-password-wrap {
+    position: relative;
+    max-width: 340px;
+    width: 100%;
+  }
+  .admin-settings-password-wrap .admin-settings-input {
+    width: 100%;
+    padding-right: 2.75rem;
+  }
+  .admin-settings-eye-btn {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0.5rem;
+    min-width: 44px;
+    min-height: 44px;
+    background: none;
+    border: none;
+    color: var(--stone-400);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: color var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .admin-settings-eye-btn:hover { color: var(--stone-600); }
+  .admin-settings-eye-btn svg { width: 18px; height: 18px; }
+
+  .admin-settings-eye-hint {
+    font-size: 0.6875rem;
+    color: var(--stone-400);
+    text-align: right;
+    margin-top: 0.25rem;
+  }
+  .admin-settings-eye-hint.set { color: #16a34a; }
+
+  .admin-settings-save-section {
+    padding: 0.875rem 1.5rem;
+    background: var(--stone-50);
+    border-top: 1px solid var(--stone-100);
+    display: flex;
+    justify-content: flex-end;
+  }
+  .admin-settings-save-section button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    min-height: 44px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--stone-600);
+    background: #fff;
+    border: 1.5px solid var(--stone-200);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+  .admin-settings-save-section button:hover {
+    background: var(--stone-800);
+    color: #fff;
+    border-color: var(--stone-800);
+    box-shadow: var(--shadow-md);
+  }
+  .admin-settings-save-section button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .admin-settings-save {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    min-height: 44px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, var(--stone-700), var(--stone-800));
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    box-shadow: var(--shadow-md);
+    white-space: nowrap;
+  }
+  .admin-settings-save:hover {
+    background: linear-gradient(135deg, var(--stone-800), var(--stone-900));
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-1px);
+  }
+  .admin-settings-save:active {
+    transform: translateY(0);
+  }
+  .admin-settings-save:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .admin-settings-save svg { width: 18px; height: 18px; }
+  .admin-settings-save .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .admin-settings-control {
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 640px) {
+    .admin-page {
+      padding: 0 0.75rem 4rem;
+    }
+    .admin-page-header {
+      padding: 1rem 0;
+    }
+    .admin-page-header h1 {
+      font-size: 1.375rem;
+    }
+    .admin-settings-section-body > div {
+      padding: 0.875rem 1rem;
+    }
+    .admin-settings-section-header {
+      padding: 0.875rem 1rem;
+    }
+    .admin-settings-save-section {
+      padding: 0.75rem 1rem !important;
+    }
+    .admin-settings-group {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+    .admin-settings-input,
+    .admin-settings-select,
+    .admin-settings-textarea {
+      max-width: 100%;
+    }
+    .admin-settings-password-wrap {
+      max-width: 100%;
+    }
+    .admin-settings-tabs {
+      margin-left: -0.75rem;
+      margin-right: -0.75rem;
+      border-radius: 0;
+      padding: 0.375rem 0.75rem;
+    }
+  }
+  @media (min-width: 641px) {
+    .admin-settings-group {
+      flex-direction: row;
+    }
+  }
+</style>
+
+<div class="admin-page">
+    <div class="admin-page-header">
         <div>
-            <h1 class="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-stone-900">Settings</h1>
-            <p class="text-sm text-stone-500 mt-1">Manage all site configuration, organized by category</p>
+            <h1>Settings</h1>
+            <p>Manage all site configuration, organized by category</p>
         </div>
-        <button onclick="saveAllSettings()" id="save-all-btn" class="px-5 py-2.5 bg-gradient-to-r from-stone-800 to-stone-900 text-white text-sm font-bold rounded-xl hover:from-stone-900 hover:to-stone-950 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer inline-flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        <button onclick="saveAllSettings()" id="save-all-btn" class="admin-settings-save">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
             Save All Changes
         </button>
     </div>
 
     <!-- Category nav tabs -->
-    <div class="flex flex-wrap gap-1.5 sm:gap-2 mb-8 sticky top-20 bg-stone-50/90 backdrop-blur-sm py-3 -mx-4 px-4 rounded-2xl overflow-x-auto" style="z-index: var(--z-settings-tabs);">
+    <div class="admin-settings-tabs" id="settings-tabs">
         {% set categories_info = {
-            'global': {'icon': 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z', 'label': 'Global', 'color': 'bg-blue-100 text-blue-700'},
-            'design': {'icon': 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01', 'label': 'Design', 'color': 'bg-purple-100 text-purple-700'},
-            'technical': {'icon': 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z', 'label': 'Technical', 'color': 'bg-cyan-100 text-cyan-700'},
-            'optional': {'icon': 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z', 'label': 'Optional', 'color': 'bg-emerald-100 text-emerald-700'},
-            'developer': {'icon': 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4', 'label': 'Developer', 'color': 'bg-rose-100 text-rose-700'},
-            'logistics': {'icon': 'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0', 'label': 'Logistics', 'color': 'bg-amber-100 text-amber-700'},
-            'other': {'icon': 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4', 'label': 'Other', 'color': 'bg-stone-100 text-stone-700'},
+            'global': {'icon': 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z', 'label': 'Global', 'color': '#dbeafe', 'text': '#1d4ed8'},
+            'design': {'icon': 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01', 'label': 'Design', 'color': '#ede9fe', 'text': '#7c3aed'},
+            'technical': {'icon': 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z', 'label': 'Technical', 'color': '#cffafe', 'text': '#0891b2'},
+            'optional': {'icon': 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z', 'label': 'Optional', 'color': '#d1fae5', 'text': '#059669'},
+            'developer': {'icon': 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4', 'label': 'Developer', 'color': '#ffe4e6', 'text': '#e11d48'},
+            'logistics': {'icon': 'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0', 'label': 'Logistics', 'color': '#fef3c7', 'text': '#d97706'},
+            'other': {'icon': 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4', 'label': 'Other', 'color': '#f5f5f4', 'text': '#57534e'},
         } %}
         {% for cat_id, cat_info in categories_info.items() %}
-        <a href="#section-{{ cat_id }}" class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-[10px] sm:text-xs font-semibold rounded-lg {{ cat_info.color }} hover:opacity-80 transition-opacity whitespace-nowrap">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ cat_info.icon }}"/></svg>
+        <a href="#section-{{ cat_id }}" class="admin-settings-tab" style="background: {{ cat_info.color }}; color: {{ cat_info.text }};" data-tab="{{ cat_id }}">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ cat_info.icon }}"/></svg>
             {{ cat_info.label }}
         </a>
         {% endfor %}
+    </div>
+
+    <!-- Search / Filter -->
+    <div class="admin-settings-search-wrap">
+        <svg class="admin-settings-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" id="settings-search" class="admin-settings-search" placeholder="Search settings..." oninput="filterSettings(this.value)">
+        <button type="button" class="admin-settings-clear-btn" id="settings-clear-btn" onclick="document.getElementById('settings-search').value=''; filterSettings('');">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
     </div>
 
     <form id="settings-form">
@@ -65,78 +593,69 @@
         {% for cat_id, cat_settings in categorized_settings.items() %}
         {% set is_disabled = not accessible_categories.get(cat_id, false) %}
         {% set label_key = cat_id ~ '_desc' %}
-        <section id="section-{{ cat_id }}" class="scroll-mt-28 mb-8">
-            <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden hover:shadow-sm transition-shadow">
-                <!-- Section header -->
-                <div class="flex items-center gap-3 px-4 sm:px-6 py-4 sm:py-5 border-b border-stone-100 bg-stone-50/50">
-                    <div class="w-9 h-9 rounded-xl bg-stone-100 flex items-center justify-center flex-shrink-0">
-                        <svg class="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ category_icons[cat_id] }}"/></svg>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <h2 class="text-sm font-bold text-stone-900">{{ category_labels.get(cat_id, cat_id|title) }}</h2>
-                        <p class="text-xs text-stone-400">{{ category_labels.get(label_key, '') }}</p>
-                    </div>
-                    <span class="text-xs text-stone-400 font-mono">{{ cat_settings|length }} settings</span>
+        <section id="section-{{ cat_id }}" class="admin-settings-section admin-settings-card" data-category="{{ cat_id }}">
+            <!-- Section header -->
+            <div class="admin-settings-section-header">
+                <div class="admin-settings-section-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ category_icons[cat_id] }}"/></svg>
                 </div>
+                <div style="flex:1; min-width:0;">
+                    <h2>{{ category_labels.get(cat_id, cat_id|title) }}</h2>
+                    <p>{{ category_labels.get(label_key, '') }}</p>
+                </div>
+                <span class="admin-settings-section-count">{{ cat_settings|length }} settings</span>
+            </div>
 
-                <!-- Settings fields -->
-                <div class="divide-y divide-stone-100">
-                    {% for s in cat_settings %}
-                    <div class="px-4 sm:px-6 py-4 sm:py-5 hover:bg-stone-50/50 transition-colors {% if is_disabled %}opacity-60 pointer-events-none{% endif %}">
-                        <div class="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
-                            <div class="flex-1 min-w-0 w-full sm:w-auto">
-                                <label for="setting-{{ s.key }}" class="text-sm font-semibold text-stone-800">{{ s.label }}</label>
-                                {% if s.description %}
-                                <p class="text-xs text-stone-400 mt-0.5">{{ s.description }}</p>
-                                {% endif %}
-                            </div>
-                            <div class="w-full sm:max-w-xs flex-shrink-0">
-                                {% if s.type == 'select' and s.options %}
-                                <select id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" class="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all cursor-pointer">
-                                    {% for opt in s.options %}
-                                    <option value="{{ opt.value }}" {% if s.value == opt.value %}selected{% endif %}>{{ opt.label }}</option>
-                                    {% endfor %}
-                                </select>
-                                {% elif s.type == 'boolean' %}
-                                <div class="flex items-center justify-end">
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" class="sr-only peer" {% if s.value == 'true' or s.value == True %}checked{% endif %}>
-                                        <div class="w-11 h-6 bg-stone-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-amber-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
-                                    </label>
-                                </div>
-                                {% elif s.type == 'password' %}
-                                <div class="relative">
-                                    <input type="password" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-mono" autocomplete="off">
-                                    <button type="button" onclick="togglePasswordVisibility('setting-{{ s.key }}')" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-stone-400 hover:text-stone-600 transition-colors">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                    </button>
-                                </div>
-                                {% elif s.type == 'textarea' %}
-                                <textarea id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" rows="2" class="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-mono">{{ s.value }}</textarea>
-                                {% elif s.type == 'number' %}
-                                <input type="number" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-mono">
-                                {% else %}
-                                <input type="text" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all" {% if s.type == 'password' %}autocomplete="off"{% endif %}>
-                                {% endif %}
-                            </div>
+            <!-- Settings fields -->
+            <div class="admin-settings-section-body">
+                {% for s in cat_settings %}
+                <div data-search="{{ s.label|lower }} {{ s.key|lower }} {{ s.description|default('', true)|lower }}">
+                    <div class="admin-settings-group">
+                        <div class="admin-settings-field">
+                            <label for="setting-{{ s.key }}" class="admin-settings-label">{{ s.label }}</label>
+                            {% if s.description %}
+                            <p class="admin-settings-desc">{{ s.description }}</p>
+                            {% endif %}
                         </div>
-                        {% if s.type == 'password' %}
-                        <div class="mt-2 flex justify-end">
-                            <span class="text-[10px] text-stone-400{% if s.value %} text-emerald-500{% endif %}">
-                                {% if s.value %}🔒 Key is set{% else %}⚠️ Not configured{% endif %}
-                            </span>
+                        <div class="admin-settings-control">
+                            {% if s.type == 'select' and s.options %}
+                            <select id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" class="admin-settings-select admin-settings-input">
+                                {% for opt in s.options %}
+                                <option value="{{ opt.value }}" {% if s.value == opt.value %}selected{% endif %}>{{ opt.label }}</option>
+                                {% endfor %}
+                            </select>
+                            {% elif s.type == 'boolean' %}
+                            <label class="admin-settings-toggle">
+                                <input type="checkbox" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" {% if s.value == 'true' or s.value == True %}checked{% endif %}>
+                                <span class="admin-settings-toggle-track"><span class="admin-settings-toggle-knob"></span></span>
+                            </label>
+                            {% elif s.type == 'password' %}
+                            <div class="admin-settings-password-wrap">
+                                <input type="password" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="admin-settings-input mono" autocomplete="off">
+                                <button type="button" class="admin-settings-eye-btn" onclick="togglePasswordVisibility('setting-{{ s.key }}', this)" title="Show/hide value">
+                                    <svg class="eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    <svg class="eye-closed" style="display:none;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/></svg>
+                                </button>
+                            </div>
+                            <p class="admin-settings-eye-hint {% if s.value %}set{% endif %}">{% if s.value %}Key is set{% else %}Not configured{% endif %}</p>
+                            {% elif s.type == 'textarea' %}
+                            <textarea id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" rows="2" class="admin-settings-textarea admin-settings-input">{{ s.value }}</textarea>
+                            {% elif s.type == 'number' %}
+                            <input type="number" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="admin-settings-input mono">
+                            {% else %}
+                            <input type="text" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="admin-settings-input">
+                            {% endif %}
                         </div>
-                        {% endif %}
                     </div>
-                    {% endfor %}
                 </div>
+                {% endfor %}
+            </div>
 
-                <!-- Section save button -->
-                <div class="px-4 sm:px-6 py-3 bg-stone-50/50 border-t border-stone-100 flex justify-end">
-                    <button type="button" onclick="saveSection('{{ cat_id }}')" class="px-4 py-2 text-xs font-semibold text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 hover:text-stone-800 transition-all cursor-pointer">
-                        Save {{ category_labels.get(cat_id, cat_id|title) }}
-                    </button>
-                </div>
+            <!-- Section save button -->
+            <div class="admin-settings-save-section">
+                <button type="button" onclick="saveSection('{{ cat_id }}')">
+                    Save {{ category_labels.get(cat_id, cat_id|title) }}
+                </button>
             </div>
         </section>
         {% endfor %}
@@ -144,10 +663,15 @@
 </div>
 
 <script>
-function togglePasswordVisibility(id) {
+function togglePasswordVisibility(id, btn) {
     const el = document.getElementById(id);
     if (!el) return;
-    el.type = el.type === 'password' ? 'text' : 'password';
+    const isOpen = el.type === 'text';
+    el.type = isOpen ? 'password' : 'text';
+    const openEye = btn.querySelector('.eye-open');
+    const closedEye = btn.querySelector('.eye-closed');
+    if (openEye) openEye.style.display = isOpen ? '' : 'none';
+    if (closedEye) closedEye.style.display = isOpen ? 'none' : '';
 }
 
 function getSettingValue(el) {
@@ -155,17 +679,34 @@ function getSettingValue(el) {
     return el.value;
 }
 
+function filterSettings(query) {
+    const q = query.toLowerCase().trim();
+    const clearBtn = document.getElementById('settings-clear-btn');
+    if (clearBtn) clearBtn.classList.toggle('visible', q.length > 0);
+
+    document.querySelectorAll('[data-category]').forEach(section => {
+        let hasVisible = false;
+        section.querySelectorAll('[data-search]').forEach(row => {
+            const haystack = row.getAttribute('data-search') || '';
+            const match = !q || haystack.includes(q);
+            row.classList.toggle('hidden-field', !match);
+            if (match) hasVisible = true;
+        });
+        section.classList.toggle('hidden-section', !hasVisible);
+    });
+}
+
 async function saveSection(category) {
     const btn = event.currentTarget;
     btn.disabled = true;
-    btn.innerHTML = 'Saving...';
+    const originalText = btn.textContent;
+    btn.textContent = 'Saving...';
 
     const data = {};
-    document.querySelectorAll(`[data-setting]`).forEach(el => {
+    document.querySelectorAll('[data-setting]').forEach(el => {
         const key = el.getAttribute('data-setting');
-        // Determine which category this setting belongs to by finding its section
-        const section = el.closest('section');
-        if (section && section.id === `section-${category}`) {
+        const section = el.closest('[data-category]');
+        if (section && section.getAttribute('data-category') === category) {
             data[key] = getSettingValue(el);
         }
     });
@@ -178,7 +719,7 @@ async function saveSection(category) {
         });
         const result = await res.json();
         if (result.success) {
-            showToast(`${result.updated} setting(s) saved`, 'success');
+            showToast(result.updated + ' setting(s) saved', 'success');
         } else {
             showToast('Failed to save', 'error');
         }
@@ -186,17 +727,17 @@ async function saveSection(category) {
         showToast('Network error', 'error');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = 'Save ' + category.charAt(0).toUpperCase() + category.slice(1);
+        btn.textContent = originalText;
     }
 }
 
 async function saveAllSettings() {
     const btn = document.getElementById('save-all-btn');
     btn.disabled = true;
-    btn.innerHTML = '<svg class="animate-spin w-4 h-4 mr-2" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Saving...';
+    btn.innerHTML = '<svg class="animate-spin" fill="none" viewBox="0 0 24 24" width="18" height="18"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Saving...';
 
     const data = {};
-    document.querySelectorAll(`[data-setting]`).forEach(el => {
+    document.querySelectorAll('[data-setting]').forEach(el => {
         data[el.getAttribute('data-setting')] = getSettingValue(el);
     });
 
@@ -208,7 +749,7 @@ async function saveAllSettings() {
         });
         const result = await res.json();
         if (result.success) {
-            showToast(`All ${result.updated} settings saved successfully!`, 'success');
+            showToast('All ' + result.updated + ' settings saved successfully!', 'success');
         } else {
             showToast('Failed to save settings', 'error');
         }
@@ -216,8 +757,29 @@ async function saveAllSettings() {
         showToast('Network error', 'error');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Save All Changes';
+        btn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Save All Changes';
     }
 }
+
+// Highlight active tab on scroll
+(function() {
+    const tabs = document.querySelectorAll('.admin-settings-tab');
+    const sections = document.querySelectorAll('[data-category]');
+    if (!tabs.length || !sections.length) return;
+
+    function updateActiveTab() {
+        let current = '';
+        sections.forEach(sec => {
+            if (sec.getBoundingClientRect().top <= 120) {
+                current = sec.getAttribute('data-category');
+            }
+        });
+        tabs.forEach(tab => {
+            tab.classList.toggle('active', tab.getAttribute('data-tab') === current);
+        });
+    }
+    window.addEventListener('scroll', updateActiveTab, { passive: true });
+    updateActiveTab();
+})();
 </script>
 {% endblock %}

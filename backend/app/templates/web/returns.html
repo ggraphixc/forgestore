@@ -1,0 +1,298 @@
+{% extends "web/base.html" %}
+{% block title %}Returns Policy — ForgeStore{% endblock %}
+{% block content %}
+<style>
+:root {
+  --sp-amber-50: #fffbeb; --sp-amber-100: #fef3c7; --sp-amber-200: #fde68a;
+  --sp-amber-300: #fcd34d; --sp-amber-400: #fbbf24; --sp-amber-500: #f59e0b;
+  --sp-amber-600: #d97706; --sp-amber-700: #b45309; --sp-amber-800: #92400e;
+  --sp-stone-50: #fafaf9; --sp-stone-100: #f5f5f4; --sp-stone-200: #e7e5e3;
+  --sp-stone-300: #d6d3d1; --sp-stone-400: #a8a29e; --sp-stone-500: #78716c;
+  --sp-stone-600: #57534e; --sp-stone-700: #44403c; --sp-stone-800: #292524;
+  --sp-stone-900: #1c1917;
+  --sp-radius: 12px; --sp-radius-lg: 16px; --sp-radius-xl: 20px;
+  --sp-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --sp-shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.06);
+  --sp-shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.06);
+}
+:root { --sp-bg: #fff; --sp-surface: #fff; --sp-text: var(--sp-stone-900); --sp-text-muted: var(--sp-stone-500); --sp-border: var(--sp-stone-200); --sp-input-bg: var(--sp-stone-50); }
+.dark, :root.dark { --sp-bg: var(--sp-stone-900); --sp-surface: var(--sp-stone-800); --sp-text: var(--sp-stone-100); --sp-text-muted: var(--sp-stone-400); --sp-border: var(--sp-stone-700); --sp-input-bg: var(--sp-stone-800); }
+@media (prefers-color-scheme: dark) { :root:not(.light) { --sp-bg: var(--sp-stone-900); --sp-surface: var(--sp-stone-800); --sp-text: var(--sp-stone-100); --sp-text-muted: var(--sp-stone-400); --sp-border: var(--sp-stone-700); --sp-input-bg: var(--sp-stone-800); } }
+
+.support-page { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
+@media (min-width: 640px) { .support-page { padding: 3rem 1.5rem; } }
+@media (min-width: 1024px) { .support-page { padding: 4rem 2rem; } }
+
+.support-breadcrumb { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 2rem; font-size: 0.8125rem; }
+.support-breadcrumb a { color: var(--sp-amber-600); text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+.dark .support-breadcrumb a { color: var(--sp-amber-400); }
+.support-breadcrumb span { color: var(--sp-text-muted); }
+.support-breadcrumb .sep { color: var(--sp-stone-300); }
+
+.support-header { text-align: center; margin-bottom: 3rem; }
+.support-header-icon {
+  width: 64px; height: 64px; border-radius: var(--sp-radius-lg);
+  background: linear-gradient(135deg, var(--sp-amber-50), var(--sp-amber-100));
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1.25rem; border: 1px solid var(--sp-amber-200);
+}
+.dark .support-header-icon { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.25); }
+.support-header-icon svg { width: 28px; height: 28px; color: var(--sp-amber-600); }
+.dark .support-header-icon svg { color: var(--sp-amber-400); }
+.support-header h1 { font-size: 1.75rem; font-weight: 900; color: var(--sp-text); margin: 0 0 0.5rem; letter-spacing: -0.02em; }
+@media (min-width: 640px) { .support-header h1 { font-size: 2.25rem; } }
+.support-header p { color: var(--sp-text-muted); font-size: 0.9375rem; max-width: 480px; margin: 0 auto; line-height: 1.6; }
+
+.support-section { margin-bottom: 2.5rem; }
+.support-section-title {
+  font-size: 1.125rem; font-weight: 700; color: var(--sp-text);
+  margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;
+}
+.support-section-title svg { width: 20px; height: 20px; color: var(--sp-amber-500); flex-shrink: 0; }
+
+.support-content { color: var(--sp-text-muted); font-size: 0.9375rem; line-height: 1.7; }
+.support-content p { margin-bottom: 0.75rem; }
+
+.support-card {
+  background: var(--sp-surface); border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-lg); padding: 1.5rem;
+  box-shadow: var(--sp-shadow); transition: transform 0.2s, box-shadow 0.2s;
+}
+.support-card:hover { transform: translateY(-2px); box-shadow: var(--sp-shadow-md); }
+
+.support-eligibility-grid { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+@media (min-width: 640px) { .support-eligibility-grid { grid-template-columns: 1fr 1fr; } }
+
+.support-eligibility-card { padding: 1.5rem; }
+.support-eligibility-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; }
+.support-eligibility-icon {
+  width: 40px; height: 40px; border-radius: var(--sp-radius);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.support-eligibility-icon.eligible { background: #d1fae5; }
+.dark .support-eligibility-icon.eligible { background: rgba(16,185,129,0.15); }
+.support-eligibility-icon.eligible svg { color: #059669; width: 20px; height: 20px; }
+.dark .support-eligibility-icon.eligible svg { color: #34d399; }
+.support-eligibility-icon.not-eligible { background: #fee2e2; }
+.dark .support-eligibility-icon.not-eligible { background: rgba(239,68,68,0.15); }
+.support-eligibility-icon.not-eligible svg { color: #dc2626; width: 20px; height: 20px; }
+.dark .support-eligibility-icon.not-eligible svg { color: #f87171; }
+.support-eligibility-card h3 { font-size: 1.125rem; font-weight: 700; color: var(--sp-text); margin: 0; }
+.support-eligibility-list { list-style: none; padding: 0; margin: 0; }
+.support-eligibility-list li {
+  display: flex; align-items: flex-start; gap: 0.5rem;
+  font-size: 0.875rem; color: var(--sp-text-muted); padding: 0.375rem 0;
+}
+.support-eligibility-list li .icon { flex-shrink: 0; margin-top: 1px; }
+.support-eligibility-list li .icon.plus { color: #059669; }
+.dark .support-eligibility-list li .icon.plus { color: #34d399; }
+.support-eligibility-list li .icon.minus { color: #dc2626; }
+.dark .support-eligibility-list li .icon.minus { color: #f87171; }
+
+.support-steps-container { max-width: 640px; margin: 0 auto; }
+.support-step {
+  display: flex; gap: 1rem; padding-bottom: 1.5rem; position: relative;
+}
+.support-step:not(:last-child)::after {
+  content: ''; position: absolute; left: 15px; top: 40px; bottom: 0;
+  width: 2px; background: var(--sp-amber-500); opacity: 0.25;
+}
+.support-step-num {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--sp-amber-100); display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 0.8125rem; font-weight: 700; color: var(--sp-amber-700);
+  z-index: 1;
+}
+.dark .support-step-num { background: rgba(245,158,11,0.2); color: var(--sp-amber-400); }
+.support-step-content {
+  background: var(--sp-surface); border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius); padding: 1.125rem; flex: 1; box-shadow: var(--sp-shadow);
+}
+.support-step:last-child .support-step-num { background: var(--sp-amber-500); color: #fff; }
+.support-step-content h3 { font-size: 0.875rem; font-weight: 700; color: var(--sp-text); margin: 0 0 0.25rem; }
+.support-step-content p { font-size: 0.8125rem; color: var(--sp-text-muted); margin: 0; line-height: 1.5; }
+
+.support-two-col { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+@media (min-width: 640px) { .support-two-col { grid-template-columns: 1fr 1fr; } }
+
+.support-timeline-list { list-style: none; padding: 0; margin: 0; }
+.support-timeline-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0; }
+.support-timeline-item:not(:last-child) { border-bottom: 1px solid var(--sp-border); }
+.support-timeline-badge {
+  width: 44px; height: 44px; border-radius: var(--sp-radius);
+  background: var(--sp-stone-100); display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 0.6875rem; font-weight: 700; color: var(--sp-stone-600);
+}
+.dark .support-timeline-badge { background: var(--sp-stone-700); color: var(--sp-stone-300); }
+.support-timeline-badge.highlight { background: var(--sp-amber-100); color: var(--sp-amber-700); }
+.dark .support-timeline-badge.highlight { background: rgba(245,158,11,0.2); color: var(--sp-amber-400); }
+.support-timeline-item strong { display: block; font-size: 0.875rem; color: var(--sp-text); }
+.support-timeline-item span { font-size: 0.75rem; color: var(--sp-text-muted); }
+
+.support-cta {
+  background: linear-gradient(135deg, var(--sp-stone-900), var(--sp-stone-800));
+  border-radius: var(--sp-radius-xl); padding: 2rem; text-align: center;
+}
+.dark .support-cta { background: linear-gradient(135deg, var(--sp-amber-600), var(--sp-amber-500)); }
+.support-cta h2 { font-size: 1.25rem; font-weight: 900; color: #fff; margin: 0 0 0.5rem; }
+.dark .support-cta h2 { color: var(--sp-stone-950); }
+.support-cta p { color: var(--sp-stone-300); font-size: 0.875rem; margin: 0 0 1.25rem; max-width: 360px; margin-left: auto; margin-right: auto; }
+.dark .support-cta p { color: var(--sp-stone-800); }
+.support-cta-btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.75rem 1.5rem; font-size: 0.875rem; font-weight: 700;
+  background: #fff; color: var(--sp-stone-900); border: none; border-radius: var(--sp-radius);
+  text-decoration: none; min-height: 44px; transition: background 0.2s, transform 0.1s;
+  box-shadow: var(--sp-shadow-md);
+}
+.dark .support-cta-btn { background: var(--sp-stone-900); color: #fff; }
+.support-cta-btn:hover { opacity: 0.9; }
+.support-cta-btn:active { transform: scale(0.98); }
+.support-cta-btn svg { width: 16px; height: 16px; }
+</style>
+
+<div class="support-page">
+  <nav class="support-breadcrumb" aria-label="Breadcrumb">
+    <a href="/shop">Home</a>
+    <span class="sep">/</span>
+    <span aria-current="page">Returns Policy</span>
+  </nav>
+
+  <div class="support-header">
+    <div class="support-header-icon">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z"/></svg>
+    </div>
+    <h1>Returns Policy</h1>
+    <p>Not satisfied? Return your order hassle-free within 30 days.</p>
+  </div>
+
+  <!-- Eligibility -->
+  <div class="support-section">
+    <h2 class="support-section-title">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      Return Eligibility
+    </h2>
+  </div>
+
+  <div class="support-eligibility-grid">
+    <div class="support-card support-eligibility-card">
+      <div class="support-eligibility-header">
+        <div class="support-eligibility-icon eligible">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <h3>Eligible for Return</h3>
+      </div>
+      <ul class="support-eligibility-list">
+        <li><span class="icon plus">+</span>Items within 30 days of delivery</li>
+        <li><span class="icon plus">+</span>Unused and in original condition</li>
+        <li><span class="icon plus">+</span>Original packaging intact</li>
+        <li><span class="icon plus">+</span>Defective or damaged items</li>
+        <li><span class="icon plus">+</span>Wrong item received</li>
+      </ul>
+    </div>
+
+    <div class="support-card support-eligibility-card">
+      <div class="support-eligibility-header">
+        <div class="support-eligibility-icon not-eligible">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </div>
+        <h3>Non-Returnable Items</h3>
+      </div>
+      <ul class="support-eligibility-list">
+        <li><span class="icon minus">-</span>Personalized or custom-made items</li>
+        <li><span class="icon minus">-</span>Perishable goods (food, flowers)</li>
+        <li><span class="icon minus">-</span>Intimate or sanitary products</li>
+        <li><span class="icon minus">-</span>Digital downloads or gift cards</li>
+        <li><span class="icon minus">-</span>Items marked as "Final Sale"</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Return Process -->
+  <div class="support-section" style="margin-top:2.5rem;">
+    <h2 class="support-section-title">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      How to Return an Item
+    </h2>
+  </div>
+
+  <div class="support-steps-container">
+    <div class="support-step">
+      <div class="support-step-num">1</div>
+      <div class="support-step-content">
+        <h3>Initiate Your Return</h3>
+        <p>Log in to your account, go to <strong style="color:var(--sp-text);">My Orders</strong>, and click <strong style="color:var(--sp-text);">Request Return</strong> on the relevant order. Select the items and reason for return.</p>
+      </div>
+    </div>
+    <div class="support-step">
+      <div class="support-step-num">2</div>
+      <div class="support-step-content">
+        <h3>Get Your Return Label</h3>
+        <p>Once approved, you'll receive a prepaid return shipping label via email. Print it and attach it to your package.</p>
+      </div>
+    </div>
+    <div class="support-step">
+      <div class="support-step-num">3</div>
+      <div class="support-step-content">
+        <h3>Pack &amp; Ship</h3>
+        <p>Securely pack the item in its original packaging. Drop off at any authorized pickup point or schedule a free pickup.</p>
+      </div>
+    </div>
+    <div class="support-step">
+      <div class="support-step-num">4</div>
+      <div class="support-step-content">
+        <h3>Get Your Refund</h3>
+        <p>Once we receive and inspect your return, your refund will be processed within 3–5 business days to your original payment method.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Refund Timeline + Exchange -->
+  <div class="support-two-col" style="margin-top:2.5rem;">
+    <div class="support-card">
+      <h3 class="support-section-title" style="margin-bottom:0.75rem;">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Refund Timeline
+      </h3>
+      <ul class="support-timeline-list">
+        <li class="support-timeline-item">
+          <div class="support-timeline-badge">1–2d</div>
+          <div><strong>Return Received</strong><span>Package arrives at our facility</span></div>
+        </li>
+        <li class="support-timeline-item">
+          <div class="support-timeline-badge">2–3d</div>
+          <div><strong>Quality Inspection</strong><span>Item condition verified</span></div>
+        </li>
+        <li class="support-timeline-item">
+          <div class="support-timeline-badge highlight">3–5d</div>
+          <div><strong>Refund Processed</strong><span>Returned to original payment method</span></div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="support-card">
+      <h3 class="support-section-title" style="margin-bottom:0.75rem;">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+        Exchange Policy
+      </h3>
+      <ul class="support-content" style="list-style:none;padding:0;margin:0;">
+        <li style="padding:0.375rem 0;display:flex;gap:0.5rem;"><span style="color:var(--sp-amber-500);flex-shrink:0;">&#10003;</span>Exchange within 30 days of delivery</li>
+        <li style="padding:0.375rem 0;display:flex;gap:0.5rem;"><span style="color:var(--sp-amber-500);flex-shrink:0;">&#10003;</span>Same item in a different size or color</li>
+        <li style="padding:0.375rem 0;display:flex;gap:0.5rem;"><span style="color:var(--sp-amber-500);flex-shrink:0;">&#10003;</span>Price difference charged or refunded accordingly</li>
+        <li style="padding:0.375rem 0;display:flex;gap:0.5rem;"><span style="color:var(--sp-amber-500);flex-shrink:0;">&#10003;</span>Subject to stock availability</li>
+        <li style="padding:0.375rem 0;display:flex;gap:0.5rem;"><span style="color:var(--sp-amber-500);flex-shrink:0;">&#10003;</span>Contact support to initiate an exchange</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="support-cta" style="margin-top:2.5rem;">
+    <h2>Need to Start a Return?</h2>
+    <p>Our support team will guide you through the process.</p>
+    <a href="/shop/contact" class="support-cta-btn">
+      Contact Support
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+</div>
+{% endblock %}

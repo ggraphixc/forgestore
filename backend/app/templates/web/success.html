@@ -1,69 +1,128 @@
 {% extends "web/base.html" %}
 {% block title %}Order Confirmed — ForgeStore{% endblock %}
 {% block content %}
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 text-center reveal">
+<style>
+  :root {
+    --ws-amber-50: #fffbeb; --ws-amber-100: #fef3c7; --ws-amber-200: #fde68a;
+    --ws-amber-400: #fbbf24; --ws-amber-500: #f59e0b; --ws-amber-600: #d97706;
+    --ws-amber-700: #b45309; --ws-emerald-50: #ecfdf5; --ws-emerald-100: #d1fae5;
+    --ws-emerald-400: #34d399; --ws-emerald-500: #10b981; --ws-emerald-600: #059669;
+    --ws-emerald-900: #064e3b; --ws-stone-50: #fafaf9; --ws-stone-100: #f5f5f4;
+    --ws-stone-200: #e7e5e3; --ws-stone-400: #a8a29e; --ws-stone-500: #78716c;
+    --ws-stone-700: #44403c; --ws-stone-800: #292524; --ws-stone-900: #1c1917;
+    --ws-radius: 16px; --ws-radius-sm: 12px; --ws-radius-xs: 8px;
+    --ws-shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --ws-shadow-lg: 0 10px 25px -3px rgba(0,0,0,.08), 0 4px 6px rgba(0,0,0,.04);
+    --ws-transition: .25s cubic-bezier(.4,0,.2,1);
+  }
+  .ws-page { max-width: 56rem; margin: 0 auto; padding: 3rem 1rem; text-align: center; }
+  @media (min-width: 640px) { .ws-page { padding: 4rem 1.5rem; } }
+  .ws-success-icon { width: 80px; height: 80px; background: var(--ws-emerald-100); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; }
+  .ws-success-icon svg { width: 40px; height: 40px; color: var(--ws-emerald-600); }
+  .ws-page-title { font-size: 1.875rem; font-weight: 900; color: var(--ws-stone-900); margin-bottom: .75rem; }
+  @media (min-width: 640px) { .ws-page-title { font-size: 2.25rem; } }
+  .ws-page-title em { font-style: normal; background: linear-gradient(135deg, var(--ws-emerald-500), var(--ws-emerald-400)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .ws-page-sub { color: var(--ws-stone-500); margin-bottom: 1rem; }
+  .ws-order-id { display: inline-flex; align-items: center; gap: .5rem; padding: .5rem 1rem; background: var(--ws-stone-100); border-radius: var(--ws-radius-xs); font-size: .875rem; color: var(--ws-stone-500); font-family: monospace; margin-bottom: 2rem; }
+  .ws-order-card { text-align: left; background: #fff; border: 1px solid var(--ws-stone-200); border-radius: var(--ws-radius); padding: 1.5rem; margin-bottom: 2rem; }
+  .ws-order-card h3 { font-size: .875rem; font-weight: 700; color: var(--ws-stone-900); margin-bottom: 1rem; }
+  .ws-order-item { display: flex; align-items: center; gap: 1rem; padding: .75rem; background: var(--ws-stone-50); border-radius: var(--ws-radius-xs); margin-bottom: .75rem; }
+  .ws-order-item-img { width: 64px; height: 64px; border-radius: var(--ws-radius-xs); overflow: hidden; background: var(--ws-stone-100); flex-shrink: 0; }
+  .ws-order-item-img img { width: 100%; height: 100%; object-fit: cover; }
+  .ws-order-item-img-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--ws-stone-300); }
+  .ws-order-item-img-placeholder svg { width: 32px; height: 32px; }
+  .ws-order-item-info { flex: 1; min-width: 0; }
+  .ws-order-item-name { font-size: .875rem; font-weight: 600; color: var(--ws-stone-900); }
+  .ws-order-item-qty { font-size: .75rem; color: var(--ws-stone-500); }
+  .ws-order-item-price { font-size: .875rem; font-weight: 700; color: var(--ws-stone-900); font-family: monospace; }
+  .ws-order-total { display: flex; justify-content: space-between; padding-top: 1rem; margin-top: 1rem; border-top: 1px solid var(--ws-stone-200); }
+  .ws-order-total span:first-child { font-weight: 700; color: var(--ws-stone-900); }
+  .ws-order-total span:last-child { font-weight: 700; color: var(--ws-amber-600); font-family: monospace; font-size: 1.125rem; }
+  .ws-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
+  .ws-btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 44px; padding: 0 1.5rem; font-size: .875rem; font-weight: 600; border-radius: var(--ws-radius-sm); border: none; cursor: pointer; transition: all var(--ws-transition); text-decoration: none; }
+  .ws-btn-primary { background: linear-gradient(135deg, var(--ws-amber-500), var(--ws-amber-600)); color: #fff; box-shadow: 0 2px 8px rgba(245,158,11,.25); }
+  .ws-btn-primary:hover { background: linear-gradient(135deg, var(--ws-amber-600), var(--ws-amber-700)); box-shadow: 0 4px 12px rgba(245,158,11,.35); transform: translateY(-1px); }
+  .ws-btn-outline { background: transparent; color: var(--ws-stone-900); border: 1.5px solid var(--ws-stone-200); }
+  .ws-btn-outline:hover { border-color: var(--ws-amber-500); color: var(--ws-amber-700); }
+  .ws-no-order-icon { width: 80px; height: 80px; background: var(--ws-amber-100); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; }
+  .ws-no-order-icon svg { width: 40px; height: 40px; color: var(--ws-amber-500); }
+  @media (prefers-color-scheme: dark) {
+    .ws-page-title { color: var(--ws-stone-100); }
+    .ws-page-sub { color: var(--ws-stone-400); }
+    .ws-order-id { background: var(--ws-stone-800); color: var(--ws-stone-400); }
+    .ws-order-card { background: var(--ws-stone-800); border-color: var(--ws-stone-700); }
+    .ws-order-card h3 { color: var(--ws-stone-100); }
+    .ws-order-item { background: var(--ws-stone-700); }
+    .ws-order-item-img { background: var(--ws-stone-700); }
+    .ws-order-item-name { color: var(--ws-stone-100); }
+    .ws-order-item-price { color: var(--ws-stone-100); }
+    .ws-order-total { border-color: var(--ws-stone-700); }
+    .ws-order-total span:first-child { color: var(--ws-stone-100); }
+    .ws-success-icon { background: rgba(16,185,129,.2); }
+    .ws-btn-outline { color: var(--ws-stone-100); border-color: var(--ws-stone-700); }
+    .ws-btn-outline:hover { border-color: var(--ws-amber-600); color: var(--ws-amber-400); }
+    .ws-no-order-icon { background: rgba(245,158,11,.15); }
+  }
+</style>
+
+<div class="ws-page">
   {% if order %}
-  <!-- Success Icon -->
-  <div class="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-    <svg class="w-10 h-10 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <div class="ws-success-icon">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
     </svg>
   </div>
 
-  <h1 class="text-3xl sm:text-4xl font-black text-stone-900 dark:text-stone-100 font-display mb-3">
-    Order <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-emerald-400">Confirmed</span>
-  </h1>
-  <p class="text-stone-500 dark:text-stone-400 mb-4">Thank you for your order! A confirmation has been sent to your email.</p>
+  <h1 class="ws-page-title">Order <em>Confirmed</em></h1>
+  <p class="ws-page-sub">Thank you for your order! A confirmation has been sent to your email.</p>
 
-  <div class="inline-flex items-center gap-2 px-4 py-2 bg-stone-100 dark:bg-stone-800 rounded-xl text-sm text-stone-600 dark:text-stone-400 font-mono mb-8">
-    Order #{{ order.id[:12] }}
-  </div>
+  <div class="ws-order-id">Order #{{ order.id[:12] }}</div>
 
-  <!-- Order Details -->
-  <div class="text-left bg-white dark:bg-stone-800/60 rounded-2xl border border-stone-200 dark:border-stone-700/50 p-6 mb-8">
-    <h3 class="text-sm font-bold text-stone-900 dark:text-stone-100 mb-4">Order Summary</h3>
-    <div class="space-y-3">
+  <div class="ws-order-card">
+    <h3>Order Summary</h3>
+    <div>
       {% for item in order_items %}
       {% set p = product_map.get(item.product_id) %}
-      <div class="flex items-center gap-4 p-3 bg-stone-50 dark:bg-stone-700/30 rounded-xl">
-        <div class="w-16 h-16 rounded-xl overflow-hidden bg-stone-100 dark:bg-stone-700 flex-shrink-0">
+      <div class="ws-order-item">
+        <div class="ws-order-item-img">
           {% if p and p.images and p.images|length > 0 %}
-          <img src="{{ p.images[0] }}" alt="{{ p.name }}" class="w-full h-full object-cover">
+          <img src="{{ p.images[0] }}" alt="{{ p.name }}">
           {% else %}
-          <div class="w-full h-full flex items-center justify-center text-stone-300 dark:text-stone-500">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          <div class="ws-order-item-img-placeholder">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
           </div>
           {% endif %}
         </div>
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">{{ p.name if p else 'Product' }}</p>
-          <p class="text-xs text-stone-500 dark:text-stone-400">Qty: {{ item.quantity }}</p>
+        <div class="ws-order-item-info">
+          <p class="ws-order-item-name">{{ p.name if p else 'Product' }}</p>
+          <p class="ws-order-item-qty">Qty: {{ item.quantity }}</p>
         </div>
-        <span class="text-sm font-bold text-stone-900 dark:text-stone-100 font-mono">{{ format_price(item.price * item.quantity, currency) }}</span>
+        <span class="ws-order-item-price">{{ format_price(item.price * item.quantity, currency) }}</span>
       </div>
       {% endfor %}
     </div>
-    <div class="pt-4 mt-4 border-t border-stone-200 dark:border-stone-700 flex justify-between">
-      <span class="font-bold text-stone-900 dark:text-stone-100">Total</span>
-      <span class="font-bold text-amber-600 dark:text-amber-400 font-mono text-lg">{{ format_price(order.total_amount, currency) }}</span>
+    <div class="ws-order-total">
+      <span>Total</span>
+      <span>{{ format_price(order.total_amount, currency) }}</span>
     </div>
   </div>
 
-  <!-- Actions -->
-  <div class="flex flex-wrap justify-center gap-4">
-    <a href="/shop/account/orders" class="btn-forge text-sm">View My Orders</a>
-    <a href="/shop/marketplace" class="btn-outline text-sm">Continue Shopping</a>
+  <div class="ws-actions">
+    <a href="/shop/account/orders" class="ws-btn ws-btn-primary">View My Orders</a>
+    <a href="/shop/marketplace" class="ws-btn ws-btn-outline">Continue Shopping</a>
   </div>
 
   {% else %}
-  <div class="w-20 h-20 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-    <svg class="w-10 h-10 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <div class="ws-no-order-icon">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
     </svg>
   </div>
-  <h1 class="text-3xl font-black text-stone-900 dark:text-stone-100 mb-3">No order found</h1>
-  <p class="text-stone-500 dark:text-stone-400 mb-8">This order confirmation link may be invalid or expired.</p>
-  <a href="/shop/marketplace" class="btn-forge text-sm">Browse Products</a>
+  <h1 class="ws-page-title">No order found</h1>
+  <p class="ws-page-sub">This order confirmation link may be invalid or expired.</p>
+  <div class="ws-actions">
+    <a href="/shop/marketplace" class="ws-btn ws-btn-primary">Browse Products</a>
+  </div>
   {% endif %}
 </div>
 {% endblock %}

@@ -1,83 +1,102 @@
 {% extends "web/base.html" %}
 {% block title %}Order Tracking — ForgeStore{% endblock %}
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-stone-50 via-white to-amber-50/20 dark:from-stone-950 dark:via-stone-900 dark:to-amber-950/20">
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sm:mb-10 reveal">
-      <div>
-        <div class="flex items-center gap-3 mb-2">
-          <a href="/shop/account" class="p-2 -ml-2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-all" aria-label="Back to dashboard">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 12H5m7-7l-7 7 7 7"/></svg>
-          </a>
-          <h1 class="text-2xl sm:text-3xl lg:text-4xl font-display font-black text-stone-900 dark:text-stone-100">Order <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Tracking</span></h1>
+<style>
+  .acct-page{padding:2rem 1rem;max-width:72rem;margin:0 auto}
+  .acct-header{display:flex;flex-direction:column;gap:.25rem}
+  .acct-header h1{font-size:1.875rem;font-weight:800;color:var(--color-stone-900)}
+  .acct-header p{font-size:.875rem;color:var(--color-stone-500)}
+  .acct-card{background:var(--color-white);border:1px solid var(--color-stone-200);border-radius:1rem;padding:1.5rem}
+  .acct-form-input{width:100%;padding:.75rem 1rem;border:1px solid var(--color-stone-200);border-radius:.75rem;font-size:.875rem;color:var(--color-stone-900);background:var(--color-white);min-height:44px;transition:border-color .15s;box-sizing:border-box}
+  .acct-form-input:focus{outline:none;border-color:var(--color-amber-400);box-shadow:0 0 0 3px rgba(245,158,11,.1)}
+  .acct-form-input::placeholder{color:var(--color-stone-400)}
+  .acct-btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.5rem;border-radius:.75rem;font-size:.875rem;font-weight:600;min-height:44px;border:none;cursor:pointer;transition:all .15s;text-decoration:none}
+  .acct-btn--primary{background:var(--color-amber-600);color:white}
+  .acct-btn--primary:hover{background:var(--color-amber-700)}
+  .acct-badge{display:inline-flex;align-items:center;padding:.25rem .75rem;border-radius:9999px;font-size:.75rem;font-weight:600}
+  .acct-badge--amber{background:var(--color-amber-100);color:var(--color-amber-700)}
+  .acct-badge--emerald{background:var(--color-emerald-100);color:var(--color-emerald-700)}
+  .acct-badge--blue{background:var(--color-blue-100);color:var(--color-blue-700)}
+  .acct-badge--red{background:var(--color-red-100);color:var(--color-red-700)}
+  .acct-badge--stone{background:var(--color-stone-100);color:var(--color-stone-600)}
+  .back-link{display:inline-flex;align-items:center;gap:.5rem;font-size:.875rem;color:var(--color-stone-500);text-decoration:none;min-height:44px;margin-bottom:1rem}
+  .back-link:hover{color:var(--color-stone-900)}
+  .timeline-dot{width:.75rem;height:.75rem;border-radius:50%;flex-shrink:0}
+  .timeline-dot--active{background:var(--color-amber-500);box-shadow:0 0 0 4px var(--color-amber-100)}
+  .timeline-dot--inactive{background:var(--color-stone-300)}
+  .timeline-line{width:2px;flex:1;margin-top:.25rem}
+  .timeline-line--inactive{background:var(--color-stone-200)}
+  .order-quick-btn{display:flex;align-items:center;justify-content:space-between;padding:1rem;border-radius:.75rem;background:var(--color-stone-50);border:1px solid var(--color-stone-200);text-decoration:none;min-height:44px;transition:all .15s;text-align:left;width:100%}
+  .order-quick-btn:hover{background:var(--color-stone-100);border-color:var(--color-amber-200)}
+  .spinner{width:2rem;height:2rem;border:2px solid var(--color-amber-500);border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;margin:0 auto .75rem}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media(min-width:768px){.acct-page{padding:2.5rem 1.5rem}.acct-header h1{font-size:2.25rem}}
+</style>
+
+<div class="acct-page">
+  <div class="acct-header" style="margin-bottom:2rem">
+    <a href="/shop/account" class="back-link">
+      <svg style="width:1.25rem;height:1.25rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 12H5m7-7l-7 7 7 7"/></svg>
+      Back to Account
+    </a>
+    <h1>Order <span style="color:var(--color-amber-600)">Tracking</span></h1>
+    <p>Track your shipments in real-time</p>
+  </div>
+
+  <div class="acct-card" style="margin-bottom:2rem">
+    <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:1rem">Track a Shipment</p>
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+      <div style="flex:1;min-width:0;position:relative">
+        <svg style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);width:1rem;height:1rem;color:var(--color-stone-400);pointer-events:none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input id="tracking-input" type="text" placeholder="Enter tracking number or order number..." class="acct-form-input" style="padding-left:2.75rem">
+      </div>
+      <button onclick="trackOrder()" class="acct-btn acct-btn--primary" style="white-space:nowrap">
+        <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        Track
+      </button>
+    </div>
+  </div>
+
+  <div class="acct-card" style="margin-bottom:1.5rem">
+    <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:1.25rem">Your Recent Orders</p>
+    <div id="recent-orders">
+      <div id="recent-loading" style="text-align:center;padding:2rem 0">
+        <div class="spinner"></div>
+        <p style="font-size:.75rem;color:var(--color-stone-400)">Loading orders...</p>
+      </div>
+      <div id="recent-list" style="display:none;flex-direction:column;gap:.75rem"></div>
+      <div id="recent-empty" style="display:none;text-align:center;padding:2rem 0">
+        <div style="width:3.5rem;height:3.5rem;background:var(--color-stone-100);border-radius:.75rem;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
+          <svg style="width:1.75rem;height:1.75rem;color:var(--color-stone-400)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         </div>
-        <p class="text-sm text-stone-500 dark:text-stone-400 ml-2">Track your shipments in real-time</p>
+        <p style="font-size:.875rem;color:var(--color-stone-500)">No orders yet</p>
+        <p style="font-size:.75rem;color:var(--color-stone-400);margin-top:.25rem">Your orders will appear here once you make a purchase.</p>
       </div>
     </div>
+  </div>
 
-    <!-- Lookup Card -->
-    <div class="card-artisan p-6 sm:p-8 mb-8 reveal">
-      <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-stone-400 dark:text-stone-500 mb-4">Track a Shipment</h2>
-      <div class="flex flex-col sm:flex-row gap-3">
-        <div class="flex-1 relative">
-          <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
-          <input id="tracking-input" type="text" placeholder="Enter tracking number or order number..." class="input-forge pl-11">
+  <div id="tracking-result" style="display:none;margin-top:2rem">
+    <div class="acct-card" id="tracking-info">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+        <div>
+          <p style="font-size:.875rem;font-weight:700;color:var(--color-stone-900)" id="tracking-order-number">—</p>
+          <p style="font-size:.75rem;color:var(--color-stone-500)" id="tracking-carrier">—</p>
         </div>
-        <button onclick="trackOrder()" class="btn-forge whitespace-nowrap">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-          Track
-        </button>
+        <span id="tracking-status" class="acct-badge acct-badge--amber">—</span>
       </div>
+      <div id="tracking-timeline" style="display:flex;flex-direction:column;gap:1rem"></div>
     </div>
+  </div>
 
-    <!-- Quick Access: Recent Orders -->
-    <div class="card-artisan p-5 sm:p-6 reveal">
-      <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-stone-400 dark:text-stone-500 mb-5">Your Recent Orders</h2>
-      <div id="recent-orders">
-        <div id="recent-loading" class="text-center py-8">
-          <div class="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-          <p class="text-xs text-stone-400">Loading orders...</p>
-        </div>
-        <div id="recent-list" class="space-y-3 hidden"></div>
-        <div id="recent-empty" class="hidden text-center py-8">
-          <div class="w-14 h-14 bg-stone-100 dark:bg-stone-800 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <svg class="w-7 h-7 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          </div>
-          <p class="text-sm text-stone-500 dark:text-stone-400">No orders yet</p>
-          <p class="text-xs text-stone-400 mt-1">Your orders will appear here once you make a purchase.</p>
-        </div>
+  <div id="tracking-error" style="display:none;margin-top:2rem">
+    <div class="acct-card" style="text-align:center">
+      <div style="width:3.5rem;height:3.5rem;background:var(--color-red-50);border-radius:.75rem;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
+        <svg style="width:1.75rem;height:1.75rem;color:var(--color-red-500)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
       </div>
-    </div>
-
-    <!-- Tracking Result (hidden initially) -->
-    <div id="tracking-result" class="hidden mt-8 space-y-6">
-      <div class="card-artisan p-5 sm:p-6 reveal" id="tracking-info">
-        <div class="flex items-center justify-between mb-5">
-          <div>
-            <h3 class="text-sm font-bold text-stone-900 dark:text-stone-100" id="tracking-order-number">—</h3>
-            <p class="text-xs text-stone-500 dark:text-stone-400" id="tracking-carrier">—</p>
-          </div>
-          <span id="tracking-status" class="badge-amber">—</span>
-        </div>
-        <!-- Timeline -->
-        <div id="tracking-timeline" class="space-y-4">
-          <!-- Populated by JS -->
-        </div>
-      </div>
-    </div>
-
-    <!-- Error state -->
-    <div id="tracking-error" class="hidden mt-8">
-      <div class="card-artisan p-6 text-center">
-        <div class="w-14 h-14 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-          <svg class="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
-        </div>
-        <p class="text-sm font-semibold text-stone-900 dark:text-stone-100 mb-1">Tracking Not Found</p>
-        <p class="text-xs text-stone-500 dark:text-stone-400" id="tracking-error-msg">We couldn't find any shipment matching that tracking number.</p>
-      </div>
+      <p style="font-size:.875rem;font-weight:600;color:var(--color-stone-900);margin-bottom:.25rem">Tracking Not Found</p>
+      <p style="font-size:.75rem;color:var(--color-stone-500)" id="tracking-error-msg">We couldn't find any shipment matching that tracking number.</p>
     </div>
   </div>
 </div>
@@ -87,41 +106,41 @@ async function loadRecentOrders() {
   try {
     const res = await fetch('/api/orders');
     if (!res.ok) {
-      document.getElementById('recent-loading').classList.add('hidden');
-      document.getElementById('recent-empty').classList.remove('hidden');
+      document.getElementById('recent-loading').style.display = 'none';
+      document.getElementById('recent-empty').style.display = 'block';
       return;
     }
     const data = await res.json();
     const orders = data.orders || [];
 
-    document.getElementById('recent-loading').classList.add('hidden');
+    document.getElementById('recent-loading').style.display = 'none';
     const list = document.getElementById('recent-list');
     const empty = document.getElementById('recent-empty');
 
     if (orders.length === 0) {
-      empty.classList.remove('hidden');
+      empty.style.display = 'block';
       return;
     }
 
-    list.classList.remove('hidden');
+    list.style.display = 'flex';
     list.innerHTML = orders.slice(0, 5).map(o => {
       const date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'}) : '—';
-      return `<button onclick="lookupOrder('${o.id}')" class="w-full flex items-center justify-between p-4 rounded-xl bg-stone-50 dark:bg-stone-800/60 hover:bg-stone-100 dark:hover:bg-stone-800 border border-stone-200 dark:border-stone-700 hover:border-amber-200 dark:hover:border-amber-700/50 transition-all text-left group">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-            <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"/></svg>
+      return `<button onclick="lookupOrder('${o.id}')" class="order-quick-btn">
+        <div style="display:flex;align-items:center;gap:.75rem">
+          <div style="width:2.5rem;height:2.5rem;background:var(--color-amber-50);border-radius:.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg style="width:1.25rem;height:1.25rem;color:var(--color-amber-600)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"/></svg>
           </div>
           <div>
-            <p class="text-sm font-semibold text-stone-800 dark:text-stone-200">${o.order_number}</p>
-            <p class="text-xs text-stone-400">${date}</p>
+            <p style="font-size:.875rem;font-weight:600;color:var(--color-stone-800)">${o.order_number}</p>
+            <p style="font-size:.75rem;color:var(--color-stone-400)">${date}</p>
           </div>
         </div>
-        <svg class="w-4 h-4 text-stone-300 dark:text-stone-600 group-hover:text-amber-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        <svg style="width:1rem;height:1rem;color:var(--color-stone-300)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
       </button>`;
     }).join('');
   } catch {
-    document.getElementById('recent-loading').classList.add('hidden');
-    document.getElementById('recent-empty').classList.remove('hidden');
+    document.getElementById('recent-loading').style.display = 'none';
+    document.getElementById('recent-empty').style.display = 'block';
   }
 }
 
@@ -132,13 +151,12 @@ async function trackOrder() {
 }
 
 async function lookupOrder(query) {
-  document.getElementById('tracking-result').classList.add('hidden');
-  document.getElementById('tracking-error').classList.add('hidden');
+  document.getElementById('tracking-result').style.display = 'none';
+  document.getElementById('tracking-error').style.display = 'none';
 
   try {
     const res = await fetch(`/api/orders/${encodeURIComponent(query)}/tracking`);
     if (!res.ok) {
-      // Try order number lookup
       const res2 = await fetch(`/api/orders/${encodeURIComponent(query)}`);
       if (res2.ok) {
         const order = await res2.json();
@@ -152,15 +170,15 @@ async function lookupOrder(query) {
           return;
         }
       }
-      document.getElementById('tracking-result').classList.add('hidden');
-      document.getElementById('tracking-error').classList.remove('hidden');
+      document.getElementById('tracking-result').style.display = 'none';
+      document.getElementById('tracking-error').style.display = 'block';
       document.getElementById('tracking-error-msg').textContent = 'We couldn\'t find any shipment matching "' + query + '".';
       return;
     }
     const data = await res.json();
     showTrackingResult(data);
   } catch {
-    document.getElementById('tracking-error').classList.remove('hidden');
+    document.getElementById('tracking-error').style.display = 'block';
     document.getElementById('tracking-error-msg').textContent = 'Network error. Please try again.';
   }
 }
@@ -171,17 +189,17 @@ function showTrackingResult(data) {
 
   const statusEl = document.getElementById('tracking-status');
   const s = (data.status || '').toLowerCase();
-  statusEl.className = 'badge';
+  statusEl.className = 'acct-badge';
   if (s.includes('delivered') || s.includes('completed')) {
-    statusEl.classList.add('badge-emerald');
+    statusEl.classList.add('acct-badge--emerald');
   } else if (s.includes('shipped')) {
-    statusEl.classList.add('badge-blue');
+    statusEl.classList.add('acct-badge--blue');
   } else if (s.includes('cancelled') || s.includes('refunded')) {
-    statusEl.classList.add('badge-red');
+    statusEl.classList.add('acct-badge--red');
   } else if (s.includes('processing')) {
-    statusEl.classList.add('badge-amber');
+    statusEl.classList.add('acct-badge--amber');
   } else {
-    statusEl.classList.add('badge-stone');
+    statusEl.classList.add('acct-badge--stone');
   }
   statusEl.textContent = (data.status || 'Pending').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
@@ -191,22 +209,22 @@ function showTrackingResult(data) {
     timeline.innerHTML = events.map((ev, i) => {
       const isLast = i === events.length - 1;
       const date = ev.date ? new Date(ev.date).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'}) : '—';
-      return `<div class="flex gap-3">
-        <div class="flex flex-col items-center">
-          <div class="w-3 h-3 rounded-full ${isLast ? 'bg-amber-500 ring-4 ring-amber-100 dark:ring-amber-900/30' : 'bg-stone-300 dark:bg-stone-600'}"></div>
-          ${!isLast ? '<div class="w-0.5 flex-1 bg-stone-200 dark:bg-stone-700 mt-1"></div>' : ''}
+      return `<div style="display:flex;gap:.75rem">
+        <div style="display:flex;flex-direction:column;align-items:center">
+          <div class="timeline-dot ${isLast ? 'timeline-dot--active' : 'timeline-dot--inactive'}"></div>
+          ${!isLast ? '<div class="timeline-line timeline-line--inactive"></div>' : ''}
         </div>
-        <div class="${!isLast ? 'pb-4' : ''}">
-          <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">${ev.description || ev.status}</p>
-          <p class="text-xs text-stone-500 dark:text-stone-400">${date}</p>
+        <div ${!isLast ? 'style="padding-bottom:1rem"' : ''}>
+          <p style="font-size:.875rem;font-weight:600;color:var(--color-stone-900)">${ev.description || ev.status}</p>
+          <p style="font-size:.75rem;color:var(--color-stone-500)">${date}</p>
         </div>
       </div>`;
     }).join('');
   } else {
-    timeline.innerHTML = '<p class="text-sm text-stone-500 dark:text-stone-400">No tracking events available yet.</p>';
+    timeline.innerHTML = '<p style="font-size:.875rem;color:var(--color-stone-500)">No tracking events available yet.</p>';
   }
 
-  document.getElementById('tracking-result').classList.remove('hidden');
+  document.getElementById('tracking-result').style.display = 'block';
   document.getElementById('tracking-input').value = '';
 }
 

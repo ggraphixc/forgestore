@@ -1,79 +1,86 @@
 {% extends "web/base.html" %}
 {% block title %}My Reviews — ForgeStore{% endblock %}
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-stone-50 via-white to-amber-50/20 dark:from-stone-950 dark:via-stone-900 dark:to-amber-950/20">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sm:mb-10 reveal">
-      <div>
-        <div class="flex items-center gap-3 mb-2">
-          <a href="/shop/account" class="p-2 -ml-2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-all" aria-label="Back to dashboard">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 12H5m7-7l-7 7 7 7"/></svg>
-          </a>
-          <h1 class="text-2xl sm:text-3xl lg:text-4xl font-display font-black text-stone-900 dark:text-stone-100">My <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Reviews</span></h1>
-        </div>
-        <p class="text-sm text-stone-500 dark:text-stone-400 ml-2">Reviews you've written for products</p>
-      </div>
-    </div>
+<style>
+  .acct-page{padding:2rem 1rem;max-width:72rem;margin:0 auto}
+  .acct-header{display:flex;flex-direction:column;gap:.25rem}
+  .acct-header h1{font-size:1.875rem;font-weight:800;color:var(--color-stone-900)}
+  .acct-header p{font-size:.875rem;color:var(--color-stone-500)}
+  .acct-card{background:var(--color-white);border:1px solid var(--color-stone-200);border-radius:1rem;padding:1.5rem}
+  .acct-btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.5rem;border-radius:.75rem;font-size:.875rem;font-weight:600;min-height:44px;border:none;cursor:pointer;transition:all .15s;text-decoration:none}
+  .acct-btn--primary{background:var(--color-amber-600);color:white}
+  .acct-btn--primary:hover{background:var(--color-amber-700)}
+  .back-link{display:inline-flex;align-items:center;gap:.5rem;font-size:.875rem;color:var(--color-stone-500);text-decoration:none;min-height:44px;margin-bottom:1rem}
+  .back-link:hover{color:var(--color-stone-900)}
+  .review-card{display:flex;gap:1rem;padding:1.25rem}
+  @media(min-width:640px){.review-card{gap:1.25rem}}
+  .review-thumb{width:4rem;height:4rem;background:var(--color-stone-100);border-radius:.75rem;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--color-stone-400)}
+  @media(min-width:640px){.review-thumb{width:5rem;height:5rem}}
+  .review-thumb img{width:100%;height:100%;object-fit:cover}
+  .star{width:1rem;height:1rem}
+  .star--filled{color:var(--color-amber-400)}
+  .star--empty{color:var(--color-stone-200)}
+  @media(min-width:768px){.acct-page{padding:2.5rem 1.5rem}.acct-header h1{font-size:2.25rem}}
+</style>
 
-    {% if reviews %}
-    <div class="space-y-5">
-      {% for review in reviews %}
-      <div class="card-artisan p-5 sm:p-6 reveal{% if loop.index > 1 %} stagger-{{ loop.index % 6 + 1 }}{% endif %}">
-        <div class="flex items-start gap-4 sm:gap-5">
-          <!-- Product Image -->
-          <div class="w-16 h-16 sm:w-20 sm:h-20 bg-stone-100 dark:bg-stone-700 rounded-xl overflow-hidden flex-shrink-0">
-            {% set product = products.get(review.product_id) if products else None %}
-            {% if product and product.images and product.images[0] %}
-            <img src="{{ product.images[0] }}" alt="" class="w-full h-full object-cover" loading="lazy">
-            {% else %}
-            <div class="w-full h-full flex items-center justify-center text-stone-400">
-              <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-            </div>
-            {% endif %}
-          </div>
-          <div class="min-w-0 flex-1">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-              <div>
-                <p class="text-sm font-semibold text-stone-900 dark:text-stone-100 truncate">{{ product.name if product else 'Product' }}</p>
-              </div>
-              <span class="text-xs text-stone-400 dark:text-stone-500 whitespace-nowrap">{{ review.created_at.strftime('%b %d, %Y') if review.created_at else '—' }}</span>
-            </div>
-            <!-- Stars -->
-            <div class="stars mb-2">
-              {% for i in range(5) %}
-              <svg class="w-4 h-4 {% if i < review.rating %}text-amber-400{% else %}text-stone-200 dark:text-stone-600{% endif %}" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-              </svg>
-              {% endfor %}
-            </div>
-            {% if review.title %}
-            <p class="text-sm font-semibold text-stone-800 dark:text-stone-200 mb-1">{{ review.title }}</p>
-            {% endif %}
-            {% if review.content %}
-            <p class="text-sm text-stone-600 dark:text-stone-400 line-clamp-3">{{ review.content }}</p>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-    {% else %}
-    <!-- Empty State -->
-    <div class="text-center py-16 sm:py-24 reveal">
-      <div class="w-20 h-20 bg-stone-100 dark:bg-stone-800 rounded-2xl flex items-center justify-center mx-auto mb-6">
-        <svg class="w-10 h-10 text-stone-400 dark:text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-        </svg>
-      </div>
-      <h2 class="text-xl font-bold text-stone-900 dark:text-stone-100 mb-2">No reviews yet</h2>
-      <p class="text-sm text-stone-500 dark:text-stone-400 max-w-sm mx-auto mb-8">You haven't written any reviews yet. Share your experience with the community!</p>
-      <a href="/shop/marketplace" class="btn-forge inline-flex">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        Browse Products
-      </a>
-    </div>
-    {% endif %}
+<div class="acct-page">
+  <div class="acct-header" style="margin-bottom:2rem">
+    <a href="/shop/account" class="back-link">
+      <svg style="width:1.25rem;height:1.25rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 12H5m7-7l-7 7 7 7"/></svg>
+      Back to Account
+    </a>
+    <h1>My <span style="color:var(--color-amber-600)">Reviews</span></h1>
+    <p>Reviews you've written for products</p>
   </div>
+
+  {% if reviews %}
+  <div style="display:flex;flex-direction:column;gap:1.25rem">
+    {% for review in reviews %}
+    <div class="acct-card review-card">
+      <div class="review-thumb">
+        {% set product = products.get(review.product_id) if products else None %}
+        {% if product and product.images and product.images[0] %}
+        <img src="{{ product.images[0] }}" alt="" loading="lazy">
+        {% else %}
+        <svg style="width:1.75rem;height:1.75rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        {% endif %}
+      </div>
+      <div style="min-width:0;flex:1">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.5rem">
+          <p style="font-size:.875rem;font-weight:600;color:var(--color-stone-900)">{{ product.name if product else 'Product' }}</p>
+          <span style="font-size:.75rem;color:var(--color-stone-400);white-space:nowrap">{{ review.created_at.strftime('%b %d, %Y') if review.created_at else '—' }}</span>
+        </div>
+        <div style="display:flex;gap:.125rem;margin-bottom:.5rem">
+          {% for i in range(5) %}
+          <svg class="star {% if i < review.rating %}star--filled{% else %}star--empty{% endif %}" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+          </svg>
+          {% endfor %}
+        </div>
+        {% if review.title %}
+        <p style="font-size:.875rem;font-weight:600;color:var(--color-stone-800);margin-bottom:.25rem">{{ review.title }}</p>
+        {% endif %}
+        {% if review.content %}
+        <p style="font-size:.875rem;color:var(--color-stone-600);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">{{ review.content }}</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:4rem 1rem">
+    <div style="width:5rem;height:5rem;background:var(--color-stone-100);border-radius:1.25rem;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem">
+      <svg style="width:2.5rem;height:2.5rem;color:var(--color-stone-400)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+      </svg>
+    </div>
+    <h2 style="font-size:1.25rem;font-weight:700;color:var(--color-stone-900);margin-bottom:.5rem">No reviews yet</h2>
+    <p style="font-size:.875rem;color:var(--color-stone-500);max-width:24rem;margin:0 auto 2rem">You haven't written any reviews yet. Share your experience with the community!</p>
+    <a href="/shop/marketplace" class="acct-btn acct-btn--primary">
+      <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Browse Products
+    </a>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

@@ -1,126 +1,910 @@
 {% extends "admin/base.html" %}
-{% block title %}Intelligence &mdash; ForgeStore Admin{% endblock %}
+{% block title %}Intelligence — ForgeStore Admin{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+<style>
+:root {
+  --amber-50: #fffbeb;
+  --amber-100: #fef3c7;
+  --amber-200: #fde68a;
+  --amber-500: #f59e0b;
+  --amber-600: #d97706;
+  --amber-700: #b45309;
+  --stone-50: #fafaf9;
+  --stone-100: #f5f5f4;
+  --stone-200: #e7e5e4;
+  --stone-300: #d6d3d1;
+  --stone-400: #a8a29e;
+  --stone-500: #78716c;
+  --stone-600: #57534e;
+  --stone-700: #44403c;
+  --stone-800: #292524;
+  --stone-900: #1c1917;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+}
+
+.admin-page {
+  max-width: 80rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 2rem 1rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--stone-900);
+}
+
+.admin-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.admin-page-header h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--stone-900);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.admin-page-header h1 span {
+  background: linear-gradient(135deg, var(--amber-700), var(--amber-500));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.admin-page-header-sub {
+  font-size: 0.875rem;
+  color: var(--stone-500);
+  margin: 0.25rem 0 0;
+}
+
+.admin-page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.admin-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--stone-500);
+  margin-bottom: 0.5rem;
+}
+
+.admin-breadcrumb svg {
+  width: 14px;
+  height: 14px;
+  color: var(--amber-500);
+}
+
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.125rem;
+  min-height: 44px;
+  background: var(--amber-500);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.admin-btn:hover {
+  background: var(--amber-600);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  transform: translateY(-1px);
+}
+
+.admin-btn:active { transform: translateY(0); }
+
+.admin-btn svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.admin-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  min-height: 38px;
+  background: #fff;
+  color: var(--stone-700);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid var(--stone-200);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+}
+
+.admin-btn-outline:hover {
+  background: var(--stone-50);
+  border-color: var(--stone-300);
+}
+
+.admin-btn-outline svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.admin-btn-sm {
+  padding: 0.375rem 0.75rem;
+  min-height: 34px;
+  font-size: 0.7rem;
+}
+
+.admin-select {
+  padding: 0.625rem 2rem 0.625rem 0.875rem;
+  min-height: 44px;
+  background: #fff;
+  border: 1px solid var(--stone-200);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-900);
+  transition: all var(--transition-fast);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2378716c' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+}
+
+.admin-select:focus {
+  outline: none;
+  border-color: var(--amber-500);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+}
+
+.admin-intel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.admin-card {
+  background: #fff;
+  border: 1px solid var(--stone-200);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-base);
+}
+
+.admin-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.admin-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--stone-200);
+  background: var(--stone-50);
+}
+
+.admin-card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.admin-card-header-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.admin-card-header-icon.amber {
+  background: var(--amber-100);
+  color: var(--amber-700);
+}
+
+.admin-card-header-icon.green {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.admin-card-header-icon.red {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.admin-card-header-icon.blue {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.admin-card-header-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.admin-card-header h2,
+.admin-card-header h3 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--stone-900);
+  margin: 0;
+}
+
+.admin-card-header-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.admin-card-header-badge.live {
+  background: var(--amber-100);
+  color: #92400e;
+}
+
+.admin-card-header-badge.beta {
+  background: var(--amber-100);
+  color: #92400e;
+}
+
+.admin-card-header-badge.smart {
+  background: var(--amber-100);
+  color: #92400e;
+}
+
+.admin-card-header-badge.predictive {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.admin-card-header-badge.security {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.admin-card-header-badge.rfm {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.admin-card-body {
+  padding: 1.25rem;
+}
+
+.admin-card-full {
+  grid-column: 1 / -1;
+}
+
+.admin-insights-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.admin-insight-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: #fff;
+  border: 1px solid var(--stone-200);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast);
+}
+
+.admin-insight-item:hover {
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.admin-insight-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 0.375rem;
+}
+
+.admin-insight-dot.positive { background: #10b981; }
+.admin-insight-dot.warning { background: var(--amber-500); }
+.admin-insight-dot.negative { background: #ef4444; }
+.admin-insight-dot.info { background: #3b82f6; }
+
+.admin-insight-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-insight-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--stone-900);
+  margin: 0 0 0.15rem;
+}
+
+.admin-insight-message {
+  font-size: 0.8rem;
+  color: var(--stone-500);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.admin-chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 380px;
+}
+
+.admin-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, var(--amber-50) 0%, var(--amber-100) 100%);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.admin-chat-msg {
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-start;
+}
+
+.admin-chat-msg.user {
+  flex-direction: row-reverse;
+}
+
+.admin-chat-bubble {
+  max-width: 75%;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.admin-chat-bubble.assistant {
+  background: #fff;
+  border: 1px solid var(--stone-200);
+  color: var(--stone-900);
+  border-bottom-left-radius: 0.25rem;
+}
+
+.admin-chat-bubble.user {
+  background: var(--amber-500);
+  color: #fff;
+  border-bottom-right-radius: 0.25rem;
+}
+
+.admin-chat-avatar {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.admin-chat-avatar.assistant {
+  background: var(--amber-100);
+  color: var(--amber-700);
+}
+
+.admin-chat-avatar.user {
+  background: var(--amber-500);
+  color: #fff;
+}
+
+.admin-chat-input-area {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #fff;
+  border-top: 1px solid var(--stone-200);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.admin-chat-input {
+  flex: 1;
+  padding: 0.625rem 0.875rem;
+  min-height: 44px;
+  background: var(--stone-50);
+  border: 1px solid var(--stone-200);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  color: var(--stone-900);
+  transition: all var(--transition-fast);
+}
+
+.admin-chat-input:focus {
+  outline: none;
+  border-color: var(--amber-500);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+}
+
+.admin-chat-input::placeholder {
+  color: var(--stone-400);
+}
+
+.admin-recs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.admin-rec-card {
+  background: linear-gradient(135deg, var(--amber-50) 0%, var(--amber-100) 100%);
+  border: 1px solid var(--amber-200);
+  border-radius: var(--radius-xl);
+  padding: 1.125rem;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.admin-rec-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.15);
+}
+
+.admin-rec-card-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--stone-900);
+  margin: 0 0 0.375rem;
+}
+
+.admin-rec-card-price {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--amber-700);
+  margin: 0 0 0.5rem;
+}
+
+.admin-rec-card-reason {
+  font-size: 0.75rem;
+  color: var(--stone-500);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.admin-stat-card {
+  background: #fff;
+  border: 1px solid var(--stone-200);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-base), border-color var(--transition-base);
+}
+
+.admin-stat-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.admin-stat-card-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--stone-500);
+  margin: 0 0 0.5rem;
+}
+
+.admin-stat-card-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--stone-900);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.admin-stat-card-sub {
+  font-size: 0.75rem;
+  color: var(--stone-500);
+  margin: 0.25rem 0 0;
+}
+
+.admin-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: var(--stone-500);
+  font-size: 0.85rem;
+  gap: 0.5rem;
+}
+
+.admin-loading svg {
+  width: 18px;
+  height: 18px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.admin-forecast-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-forecast-stat-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--stone-500);
+  margin: 0;
+}
+
+.admin-forecast-stat-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--stone-900);
+  margin: 0.125rem 0 0;
+}
+
+.admin-forecast-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  max-height: 12rem;
+  overflow-y: auto;
+}
+
+.admin-forecast-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.375rem 0;
+  border-bottom: 1px solid var(--stone-100);
+  font-size: 0.8rem;
+}
+
+.admin-forecast-row:last-child { border-bottom: none; }
+
+.admin-forecast-date { color: var(--stone-500); }
+.admin-forecast-amount { font-weight: 600; color: var(--stone-900); }
+.admin-forecast-conf { font-size: 0.7rem; color: var(--stone-500); }
+
+.admin-fraud-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.admin-fraud-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-md);
+}
+
+.admin-fraud-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 0.375rem;
+}
+
+.admin-fraud-dot.high { background: #ef4444; }
+.admin-fraud-dot.medium { background: var(--amber-500); }
+.admin-fraud-dot.low { background: #eab308; }
+
+.admin-fraud-content { flex: 1; min-width: 0; }
+
+.admin-fraud-type {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--stone-900);
+  margin: 0;
+}
+
+.admin-fraud-detail {
+  font-size: 0.7rem;
+  color: var(--stone-500);
+  margin: 0.125rem 0 0;
+}
+
+.admin-fraud-date {
+  font-size: 0.65rem;
+  color: var(--stone-500);
+  flex-shrink: 0;
+}
+
+.admin-fraud-ok {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  color: #10b981;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.admin-fraud-ok svg {
+  width: 20px;
+  height: 20px;
+}
+
+.admin-empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: var(--stone-500);
+  font-size: 0.85rem;
+}
+
+.admin-empty-state.error {
+  color: #ef4444;
+}
+
+@media (max-width: 768px) {
+  .admin-page { padding: 1.5rem 0.75rem; }
+  .admin-intel-grid { grid-template-columns: 1fr; }
+  .admin-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .admin-stat-card-value { font-size: 1.25rem; }
+  .admin-page-header { flex-direction: column; align-items: flex-start; }
+  .admin-page-header-actions { width: 100%; flex-wrap: wrap; }
+  .hide-mobile { display: none !important; }
+}
+
+@media (max-width: 480px) {
+  .admin-stats-grid { grid-template-columns: 1fr; }
+  .admin-chat-messages { height: 260px; }
+  .admin-recs-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="admin-page">
+  <div class="admin-page-header">
+    <div>
+      <div class="admin-breadcrumb">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Business Intelligence
+      </div>
+      <h1>Commerce <span>Intelligence</span></h1>
+      <p class="admin-page-header-sub">AI-powered insights, forecasts, and predictive analytics</p>
+    </div>
+    <div class="admin-page-header-actions">
+      <select id="period-select" class="admin-select">
+        <option value="7">Last 7 days</option>
+        <option value="30" selected>Last 30 days</option>
+        <option value="90">Last 90 days</option>
+        <option value="365">Last year</option>
+      </select>
+      <button onclick="refreshAnalytics()" class="admin-btn">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- AI Insights -->
+  <div class="admin-card admin-card-full" style="margin-bottom:2rem;background:linear-gradient(135deg, var(--amber-50) 0%, var(--amber-100) 100%);border-color:var(--amber-200);">
+    <div class="admin-card-header" style="background:transparent;border-bottom-color:rgba(245,158,11,0.2);">
+      <div class="admin-card-header-left">
+        <div class="admin-card-header-icon amber">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+        </div>
         <div>
-            <div class="flex items-center gap-2 text-xs text-stone-500 mb-1">
-                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                Business Intelligence
-            </div>
-            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black text-stone-900 dark:text-stone-100 font-display">Commerce <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Intelligence</span></h1>
-            <p class="text-stone-500 dark:text-stone-400 mt-1 text-sm">AI-powered insights, forecasts, and predictive analytics</p>
+          <h2 style="font-size:0.9rem;font-weight:700;color:var(--stone-900);margin:0;">AI-Generated Insights</h2>
         </div>
-        <div class="flex items-center gap-3">
-            <select id="period-select" class="px-3 py-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-sm font-medium text-stone-700 dark:text-stone-300 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all min-h-[44px]">
-                <option value="7">Last 7 days</option>
-                <option value="30" selected>Last 30 days</option>
-                <option value="90">Last 90 days</option>
-                <option value="365">Last year</option>
-            </select>
-            <button onclick="refreshAnalytics()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-bold transition-all duration-150 min-h-[44px]">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                Refresh
+        <span class="admin-card-header-badge live">Live</span>
+      </div>
+    </div>
+    <div class="admin-card-body">
+      <div id="insights-container" class="admin-insights-container">
+        <div class="admin-loading">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Loading insights...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-intel-grid">
+    <!-- AI Shopping Assistant -->
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <div class="admin-card-header-left">
+          <div class="admin-card-header-icon amber">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          </div>
+          <h2>AI Shopping Assistant</h2>
+          <span class="admin-card-header-badge beta">Beta</span>
+        </div>
+      </div>
+      <div class="admin-chat-container">
+        <div id="ai-chat-messages" class="admin-chat-messages">
+          <div class="admin-chat-msg assistant">
+            <div class="admin-chat-avatar assistant">AI</div>
+            <div class="admin-chat-bubble assistant">Hello! I'm your AI shopping assistant. Ask me anything about products, orders, or recommendations.</div>
+          </div>
+        </div>
+        <div class="admin-chat-input-area">
+          <form id="ai-chat-form" style="display:flex;align-items:center;gap:0.5rem;width:100%;" onsubmit="sendAiChat(event)">
+            <input id="ai-chat-input" type="text" placeholder="Ask about products, orders, recommendations..." class="admin-chat-input" />
+            <button type="submit" class="admin-btn admin-btn-sm">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+              Send
             </button>
+          </form>
         </div>
+      </div>
     </div>
 
-    <!-- AI Insights -->
-    <div class="bg-gradient-to-br from-amber-50 to-amber-50/50 dark:from-amber-900/10 dark:to-stone-900 border border-amber-200 dark:border-amber-800 rounded-2xl p-5 sm:p-6 mb-8">
-        <div class="flex items-center gap-2 mb-4">
-            <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-            </div>
-            <h2 class="text-base font-bold text-stone-900 dark:text-stone-100">AI-Generated Insights</h2>
-            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded-full">Live</span>
+    <!-- AI Product Recommendations -->
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <div class="admin-card-header-left">
+          <div class="admin-card-header-icon amber">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+          </div>
+          <h2>AI Product Recommendations</h2>
+          <span class="admin-card-header-badge smart">Smart</span>
         </div>
-        <div id="insights-container" class="space-y-3">
-            <div class="flex items-center justify-center py-8 text-stone-400">
-                <svg class="w-5 h-5 animate-spin mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                Loading insights...
-            </div>
+        <button onclick="refreshAiRecommendations()" class="admin-btn-outline admin-btn-sm">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Refresh
+        </button>
+      </div>
+      <div class="admin-card-body">
+        <div id="ai-recommendations-grid" class="admin-recs-grid">
+          <div class="admin-loading">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Loading recommendations...
+          </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="admin-stats-grid">
+    <div class="admin-stat-card">
+      <p class="admin-stat-card-label">Total Revenue</p>
+      <p id="stat-revenue" class="admin-stat-card-value">—</p>
+      <p id="stat-revenue-change" class="admin-stat-card-sub">Loading...</p>
+    </div>
+    <div class="admin-stat-card">
+      <p class="admin-stat-card-label">Total Orders</p>
+      <p id="stat-orders" class="admin-stat-card-value">—</p>
+      <p id="stat-orders-change" class="admin-stat-card-sub">Loading...</p>
+    </div>
+    <div class="admin-stat-card">
+      <p class="admin-stat-card-label">Avg Order Value</p>
+      <p id="stat-aov" class="admin-stat-card-value">—</p>
+      <p id="stat-aov-change" class="admin-stat-card-sub">Loading...</p>
+    </div>
+    <div class="admin-stat-card">
+      <p class="admin-stat-card-label">Total Customers</p>
+      <p id="stat-customers" class="admin-stat-card-value">—</p>
+      <p id="stat-customers-change" class="admin-stat-card-sub">Loading...</p>
+    </div>
+  </div>
+
+  <div class="admin-intel-grid">
+    <!-- Revenue Forecast -->
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <div class="admin-card-header-left">
+          <div class="admin-card-header-icon green">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          </div>
+          <h3>Revenue Forecast (30 Days)</h3>
+          <span class="admin-card-header-badge predictive">Predictive</span>
+        </div>
+      </div>
+      <div class="admin-card-body">
+        <div id="forecast-container">
+          <div class="admin-loading">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Loading forecast...
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
-            <p class="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Total Revenue</p>
-            <p id="stat-revenue" class="text-2xl sm:text-3xl font-black text-stone-900 dark:text-stone-100">—</p>
-            <p id="stat-revenue-change" class="text-xs mt-1 text-stone-400">Loading...</p>
+    <!-- Fraud Detection -->
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <div class="admin-card-header-left">
+          <div class="admin-card-header-icon red">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+          </div>
+          <h3>Fraud Detection</h3>
+          <span class="admin-card-header-badge security">Security</span>
         </div>
-        <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
-            <p class="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Total Orders</p>
-            <p id="stat-orders" class="text-2xl sm:text-3xl font-black text-stone-900 dark:text-stone-100">—</p>
-            <p id="stat-orders-change" class="text-xs mt-1 text-stone-400">Loading...</p>
+      </div>
+      <div class="admin-card-body">
+        <div id="fraud-container">
+          <div class="admin-loading">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Loading alerts...
+          </div>
         </div>
-        <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
-            <p class="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Avg Order Value</p>
-            <p id="stat-aov" class="text-2xl sm:text-3xl font-black text-stone-900 dark:text-stone-100">—</p>
-            <p id="stat-aov-change" class="text-xs mt-1 text-stone-400">Loading...</p>
-        </div>
-        <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 shadow-sm">
-            <p class="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1">Total Customers</p>
-            <p id="stat-customers" class="text-2xl sm:text-3xl font-black text-stone-900 dark:text-stone-100">—</p>
-            <p id="stat-customers-change" class="text-xs mt-1 text-stone-400">Loading...</p>
-        </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Revenue Forecast & Fraud Detection -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <!-- Revenue Forecast -->
-        <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 overflow-hidden shadow-sm">
-            <div class="px-5 py-4 border-b border-stone-100 dark:border-stone-700 flex items-center justify-between">
-                <h3 class="text-sm font-bold text-stone-900 dark:text-stone-100">Revenue Forecast (30 Days)</h3>
-                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-full">Predictive</span>
-            </div>
-            <div id="forecast-container" class="p-5">
-                <div class="flex items-center justify-center py-12 text-stone-400">
-                    <svg class="w-5 h-5 animate-spin mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                    Loading forecast...
-                </div>
-            </div>
+  <!-- Cohort Analysis -->
+  <div class="admin-card" style="margin-top:2rem;">
+    <div class="admin-card-header">
+      <div class="admin-card-header-left">
+        <div class="admin-card-header-icon blue">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
         </div>
-
-        <!-- Fraud Detection -->
-        <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 overflow-hidden shadow-sm">
-            <div class="px-5 py-4 border-b border-stone-100 dark:border-stone-700 flex items-center justify-between">
-                <h3 class="text-sm font-bold text-stone-900 dark:text-stone-100">Fraud Detection</h3>
-                <span class="text-[10px] font-bold uppercase tracking-wider text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full">Security</span>
-            </div>
-            <div id="fraud-container" class="p-5">
-                <div class="flex items-center justify-center py-12 text-stone-400">
-                    <svg class="w-5 h-5 animate-spin mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                    Loading alerts...
-                </div>
-            </div>
-        </div>
+        <h3>Customer Cohort Analysis</h3>
+        <span class="admin-card-header-badge rfm">RFM</span>
+      </div>
     </div>
-
-    <!-- Cohort Analysis -->
-    <div class="bg-white dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 overflow-hidden shadow-sm">
-        <div class="px-5 py-4 border-b border-stone-100 dark:border-stone-700 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <h3 class="text-sm font-bold text-stone-900 dark:text-stone-100">Customer Cohort Analysis</h3>
-                <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-full">RFM</span>
-            </div>
+    <div class="admin-card-body">
+      <div id="cohort-container">
+        <div class="admin-loading">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Loading cohort data...
         </div>
-        <div id="cohort-container" class="p-5">
-            <div class="flex items-center justify-center py-12 text-stone-400">
-                <svg class="w-5 h-5 animate-spin mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                Loading cohort data...
-            </div>
-        </div>
+      </div>
     </div>
+  </div>
 </div>
 
 <script>
 async function refreshAnalytics() {
     const period = document.getElementById('period-select')?.value || 30;
-    
-    // Fetch all analytics endpoints in parallel
+
     const [predictiveRes, forecastRes, insightsRes, fraudRes] = await Promise.all([
         fetch(`/api/admin/analytics/predictive?days=${period}`).catch(() => null),
         fetch(`/api/admin/analytics/forecast?days_ahead=30`).catch(() => null),
@@ -128,39 +912,36 @@ async function refreshAnalytics() {
         fetch('/api/admin/analytics/fraud').catch(() => null),
     ]);
 
-    // Update stats
     if (predictiveRes?.ok) {
         const data = await predictiveRes.json();
-        document.getElementById('stat-revenue').textContent = `₦${(data.revenue?.total_revenue || 0).toLocaleString()}`;
+        document.getElementById('stat-revenue').textContent = `\u20A6${(data.revenue?.total_revenue || 0).toLocaleString()}`;
         document.getElementById('stat-orders').textContent = (data.revenue?.total_orders || 0).toLocaleString();
-        document.getElementById('stat-aov').textContent = `₦${(data.revenue?.avg_order_value || 0).toLocaleString()}`;
+        document.getElementById('stat-aov').textContent = `\u20A6${(data.revenue?.avg_order_value || 0).toLocaleString()}`;
         document.getElementById('stat-customers').textContent = (data.customers?.repeat_customers || 0).toLocaleString();
     }
 
-    // Update insights
     if (insightsRes?.ok) {
         const data = await insightsRes.json();
         const container = document.getElementById('insights-container');
         if (data.insights?.length) {
             container.innerHTML = data.insights.map(i => `
-                <div class="flex items-start gap-3 p-3 rounded-xl bg-white dark:bg-stone-800/50 border border-stone-100 dark:border-stone-700">
-                    <div class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
-                        i.severity === 'positive' ? 'bg-emerald-500' :
-                        i.severity === 'warning' ? 'bg-amber-500' :
-                        i.severity === 'negative' ? 'bg-red-500' : 'bg-blue-500'
+                <div class="admin-insight-item">
+                    <div class="admin-insight-dot ${
+                        i.severity === 'positive' ? 'positive' :
+                        i.severity === 'warning' ? 'warning' :
+                        i.severity === 'negative' ? 'negative' : 'info'
                     }"></div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">${i.title}</p>
-                        <p class="text-sm text-stone-500 dark:text-stone-400">${i.message}</p>
+                    <div class="admin-insight-content">
+                        <p class="admin-insight-title">${i.title}</p>
+                        <p class="admin-insight-message">${i.message}</p>
                     </div>
                 </div>
             `).join('');
         } else {
-            container.innerHTML = '<p class="text-sm text-stone-400 text-center py-4">No insights available yet. Data is being collected.</p>';
+            container.innerHTML = '<div class="admin-empty-state">No insights available yet. Data is being collected.</div>';
         }
     }
 
-    // Update forecast (simple list view)
     if (forecastRes?.ok) {
         const data = await forecastRes.json();
         const container = document.getElementById('forecast-container');
@@ -168,63 +949,143 @@ async function refreshAnalytics() {
             const total = data.forecasts.reduce((s, f) => s + f.predicted, 0);
             const avg = total / data.forecasts.length;
             container.innerHTML = `
-                <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="admin-forecast-summary">
                     <div>
-                        <p class="text-xs text-stone-400">30-Day Projected Revenue</p>
-                        <p class="text-xl font-black text-stone-900 dark:text-stone-100">₦${total.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
+                        <p class="admin-forecast-stat-label">30-Day Projected Revenue</p>
+                        <p class="admin-forecast-stat-value">\u20A6${total.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
                     </div>
                     <div>
-                        <p class="text-xs text-stone-400">Daily Average</p>
-                        <p class="text-xl font-black text-stone-900 dark:text-stone-100">₦${avg.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
+                        <p class="admin-forecast-stat-label">Daily Average</p>
+                        <p class="admin-forecast-stat-value">\u20A6${avg.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
                     </div>
                 </div>
-                <div class="space-y-1.5 max-h-48 overflow-y-auto">
+                <div class="admin-forecast-list">
                     ${data.forecasts.slice(0, 14).map(f => `
-                        <div class="flex items-center justify-between text-sm">
-                            <span class="text-stone-500">${new Date(f.date).toLocaleDateString()}</span>
-                            <span class="font-medium text-stone-900 dark:text-stone-100">₦${f.predicted.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
-                            <span class="text-xs text-stone-400">${(f.confidence * 100).toFixed(0)}% conf</span>
+                        <div class="admin-forecast-row">
+                            <span class="admin-forecast-date">${new Date(f.date).toLocaleDateString()}</span>
+                            <span class="admin-forecast-amount">\u20A6${f.predicted.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+                            <span class="admin-forecast-conf">${(f.confidence * 100).toFixed(0)}% conf</span>
                         </div>
                     `).join('')}
                 </div>
             `;
         } else {
-            container.innerHTML = '<p class="text-sm text-stone-400 text-center py-4">No forecast data available.</p>';
+            container.innerHTML = '<div class="admin-empty-state">No forecast data available.</div>';
         }
     }
 
-    // Update fraud alerts
     if (fraudRes?.ok) {
         const data = await fraudRes.json();
         const container = document.getElementById('fraud-container');
         if (data.events?.length) {
             container.innerHTML = `
-                <div class="space-y-2 max-h-64 overflow-y-auto">
+                <div class="admin-fraud-list">
                     ${data.events.map(e => `
-                        <div class="flex items-start gap-3 p-3 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-800/30">
-                            <div class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
-                                e.score > 0.7 ? 'bg-red-500' :
-                                e.score > 0.4 ? 'bg-amber-500' : 'bg-yellow-500'
+                        <div class="admin-fraud-item">
+                            <div class="admin-fraud-dot ${
+                                e.score > 0.7 ? 'high' :
+                                e.score > 0.4 ? 'medium' : 'low'
                             }"></div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">${e.event_type}</p>
-                                <p class="text-xs text-stone-500">Score: ${(e.score * 100).toFixed(0)}% | Action: ${e.action_taken || 'pending'}</p>
+                            <div class="admin-fraud-content">
+                                <p class="admin-fraud-type">${e.event_type}</p>
+                                <p class="admin-fraud-detail">Score: ${(e.score * 100).toFixed(0)}% | Action: ${e.action_taken || 'pending'}</p>
                             </div>
-                            <span class="text-[10px] text-stone-400">${new Date(e.created_at).toLocaleDateString()}</span>
+                            <span class="admin-fraud-date">${new Date(e.created_at).toLocaleDateString()}</span>
                         </div>
                     `).join('')}
                 </div>
             `;
         } else {
-            container.innerHTML = '<div class="flex items-center justify-center py-8 text-emerald-600"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>No fraud events detected</div>';
+            container.innerHTML = '<div class="admin-fraud-ok"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>No fraud events detected</div>';
         }
     }
 }
 
-// Auto-refresh on load
-document.addEventListener('DOMContentLoaded', refreshAnalytics);
+let aiChatSessionId = 'admin-' + Date.now();
 
-// Refresh on period change
+async function sendAiChat(e) {
+    e.preventDefault();
+    const input = document.getElementById('ai-chat-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    const messagesDiv = document.getElementById('ai-chat-messages');
+    messagesDiv.innerHTML += `
+        <div class="admin-chat-msg user">
+            <div class="admin-chat-avatar user">You</div>
+            <div class="admin-chat-bubble user">${msg.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+        </div>`;
+    input.value = '';
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+    const typingId = 'typing-' + Date.now();
+    messagesDiv.innerHTML += `
+        <div id="${typingId}" class="admin-chat-msg assistant">
+            <div class="admin-chat-avatar assistant">AI</div>
+            <div class="admin-chat-bubble assistant" style="color:#9ca3af">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="animation:spin 1s linear infinite;display:inline;vertical-align:middle;margin-right:0.25rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Thinking...
+            </div>
+        </div>`;
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+    try {
+        const res = await fetch('/api/ai/assistant/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: aiChatSessionId, message: msg })
+        });
+        const data = await res.json();
+        const typing = document.getElementById(typingId);
+        if (typing) typing.remove();
+
+        const reply = data.response || data.reply || data.message || 'No response received.';
+        messagesDiv.innerHTML += `
+            <div class="admin-chat-msg assistant">
+                <div class="admin-chat-avatar assistant">AI</div>
+                <div class="admin-chat-bubble assistant">${reply.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+            </div>`;
+    } catch (err) {
+        const typing = document.getElementById(typingId);
+        if (typing) typing.remove();
+        messagesDiv.innerHTML += `
+            <div class="admin-chat-msg assistant">
+                <div class="admin-chat-avatar assistant">AI</div>
+                <div class="admin-chat-bubble assistant" style="color:#dc2626">Sorry, something went wrong. Please try again.</div>
+            </div>`;
+    }
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+async function refreshAiRecommendations() {
+    const grid = document.getElementById('ai-recommendations-grid');
+    grid.innerHTML = `
+        <div class="admin-loading">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Loading recommendations...
+        </div>`;
+    try {
+        const res = await fetch('/api/ai/assistant/recommendations');
+        const data = await res.json();
+        const products = data.recommendations || data.products || [];
+        if (products.length) {
+            grid.innerHTML = products.map(p => `
+                <div class="admin-rec-card">
+                    <h4 class="admin-rec-card-name">${(p.name || p.product_name || 'Product').replace(/</g, '&lt;')}</h4>
+                    <p class="admin-rec-card-price">\u20A6${Number(p.price || 0).toLocaleString()}</p>
+                    <p class="admin-rec-card-reason">${(p.reason || p.description || '').replace(/</g, '&lt;')}</p>
+                </div>
+            `).join('');
+        } else {
+            grid.innerHTML = '<div class="admin-empty-state">No recommendations available yet.</div>';
+        }
+    } catch (err) {
+        grid.innerHTML = '<div class="admin-empty-state error">Failed to load recommendations.</div>';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', refreshAnalytics);
+document.addEventListener('DOMContentLoaded', refreshAiRecommendations);
 document.getElementById('period-select')?.addEventListener('change', refreshAnalytics);
 </script>
 {% endblock %}

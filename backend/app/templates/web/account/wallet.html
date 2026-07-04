@@ -1,88 +1,99 @@
 {% extends "web/base.html" %}
 {% block title %}Wallet — ForgeStore{% endblock %}
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-stone-50 via-white to-amber-50/20 dark:from-stone-950 dark:via-stone-900 dark:to-amber-950/20">
-  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sm:mb-10 reveal">
+<style>
+  .acct-page{padding:2rem 1rem;max-width:72rem;margin:0 auto}
+  .acct-header{display:flex;flex-direction:column;gap:.25rem}
+  .acct-header h1{font-size:1.875rem;font-weight:800;color:var(--color-stone-900)}
+  .acct-header p{font-size:.875rem;color:var(--color-stone-500)}
+  .acct-card{background:var(--color-white);border:1px solid var(--color-stone-200);border-radius:1rem;padding:1.5rem}
+  .acct-btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.5rem;border-radius:.75rem;font-size:.875rem;font-weight:600;min-height:44px;border:none;cursor:pointer;transition:all .15s;text-decoration:none}
+  .acct-btn--primary{background:var(--color-amber-600);color:white}
+  .acct-btn--primary:hover{background:var(--color-amber-700)}
+  .acct-btn--ghost{background:transparent;color:var(--color-stone-600);border:1px solid var(--color-stone-200)}
+  .acct-btn--ghost:hover{background:var(--color-stone-50)}
+  .back-link{display:inline-flex;align-items:center;gap:.5rem;font-size:.875rem;color:var(--color-stone-500);text-decoration:none;min-height:44px;margin-bottom:1rem}
+  .back-link:hover{color:var(--color-stone-900)}
+  .tx-row{display:flex;align-items:center;justify-content:space-between;padding:.75rem 0;border-bottom:1px solid var(--color-stone-100);min-height:44px}
+  .tx-row:last-child{border-bottom:none}
+  .tx-icon{width:2.25rem;height:2.25rem;border-radius:.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .tx-icon--credit{background:var(--color-emerald-50)}
+  .tx-icon--debit{background:var(--color-red-50)}
+  .spinner{width:2rem;height:2rem;border:2px solid var(--color-amber-500);border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;margin:0 auto .75rem}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media(min-width:768px){.acct-page{padding:2.5rem 1.5rem}.acct-header h1{font-size:2.25rem}}
+  @media(min-width:1024px){.wallet-grid{display:grid;grid-template-columns:2fr 1fr;gap:1.5rem}}
+</style>
+
+<div class="acct-page">
+  <div class="acct-header" style="margin-bottom:2rem">
+    <a href="/shop/account" class="back-link">
+      <svg style="width:1.25rem;height:1.25rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 12H5m7-7l-7 7 7 7"/></svg>
+      Back to Account
+    </a>
+    <h1>My <span style="color:var(--color-amber-600)">Wallet</span></h1>
+    <p>Manage your balance and transactions</p>
+  </div>
+
+  <div class="acct-card" style="margin-bottom:1.5rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
       <div>
-        <div class="flex items-center gap-3 mb-2">
-          <a href="/shop/account" class="p-2 -ml-2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-all" aria-label="Back to dashboard">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 12H5m7-7l-7 7 7 7"/></svg>
-          </a>
-          <h1 class="text-2xl sm:text-3xl lg:text-4xl font-display font-black text-stone-900 dark:text-stone-100">My <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Wallet</span></h1>
+        <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--color-stone-400);margin-bottom:.5rem">Available Balance</p>
+        <div style="display:flex;align-items:baseline;gap:.5rem">
+          <span style="font-size:2.5rem;font-family:monospace;font-weight:800;color:var(--color-stone-900)" id="wallet-balance">—</span>
+          <span style="font-size:.875rem;font-weight:600;color:var(--color-stone-400)">NGN</span>
         </div>
-        <p class="text-sm text-stone-500 dark:text-stone-400 ml-2">Manage your balance and transactions</p>
+      </div>
+      <button onclick="fundWallet()" class="acct-btn acct-btn--primary">
+        <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+        Fund Wallet
+      </button>
+    </div>
+  </div>
+
+  <div class="wallet-grid">
+    <div class="acct-card">
+      <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:1.25rem">Transaction History</p>
+      <div id="transactions-container">
+        <div id="transactions-list" style="display:flex;flex-direction:column;gap:.75rem"></div>
+        <div id="transactions-empty" style="display:none;text-align:center;padding:2.5rem 0">
+          <div style="width:3.5rem;height:3.5rem;background:var(--color-stone-100);border-radius:.75rem;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
+            <svg style="width:1.75rem;height:1.75rem;color:var(--color-stone-400)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+          </div>
+          <p style="font-size:.875rem;color:var(--color-stone-500)">No transactions yet</p>
+        </div>
+        <div id="transactions-loading" style="text-align:center;padding:2.5rem 0">
+          <div class="spinner"></div>
+          <p style="font-size:.75rem;color:var(--color-stone-400)">Loading transactions...</p>
+        </div>
       </div>
     </div>
 
-    <!-- Balance Card -->
-    <div class="card-artisan p-6 sm:p-8 lg:p-10 mb-6 reveal">
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <p class="text-xs font-bold uppercase tracking-[0.15em] text-stone-400 dark:text-stone-500 mb-2">Available Balance</p>
-          <div class="flex items-baseline gap-2">
-            <span class="text-4xl sm:text-5xl font-mono font-black text-stone-900 dark:text-stone-100" id="wallet-balance">—</span>
-            <span class="text-sm font-semibold text-stone-400 dark:text-stone-500">NGN</span>
+    <div style="display:flex;flex-direction:column;gap:1.5rem">
+      <div class="acct-card">
+        <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:1rem">Quick Stats</p>
+        <div style="display:flex;flex-direction:column;gap:1rem">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:.875rem;color:var(--color-stone-600)">Total Deposits</span>
+            <span style="font-size:.875rem;font-weight:600;color:var(--color-emerald-600)" id="total-deposits">—</span>
           </div>
-        </div>
-        <button onclick="fundWallet()" class="btn-forge">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-          Fund Wallet
-        </button>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-      <!-- Transaction History -->
-      <div class="lg:col-span-2">
-        <div class="card-artisan p-5 sm:p-6 reveal">
-          <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-stone-400 dark:text-stone-500 mb-5">Transaction History</h2>
-          <div id="transactions-container">
-            <div class="space-y-3" id="transactions-list">
-              <!-- Populated by JS -->
-            </div>
-            <div id="transactions-empty" class="hidden text-center py-10">
-              <div class="w-14 h-14 bg-stone-100 dark:bg-stone-800 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <svg class="w-7 h-7 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-              </div>
-              <p class="text-sm text-stone-500 dark:text-stone-400">No transactions yet</p>
-            </div>
-            <div id="transactions-loading" class="text-center py-10">
-              <div class="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-              <p class="text-xs text-stone-400">Loading transactions...</p>
-            </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:.875rem;color:var(--color-stone-600)">Total Withdrawals</span>
+            <span style="font-size:.875rem;font-weight:600;color:var(--color-red-600)" id="total-withdrawals">—</span>
+          </div>
+          <div style="border-top:1px solid var(--color-stone-100);padding-top:1rem;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:.875rem;font-weight:700;color:var(--color-stone-900)">Net Balance</span>
+            <span style="font-size:.875rem;font-weight:700;font-family:monospace;color:var(--color-stone-900)" id="net-balance">—</span>
           </div>
         </div>
       </div>
-
-      <!-- Quick Stats -->
-      <div class="space-y-6">
-        <div class="card-artisan p-5 sm:p-6 reveal">
-          <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-stone-400 dark:text-stone-500 mb-4">Quick Stats</h2>
-          <div class="space-y-4">
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-stone-600 dark:text-stone-400">Total Deposits</span>
-              <span class="text-sm font-semibold text-emerald-600 dark:text-emerald-400" id="total-deposits">—</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-stone-600 dark:text-stone-400">Total Withdrawals</span>
-              <span class="text-sm font-semibold text-red-600 dark:text-red-400" id="total-withdrawals">—</span>
-            </div>
-            <div class="border-t border-stone-100 dark:border-stone-700 pt-4 flex justify-between items-center">
-              <span class="text-sm font-bold text-stone-900 dark:text-stone-100">Net Balance</span>
-              <span class="text-sm font-bold font-mono text-stone-900 dark:text-stone-100" id="net-balance">—</span>
-            </div>
-          </div>
-        </div>
-        <div class="card-artisan p-5 sm:p-6 reveal">
-          <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-stone-400 dark:text-stone-500 mb-3">Need Help?</h2>
-          <p class="text-xs text-stone-500 dark:text-stone-400 mb-4">Having trouble with your wallet? Our support team is available.</p>
-          <a href="#" class="btn-ghost text-sm w-full justify-center">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-            Contact Support
-          </a>
-        </div>
+      <div class="acct-card">
+        <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:.75rem">Need Help?</p>
+        <p style="font-size:.75rem;color:var(--color-stone-500);margin-bottom:1rem">Having trouble with your wallet? Our support team is available.</p>
+        <a href="#" class="acct-btn acct-btn--ghost" style="width:100%">
+          <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+          Contact Support
+        </a>
       </div>
     </div>
   </div>
@@ -100,12 +111,12 @@ async function loadWalletData() {
     const txData = await txRes.json();
     const transactions = txData.transactions || [];
 
-    document.getElementById('transactions-loading').classList.add('hidden');
+    document.getElementById('transactions-loading').style.display = 'none';
     const list = document.getElementById('transactions-list');
     const empty = document.getElementById('transactions-empty');
 
     if (transactions.length === 0) {
-      empty.classList.remove('hidden');
+      empty.style.display = 'block';
       return;
     }
 
@@ -115,19 +126,19 @@ async function loadWalletData() {
       if (isCredit) deposits += Math.abs(t.amount);
       else withdrawals += Math.abs(t.amount);
       const date = t.created_at ? new Date(t.created_at).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'}) : '—';
-      return `<div class="flex items-center justify-between py-3 border-b border-stone-100 dark:border-stone-700 last:border-0">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 ${isCredit ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-red-50 dark:bg-red-900/20'} rounded-lg flex items-center justify-center flex-shrink-0">
-            <svg class="w-4 h-4 ${isCredit ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      return `<div class="tx-row">
+        <div style="display:flex;align-items:center;gap:.75rem">
+          <div class="tx-icon ${isCredit ? 'tx-icon--credit' : 'tx-icon--debit'}">
+            <svg style="width:1rem;height:1rem;color:${isCredit ? 'var(--color-emerald-600)' : 'var(--color-red-600)'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="${isCredit ? 'M12 6v6m0 0v6m0-6h6m-6 0H6' : 'M20 12H4'}"/>
             </svg>
           </div>
           <div>
-            <p class="text-sm font-semibold text-stone-800 dark:text-stone-200">${t.description || (isCredit ? 'Deposit' : 'Withdrawal')}</p>
-            <p class="text-xs text-stone-400">${date}</p>
+            <p style="font-size:.875rem;font-weight:600;color:var(--color-stone-800)">${t.description || (isCredit ? 'Deposit' : 'Withdrawal')}</p>
+            <p style="font-size:.75rem;color:var(--color-stone-400)">${date}</p>
           </div>
         </div>
-        <span class="text-sm font-mono font-bold ${isCredit ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}">${isCredit ? '+' : '-'}₦${Math.abs(t.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+        <span style="font-size:.875rem;font-family:monospace;font-weight:700;color:${isCredit ? 'var(--color-emerald-600)' : 'var(--color-red-600)'}">${isCredit ? '+' : '-'}₦${Math.abs(t.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
       </div>`;
     }).join('');
 
@@ -135,8 +146,8 @@ async function loadWalletData() {
     document.getElementById('total-withdrawals').textContent = '₦' + withdrawals.toLocaleString(undefined, {minimumFractionDigits: 2});
     document.getElementById('net-balance').textContent = '₦' + (deposits - withdrawals).toLocaleString(undefined, {minimumFractionDigits: 2});
   } catch {
-    document.getElementById('transactions-loading').classList.add('hidden');
-    document.getElementById('transactions-empty').classList.remove('hidden');
+    document.getElementById('transactions-loading').style.display = 'none';
+    document.getElementById('transactions-empty').style.display = 'block';
     document.getElementById('transactions-empty').querySelector('p').textContent = 'Could not load transactions.';
   }
 }

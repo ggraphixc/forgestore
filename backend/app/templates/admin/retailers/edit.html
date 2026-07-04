@@ -1,91 +1,137 @@
 {% extends "admin/base.html" %}
 {% block title %}Edit {{ retailer.name }} — ForgeStore Admin{% endblock %}
 {% block content %}
-<div class="max-w-2xl mx-auto">
-    <nav class="flex items-center gap-2 text-sm text-stone-400 mb-6">
-        <a href="/admin/retailers" class="hover:text-amber-600 transition-colors">Retailers</a>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
-        <a href="/admin/retailers/{{ retailer.slug }}" class="hover:text-amber-600 transition-colors">{{ retailer.name[:20] }}{% if retailer.name|length > 20 %}...{% endif %}</a>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
-        <span class="text-stone-600 font-medium">Edit</span>
+<style>
+  :root {
+    --amber-50:#fffbeb;--amber-100:#fef3c7;--amber-200:#fde68a;--amber-300:#fcd34d;
+    --amber-400:#fbbf24;--amber-500:#f59e0b;--amber-600:#d97706;--amber-700:#b45309;
+    --amber-800:#92400e;
+    --stone-50:#fafaf9;--stone-100:#f5f5f4;--stone-200:#e7e5e4;--stone-300:#d6d3d1;
+    --stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#57534e;--stone-700:#44403c;
+    --stone-800:#292524;--stone-900:#1c1917;
+    --red-50:#fef2f2;--red-200:#fecaca;--red-500:#ef4444;--red-700:#b91c1c;
+    --radius-sm:6px;--radius-md:10px;--radius-lg:14px;--radius-xl:16px;--radius-full:9999px;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 12px rgba(0,0,0,.06);
+    --transition-fast:150ms ease;--transition-base:200ms ease;
+  }
+  .admin-page{max-width:640px;margin:0 auto;padding:0}
+  .admin-page-header{margin-bottom:2rem}
+  .admin-page-eyebrow{display:block;font-size:.625rem;font-weight:700;text-transform:uppercase;letter-spacing:.2em;color:var(--amber-600);margin-bottom:.5rem}
+  .admin-page-title{font-size:1.75rem;font-weight:900;color:var(--stone-900);line-height:1.15}
+  .admin-page-title .accent{background:linear-gradient(135deg,var(--amber-600),var(--amber-500));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .admin-page-subtitle{font-size:.875rem;color:var(--stone-500);margin-top:.5rem}
+  .admin-breadcrumb{display:flex;align-items:center;gap:8px;font-size:.875rem;color:var(--stone-400);margin-bottom:1.5rem}
+  .admin-breadcrumb a{color:var(--stone-400);text-decoration:none;transition:color var(--transition-fast)}
+  .admin-breadcrumb a:hover{color:var(--amber-600)}
+  .admin-breadcrumb svg{width:16px;height:16px;flex-shrink:0}
+  .admin-breadcrumb-current{color:var(--stone-600);font-weight:500}
+  .admin-card{background:#fff;border:1px solid var(--stone-200);border-radius:var(--radius-lg);padding:1.5rem 2rem;box-shadow:var(--shadow-sm);transition:box-shadow var(--transition-base)}
+  .admin-card:hover{box-shadow:var(--shadow-md)}
+  .admin-stack{display:flex;flex-direction:column;gap:1.25rem}
+  .admin-form-group{display:flex;flex-direction:column}
+  .admin-form-label{display:block;font-size:.625rem;font-weight:700;text-transform:uppercase;letter-spacing:.15em;color:var(--stone-500);margin-bottom:.5rem}
+  .admin-form-input,.admin-form-select,.admin-form-textarea{width:100%;padding:.75rem 1rem;background:#fff;border:1px solid var(--stone-200);border-radius:var(--radius-md);font-size:.875rem;color:var(--stone-900);transition:all var(--transition-fast);min-height:44px;box-sizing:border-box}
+  .admin-form-input:focus,.admin-form-select:focus,.admin-form-textarea:focus{outline:none;border-color:var(--amber-500);box-shadow:0 0 0 3px rgba(245,158,11,.12)}
+  .admin-form-textarea{resize:none;min-height:90px}
+  .admin-form-select{cursor:pointer;appearance:auto}
+  .admin-form-grid{display:grid;grid-template-columns:1fr;gap:1rem}
+  .admin-preview-img{margin-bottom:.75rem;border-radius:var(--radius-md);object-fit:cover;border:1px solid var(--stone-200)}
+  .admin-form-actions{display:flex;align-items:center;gap:.75rem;padding-top:1rem;border-top:1px solid var(--stone-100)}
+  .admin-btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.5rem;border:none;border-radius:var(--radius-md);font-size:.875rem;font-weight:700;cursor:pointer;transition:all var(--transition-fast);min-height:44px;text-decoration:none}
+  .admin-btn-primary{background:linear-gradient(135deg,var(--stone-800),var(--stone-900));color:#fff}
+  .admin-btn-primary:hover{background:linear-gradient(135deg,var(--stone-900),#1a1512);box-shadow:0 4px 12px rgba(0,0,0,.12)}
+  .admin-btn-ghost{padding:.75rem 1.5rem;background:none;color:var(--stone-500);font-weight:500;border-radius:var(--radius-md);transition:all var(--transition-fast);min-height:44px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:.875rem}
+  .admin-btn-ghost:hover{color:var(--stone-900);background:var(--stone-50)}
+  .admin-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:var(--radius-full);font-size:.625rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;border:1px solid;white-space:nowrap}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .admin-spin{animation:spin 1s linear infinite}
+  @media(min-width:768px){.admin-form-grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:640px){.admin-card{padding:1rem}.admin-page-title{font-size:1.25rem}}
+</style>
+
+<div class="admin-page">
+    <nav class="admin-breadcrumb">
+        <a href="/admin/retailers">Retailers</a>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
+        <a href="/admin/retailers/{{ retailer.slug }}">{{ retailer.name[:20] }}{% if retailer.name|length > 20 %}...{% endif %}</a>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
+        <span class="admin-breadcrumb-current">Edit</span>
     </nav>
 
-    <h1 class="text-2xl font-heading font-bold text-stone-900 mb-6">Edit Retailer</h1>
+    <div class="admin-page-header">
+        <span class="admin-page-eyebrow">Retailers</span>
+        <h1 class="admin-page-title">Edit <span class="accent">Retailer</span></h1>
+        <p class="admin-page-subtitle">{{ retailer.name }}</p>
+    </div>
 
-    <div class="bg-white rounded-2xl border border-stone-200 p-6 md:p-8 shadow-sm hover:shadow-md transition-shadow">
-        <form id="edit-retailer-form" class="space-y-5" onsubmit="event.preventDefault(); submitEditRetailer(this)">
+    <div class="admin-card">
+        <form id="edit-retailer-form" class="admin-stack" onsubmit="event.preventDefault(); submitEditRetailer(this)">
             <input type="hidden" name="slug_current" value="{{ retailer.slug }}">
 
-            <div>
-                <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2" for="name">Retailer Name</label>
-                <input id="name" name="name" value="{{ retailer.name }}" required class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="name">Retailer Name</label>
+                <input id="name" name="name" value="{{ retailer.name }}" required class="admin-form-input">
             </div>
 
-            <div>
-                <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2" for="slug">Slug</label>
-                <input id="slug" name="slug" value="{{ retailer.slug }}" class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="slug">Slug</label>
+                <input id="slug" name="slug" value="{{ retailer.slug }}" class="admin-form-input">
             </div>
 
-            <div>
-                <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2" for="description">Description</label>
-                <textarea id="description" name="description" rows="4" class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">{{ retailer.description or '' }}</textarea>
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="description">Description</label>
+                <textarea id="description" name="description" rows="4" class="admin-form-textarea">{{ retailer.description or '' }}</textarea>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2" for="logo_url">Logo</label>
+            <div class="admin-form-grid">
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="logo_url">Logo</label>
                     {% if retailer.logo_url %}
-                    <div class="mb-3">
-                        <img src="{{ retailer.logo_url }}" alt="{{ retailer.name }}" class="w-20 h-20 object-cover rounded-lg border border-stone-200">
-                    </div>
+                    <img src="{{ retailer.logo_url }}" alt="{{ retailer.name }}" class="admin-preview-img" style="width:80px;height:80px;">
                     {% endif %}
-                    <input id="logo_url" name="logo_url" type="file" accept="image/*" class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all" />
+                    <input id="logo_url" name="logo_url" type="file" accept="image/*" class="admin-form-input" />
                     <input type="hidden" name="existing_logo_url" value="{{ retailer.logo_url or '' }}">
                 </div>
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2" for="banner_url">Cover Image</label>
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="banner_url">Cover Image</label>
                     {% if retailer.banner_url %}
-                    <div class="mb-3">
-                        <img src="{{ retailer.banner_url }}" alt="{{ retailer.name }} cover" class="w-full h-28 object-cover rounded-lg border border-stone-200">
-                    </div>
+                    <img src="{{ retailer.banner_url }}" alt="{{ retailer.name }} cover" class="admin-preview-img" style="width:100%;height:112px;">
                     {% endif %}
-                    <input id="banner_url" name="banner_url" type="file" accept="image/*" class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all" />
+                    <input id="banner_url" name="banner_url" type="file" accept="image/*" class="admin-form-input" />
                     <input type="hidden" name="existing_banner_url" value="{{ retailer.banner_url or '' }}">
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2" for="email">Email</label>
-                    <input id="email" name="email" type="email" value="{{ retailer.email or '' }}" class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">
+            <div class="admin-form-grid">
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="email">Email</label>
+                    <input id="email" name="email" type="email" value="{{ retailer.email or '' }}" class="admin-form-input">
                 </div>
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2" for="phone">Phone</label>
-                    <input id="phone" name="phone" value="{{ retailer.phone or '' }}" class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="phone">Phone</label>
+                    <input id="phone" name="phone" value="{{ retailer.phone or '' }}" class="admin-form-input">
                 </div>
             </div>
 
-            <div>
-                <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2" for="address">Address</label>
-                <textarea id="address" name="address" rows="2" class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">{{ retailer.address or '' }}</textarea>
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="address">Address</label>
+                <textarea id="address" name="address" rows="2" class="admin-form-textarea">{{ retailer.address or '' }}</textarea>
             </div>
 
-            <div>
-                <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2">Status</label>
-                <select name="status" class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all cursor-pointer">
+            <div class="admin-form-group">
+                <label class="admin-form-label">Status</label>
+                <select name="status" class="admin-form-select">
                     <option value="ACTIVE" {% if retailer.status == 'ACTIVE' %}selected{% endif %}>Active</option>
                     <option value="INACTIVE" {% if retailer.status == 'INACTIVE' %}selected{% endif %}>Inactive</option>
                 </select>
             </div>
 
-            <div class="flex items-center gap-3 pt-4 border-t border-stone-100">
-                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-stone-800 to-stone-900 text-white text-sm font-bold rounded-xl hover:from-stone-900 hover:to-stone-950 transition-all shadow-md hover:shadow-lg">
-                    <span class="inline-flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Save Changes
-                    </span>
+            <div class="admin-form-actions">
+                <button type="submit" class="admin-btn admin-btn-primary">
+                    <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Save Changes
                 </button>
-                <a href="/admin/retailers" class="px-6 py-3 text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 rounded-xl transition-all">Cancel</a>
+                <a href="/admin/retailers" class="admin-btn-ghost">Cancel</a>
             </div>
         </form>
     </div>
@@ -95,7 +141,7 @@
 async function submitEditRetailer(form) {
     const btn = form.querySelector('button[type="submit"]');
     btn.disabled = true;
-    btn.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Saving...</span>';
+    btn.innerHTML = '<svg class="admin-spin" style="width:16px;height:16px;" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Saving...';
 
     const formData = new FormData(form);
     const data = {};
@@ -103,35 +149,21 @@ async function submitEditRetailer(form) {
         if (['slug_current', 'logo_url', 'banner_url', 'existing_logo_url', 'existing_banner_url'].includes(key)) continue;
         data[key] = value;
     }
-
     const logoFile = formData.get('logo_url');
     if (logoFile && logoFile.size) {
-        const uploadForm = new FormData();
-        uploadForm.append('files', logoFile);
-        const uploadRes = await fetch('/api/admin/upload', {
-            method: 'POST',
-            body: uploadForm,
-        });
-        const uploadData = await uploadRes.json();
-        if (uploadData.urls && uploadData.urls.length) {
-            data.logo_url = uploadData.urls[0];
-        }
+        const uf = new FormData(); uf.append('files', logoFile);
+        const ur = await fetch('/api/admin/upload', { method: 'POST', body: uf });
+        const ud = await ur.json();
+        if (ud.urls && ud.urls.length) data.logo_url = ud.urls[0];
     } else if (formData.get('existing_logo_url')) {
         data.logo_url = formData.get('existing_logo_url');
     }
-
     const bannerFile = formData.get('banner_url');
     if (bannerFile && bannerFile.size) {
-        const uploadForm = new FormData();
-        uploadForm.append('files', bannerFile);
-        const uploadRes = await fetch('/api/admin/upload', {
-            method: 'POST',
-            body: uploadForm,
-        });
-        const uploadData = await uploadRes.json();
-        if (uploadData.urls && uploadData.urls.length) {
-            data.banner_url = uploadData.urls[0];
-        }
+        const uf = new FormData(); uf.append('files', bannerFile);
+        const ur = await fetch('/api/admin/upload', { method: 'POST', body: uf });
+        const ud = await ur.json();
+        if (ud.urls && ud.urls.length) data.banner_url = ud.urls[0];
     } else if (formData.get('existing_banner_url')) {
         data.banner_url = formData.get('existing_banner_url');
     }
@@ -139,9 +171,7 @@ async function submitEditRetailer(form) {
     const slug = form.slug_current.value;
     try {
         const res = await fetch(`/api/admin/retailers/${slug}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
+            method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
         });
         if (!res.ok) throw new Error('Failed to update');
         showToast('Retailer updated successfully', 'success');
@@ -150,7 +180,7 @@ async function submitEditRetailer(form) {
         showToast('Failed to update retailer', 'error');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Save Changes</span>';
+        btn.innerHTML = '<svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Save Changes';
     }
 }
 </script>

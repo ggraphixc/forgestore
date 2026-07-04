@@ -2,200 +2,208 @@
 {% block title %}Become a Vendor — ForgeStore{% endblock %}
 {% block footer %}{% endblock %}
 {% block content %}
+<style>
+  :root {
+    --ws-amber-50: #fffbeb; --ws-amber-100: #fef3c7; --ws-amber-200: #fde68a;
+    --ws-amber-300: #fcd34d; --ws-amber-400: #fbbf24; --ws-amber-500: #f59e0b;
+    --ws-amber-600: #d97706; --ws-amber-700: #b45309;
+    --ws-emerald-500: #10b981; --ws-emerald-600: #059669; --ws-emerald-700: #047857;
+    --ws-emerald-50: #ecfdf5; --ws-emerald-100: #d1fae5; --ws-emerald-200: #a7f3d0;
+    --ws-emerald-900: #064e3b;
+    --ws-stone-50: #fafaf9; --ws-stone-100: #f5f5f4; --ws-stone-200: #e7e5e3;
+    --ws-stone-300: #d6d3d1; --ws-stone-400: #a8a29e; --ws-stone-500: #78716c;
+    --ws-stone-600: #57534e; --ws-stone-700: #44403c; --ws-stone-800: #292524;
+    --ws-stone-900: #1c1917; --ws-stone-950: #0c0a09;
+    --ws-radius: 16px; --ws-radius-sm: 12px; --ws-radius-xs: 8px;
+    --ws-shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --ws-transition: .25s cubic-bezier(.4,0,.2,1);
+  }
+  .ws-split { min-height: 100vh; display: flex; }
+  .ws-split-left { display: none; }
+  @media (min-width: 1024px) {
+    .ws-split-left { display: flex; width: 55%; position: relative; overflow: hidden; background: linear-gradient(135deg, var(--ws-stone-900), var(--ws-stone-800), #78350f); align-items: center; justify-content: center; padding: 3rem; }
+  }
+  .ws-split-glow1 { position: absolute; top: -33%; left: -25%; width: 700px; height: 700px; background: radial-gradient(circle, rgba(245,158,11,.2), transparent 70%); animation: ws-pulse 6s ease-in-out infinite; pointer-events: none; }
+  .ws-split-glow2 { position: absolute; bottom: -33%; right: -25%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(249,115,22,.1), transparent 70%); pointer-events: none; }
+  .ws-split-glow3 { position: absolute; top: 33%; right: 10%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(245,158,11,.1), transparent 70%); pointer-events: none; }
+  .ws-split-grid-overlay { position: absolute; inset: 0; opacity: .04; background-image: linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+  @keyframes ws-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
+  .ws-split-left-content { position: relative; z-index: 1; max-width: 32rem; }
+  .ws-brand { display: flex; align-items: center; gap: .75rem; margin-bottom: 2.5rem; }
+  .ws-brand-icon { width: 48px; height: 48px; background: rgba(255,255,255,.1); border-radius: 16px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,.1); }
+  .ws-brand-icon span { color: #fff; font-size: 1.25rem; font-weight: 900; }
+  .ws-brand-text span:first-child { color: #fff; font-weight: 700; font-size: 1.125rem; }
+  .ws-brand-text span:last-child { display: block; font-size: .75rem; color: rgba(252,211,77,.7); }
+  .ws-split-left h1 { font-size: 2.25rem; font-weight: 900; color: #fff; line-height: 1.1; margin-bottom: 1rem; }
+  .ws-split-left h1 em { font-style: normal; background: linear-gradient(135deg, var(--ws-amber-300), var(--ws-amber-500)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .ws-split-left > .ws-split-left-content > p { color: var(--ws-stone-400); line-height: 1.6; margin-bottom: 2.5rem; max-width: 28rem; }
+  .ws-perks { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 3rem; }
+  .ws-perk { padding: 1rem; background: rgba(255,255,255,.05); backdrop-filter: blur(8px); border-radius: var(--ws-radius-sm); border: 1px solid rgba(255,255,255,.1); }
+  .ws-perk-icon { width: 40px; height: 40px; background: rgba(245,158,11,.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: .75rem; }
+  .ws-perk-icon svg { width: 20px; height: 20px; color: var(--ws-amber-400); }
+  .ws-perk strong { display: block; color: #fff; font-size: .875rem; font-weight: 600; }
+  .ws-perk span { display: block; color: var(--ws-stone-500); font-size: .75rem; margin-top: .25rem; }
+  .ws-testimonial { padding: 1.5rem; background: rgba(255,255,255,.05); backdrop-filter: blur(8px); border-radius: var(--ws-radius); border: 1px solid rgba(255,255,255,.1); }
+  .ws-testimonial svg { width: 32px; height: 32px; color: rgba(245,158,11,.3); margin-bottom: .75rem; }
+  .ws-testimonial p { color: var(--ws-stone-300); font-size: .875rem; line-height: 1.6; font-style: italic; }
+  .ws-testimonial-author { display: flex; align-items: center; gap: .75rem; margin-top: 1rem; }
+  .ws-testimonial-avatar { width: 40px; height: 40px; border-radius: 50%; background: rgba(245,158,11,.2); display: flex; align-items: center; justify-content: center; font-size: .75rem; font-weight: 700; color: var(--ws-amber-300); border: 2px solid rgba(245,158,11,.2); }
+  .ws-testimonial-name { font-size: .875rem; font-weight: 600; color: #fff; }
+  .ws-testimonial-role { font-size: .75rem; color: var(--ws-stone-500); }
+  .ws-split-left-footer { margin-top: 2.5rem; font-size: .75rem; color: var(--ws-stone-600); }
+  .ws-split-right { width: 100%; display: flex; align-items: center; justify-content: center; padding: 2rem 1.25rem; background: #fff; }
+  @media (min-width: 1024px) { .ws-split-right { width: 45%; } }
+  .ws-form-wrap { width: 100%; max-width: 28rem; }
+  .ws-mobile-logo { display: flex; align-items: center; gap: .75rem; margin-bottom: 2rem; justify-content: center; }
+  @media (min-width: 1024px) { .ws-mobile-logo { display: none; } }
+  .ws-mobile-logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--ws-stone-900), var(--ws-stone-700)); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: var(--ws-shadow); }
+  .ws-mobile-logo-icon span { color: #fff; font-size: .875rem; font-weight: 900; }
+  .ws-mobile-logo-text { font-size: 1.125rem; font-weight: 700; color: var(--ws-stone-900); }
+  .ws-form-header { text-align: center; margin-bottom: 2rem; }
+  .ws-form-header h1 { font-size: 1.875rem; font-weight: 900; color: var(--ws-stone-900); }
+  .ws-form-header h1 em { font-style: normal; background: linear-gradient(135deg, var(--ws-amber-600), var(--ws-amber-500)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .ws-form-header p { font-size: .875rem; color: var(--ws-stone-500); margin-top: .5rem; }
+  .ws-success-box { display: none; margin-bottom: 1.5rem; padding: 1rem; background: var(--ws-emerald-50); border: 1px solid var(--ws-emerald-200); border-radius: var(--ws-radius-sm); text-align: center; }
+  .ws-success-box svg { width: 40px; height: 40px; color: var(--ws-emerald-500); margin: 0 auto .5rem; }
+  .ws-success-box strong { display: block; font-size: .875rem; color: var(--ws-emerald-700); }
+  .ws-success-box span { font-size: .75rem; color: var(--ws-emerald-600); margin-top: .25rem; display: block; }
+  .ws-form-group { margin-bottom: 1rem; }
+  .ws-form-group label { display: block; font-size: .875rem; font-weight: 500; color: var(--ws-stone-700); margin-bottom: .375rem; }
+  .ws-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+  .ws-input { width: 100%; min-height: 44px; padding: 0 1rem; font-size: .875rem; color: var(--ws-stone-900); background: #fff; border: 1.5px solid var(--ws-stone-200); border-radius: var(--ws-radius-xs); outline: none; transition: border-color var(--ws-transition), box-shadow var(--ws-transition); }
+  .ws-input::placeholder { color: var(--ws-stone-400); }
+  .ws-input:focus { border-color: var(--ws-amber-500); box-shadow: 0 0 0 3px rgba(245,158,11,.12); }
+  .ws-textarea { min-height: 80px; padding: .75rem 1rem; resize: none; }
+  .ws-section-label { font-size: .75rem; font-weight: 700; color: var(--ws-stone-400); text-transform: uppercase; letter-spacing: .1em; margin-bottom: .75rem; margin-top: .5rem; }
+  .ws-submit-btn { display: flex; align-items: center; justify-content: center; min-height: 44px; width: 100%; padding: 0 1.5rem; font-size: .875rem; font-weight: 600; border-radius: var(--ws-radius-sm); border: none; cursor: pointer; background: linear-gradient(135deg, var(--ws-amber-500), var(--ws-amber-600)); color: #fff; box-shadow: 0 2px 8px rgba(245,158,11,.25); transition: all var(--ws-transition); margin-top: .5rem; }
+  .ws-submit-btn:hover { background: linear-gradient(135deg, var(--ws-amber-600), var(--ws-amber-700)); box-shadow: 0 4px 12px rgba(245,158,11,.35); transform: translateY(-1px); }
+  .ws-submit-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+  .ws-submit-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: ws-spin .6s linear infinite; margin-right: .5rem; }
+  @keyframes ws-spin { to { transform: rotate(360deg); } }
+  .ws-form-divider { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--ws-stone-200); text-align: center; }
+  .ws-form-divider span { font-size: .75rem; color: var(--ws-stone-400); }
+  .ws-form-divider a { font-weight: 600; color: var(--ws-amber-600); text-decoration: none; transition: color var(--ws-transition); }
+  .ws-form-divider a:hover { color: var(--ws-amber-700); }
+  @media (prefers-color-scheme: dark) {
+    .ws-split-right { background: var(--ws-stone-950); }
+    .ws-mobile-logo-text { color: var(--ws-stone-100); }
+    .ws-form-header h1 { color: var(--ws-stone-100); }
+    .ws-form-group label { color: var(--ws-stone-300); }
+    .ws-input { background: transparent; border-color: var(--ws-stone-700); color: var(--ws-stone-100); }
+    .ws-input:focus { border-color: var(--ws-amber-600); }
+    .ws-success-box { background: rgba(6,78,59,.2); border-color: rgba(5,150,105,.3); }
+    .ws-success-box strong { color: var(--ws-emerald-400); }
+    .ws-success-box span { color: var(--ws-emerald-500); }
+    .ws-form-divider { border-color: var(--ws-stone-700); }
+    .ws-form-divider span { color: var(--ws-stone-500); }
+    .ws-form-divider a { color: var(--ws-amber-400); }
+  }
+</style>
 
-<div class="min-h-screen flex" style="margin-top: calc(-1 * theme('spacing.14')); padding-top: theme('spacing.14');">
-  <!-- ===== LEFT: Value Proposition (hidden on mobile) ===== -->
-  <div class="hidden lg:flex lg:w-[55%] relative overflow-hidden bg-gradient-to-br from-stone-900 via-stone-800 to-amber-950 items-center justify-center p-12">
-    <!-- Decorative gradient orbs -->
-    <div class="absolute -top-1/3 -left-1/4 w-[700px] h-[700px] bg-gradient-to-br from-amber-500/20 to-amber-600/5 rounded-full blur-[120px] animate-pulse" style="animation-duration: 6s;"></div>
-    <div class="absolute -bottom-1/3 -right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-orange-500/10 to-transparent rounded-full blur-[100px]"></div>
-    <div class="absolute top-1/3 right-[10%] w-[300px] h-[300px] bg-gradient-to-br from-amber-400/10 to-transparent rounded-full blur-[80px]"></div>
-
-    <!-- Subtle grid overlay -->
-    <div class="absolute inset-0 opacity-[0.04]" style="background-image: linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px); background-size: 60px 60px;"></div>
-
-    <!-- Content -->
-    <div class="relative z-10 max-w-lg">
-      <!-- Brand -->
-      <div class="flex items-center gap-3 mb-10">
-        <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm ring-1 ring-white/10">
-          <span class="text-white text-xl font-black">FS</span>
-        </div>
-        <div>
-          <span class="text-white font-bold text-lg font-display">ForgeStore</span>
-          <span class="block text-xs text-amber-300/70 lowercase">where the workshop meets the world</span>
+<div class="ws-split">
+  <div class="ws-split-left">
+    <div class="ws-split-glow1"></div>
+    <div class="ws-split-glow2"></div>
+    <div class="ws-split-glow3"></div>
+    <div class="ws-split-grid-overlay"></div>
+    <div class="ws-split-left-content">
+      <div class="ws-brand">
+        <div class="ws-brand-icon"><span>FS</span></div>
+        <div class="ws-brand-text">
+          <span>ForgeStore</span>
+          <span>where the workshop meets the world</span>
         </div>
       </div>
-
-      <!-- Hero message -->
-      <h1 class="text-4xl font-black text-white leading-[1.1] mb-4">
-        Grow Your<br/>
-        <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-500">Artisan Business</span>
-      </h1>
-      <p class="text-stone-400 text-base leading-relaxed mb-10 max-w-md">
-        Join 500+ vendors already selling on ForgeStore. Reach thousands of buyers, manage orders from one dashboard, and get paid on time — every time.
-      </p>
-
-      <!-- Vendor perks -->
-      <div class="grid grid-cols-2 gap-4 mb-12">
-        <div class="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-          <div class="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center mb-3">
-            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </div>
-          <p class="text-white text-sm font-semibold">Keep 90%+</p>
-          <p class="text-stone-500 text-xs mt-1">Competitive commission rates</p>
+      <h1>Grow Your<br><em>Artisan Business</em></h1>
+      <p>Join 500+ vendors already selling on ForgeStore. Reach thousands of buyers, manage orders from one dashboard, and get paid on time — every time.</p>
+      <div class="ws-perks">
+        <div class="ws-perk">
+          <div class="ws-perk-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+          <strong>Keep 90%+</strong>
+          <span>Competitive commission rates</span>
         </div>
-        <div class="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-          <div class="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center mb-3">
-            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-            </svg>
-          </div>
-          <p class="text-white text-sm font-semibold">Secure Payouts</p>
-          <p class="text-stone-500 text-xs mt-1">Direct bank transfers on schedule</p>
+        <div class="ws-perk">
+          <div class="ws-perk-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg></div>
+          <strong>Secure Payouts</strong>
+          <span>Direct bank transfers on schedule</span>
         </div>
-        <div class="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-          <div class="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center mb-3">
-            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-          </div>
-          <p class="text-white text-sm font-semibold">Instant Tools</p>
-          <p class="text-stone-500 text-xs mt-1">Dashboard, analytics & bulk import</p>
+        <div class="ws-perk">
+          <div class="ws-perk-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+          <strong>Instant Tools</strong>
+          <span>Dashboard, analytics & bulk import</span>
         </div>
-        <div class="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-          <div class="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center mb-3">
-            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
-            </svg>
-          </div>
-          <p class="text-white text-sm font-semibold">Global Reach</p>
-          <p class="text-stone-500 text-xs mt-1">Sell to buyers across 50+ countries</p>
+        <div class="ws-perk">
+          <div class="ws-perk-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg></div>
+          <strong>Global Reach</strong>
+          <span>Sell to buyers across 50+ countries</span>
         </div>
       </div>
-
-      <!-- Testimonial -->
-      <div class="relative p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10">
-        <svg class="w-8 h-8 text-amber-500/30 mb-3" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10H14.017zM0 21v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151C7.563 6.068 6 8.789 6 11h4v10H0z"/>
-        </svg>
-        <p class="text-stone-300 text-sm leading-relaxed italic">
-          "Since joining ForgeStore, my ceramic studio's revenue tripled. The vendor dashboard makes inventory and payouts effortless."
-        </p>
-        <div class="flex items-center gap-3 mt-4">
-          <div class="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-300 ring-2 ring-amber-500/20">
-            NK
-          </div>
+      <div class="ws-testimonial">
+        <svg fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10H14.017zM0 21v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151C7.563 6.068 6 8.789 6 11h4v10H0z"/></svg>
+        <p>"Since joining ForgeStore, my ceramic studio's revenue tripled. The vendor dashboard makes inventory and payouts effortless."</p>
+        <div class="ws-testimonial-author">
+          <div class="ws-testimonial-avatar">NK</div>
           <div>
-            <p class="text-sm font-semibold text-white">Nkechi K.</p>
-            <p class="text-xs text-stone-500">Ceramic Vendor, Enugu</p>
+            <p class="ws-testimonial-name">Nkechi K.</p>
+            <p class="ws-testimonial-role">Ceramic Vendor, Enugu</p>
           </div>
         </div>
       </div>
-
-      <p class="mt-10 text-xs text-stone-600">
-        &copy; 2026 ForgeStore &mdash; Empowering Artisans Worldwide
-      </p>
+      <p class="ws-split-left-footer">&copy; 2026 ForgeStore &mdash; Empowering Artisans Worldwide</p>
     </div>
   </div>
 
-  <!-- ===== RIGHT: Application Form ===== -->
-  <div class="w-full lg:w-[45%] flex items-center justify-center px-5 sm:px-8 py-8 bg-white dark:bg-stone-950">
-    <div class="w-full max-w-md">
-      <!-- Mobile logo -->
-      <div class="lg:hidden flex items-center gap-3 mb-8 justify-center">
-        <div class="w-10 h-10 bg-gradient-to-br from-stone-900 to-stone-700 dark:from-amber-600 dark:to-amber-700 rounded-xl flex items-center justify-center shadow-sm">
-          <span class="text-white text-sm font-black">FS</span>
+  <div class="ws-split-right">
+    <div class="ws-form-wrap">
+      <div class="ws-mobile-logo">
+        <div class="ws-mobile-logo-icon"><span>FS</span></div>
+        <span class="ws-mobile-logo-text">ForgeStore</span>
+      </div>
+      <div class="ws-form-header">
+        <h1>Become a <em>Vendor</em></h1>
+        <p>Fill out the form below to apply. We'll review within 24 hours.</p>
+      </div>
+      <div id="success-msg" class="ws-success-box">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <strong>Application Submitted!</strong>
+        <span>We'll review your application and get back to you within 24 hours.</span>
+      </div>
+      <form id="vendor-form" onsubmit="submitVendorApplication(event)">
+        <div class="ws-form-group">
+          <label for="business_name">Business Name *</label>
+          <input id="business_name" name="business_name" type="text" required class="ws-input" placeholder="Your shop or brand name">
         </div>
-        <span class="text-lg font-bold text-stone-900 dark:text-stone-100 font-display">ForgeStore</span>
-      </div>
-
-      <!-- Form header -->
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-black text-stone-900 dark:text-stone-100">
-          Become a <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Vendor</span>
-        </h1>
-        <p class="text-sm text-stone-500 mt-2">Fill out the form below to apply. We'll review within 24 hours.</p>
-      </div>
-
-      <!-- Success message -->
-      <div id="success-msg" class="hidden mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 rounded-xl text-center">
-        <svg class="w-10 h-10 text-emerald-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <p class="text-sm font-semibold text-emerald-700 dark:text-emerald-400">Application Submitted!</p>
-        <p class="text-xs text-emerald-600 dark:text-emerald-500 mt-1">We'll review your application and get back to you within 24 hours.</p>
-      </div>
-
-      <!-- Application Form -->
-      <div class="bg-white dark:bg-transparent rounded-2xl">
-        <form id="vendor-form" class="space-y-4" onsubmit="submitVendorApplication(event)">
-          <div>
-            <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5" for="business_name">Business Name *</label>
-            <input id="business_name" name="business_name" type="text" required
-              class="input-forge"
-              placeholder="Your shop or brand name">
+        <div class="ws-form-row">
+          <div class="ws-form-group">
+            <label for="email">Contact Email *</label>
+            <input id="email" name="email" type="email" required class="ws-input" placeholder="you@business.com">
           </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5" for="email">Contact Email *</label>
-              <input id="email" name="email" type="email" required
-                class="input-forge"
-                placeholder="you@business.com">
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5" for="phone">Phone *</label>
-              <input id="phone" name="phone" type="tel" required
-                class="input-forge"
-                placeholder="+234...">
-            </div>
+          <div class="ws-form-group">
+            <label for="phone">Phone *</label>
+            <input id="phone" name="phone" type="tel" required class="ws-input" placeholder="+234...">
           </div>
-          <div>
-            <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5" for="description">Business Description</label>
-            <textarea id="description" name="description" rows="3"
-              class="input-forge resize-none"
-              placeholder="Tell us about your products and craft..."></textarea>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5" for="catalog_category">Product Category</label>
-            <input id="catalog_category" name="catalog_category" type="text"
-              class="input-forge"
-              placeholder="e.g. Handmade Jewelry, Fashion, Ceramics...">
-          </div>
-
-          <!-- Banking Section -->
-          <div class="pt-2">
-            <p class="text-xs font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-3">Banking Details</p>
-            <div class="space-y-3">
-              <div>
-                <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5" for="account_number">Account Number *</label>
-                <input id="account_number" name="account_number" required
-                  class="input-forge"
-                  placeholder="0123456789">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5" for="bank_code">Bank Code *</label>
-                <input id="bank_code" name="bank_code" required
-                  class="input-forge"
-                  placeholder="e.g. 044 (Access), 057 (Zenith)">
-              </div>
-            </div>
-          </div>
-
-          <button type="submit" id="submit-btn"
-            class="btn-forge min-h-[44px] w-full justify-center text-sm mt-2">
-            Submit Application
-          </button>
-        </form>
-
-        <div class="mt-6 pt-4 border-t border-stone-200 dark:border-stone-700 text-center">
-          <p class="text-xs text-stone-400 dark:text-stone-500">
-            Already a vendor?
-            <a href="/admin/login" class="font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors">Sign in to dashboard</a>
-          </p>
         </div>
+        <div class="ws-form-group">
+          <label for="description">Business Description</label>
+          <textarea id="description" name="description" rows="3" class="ws-input ws-textarea" placeholder="Tell us about your products and craft..."></textarea>
+        </div>
+        <div class="ws-form-group">
+          <label for="catalog_category">Product Category</label>
+          <input id="catalog_category" name="catalog_category" type="text" class="ws-input" placeholder="e.g. Handmade Jewelry, Fashion, Ceramics...">
+        </div>
+        <p class="ws-section-label">Banking Details</p>
+        <div class="ws-form-group">
+          <label for="account_number">Account Number *</label>
+          <input id="account_number" name="account_number" required class="ws-input" placeholder="0123456789">
+        </div>
+        <div class="ws-form-group">
+          <label for="bank_code">Bank Code *</label>
+          <input id="bank_code" name="bank_code" required class="ws-input" placeholder="e.g. 044 (Access), 057 (Zenith)">
+        </div>
+        <button type="submit" id="submit-btn" class="ws-submit-btn">Submit Application</button>
+      </form>
+      <div class="ws-form-divider">
+        <span>Already a vendor? <a href="/admin/login">Sign in to dashboard</a></span>
       </div>
     </div>
   </div>
@@ -208,7 +216,7 @@ async function submitVendorApplication(e) {
     const btn = document.getElementById('submit-btn');
     const data = Object.fromEntries(new FormData(form));
     btn.disabled = true;
-    btn.innerHTML = '<span class="inline-block animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></span> Submitting...';
+    btn.innerHTML = '<span class="ws-submit-spinner"></span> Submitting...';
     try {
         const res = await fetch('/api/vendor/apply', {
             method: 'POST',
@@ -218,7 +226,7 @@ async function submitVendorApplication(e) {
         const result = await res.json();
         if (result.success) {
             form.classList.add('hidden');
-            document.getElementById('success-msg').classList.remove('hidden');
+            document.getElementById('success-msg').style.display = 'block';
         } else {
             alert(result.detail || 'Failed to submit. Please try again.');
             btn.disabled = false;

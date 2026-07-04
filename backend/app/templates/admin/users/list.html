@@ -1,73 +1,286 @@
 {% extends "admin/base.html" %}
-
 {% block title %}Admin Users — ForgeStore{% endblock %}
-
 {% block content %}
-<div class="max-w-5xl mx-auto">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+<style>
+:root {
+    --page-bg: #faf9f6;
+    --card-bg: #ffffff;
+    --text-primary: #1c1917;
+    --text-secondary: #78716c;
+    --text-muted: #a8a29e;
+    --border-color: #e7e5e4;
+    --amber: #d97706;
+    --amber-hover: #b45309;
+    --amber-bg: #fffbeb;
+    --amber-bg-subtle: rgba(255,251,235,0.1);
+    --purple: #7c3aed;
+    --purple-bg: #7c3aed;
+    --blue: #2563eb;
+    --blue-bg: #2563eb;
+    --cyan: #0891b2;
+    --cyan-bg: #0891b2;
+    --emerald: #059669;
+    --emerald-bg: #059669;
+    --red: #dc2626;
+    --stone-50: #fafaf9;
+    --stone-100: #f5f5f4;
+    --stone-200: #e7e5e4;
+    --stone-400: #a8a29e;
+    --stone-500: #78716c;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+    --radius: 8px;
+    --radius-lg: 12px;
+    --transition: 0.15s;
+}
+.dark {
+    --page-bg: #1c1917;
+    --card-bg: #292524;
+    --text-primary: #faf9f6;
+    --text-secondary: #a8a29e;
+    --text-muted: #78716c;
+    --border-color: #44403c;
+    --amber-bg: rgba(217,119,6,0.15);
+    --amber-bg-subtle: rgba(255,251,235,0.05);
+    --stone-50: #292524;
+    --stone-100: #44403c;
+    --stone-200: #57534e;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.admin-users-container { max-width: 64rem; margin: 0 auto; padding: 0 16px; }
+
+.admin-users-header {
+    display: flex; flex-direction: column; gap: 1rem;
+    margin-bottom: 2rem; padding-top: 24px;
+}
+@media (min-width: 640px) {
+    .admin-users-header { flex-direction: row; align-items: center; justify-content: space-between; }
+}
+.admin-users-label {
+    font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.2em; color: var(--amber); margin-bottom: 0.5rem; display: block;
+}
+.admin-users-title {
+    font-size: 1.875rem; font-weight: 900; color: var(--text-primary); margin: 0;
+    font-family: system-ui, sans-serif;
+}
+@media (min-width: 768px) { .admin-users-title { font-size: 2.25rem; } }
+.admin-users-title span {
+    background: linear-gradient(135deg, var(--amber), #f59e0b);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.admin-users-desc { font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem; }
+
+.admin-users-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    padding: 0 1.25rem; font-size: 0.875rem; font-weight: 600;
+    background: var(--amber); color: white; border: none;
+    border-radius: var(--radius); cursor: pointer;
+    min-height: 44px; text-decoration: none;
+    transition: background var(--transition);
+}
+.admin-users-btn:hover { background: var(--amber-hover); }
+.admin-users-btn svg { width: 1rem; height: 1rem; }
+
+.admin-users-card {
+    background: var(--card-bg); border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg); overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+.admin-users-table { width: 100%; font-size: 0.875rem; }
+.admin-users-table thead tr {
+    border-bottom: 1px solid var(--stone-100); background: var(--stone-50);
+}
+.admin-users-table th {
+    text-align: left; padding: 0.875rem 1.5rem;
+    font-size: 0.625rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.15em; color: var(--stone-400);
+}
+.admin-users-table td { padding: 0.875rem 1.5rem; }
+.admin-users-table tbody tr {
+    border-bottom: 1px solid var(--stone-100);
+    transition: background var(--transition);
+}
+.admin-users-table tbody tr:hover { background: var(--amber-bg-subtle); }
+.admin-users-table tbody tr:last-child { border-bottom: none; }
+
+.admin-users-avatar {
+    width: 2.25rem; height: 2.25rem; border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 0.75rem; font-weight: 700;
+    border: 2px solid rgba(217,119,6,0.2);
+    flex-shrink: 0;
+}
+
+.admin-users-name { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin: 0; }
+.admin-users-you { font-size: 0.625rem; font-weight: 500; color: var(--amber); }
+.admin-users-email { font-size: 0.875rem; color: var(--text-secondary); }
+.admin-users-date { font-size: 0.875rem; color: var(--text-muted); }
+
+.admin-users-role {
+    display: inline-flex; align-items: center; padding: 0.125rem 0.625rem;
+    border-radius: 9999px; font-size: 0.625rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em;
+}
+
+.admin-users-actions { display: flex; align-items: center; justify-content: flex-end; gap: 0.25rem; }
+.admin-users-action {
+    padding: 0.5rem; border-radius: var(--radius); text-decoration: none;
+    color: var(--stone-400); transition: all var(--transition);
+    display: flex; align-items: center; justify-content: center;
+}
+.admin-users-action:hover { background: var(--stone-100); color: var(--text-primary); }
+.admin-users-action.delete:hover { background: #fef2f2; color: var(--red); }
+.admin-users-action svg { width: 1rem; height: 1rem; }
+
+.admin-users-empty {
+    padding: 3rem 1.5rem; text-align: center;
+}
+.admin-users-empty-icon {
+    width: 4rem; height: 4rem; background: var(--stone-50);
+    border-radius: 9999px; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1rem;
+}
+.admin-users-empty-icon svg { width: 2rem; height: 2rem; color: var(--stone-400); }
+.admin-users-empty p { font-size: 0.875rem; color: var(--text-secondary); }
+
+/* Audit Log */
+.audit-section { margin-top: 2rem; }
+.audit-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.5rem; border-bottom: 1px solid var(--stone-100);
+}
+.audit-header-left { display: flex; align-items: center; gap: 0.5rem; }
+.audit-header-left svg { width: 1rem; height: 1rem; color: var(--stone-400); }
+.audit-title { font-size: 0.875rem; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.1em; }
+.audit-meta { font-size: 0.625rem; color: var(--text-muted); font-weight: 500; }
+
+.audit-spinner {
+    display: flex; align-items: center; justify-content: center; padding: 2rem 1.5rem;
+}
+.audit-spinner-dot {
+    width: 1.5rem; height: 1rem; border: 2px solid var(--amber);
+    border-top-color: transparent; border-radius: 9999px;
+    animation: audit-spin 0.8s linear infinite;
+}
+@keyframes audit-spin { to { transform: rotate(360deg); } }
+
+.audit-load-more {
+    padding: 0.75rem 1.5rem; border-top: 1px solid var(--stone-100); text-align: center;
+}
+.audit-load-more button {
+    padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 500;
+    color: var(--text-secondary); background: var(--card-bg);
+    border: 1px solid var(--border-color); border-radius: var(--radius);
+    cursor: pointer; transition: all var(--transition);
+}
+.audit-load-more button:hover { border-color: var(--stone-200); color: var(--text-primary); }
+
+.audit-item {
+    display: flex; align-items: flex-start; gap: 0.75rem;
+    padding: 0.875rem 1.5rem; transition: background var(--transition);
+}
+.audit-item:hover { background: var(--stone-50); }
+.audit-dot {
+    flex-shrink: 0; width: 0.375rem; height: 0.375rem;
+    border-radius: 9999px; margin-top: 0.5rem;
+}
+.audit-dot.create { background: #34d399; }
+.audit-dot.delete { background: #f87171; }
+.audit-dot.update { background: #60a5fa; }
+.audit-dot.default { background: var(--stone-400); }
+.audit-body { flex: 1; min-width: 0; }
+.audit-body-header { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.audit-action-badge {
+    display: inline-block; padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem; font-size: 0.625rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em;
+}
+.audit-admin { font-size: 0.75rem; font-weight: 500; color: var(--stone-200); }
+.audit-resource { font-size: 0.75rem; color: var(--text-muted); }
+.audit-details { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.125rem; }
+.audit-date { font-size: 0.625rem; color: var(--text-muted); margin-top: 0.125rem; }
+
+/* Role Info Cards */
+.role-info-grid {
+    display: grid; grid-template-columns: 1fr; gap: 1rem;
+    margin-top: 2rem;
+}
+@media (min-width: 768px) { .role-info-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.role-info-card {
+    background: var(--card-bg); border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg); padding: 1.25rem;
+}
+.role-info-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+.role-dot { width: 0.625rem; height: 0.625rem; border-radius: 9999px; }
+.role-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-secondary); }
+.role-desc { font-size: 0.75rem; color: var(--text-muted); }
+</style>
+
+<div class="admin-users-container">
+    <div class="admin-users-header">
         <div>
-            <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 mb-2 block">System</span>
-            <h1 class="text-3xl md:text-4xl font-display font-black text-stone-900">Admin <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Users</span></h1>
-            <p class="text-sm text-stone-500 mt-2">Manage administrator accounts and roles</p>
+            <span class="admin-users-label">System</span>
+            <h1 class="admin-users-title">Admin <span>Users</span></h1>
+            <p class="admin-users-desc">Manage administrator accounts and roles</p>
         </div>
-        <a href="/admin/admin-users/new" class="btn-forge text-sm min-h-[44px] inline-flex items-center justify-center">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <a href="/admin/admin-users/new" class="admin-users-btn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             Add Admin
         </a>
     </div>
 
-    <!-- Admin Users Table -->
-    <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
+    <div class="admin-users-card">
+        <div style="overflow-x:auto">
+            <table class="admin-users-table">
                 <thead>
-                    <tr class="border-b border-stone-100 bg-stone-50/50">
-                        <th class="text-left px-6 py-3.5 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Admin</th>
-                        <th class="text-left px-6 py-3.5 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Email</th>
-                        <th class="text-left px-6 py-3.5 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Role</th>
-                        <th class="text-left px-6 py-3.5 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 hidden md:table-cell">Created</th>
-                        <th class="text-right px-6 py-3.5 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Actions</th>
+                    <tr>
+                        <th>Admin</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th style="display:none" class="admin-users-th-created">Created</th>
+                        <th style="text-align:right">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-stone-50">
+                <tbody>
                     {% for u in admin_users %}
-                    <tr class="hover:bg-amber-50/10 transition-colors duration-150">
-                        <td class="px-6 py-3.5">
-                            <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold ring-2 ring-amber-500/20
-                                    {% if u.role.value == 'DIR_ADMIN' %}bg-purple-600
-                                    {% elif u.role.value == 'MANAGEMENT' %}bg-blue-600
-                                    {% elif u.role.value == 'TECH_ADMIN' %}bg-cyan-600
-                                    {% elif u.role.value == 'RETAILER' %}bg-amber-600
-                                    {% else %}bg-emerald-600{% endif %}">
+                    <tr>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:0.75rem">
+                                <div class="admin-users-avatar"
+                                    {% if u.role.value == 'DIR_ADMIN' %}style="background:var(--purple-bg)"
+                                    {% elif u.role.value == 'MANAGEMENT' %}style="background:var(--blue-bg)"
+                                    {% elif u.role.value == 'TECH_ADMIN' %}style="background:var(--cyan-bg)"
+                                    {% elif u.role.value == 'RETAILER' %}style="background:var(--amber)"
+                                    {% else %}style="background:var(--emerald-bg)"{% endif %}>
                                     {{ (u.name or u.email)[0]|upper }}
                                 </div>
                                 <div>
-                                    <p class="text-sm font-semibold text-stone-900">{{ u.name or 'Unnamed' }}</p>
+                                    <p class="admin-users-name">{{ u.name or 'Unnamed' }}</p>
                                     {% if u.id == admin.id %}
-                                    <span class="text-[10px] font-medium text-amber-600">(You)</span>
+                                    <span class="admin-users-you">(You)</span>
                                     {% endif %}
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-3.5 text-sm text-stone-500">{{ u.email }}</td>
-                        <td class="px-6 py-3.5">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border {{ get_role_badge(u.role.value) }}">
+                        <td class="admin-users-email">{{ u.email }}</td>
+                        <td>
+                            <span class="admin-users-role {{ get_role_badge(u.role.value) }}">
                                 {{ u.role.value }}
                             </span>
                         </td>
-                        <td class="px-6 py-3.5 text-sm text-stone-400 hidden md:table-cell">
+                        <td class="admin-users-date admin-users-td-created" style="display:none">
                             {{ u.created_at.strftime('%b %d, %Y') if u.created_at else '—' }}
                         </td>
-                        <td class="px-6 py-3.5 text-right">
-                            <div class="flex items-center justify-end gap-1">
-                                <a href="/admin/admin-users/{{ u.id }}/edit" class="p-2 text-stone-400 hover:text-stone-900 hover:bg-stone-50 rounded-lg transition-all duration-150" title="Edit">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        <td style="text-align:right">
+                            <div class="admin-users-actions">
+                                <a href="/admin/admin-users/{{ u.id }}/edit" class="admin-users-action" title="Edit">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </a>
                                 {% if u.id != admin.id %}
-                                <a href="/admin/users/{{ u.id }}/delete" class="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-150" title="Delete" onclick="return confirm('Are you sure you want to delete this admin user?')">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                <a href="/admin/users/{{ u.id }}/delete" class="admin-users-action delete" title="Delete" onclick="return confirm('Are you sure you want to delete this admin user?')">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 </a>
                                 {% endif %}
                             </div>
@@ -79,75 +292,77 @@
         </div>
 
         {% if not admin_users %}
-        <div class="px-6 py-12 text-center">
-            <div class="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/></svg>
+        <div class="admin-users-empty">
+            <div class="admin-users-empty-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/></svg>
             </div>
-            <p class="text-sm text-stone-500">No admin users found</p>
+            <p>No admin users found</p>
         </div>
         {% endif %}
     </div>
 
-    <!-- Recent Audit Log -->
-    <div class="mt-8 bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm" id="audit-log-section">
-        <div class="px-6 py-4 border-b border-stone-100 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                <h2 class="text-sm font-bold text-stone-900 uppercase tracking-wider">Audit Log</h2>
+    <div class="audit-section admin-users-card" id="audit-log-section">
+        <div class="audit-header">
+            <div class="audit-header-left">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                <h2 class="audit-title">Audit Log</h2>
             </div>
-            <span class="text-[10px] text-stone-400 font-medium">Recent activity</span>
+            <span class="audit-meta">Recent activity</span>
         </div>
         <div id="audit-log-container">
-            <div class="px-6 py-8 text-center">
-                <div class="animate-spin w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full mx-auto"></div>
+            <div class="audit-spinner">
+                <div class="audit-spinner-dot"></div>
             </div>
         </div>
-        <div id="audit-load-more" class="px-6 py-3 border-t border-stone-100 text-center hidden">
-            <button onclick="loadMoreAudit()" class="px-4 py-2 text-xs font-medium text-stone-600 bg-white border border-stone-200 rounded-lg hover:border-stone-300 hover:text-stone-900 transition-all duration-150">
-                Load More
-            </button>
+        <div id="audit-load-more" class="audit-load-more" style="display:none">
+            <button onclick="loadMoreAudit()">Load More</button>
         </div>
     </div>
 
-    <!-- Role Info Cards -->
-    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-white rounded-xl border border-stone-200 p-5">
-            <div class="flex items-center gap-2 mb-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
-                <span class="text-xs font-bold uppercase tracking-wider text-stone-500">DIR_ADMIN</span>
+    <div class="role-info-grid">
+        <div class="role-info-card">
+            <div class="role-info-header">
+                <span class="role-dot" style="background:var(--purple)"></span>
+                <span class="role-label">DIR_ADMIN</span>
             </div>
-            <p class="text-xs text-stone-400">Full system access — all modules, settings, and admin user management.</p>
+            <p class="role-desc">Full system access — all modules, settings, and admin user management.</p>
         </div>
-        <div class="bg-white rounded-xl border border-stone-200 p-5">
-            <div class="flex items-center gap-2 mb-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                <span class="text-xs font-bold uppercase tracking-wider text-stone-500">MANAGEMENT</span>
+        <div class="role-info-card">
+            <div class="role-info-header">
+                <span class="role-dot" style="background:var(--blue)"></span>
+                <span class="role-label">MANAGEMENT</span>
             </div>
-            <p class="text-xs text-stone-400">Product, category, retailer, order, and customer management.</p>
+            <p class="role-desc">Product, category, retailer, order, and customer management.</p>
         </div>
-        <div class="bg-white rounded-xl border border-stone-200 p-5">
-            <div class="flex items-center gap-2 mb-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-cyan-500"></span>
-                <span class="text-xs font-bold uppercase tracking-wider text-stone-500">TECH_ADMIN</span>
+        <div class="role-info-card">
+            <div class="role-info-header">
+                <span class="role-dot" style="background:var(--cyan)"></span>
+                <span class="role-label">TECH_ADMIN</span>
             </div>
-            <p class="text-xs text-stone-400">System settings and admin user management. No product/order access.</p>
+            <p class="role-desc">System settings and admin user management. No product/order access.</p>
         </div>
-        <div class="bg-white rounded-xl border border-stone-200 p-5">
-            <div class="flex items-center gap-2 mb-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                <span class="text-xs font-bold uppercase tracking-wider text-stone-500">RETAILER</span>
+        <div class="role-info-card">
+            <div class="role-info-header">
+                <span class="role-dot" style="background:var(--amber)"></span>
+                <span class="role-label">RETAILER</span>
             </div>
-            <p class="text-xs text-stone-400">Can only manage their own products (linked via vendor_id).</p>
+            <p class="role-desc">Can only manage their own products (linked via vendor_id).</p>
         </div>
-        <div class="bg-white rounded-xl border border-stone-200 p-5">
-            <div class="flex items-center gap-2 mb-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                <span class="text-xs font-bold uppercase tracking-wider text-stone-500">LOGISTICS</span>
+        <div class="role-info-card">
+            <div class="role-info-header">
+                <span class="role-dot" style="background:var(--emerald)"></span>
+                <span class="role-label">LOGISTICS</span>
             </div>
-            <p class="text-xs text-stone-400">Order management and customer information only.</p>
+            <p class="role-desc">Order management and customer information only.</p>
         </div>
     </div>
 </div>
+
+<style>
+@media (min-width: 768px) {
+    .admin-users-th-created, .admin-users-td-created { display: table-cell !important; }
+}
+</style>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -170,32 +385,33 @@ async function loadAuditLog(append = false) {
 
         if (!data.logs || data.logs.length === 0) {
             if (!append) {
-                container.innerHTML = '<div class="px-6 py-8 text-center text-sm text-stone-400">No audit log entries yet.</div>';
+                container.innerHTML = '<div style="padding:2rem 1.5rem;text-align:center;font-size:0.875rem;color:var(--text-muted)">No audit log entries yet.</div>';
             }
-            if (loadMoreContainer) loadMoreContainer.classList.add('hidden');
+            if (loadMoreContainer) loadMoreContainer.style.display = 'none';
             auditLoading = false;
             return;
         }
 
         let html = '';
         for (const log of data.logs) {
-            const date = log.created_at ? new Date(log.created_at).toLocaleString() : '\u2014';
-            const actionLabels = {
-                'create': 'bg-emerald-100 text-emerald-700',
-                'update': 'bg-blue-100 text-blue-700',
-                'delete': 'bg-red-100 text-red-700',
+            const date = log.created_at ? new Date(log.created_at).toLocaleString() : '—';
+            const actionColors = {
+                'create': { bg: '#d1fae5', text: '#059669' },
+                'update': { bg: '#dbeafe', text: '#2563eb' },
+                'delete': { bg: '#fee2e2', text: '#dc2626' },
             };
-            const color = actionLabels[log.action] || 'bg-stone-100 text-stone-700';
-            html += `<div class="px-6 py-3.5 flex items-start gap-3 hover:bg-stone-50/50 transition-colors">
-                <span class="shrink-0 w-1.5 h-1.5 rounded-full mt-2 ${log.action === 'create' ? 'bg-emerald-400' : log.action === 'delete' ? 'bg-red-400' : 'bg-blue-400'}"></span>
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${color}">${log.action}</span>
-                        <span class="text-xs font-medium text-stone-700">${log.admin_email || 'Unknown'}</span>
-                        <span class="text-xs text-stone-400">on ${log.resource_type || 'unknown'}</span>
+            const c = actionColors[log.action] || { bg: '#f5f5f4', text: '#78716c' };
+            const dotClass = log.action === 'create' ? 'create' : log.action === 'delete' ? 'delete' : log.action === 'update' ? 'update' : 'default';
+            html += `<div class="audit-item">
+                <span class="audit-dot ${dotClass}"></span>
+                <div class="audit-body">
+                    <div class="audit-body-header">
+                        <span class="audit-action-badge" style="background:${c.bg};color:${c.text}">${log.action}</span>
+                        <span class="audit-admin">${log.admin_email || 'Unknown'}</span>
+                        <span class="audit-resource">on ${log.resource_type || 'unknown'}</span>
                     </div>
-                    <p class="text-xs text-stone-500 mt-0.5">${log.details || ''}</p>
-                    <p class="text-[10px] text-stone-400 mt-0.5">${date}</p>
+                    <p class="audit-details">${log.details || ''}</p>
+                    <p class="audit-date">${date}</p>
                 </div>
             </div>`;
         }
@@ -203,20 +419,20 @@ async function loadAuditLog(append = false) {
         if (append) {
             container.insertAdjacentHTML('beforeend', html);
         } else {
-            container.innerHTML = '<div class="divide-y divide-stone-50 max-h-[400px] overflow-y-auto">' + html + '</div>';
+            container.innerHTML = '<div style="max-height:400px;overflow-y:auto">' + html + '</div>';
         }
 
         auditOffset += data.logs.length;
         if (loadMoreContainer) {
             if (data.has_more) {
-                loadMoreContainer.classList.remove('hidden');
+                loadMoreContainer.style.display = 'block';
             } else {
-                loadMoreContainer.classList.add('hidden');
+                loadMoreContainer.style.display = 'none';
             }
         }
     } catch (err) {
         if (!append) {
-            container.innerHTML = '<div class="px-6 py-8 text-center text-sm text-red-500">Failed to load audit log.</div>';
+            container.innerHTML = '<div style="padding:2rem 1.5rem;text-align:center;font-size:0.875rem;color:var(--red)">Failed to load audit log.</div>';
         }
     }
     auditLoading = false;

@@ -1,0 +1,306 @@
+{% extends "web/base.html" %}
+{% block title %}Shipping Information — ForgeStore{% endblock %}
+{% block content %}
+<style>
+:root {
+  --sp-amber-50: #fffbeb; --sp-amber-100: #fef3c7; --sp-amber-200: #fde68a;
+  --sp-amber-300: #fcd34d; --sp-amber-400: #fbbf24; --sp-amber-500: #f59e0b;
+  --sp-amber-600: #d97706; --sp-amber-700: #b45309; --sp-amber-800: #92400e;
+  --sp-stone-50: #fafaf9; --sp-stone-100: #f5f5f4; --sp-stone-200: #e7e5e3;
+  --sp-stone-300: #d6d3d1; --sp-stone-400: #a8a29e; --sp-stone-500: #78716c;
+  --sp-stone-600: #57534e; --sp-stone-700: #44403c; --sp-stone-800: #292524;
+  --sp-stone-900: #1c1917;
+  --sp-radius: 12px; --sp-radius-lg: 16px; --sp-radius-xl: 20px;
+  --sp-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --sp-shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.06);
+  --sp-shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.06);
+}
+:root { --sp-bg: #fff; --sp-surface: #fff; --sp-text: var(--sp-stone-900); --sp-text-muted: var(--sp-stone-500); --sp-border: var(--sp-stone-200); --sp-input-bg: var(--sp-stone-50); }
+.dark, :root.dark { --sp-bg: var(--sp-stone-900); --sp-surface: var(--sp-stone-800); --sp-text: var(--sp-stone-100); --sp-text-muted: var(--sp-stone-400); --sp-border: var(--sp-stone-700); --sp-input-bg: var(--sp-stone-800); }
+@media (prefers-color-scheme: dark) { :root:not(.light) { --sp-bg: var(--sp-stone-900); --sp-surface: var(--sp-stone-800); --sp-text: var(--sp-stone-100); --sp-text-muted: var(--sp-stone-400); --sp-border: var(--sp-stone-700); --sp-input-bg: var(--sp-stone-800); } }
+
+.support-page { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
+@media (min-width: 640px) { .support-page { padding: 3rem 1.5rem; } }
+@media (min-width: 1024px) { .support-page { padding: 4rem 2rem; } }
+
+.support-breadcrumb { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 2rem; font-size: 0.8125rem; }
+.support-breadcrumb a { color: var(--sp-amber-600); text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+.dark .support-breadcrumb a { color: var(--sp-amber-400); }
+.support-breadcrumb span { color: var(--sp-text-muted); }
+.support-breadcrumb .sep { color: var(--sp-stone-300); }
+
+.support-header { text-align: center; margin-bottom: 3rem; }
+.support-header-icon {
+  width: 64px; height: 64px; border-radius: var(--sp-radius-lg);
+  background: linear-gradient(135deg, var(--sp-amber-50), var(--sp-amber-100));
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1.25rem; border: 1px solid var(--sp-amber-200);
+}
+.dark .support-header-icon { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.25); }
+.support-header-icon svg { width: 28px; height: 28px; color: var(--sp-amber-600); }
+.dark .support-header-icon svg { color: var(--sp-amber-400); }
+.support-header h1 { font-size: 1.75rem; font-weight: 900; color: var(--sp-text); margin: 0 0 0.5rem; letter-spacing: -0.02em; }
+@media (min-width: 640px) { .support-header h1 { font-size: 2.25rem; } }
+.support-header p { color: var(--sp-text-muted); font-size: 0.9375rem; max-width: 480px; margin: 0 auto; line-height: 1.6; }
+
+.support-section { margin-bottom: 2.5rem; }
+.support-section-title {
+  font-size: 1.125rem; font-weight: 700; color: var(--sp-text);
+  margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;
+}
+.support-section-title svg { width: 20px; height: 20px; color: var(--sp-amber-500); flex-shrink: 0; }
+
+.support-content { color: var(--sp-text-muted); font-size: 0.9375rem; line-height: 1.7; }
+.support-content p { margin-bottom: 0.75rem; }
+
+.support-card {
+  background: var(--sp-surface); border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-lg); padding: 1.5rem;
+  box-shadow: var(--sp-shadow); transition: transform 0.2s, box-shadow 0.2s;
+}
+.support-card:hover { transform: translateY(-2px); box-shadow: var(--sp-shadow-md); }
+
+.support-method-grid { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+@media (min-width: 640px) { .support-method-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.support-method-card {
+  background: var(--sp-surface); border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-lg); padding: 1.5rem; text-align: center;
+  box-shadow: var(--sp-shadow); transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+.support-method-card:hover { transform: translateY(-3px); box-shadow: var(--sp-shadow-lg); }
+.support-method-card.popular { border: 2px solid var(--sp-amber-500); box-shadow: var(--sp-shadow-md), 0 0 0 1px rgba(245,158,11,0.1); }
+.support-method-badge {
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  background: var(--sp-amber-500); color: #fff; font-size: 0.625rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.1em; padding: 3px 12px; border-radius: 999px;
+}
+.support-method-icon {
+  width: 56px; height: 56px; border-radius: var(--sp-radius-lg);
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;
+}
+.support-method-icon.standard { background: var(--sp-stone-100); }
+.dark .support-method-icon.standard { background: var(--sp-stone-700); }
+.support-method-icon.standard svg { color: var(--sp-stone-600); width: 28px; height: 28px; }
+.dark .support-method-icon.standard svg { color: var(--sp-stone-300); }
+.support-method-icon.express { background: var(--sp-amber-100); }
+.dark .support-method-icon.express { background: rgba(245,158,11,0.2); }
+.support-method-icon.express svg { color: var(--sp-amber-600); width: 28px; height: 28px; }
+.dark .support-method-icon.express svg { color: var(--sp-amber-400); }
+.support-method-icon.sameday { background: #d1fae5; }
+.dark .support-method-icon.sameday { background: rgba(16,185,129,0.15); }
+.support-method-icon.sameday svg { color: #059669; width: 28px; height: 28px; }
+.dark .support-method-icon.sameday svg { color: #34d399; }
+.support-method-card h3 { font-size: 1.125rem; font-weight: 700; color: var(--sp-text); margin: 0 0 0.25rem; }
+.support-method-price { font-size: 1.75rem; font-weight: 900; color: var(--sp-text); margin-bottom: 0.125rem; }
+.support-method-eta { font-size: 0.75rem; color: var(--sp-text-muted); margin-bottom: 1.25rem; }
+.support-method-features { list-style: none; padding: 0; margin: 0; text-align: left; }
+.support-method-features li {
+  display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem;
+  color: var(--sp-text-muted); padding: 0.375rem 0;
+}
+.support-method-features li svg { width: 16px; height: 16px; color: #059669; flex-shrink: 0; }
+
+.support-table-wrap {
+  background: var(--sp-surface); border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-lg); overflow: hidden; box-shadow: var(--sp-shadow);
+}
+.support-table-header {
+  padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--sp-border);
+}
+.support-table-header h2 { font-size: 1rem; font-weight: 700; color: var(--sp-text); margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+.support-table-header h2 svg { width: 18px; height: 18px; color: var(--sp-amber-500); }
+.support-table-header p { font-size: 0.8125rem; color: var(--sp-text-muted); margin: 0.25rem 0 0; }
+
+.support-region-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.875rem 1.5rem;
+}
+.support-region-row:not(:last-child) { border-bottom: 1px solid var(--sp-border); }
+.support-region-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.support-region-name { font-size: 0.875rem; font-weight: 500; color: var(--sp-text); margin-left: 0.75rem; }
+.support-region-price { font-size: 0.875rem; font-weight: 700; color: var(--sp-text); }
+.support-region-flex { display: flex; align-items: center; }
+
+.support-two-col { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+@media (min-width: 640px) { .support-two-col { grid-template-columns: 1fr 1fr; } }
+
+.support-steps-list { list-style: none; padding: 0; margin: 0; }
+.support-steps-list li {
+  display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.625rem 0;
+}
+.support-step-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--sp-amber-100); display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 0.75rem; font-weight: 700; color: var(--sp-amber-700);
+}
+.dark .support-step-num { background: rgba(245,158,11,0.2); color: var(--sp-amber-400); }
+.support-steps-list li span { font-size: 0.875rem; color: var(--sp-text-muted); line-height: 1.5; }
+
+.support-cta {
+  background: linear-gradient(135deg, var(--sp-stone-900), var(--sp-stone-800));
+  border-radius: var(--sp-radius-xl); padding: 2rem; text-align: center;
+}
+.dark .support-cta { background: linear-gradient(135deg, var(--sp-amber-600), var(--sp-amber-500)); }
+.support-cta h2 { font-size: 1.25rem; font-weight: 900; color: #fff; margin: 0 0 0.5rem; }
+.dark .support-cta h2 { color: var(--sp-stone-950); }
+.support-cta p { color: var(--sp-stone-300); font-size: 0.875rem; margin: 0 0 1.25rem; max-width: 360px; margin-left: auto; margin-right: auto; }
+.dark .support-cta p { color: var(--sp-stone-800); }
+.support-cta-btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.75rem 1.5rem; font-size: 0.875rem; font-weight: 700;
+  background: #fff; color: var(--sp-stone-900); border: none; border-radius: var(--sp-radius);
+  text-decoration: none; min-height: 44px; transition: background 0.2s, transform 0.1s;
+  box-shadow: var(--sp-shadow-md);
+}
+.dark .support-cta-btn { background: var(--sp-stone-900); color: #fff; }
+.support-cta-btn:hover { opacity: 0.9; }
+.support-cta-btn:active { transform: scale(0.98); }
+.support-cta-btn svg { width: 16px; height: 16px; }
+</style>
+
+<div class="support-page">
+  <nav class="support-breadcrumb" aria-label="Breadcrumb">
+    <a href="/shop">Home</a>
+    <span class="sep">/</span>
+    <span aria-current="page">Shipping Info</span>
+  </nav>
+
+  <div class="support-header">
+    <div class="support-header-icon">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+    </div>
+    <h1>Shipping Info</h1>
+    <p>Fast, reliable delivery to your doorstep. Every order is carefully packaged.</p>
+  </div>
+
+  <!-- Shipping Methods -->
+  <div class="support-section">
+    <h2 class="support-section-title">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      Shipping Methods
+    </h2>
+  </div>
+
+  <div class="support-method-grid">
+    <!-- Standard -->
+    <div class="support-method-card">
+      <div class="support-method-icon standard">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+      </div>
+      <h3>Standard</h3>
+      <p class="support-method-price">₦2,500</p>
+      <p class="support-method-eta">3–5 business days</p>
+      <ul class="support-method-features">
+        <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Order tracking included</li>
+        <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Insured shipment</li>
+        <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Free over ₦50,000</li>
+      </ul>
+    </div>
+
+    <!-- Express -->
+    <div class="support-method-card popular">
+      <span class="support-method-badge">Popular</span>
+      <div class="support-method-icon express">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      </div>
+      <h3>Express</h3>
+      <p class="support-method-price">₦5,000</p>
+      <p class="support-method-eta">1–2 business days</p>
+      <ul class="support-method-features">
+        <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Priority handling</li>
+        <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Real-time tracking</li>
+        <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>SMS notifications</li>
+      </ul>
+    </div>
+
+    <!-- Same-Day -->
+    <div class="support-method-card">
+      <div class="support-method-icon sameday">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <h3>Same-Day</h3>
+      <p class="support-method-price">₦8,000</p>
+      <p class="support-method-eta">Within Lagos only</p>
+      <ul class="support-method-features">
+        <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Order before 12 PM</li>
+        <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Live rider tracking</li>
+        <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Lagos metro only</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Rates by Region -->
+  <div class="support-section" style="margin-top:2.5rem;">
+    <div class="support-table-wrap">
+      <div class="support-table-header">
+        <h2>
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Shipping Rates by Region
+        </h2>
+        <p>Standard shipping rates across Nigeria</p>
+      </div>
+      <div class="support-region-row">
+        <div class="support-region-flex"><span class="support-region-dot" style="background:var(--sp-amber-500);"></span><span class="support-region-name">Lagos</span></div>
+        <span class="support-region-price">₦2,500</span>
+      </div>
+      <div class="support-region-row">
+        <div class="support-region-flex"><span class="support-region-dot" style="background:var(--sp-amber-400);"></span><span class="support-region-name">South-West (Ogun, Oyo, Ondo, etc.)</span></div>
+        <span class="support-region-price">₦3,500</span>
+      </div>
+      <div class="support-region-row">
+        <div class="support-region-flex"><span class="support-region-dot" style="background:#fb923c;"></span><span class="support-region-name">South-South &amp; South-East</span></div>
+        <span class="support-region-price">₦4,500</span>
+      </div>
+      <div class="support-region-row">
+        <div class="support-region-flex"><span class="support-region-dot" style="background:#f97316;"></span><span class="support-region-name">North-Central (Abuja, Kwara, etc.)</span></div>
+        <span class="support-region-price">₦5,000</span>
+      </div>
+      <div class="support-region-row">
+        <div class="support-region-flex"><span class="support-region-dot" style="background:#ef4444;"></span><span class="support-region-name">North-West &amp; North-East</span></div>
+        <span class="support-region-price">₦6,000</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- International + Tracking -->
+  <div class="support-two-col">
+    <div class="support-card">
+      <h3 class="support-section-title" style="margin-bottom:0.75rem;">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        International Shipping
+      </h3>
+      <ul class="support-content" style="list-style:none;padding:0;margin:0;">
+        <li style="padding:0.375rem 0;display:flex;gap:0.5rem;"><span style="color:var(--sp-amber-500);flex-shrink:0;">&#10003;</span>We ship to 50+ countries worldwide</li>
+        <li style="padding:0.375rem 0;display:flex;gap:0.5rem;"><span style="color:var(--sp-amber-500);flex-shrink:0;">&#10003;</span>Rates calculated at checkout</li>
+        <li style="padding:0.375rem 0;display:flex;gap:0.5rem;"><span style="color:var(--sp-amber-500);flex-shrink:0;">&#10003;</span>Delivery typically 7–14 business days</li>
+        <li style="padding:0.375rem 0;display:flex;gap:0.5rem;"><span style="color:var(--sp-amber-500);flex-shrink:0;">&#10003;</span>Customs duties may apply (buyer's responsibility)</li>
+      </ul>
+    </div>
+
+    <div class="support-card">
+      <h3 class="support-section-title" style="margin-bottom:0.75rem;">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+        How to Track Your Order
+      </h3>
+      <ol class="support-steps-list">
+        <li><span class="support-step-num">1</span><span>Log in to your ForgeStore account and go to <strong style="color:var(--sp-text);">My Orders</strong></span></li>
+        <li><span class="support-step-num">2</span><span>Select the order you want to track</span></li>
+        <li><span class="support-step-num">3</span><span>Click <strong style="color:var(--sp-text);">Track Shipment</strong> for real-time updates</span></li>
+        <li><span class="support-step-num">4</span><span>You'll also receive SMS and email notifications at each stage</span></li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="support-cta" style="margin-top:2.5rem;">
+    <h2>Have a Shipping Question?</h2>
+    <p>Our support team is ready to help with any delivery concerns.</p>
+    <a href="/shop/contact" class="support-cta-btn">
+      Contact Support
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+</div>
+{% endblock %}

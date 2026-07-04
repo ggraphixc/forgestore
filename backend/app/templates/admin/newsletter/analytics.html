@@ -1,117 +1,152 @@
 {% extends "admin/base.html" %}
 {% block title %}Broadcast Analytics — ForgeStore Admin{% endblock %}
 {% block content %}
-<div class="max-w-6xl mx-auto">
-    <div class="flex items-center justify-between mb-8">
+<style>
+  :root {
+    --admin-amber-50: #fffbeb; --admin-amber-100: #fef3c7; --admin-amber-200: #fde68a;
+    --admin-amber-300: #fcd34d; --admin-amber-400: #fbbf24; --admin-amber-500: #f59e0b;
+    --admin-amber-600: #d97706; --admin-amber-700: #b45309; --admin-amber-800: #92400e;
+    --admin-stone-50: #fafaf9; --admin-stone-100: #f5f5f4; --admin-stone-200: #e7e5e4;
+    --admin-stone-300: #d6d3d1; --admin-stone-400: #a8a29e; --admin-stone-500: #78716c;
+    --admin-stone-600: #57534e; --admin-stone-700: #44403c; --admin-stone-800: #292524;
+    --admin-stone-900: #1c1917; --admin-stone-950: #0c0a09;
+    --admin-emerald-50: #ecfdf5; --admin-emerald-100: #d1fae5; --admin-emerald-500: #10b981;
+    --admin-emerald-600: #059669; --admin-emerald-700: #047857;
+    --admin-red-50: #fef2f2; --admin-red-100: #fee2e2; --admin-red-200: #fecaca;
+    --admin-red-500: #ef4444; --admin-red-600: #dc2626; --admin-red-700: #b91c1c;
+    --admin-blue-50: #eff6ff; --admin-blue-100: #dbeafe; --admin-blue-600: #2563eb; --admin-blue-700: #1d4ed8;
+    --admin-radius: 0.75rem; --admin-radius-lg: 1rem;
+    --admin-shadow: 0 1px 2px rgba(0,0,0,0.04); --admin-shadow-lg: 0 25px 50px -12px rgba(0,0,0,0.25);
+    --admin-touch: 44px;
+  }
+  .admin-ba-page { max-width: 72rem; margin: 0 auto; padding: 1.5rem; }
+  .admin-ba-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+  .admin-ba-header h1 { font-size: 1.5rem; font-weight: 800; color: var(--admin-stone-900); }
+  @media (min-width: 768px) { .admin-ba-header h1 { font-size: 1.875rem; } }
+  .admin-ba-header p { font-size: 0.875rem; color: var(--admin-stone-500); margin-top: 0.25rem; }
+  .admin-ba-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 2rem; }
+  @media (min-width: 768px) { .admin-ba-stats { grid-template-columns: repeat(4, 1fr); } }
+  .admin-ba-stat { background: #fff; border-radius: var(--admin-radius); border: 1px solid var(--admin-stone-200); padding: 1.25rem; box-shadow: var(--admin-shadow); }
+  .admin-ba-stat .num { font-size: 1.5rem; font-weight: 700; color: var(--admin-stone-900); }
+  .admin-ba-stat .lbl { font-size: 0.75rem; color: var(--admin-stone-400); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.25rem; }
+  .admin-ba-card { background: #fff; border-radius: var(--admin-radius-lg); border: 1px solid var(--admin-stone-200); overflow: hidden; box-shadow: var(--admin-shadow); }
+  .admin-ba-card-head { padding: 1rem 1.5rem; border-bottom: 1px solid var(--admin-stone-100); background: rgba(250,250,249,0.5); }
+  .admin-ba-card-head h2 { font-size: 0.875rem; font-weight: 700; color: var(--admin-stone-900); }
+  .admin-ba-table-wrap { overflow-x: auto; }
+  .admin-ba-table { width: 100%; }
+  .admin-ba-table th { text-align: left; padding: 1rem 1.5rem; font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: var(--admin-stone-400); border-bottom: 1px solid var(--admin-stone-100); background: rgba(250,250,249,0.5); }
+  .admin-ba-table th.right { text-align: right; }
+  .admin-ba-table td { padding: 1rem 1.5rem; border-bottom: 1px solid var(--admin-stone-50); }
+  .admin-ba-table td.right { text-align: right; }
+  .admin-ba-table tr:hover { background: rgba(255,251,235,0.2); }
+  .admin-ba-badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.625rem; font-weight: 600; }
+  .admin-ba-badge-emerald { background: var(--admin-emerald-50); color: var(--admin-emerald-700); border: 1px solid var(--admin-emerald-100); }
+  .admin-ba-badge-amber { background: var(--admin-amber-50); color: var(--admin-amber-700); border: 1px solid var(--admin-amber-100); }
+  .admin-ba-badge-blue { background: var(--admin-blue-50); color: var(--admin-blue-600); border: 1px solid var(--admin-blue-100); }
+  .admin-ba-badge-red { background: var(--admin-red-50); color: var(--admin-red-700); border: 1px solid var(--admin-red-100); }
+  .admin-ba-badge-stone { background: var(--admin-stone-100); color: var(--admin-stone-600); border: 1px solid var(--admin-stone-200); }
+  .admin-ba-badge-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .admin-ba-tag { display: inline-flex; align-items: center; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.5625rem; font-weight: 600; background: var(--admin-stone-100); color: var(--admin-stone-600); border: 1px solid var(--admin-stone-200); margin-left: 0.5rem; }
+  .admin-ba-progress { display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; }
+  .admin-ba-bar-bg { width: 4rem; height: 6px; background: var(--admin-stone-100); border-radius: 9999px; overflow: hidden; }
+  .admin-ba-bar { height: 100%; border-radius: 9999px; }
+  .admin-ba-bar-emerald { background: var(--admin-emerald-500); }
+  .admin-ba-bar-blue { background: var(--admin-blue-600); }
+  .admin-ba-rate { font-size: 0.875rem; font-weight: 500; color: var(--admin-stone-700); width: 3rem; text-align: right; }
+  .admin-ba-empty { padding: 4rem 1.5rem; text-align: center; }
+  .admin-ba-empty-icon { width: 3.5rem; height: 3.5rem; background: linear-gradient(135deg, var(--admin-stone-100), var(--admin-stone-200)); border-radius: var(--admin-radius); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+  .admin-ba-empty h3 { font-size: 0.875rem; font-weight: 700; color: var(--admin-stone-900); margin-bottom: 0.25rem; }
+  .admin-ba-empty p { font-size: 0.875rem; color: var(--admin-stone-400); margin-bottom: 1rem; }
+  .admin-ba-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: var(--admin-radius); min-height: var(--admin-touch); text-decoration: none; border: none; background: linear-gradient(135deg, var(--admin-stone-800), var(--admin-stone-900)); color: #fff; }
+</style>
+
+<div class="admin-ba-page">
+    <div class="admin-ba-header">
         <div>
-            <h1 class="text-2xl md:text-3xl font-heading font-bold text-stone-900">Broadcast Analytics</h1>
-            <p class="text-sm text-stone-500 mt-1">Track open rates, click rates, and engagement for all campaigns</p>
+            <h1>Broadcast Analytics</h1>
+            <p>Track open rates, click rates, and engagement for all campaigns</p>
         </div>
-        <div class="flex items-center gap-3">
-            <span class="text-xs text-stone-400 font-mono">{{ campaigns|length }} campaign(s)</span>
-        </div>
+        <span style="font-size:0.75rem;color:var(--admin-stone-400);font-family:monospace">{{ campaigns|length }} campaign(s)</span>
     </div>
 
     {% if campaigns %}
-    <!-- Summary stats -->
     {% set total_sent = campaigns|sum(attribute='sent_count') %}
     {% set total_opened = campaigns|sum(attribute='opened_count') %}
     {% set total_clicked = campaigns|sum(attribute='clicked_count') %}
     {% set total_unsub = campaigns|sum(attribute='unsubscribed_count') %}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white rounded-xl border border-stone-200 p-5 shadow-sm">
-            <p class="text-2xl font-bold text-stone-900">{{ total_sent }}</p>
-            <p class="text-xs text-stone-400 font-medium uppercase tracking-wider mt-1">Total Sent</p>
+    <div class="admin-ba-stats">
+        <div class="admin-ba-stat">
+            <div class="num">{{ total_sent }}</div>
+            <div class="lbl">Total Sent</div>
         </div>
-        <div class="bg-white rounded-xl border border-stone-200 p-5 shadow-sm">
-            <p class="text-2xl font-bold text-emerald-600">{{ "%.1f"|format(total_opened / total_sent * 100) if total_sent > 0 else 0 }}%</p>
-            <p class="text-xs text-stone-400 font-medium uppercase tracking-wider mt-1">Avg Open Rate</p>
+        <div class="admin-ba-stat">
+            <div class="num" style="color:var(--admin-emerald-600)">{{ "%.1f"|format(total_opened / total_sent * 100) if total_sent > 0 else 0 }}%</div>
+            <div class="lbl">Avg Open Rate</div>
         </div>
-        <div class="bg-white rounded-xl border border-stone-200 p-5 shadow-sm">
-            <p class="text-2xl font-bold text-blue-600">{{ "%.1f"|format(total_clicked / total_sent * 100) if total_sent > 0 else 0 }}%</p>
-            <p class="text-xs text-stone-400 font-medium uppercase tracking-wider mt-1">Avg Click Rate</p>
+        <div class="admin-ba-stat">
+            <div class="num" style="color:var(--admin-blue-600)">{{ "%.1f"|format(total_clicked / total_sent * 100) if total_sent > 0 else 0 }}%</div>
+            <div class="lbl">Avg Click Rate</div>
         </div>
-        <div class="bg-white rounded-xl border border-stone-200 p-5 shadow-sm">
-            <p class="text-2xl font-bold text-red-500">{{ total_unsub }}</p>
-            <p class="text-xs text-stone-400 font-medium uppercase tracking-wider mt-1">Unsubscribes</p>
+        <div class="admin-ba-stat">
+            <div class="num" style="color:var(--admin-red-500)">{{ total_unsub }}</div>
+            <div class="lbl">Unsubscribes</div>
         </div>
     </div>
 
-    <!-- Campaigns table -->
-    <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
-        <div class="px-6 py-4 border-b border-stone-100 bg-stone-50/50">
-            <h2 class="text-sm font-bold text-stone-900">All Campaigns</h2>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full">
+    <div class="admin-ba-card">
+        <div class="admin-ba-card-head"><h2>All Campaigns</h2></div>
+        <div class="admin-ba-table-wrap">
+            <table class="admin-ba-table">
                 <thead>
-                    <tr class="border-b border-stone-100 bg-stone-50/50">
-                        <th class="text-left px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Subject</th>
-                        <th class="text-left px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Status</th>
-                        <th class="text-right px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Sent</th>
-                        <th class="text-right px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Opens</th>
-                        <th class="text-right px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Clicks</th>
-                        <th class="text-right px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Open Rate</th>
-                        <th class="text-right px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Click Rate</th>
-                        <th class="text-left px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Sent At</th>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Status</th>
+                        <th class="right">Sent</th>
+                        <th class="right">Opens</th>
+                        <th class="right">Clicks</th>
+                        <th class="right">Open Rate</th>
+                        <th class="right">Click Rate</th>
+                        <th>Sent At</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-stone-50">
+                <tbody>
                     {% for c in campaigns %}
-                    <tr class="hover:bg-amber-50/20 transition-colors group">
-                        <td class="px-6 py-4">
-                            <span class="text-sm font-medium text-stone-900">{{ c.subject }}</span>
-                            {% if c.tag_filter %}
-                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-stone-100 text-stone-600 border border-stone-200 ml-2">{{ c.tag_filter }}</span>
-                            {% endif %}
+                    <tr>
+                        <td>
+                            <span style="font-size:0.875rem;font-weight:500;color:var(--admin-stone-900)">{{ c.subject }}</span>
+                            {% if c.tag_filter %}<span class="admin-ba-tag">{{ c.tag_filter }}</span>{% endif %}
                         </td>
-                        <td class="px-6 py-4">
+                        <td>
                             {% if c.status == 'sent' %}
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-                                Sent
-                            </span>
+                            <span class="admin-ba-badge admin-ba-badge-emerald"><span class="admin-ba-badge-dot" style="background:var(--admin-emerald-500)"></span>Sent</span>
                             {% elif c.status == 'sending' %}
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                                <span class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
-                                Sending
-                            </span>
+                            <span class="admin-ba-badge admin-ba-badge-blue"><span class="admin-ba-badge-dot" style="background:var(--admin-blue-600);animation:pulse 2s infinite"></span>Sending</span>
                             {% elif c.status == 'scheduled' %}
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                                <span class="w-1.5 h-1.5 bg-amber-400 rounded-full"></span>
-                                Scheduled
-                            </span>
+                            <span class="admin-ba-badge admin-ba-badge-amber"><span class="admin-ba-badge-dot" style="background:var(--admin-amber-500)"></span>Scheduled</span>
                             {% elif c.status == 'failed' %}
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-700 border border-red-200">
-                                <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                                Failed
-                            </span>
+                            <span class="admin-ba-badge admin-ba-badge-red"><span class="admin-ba-badge-dot" style="background:var(--admin-red-500)"></span>Failed</span>
                             {% else %}
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-stone-100 text-stone-600 border border-stone-200">{{ c.status }}</span>
+                            <span class="admin-ba-badge admin-ba-badge-stone">{{ c.status }}</span>
                             {% endif %}
                         </td>
-                        <td class="px-6 py-4 text-right text-sm font-medium text-stone-900">{{ c.sent_count }}</td>
-                        <td class="px-6 py-4 text-right text-sm font-medium text-stone-900">{{ c.opened_count }}</td>
-                        <td class="px-6 py-4 text-right text-sm font-medium text-stone-900">{{ c.clicked_count }}</td>
-                        <td class="px-6 py-4 text-right">
+                        <td class="right" style="font-size:0.875rem;font-weight:500;color:var(--admin-stone-900)">{{ c.sent_count }}</td>
+                        <td class="right" style="font-size:0.875rem;font-weight:500;color:var(--admin-stone-900)">{{ c.opened_count }}</td>
+                        <td class="right" style="font-size:0.875rem;font-weight:500;color:var(--admin-stone-900)">{{ c.clicked_count }}</td>
+                        <td class="right">
                             {% set open_rate = (c.opened_count / c.sent_count * 100) if c.sent_count > 0 else 0 %}
-                            <div class="flex items-center justify-end gap-2">
-                                <div class="w-16 h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                                    <div class="h-full bg-emerald-500 rounded-full" style="width: {{ open_rate }}%"></div>
-                                </div>
-                                <span class="text-sm font-medium text-stone-700 w-12 text-right">{{ "%.1f"|format(open_rate) }}%</span>
+                            <div class="admin-ba-progress">
+                                <div class="admin-ba-bar-bg"><div class="admin-ba-bar admin-ba-bar-emerald" style="width:{{ open_rate }}%"></div></div>
+                                <span class="admin-ba-rate">{{ "%.1f"|format(open_rate) }}%</span>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-right">
+                        <td class="right">
                             {% set click_rate = (c.clicked_count / c.sent_count * 100) if c.sent_count > 0 else 0 %}
-                            <div class="flex items-center justify-end gap-2">
-                                <div class="w-16 h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                                    <div class="h-full bg-blue-500 rounded-full" style="width: {{ click_rate }}%"></div>
-                                </div>
-                                <span class="text-sm font-medium text-stone-700 w-12 text-right">{{ "%.1f"|format(click_rate) }}%</span>
+                            <div class="admin-ba-progress">
+                                <div class="admin-ba-bar-bg"><div class="admin-ba-bar admin-ba-bar-blue" style="width:{{ click_rate }}%"></div></div>
+                                <span class="admin-ba-rate">{{ "%.1f"|format(click_rate) }}%</span>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-sm text-stone-400">
+                        <td style="font-size:0.875rem;color:var(--admin-stone-400)">
                             {{ c.sent_at.strftime('%b %d, %Y %H:%M') if c.sent_at else (c.scheduled_at.strftime('%b %d, %Y %H:%M') if c.scheduled_at else '—') }}
                         </td>
                     </tr>
@@ -121,19 +156,20 @@
         </div>
     </div>
     {% else %}
-    <!-- Empty state -->
-    <div class="bg-white rounded-2xl border border-stone-200 shadow-sm p-16 text-center">
-        <div class="w-14 h-14 bg-gradient-to-br from-stone-100 to-stone-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <svg class="w-7 h-7 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-            </svg>
+    <div class="admin-ba-card">
+        <div class="admin-ba-empty">
+            <div class="admin-ba-empty-icon">
+                <svg class="w-7 h-7" style="color:var(--admin-stone-400)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+            </div>
+            <h3>No campaigns yet</h3>
+            <p>Send your first broadcast to see analytics here.</p>
+            <a href="/admin/newsletter/broadcast" class="admin-ba-btn">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                Send Your First Broadcast
+            </a>
         </div>
-        <h3 class="text-sm font-bold text-stone-900 mb-1">No campaigns yet</h3>
-        <p class="text-sm text-stone-400">Send your first broadcast to see analytics here.</p>
-        <a href="/admin/newsletter/broadcast" class="inline-flex items-center gap-2 mt-4 px-4 py-2.5 bg-gradient-to-r from-stone-800 to-stone-900 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:from-stone-900 hover:to-stone-950 transition-all shadow-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-            Send Your First Broadcast
-        </a>
     </div>
     {% endif %}
 </div>

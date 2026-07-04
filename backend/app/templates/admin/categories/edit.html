@@ -1,54 +1,400 @@
 {% extends "admin/base.html" %}
 {% block title %}Edit {{ category.name }} — ForgeStore Admin{% endblock %}
 {% block content %}
-<div class="max-w-2xl mx-auto">
-    <nav class="flex items-center gap-2 text-sm text-stone-400 mb-6">
-        <a href="/admin/categories" class="hover:text-amber-600 transition-colors">Categories</a>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
-        <span class="text-stone-600 font-medium">{{ category.name }}</span>
+<style>
+/* ─── admin-category-edit design system ─── */
+:root {
+  --admin-cat-amber-50: #fffbeb;
+  --admin-cat-amber-100: #fef3c7;
+  --admin-cat-amber-200: #fde68a;
+  --admin-cat-amber-500: #f59e0b;
+  --admin-cat-amber-600: #d97706;
+  --admin-cat-amber-700: #b45309;
+  --admin-cat-stone-50: #fafaf9;
+  --admin-cat-stone-100: #f5f5f4;
+  --admin-cat-stone-200: #e7e5e4;
+  --admin-cat-stone-300: #d6d3d1;
+  --admin-cat-stone-400: #a8a29e;
+  --admin-cat-stone-500: #78716c;
+  --admin-cat-stone-600: #57534e;
+  --admin-cat-stone-700: #44403c;
+  --admin-cat-stone-800: #292524;
+  --admin-cat-stone-900: #1c1917;
+  --admin-cat-radius-sm: 6px;
+  --admin-cat-radius-md: 10px;
+  --admin-cat-radius-lg: 14px;
+  --admin-cat-shadow-sm: 0 1px 3px rgba(0,0,0,.04);
+  --admin-cat-shadow-md: 0 4px 12px rgba(0,0,0,.06);
+  --admin-cat-shadow-lg: 0 8px 24px rgba(0,0,0,.08);
+  --admin-cat-transition-fast: 150ms ease;
+  --admin-cat-transition-base: 200ms ease;
+}
+
+/* ─── page layout ─── */
+.admin-cat-page {
+  max-width: 42rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 2rem 1rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ─── breadcrumb ─── */
+.admin-cat-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--admin-cat-stone-400);
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.admin-cat-breadcrumb a {
+  color: var(--admin-cat-stone-400);
+  text-decoration: none;
+  transition: color var(--admin-cat-transition-fast);
+  padding: 4px 0;
+}
+
+.admin-cat-breadcrumb a:hover {
+  color: var(--admin-cat-amber-600);
+}
+
+.admin-cat-breadcrumb-sep {
+  width: 16px;
+  height: 16px;
+  color: var(--admin-cat-stone-300);
+  flex-shrink: 0;
+}
+
+.admin-cat-breadcrumb-current {
+  color: var(--admin-cat-stone-600);
+  font-weight: 600;
+}
+
+/* ─── page title ─── */
+.admin-cat-page-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--admin-cat-stone-900);
+  margin: 0 0 2rem;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+/* ─── form card ─── */
+.admin-cat-form-card {
+  background: #fff;
+  border-radius: var(--admin-cat-radius-lg);
+  border: 1px solid var(--admin-cat-stone-200);
+  padding: 2rem;
+  box-shadow: var(--admin-cat-shadow-sm);
+  transition: box-shadow var(--admin-cat-transition-base);
+}
+
+.admin-cat-form-card:hover {
+  box-shadow: var(--admin-cat-shadow-md);
+}
+
+/* ─── form groups ─── */
+.admin-cat-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.admin-cat-form-group:last-of-type {
+  margin-bottom: 0;
+}
+
+.admin-cat-form-label {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--admin-cat-stone-500);
+  margin-bottom: 0.5rem;
+}
+
+.admin-cat-form-label-required::after {
+  content: ' *';
+  color: var(--admin-cat-amber-500);
+}
+
+/* ─── inputs ─── */
+.admin-cat-form-input,
+.admin-cat-form-textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  min-height: 44px;
+  background: #fff;
+  border: 1px solid var(--admin-cat-stone-300);
+  border-radius: var(--admin-cat-radius-md);
+  font-size: 0.875rem;
+  color: var(--admin-cat-stone-900);
+  transition: border-color var(--admin-cat-transition-fast), box-shadow var(--admin-cat-transition-fast);
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.admin-cat-form-input::placeholder,
+.admin-cat-form-textarea::placeholder {
+  color: var(--admin-cat-stone-400);
+}
+
+.admin-cat-form-input:focus,
+.admin-cat-form-textarea:focus {
+  outline: none;
+  border-color: var(--admin-cat-amber-500);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+.admin-cat-form-textarea {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.6;
+}
+
+/* ─── file input ─── */
+.admin-cat-form-file-wrap {
+  position: relative;
+}
+
+.admin-cat-form-file-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  min-height: 44px;
+  background: var(--admin-cat-stone-50);
+  border: 2px dashed var(--admin-cat-stone-300);
+  border-radius: var(--admin-cat-radius-md);
+  font-size: 0.8125rem;
+  color: var(--admin-cat-stone-500);
+  transition: all var(--admin-cat-transition-fast);
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.admin-cat-form-file-input:hover {
+  border-color: var(--admin-cat-amber-500);
+  background: var(--admin-cat-amber-50);
+}
+
+.admin-cat-form-file-input:focus {
+  outline: none;
+  border-color: var(--admin-cat-amber-500);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+/* ─── hints ─── */
+.admin-cat-form-hint {
+  font-size: 0.75rem;
+  color: var(--admin-cat-stone-400);
+  margin-top: 0.375rem;
+  line-height: 1.4;
+}
+
+/* ─── image preview ─── */
+.admin-cat-form-image-preview {
+  margin-bottom: 0.75rem;
+  display: inline-block;
+}
+
+.admin-cat-form-image-preview img {
+  width: 10rem;
+  height: 6rem;
+  object-fit: cover;
+  border-radius: var(--admin-cat-radius-md);
+  border: 2px solid var(--admin-cat-stone-200);
+  transition: border-color var(--admin-cat-transition-fast);
+}
+
+.admin-cat-form-image-preview img:hover {
+  border-color: var(--admin-cat-amber-500);
+}
+
+/* ─── separator ─── */
+.admin-cat-form-separator {
+  height: 1px;
+  background: var(--admin-cat-stone-100);
+  margin: 1.5rem 0;
+}
+
+/* ─── actions ─── */
+.admin-cat-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--admin-cat-stone-100);
+  margin-top: 1.5rem;
+}
+
+/* ─── primary button ─── */
+.admin-cat-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 24px;
+  min-height: 44px;
+  background: linear-gradient(135deg, var(--admin-cat-stone-800), var(--admin-cat-stone-900));
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: none;
+  border-radius: var(--admin-cat-radius-md);
+  cursor: pointer;
+  transition: all var(--admin-cat-transition-fast);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-cat-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.admin-cat-btn:hover {
+  background: linear-gradient(135deg, var(--admin-cat-stone-900), #1c1917);
+  box-shadow: var(--admin-cat-shadow-md);
+  transform: translateY(-1px);
+}
+
+.admin-cat-btn:active {
+  transform: translateY(0);
+}
+
+.admin-cat-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.admin-cat-btn svg {
+  width: 16px;
+  height: 16px;
+  position: relative;
+}
+
+/* ─── cancel button ─── */
+.admin-cat-btn--cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+  min-height: 44px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--admin-cat-stone-500);
+  background: none;
+  border: 1px solid var(--admin-cat-stone-200);
+  border-radius: var(--admin-cat-radius-md);
+  cursor: pointer;
+  transition: all var(--admin-cat-transition-fast);
+  text-decoration: none;
+}
+
+.admin-cat-btn--cancel:hover {
+  color: var(--admin-cat-stone-900);
+  background: var(--admin-cat-stone-50);
+  border-color: var(--admin-cat-stone-300);
+}
+
+/* ─── loading spinner ─── */
+@keyframes admin-cat-spin {
+  to { transform: rotate(360deg); }
+}
+
+.admin-cat-btn .admin-cat-spin {
+  animation: admin-cat-spin 0.6s linear infinite;
+}
+
+/* ─── responsive ─── */
+@media (max-width: 640px) {
+  .admin-cat-page {
+    padding: 1.25rem 0.75rem;
+  }
+
+  .admin-cat-page-title {
+    font-size: 1.375rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .admin-cat-form-card {
+    padding: 1.25rem;
+  }
+
+  .admin-cat-form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-cat-form-actions .admin-cat-btn,
+  .admin-cat-form-actions .admin-cat-btn--cancel {
+    width: 100%;
+  }
+
+  .admin-cat-form-image-preview img {
+    width: 8rem;
+    height: 5rem;
+  }
+}
+</style>
+
+<div class="admin-cat-page">
+    <nav class="admin-cat-breadcrumb">
+        <a href="/admin/categories">Categories</a>
+        <svg class="admin-cat-breadcrumb-sep" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        <span class="admin-cat-breadcrumb-current">{{ category.name }}</span>
     </nav>
 
-    <h1 class="text-2xl font-heading font-bold text-stone-900 mb-6">Edit Category</h1>
+    <h1 class="admin-cat-page-title">Edit Category</h1>
 
-    <div class="bg-white rounded-2xl border border-stone-200 p-6 md:p-8 shadow-sm hover:shadow-md transition-shadow">
-        <form id="edit-category-form" class="space-y-5" onsubmit="event.preventDefault(); submitEditCategory(this)">
+    <div class="admin-cat-form-card">
+        <form id="edit-category-form" onsubmit="event.preventDefault(); submitEditCategory(this)">
             <input type="hidden" name="id" value="{{ category.id }}">
 
-            <div>
-                <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2" for="name">Category Name</label>
-                <input id="name" name="name" value="{{ category.name }}" required class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">
+            <div class="admin-cat-form-group">
+                <label class="admin-cat-form-label admin-cat-form-label-required" for="name">Category Name</label>
+                <input id="name" name="name" value="{{ category.name }}" required class="admin-cat-form-input" placeholder="Enter category name">
             </div>
 
-            <div>
-                <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2" for="slug">Slug</label>
-                <input id="slug" name="slug" value="{{ category.slug }}" class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">
-                <p class="text-xs text-stone-400 mt-1.5">Leave empty to auto-generate</p>
+            <div class="admin-cat-form-group">
+                <label class="admin-cat-form-label" for="slug">Slug</label>
+                <input id="slug" name="slug" value="{{ category.slug }}" class="admin-cat-form-input" placeholder="auto-generated-from-name">
+                <p class="admin-cat-form-hint">Leave empty to auto-generate from category name</p>
             </div>
 
-            <div>
-                <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2" for="description">Description</label>
-                <textarea id="description" name="description" rows="3" class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">{{ category.description or '' }}</textarea>
+            <div class="admin-cat-form-group">
+                <label class="admin-cat-form-label" for="description">Description</label>
+                <textarea id="description" name="description" rows="4" class="admin-cat-form-textarea" placeholder="Optional description for this category">{{ category.description or '' }}</textarea>
             </div>
 
-            <div>
-                <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-stone-500 mb-2" for="image">Category Image</label>
+            <div class="admin-cat-form-group">
+                <label class="admin-cat-form-label" for="image">Category Image</label>
                 {% if category.image %}
-                <div class="mb-3">
-                    <img src="{{ category.image }}" alt="{{ category.name }}" class="w-32 h-20 object-cover rounded-lg border border-stone-200">
+                <div class="admin-cat-form-image-preview">
+                    <img src="{{ category.image }}" alt="{{ category.name }}">
                 </div>
                 {% endif %}
-                <input id="image" name="image" type="file" accept="image/*" class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all" />
+                <div class="admin-cat-form-file-wrap">
+                    <input id="image" name="image" type="file" accept="image/*" class="admin-cat-form-file-input">
+                </div>
                 <input type="hidden" name="existing_image" value="{{ category.image or '' }}">
             </div>
 
-            <div class="flex items-center gap-3 pt-4 border-t border-stone-100">
-                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-stone-800 to-stone-900 text-white text-sm font-bold rounded-xl hover:from-stone-900 hover:to-stone-950 transition-all shadow-md hover:shadow-lg">
-                    <span class="inline-flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Save Changes
-                    </span>
+            <div class="admin-cat-form-actions">
+                <button type="submit" class="admin-cat-btn">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Save Changes
                 </button>
-                <a href="/admin/categories" class="px-6 py-3 text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 rounded-xl transition-all">Cancel</a>
+                <a href="/admin/categories" class="admin-cat-btn--cancel">Cancel</a>
             </div>
         </form>
     </div>
@@ -58,7 +404,7 @@
 async function submitEditCategory(form) {
     const btn = form.querySelector('button[type="submit"]');
     btn.disabled = true;
-    btn.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Saving...</span>';
+    btn.innerHTML = '<svg class="admin-cat-spin" width="16" height="16" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Saving...';
 
     const formData = new FormData(form);
     const data = {};
@@ -95,7 +441,7 @@ async function submitEditCategory(form) {
         showToast('Failed to update category', 'error');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Save Changes</span>';
+        btn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Save Changes';
     }
 }
 </script>

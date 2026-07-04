@@ -1,116 +1,183 @@
 {% extends "admin/base.html" %}
 {% block title %}{{ retailer.name }} — ForgeStore Admin{% endblock %}
 {% block content %}
-<div class="max-w-5xl mx-auto">
-    <nav class="flex items-center gap-2 text-sm text-stone-400 mb-6">
-        <a href="/admin/retailers" class="hover:text-amber-600 transition-colors">Retailers</a>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
-        <span class="text-stone-600 font-medium">{{ retailer.name }}</span>
+<style>
+  :root {
+    --amber-50:#fffbeb;--amber-100:#fef3c7;--amber-200:#fde68a;--amber-300:#fcd34d;
+    --amber-400:#fbbf24;--amber-500:#f59e0b;--amber-600:#d97706;--amber-700:#b45309;
+    --amber-800:#92400e;
+    --stone-50:#fafaf9;--stone-100:#f5f5f4;--stone-200:#e7e5e4;--stone-300:#d6d3d1;
+    --stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#57534e;--stone-700:#44403c;
+    --stone-800:#292524;--stone-900:#1c1917;
+    --emerald-50:#ecfdf5;--emerald-100:#d1fae5;--emerald-200:#a7f3d0;--emerald-600:#059669;
+    --red-50:#fef2f2;--red-200:#fecaca;--red-700:#b91c1c;
+    --radius-sm:6px;--radius-md:10px;--radius-lg:14px;--radius-xl:16px;--radius-full:9999px;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 12px rgba(0,0,0,.06);
+    --transition-fast:150ms ease;--transition-base:200ms ease;
+  }
+  .admin-page{max-width:1100px;margin:0 auto;padding:0}
+  .admin-breadcrumb{display:flex;align-items:center;gap:8px;font-size:.875rem;color:var(--stone-400);margin-bottom:1.5rem}
+  .admin-breadcrumb a{color:var(--stone-400);text-decoration:none;transition:color var(--transition-fast)}
+  .admin-breadcrumb a:hover{color:var(--amber-600)}
+  .admin-breadcrumb svg{width:16px;height:16px;flex-shrink:0}
+  .admin-breadcrumb-current{color:var(--stone-600);font-weight:500}
+  .admin-card{background:#fff;border:1px solid var(--stone-200);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm)}
+  .admin-card-body{padding:1.5rem}
+  .admin-banner{height:192px;background:var(--stone-100)}
+  .admin-banner img{width:100%;height:100%;object-fit:cover}
+  .admin-banner-gradient{height:128px;background:linear-gradient(135deg,var(--stone-900),var(--stone-800),var(--amber-700))}
+  .admin-header-row{display:flex;align-items:flex-end;gap:1rem;padding:1.5rem}
+  .admin-header-row.has-banner{margin-top:-64px;padding-top:0}
+  .admin-logo{width:80px;height:80px;border-radius:14px;border:4px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.1);object-fit:cover;background:#fff;flex-shrink:0}
+  .admin-logo-placeholder{width:80px;height:80px;border-radius:14px;border:4px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.1);background:linear-gradient(135deg,var(--stone-800),var(--stone-900));display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.5rem;font-weight:700;flex-shrink:0}
+  .admin-header-content{flex:1;padding-top:1rem}
+  .admin-header-top{display:flex;flex-direction:column;gap:1rem}
+  .admin-retailer-name{font-size:1.5rem;font-weight:700;color:var(--stone-900)}
+  .admin-retailer-location{font-size:.875rem;color:var(--stone-400);margin-top:.25rem}
+  .admin-btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.625rem 1.25rem;border:none;border-radius:var(--radius-md);font-size:.875rem;font-weight:700;cursor:pointer;transition:all var(--transition-fast);min-height:44px;text-decoration:none}
+  .admin-btn-dark{background:linear-gradient(135deg,var(--stone-800),var(--stone-900));color:#fff}
+  .admin-btn-dark:hover{background:linear-gradient(135deg,var(--stone-900),#1a1512);box-shadow:0 4px 12px rgba(0,0,0,.12)}
+  .admin-grid-layout{display:grid;grid-template-columns:1fr;gap:1.5rem;margin-top:1.5rem}
+  .admin-detail-label{font-size:.625rem;font-weight:700;text-transform:uppercase;letter-spacing:.15em;color:var(--stone-400);margin-bottom:1rem}
+  .admin-detail-row{display:flex;justify-content:space-between;align-items:center;font-size:.875rem;padding:.375rem 0}
+  .admin-detail-row .label{color:var(--stone-400)}
+  .admin-detail-row .value{font-weight:500;color:var(--stone-700)}
+  .admin-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:var(--radius-full);font-size:.625rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;border:1px solid;white-space:nowrap}
+  .admin-badge--active{background:var(--emerald-50);color:var(--emerald-600);border-color:var(--emerald-200)}
+  .admin-badge--inactive{background:var(--stone-50);color:var(--stone-400);border-color:var(--stone-200)}
+  .admin-section-border{border-top:1px solid var(--stone-100);padding-top:.75rem;margin-top:.75rem}
+  .admin-table-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:1px solid var(--stone-100)}
+  .admin-table-header h2{font-size:.875rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--stone-900);display:flex;align-items:center;gap:.5rem}
+  .admin-table-header h2 svg{width:16px;height:16px;color:var(--stone-400)}
+  .admin-table-count{font-size:.75rem;color:var(--stone-400);background:var(--stone-50);padding:4px 10px;border-radius:var(--radius-full)}
+  .admin-table-wrap{overflow-x:auto}
+  .admin-table{width:100%;border-collapse:collapse;font-size:.875rem}
+  .admin-table th{text-align:left;padding:.75rem 1.5rem;font-size:.625rem;font-weight:700;text-transform:uppercase;letter-spacing:.15em;color:var(--stone-400);background:var(--stone-50);border-bottom:1px solid var(--stone-100)}
+  .admin-table td{padding:.75rem 1.5rem;border-bottom:1px solid var(--stone-50)}
+  .admin-table tbody tr{transition:background var(--transition-fast)}
+  .admin-table tbody tr:hover{background:rgba(255,251,235,.2)}
+  .admin-product-link{display:flex;align-items:center;gap:.75rem;text-decoration:none}
+  .admin-product-link:hover .admin-product-link-name{color:var(--amber-700)}
+  .admin-product-thumb{width:40px;height:40px;border-radius:var(--radius-sm);object-fit:cover;box-shadow:inset 0 0 0 1px var(--stone-200);flex-shrink:0}
+  .admin-product-thumb-placeholder{width:40px;height:40px;border-radius:var(--radius-sm);background:var(--stone-100);display:flex;align-items:center;justify-content:center;color:var(--stone-300);box-shadow:inset 0 0 0 1px var(--stone-200);flex-shrink:0}
+  .admin-product-link-name{font-size:.875rem;font-weight:500;color:var(--stone-900);transition:color var(--transition-fast)}
+  .admin-stock-badge{display:inline-flex;padding:2px 8px;font-size:.625rem;font-weight:500;border-radius:var(--radius-full);background:var(--emerald-50);color:var(--emerald-600);box-shadow:inset 0 0 0 1px var(--emerald-200)}
+  .admin-stock-badge.out{background:var(--stone-50);color:var(--stone-500);box-shadow:inset 0 0 0 1px var(--stone-200)}
+  .admin-empty-state{text-align:center;padding:4rem 1.5rem;color:var(--stone-400);font-size:.875rem}
+  .admin-star{color:var(--amber-700)}
+  .admin-sm-hide{display:none}
+  @media(min-width:640px){.admin-sm-hide{display:table-cell}.admin-header-top{flex-direction:row;align-items:center;justify-content:space-between}}
+  @media(min-width:1024px){.admin-grid-layout{grid-template-columns:1fr 3fr}}
+  @media(max-width:640px){.admin-card-body{padding:1rem}.admin-retailer-name{font-size:1.25rem}.admin-table th,.admin-table td{padding:.625rem 1rem}}
+</style>
+
+<div class="admin-page">
+    <nav class="admin-breadcrumb">
+        <a href="/admin/retailers">Retailers</a>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
+        <span class="admin-breadcrumb-current">{{ retailer.name }}</span>
     </nav>
 
-    <!-- Header -->
-    <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden mb-6 shadow-sm">
+    <div class="admin-card">
         {% if retailer.banner_url %}
-        <div class="h-48 bg-stone-100">
-            <img src="{{ retailer.banner_url }}" alt="" class="w-full h-full object-cover">
-        </div>
+        <div class="admin-banner"><img src="{{ retailer.banner_url }}" alt=""></div>
         {% else %}
-        <div class="h-32 bg-gradient-to-r from-stone-900 via-stone-800 to-amber-900"></div>
+        <div class="admin-banner-gradient"></div>
         {% endif %}
-        <div class="px-6 pb-6 {% if retailer.banner_url %}pt-0{% else %}pt-6{% endif %}">
-            <div class="flex items-end gap-4 {% if retailer.banner_url %}-mt-16{% endif %}">
-                {% if retailer.logo_url %}
-                <img src="{{ retailer.logo_url }}" alt="{{ retailer.name }}" class="w-20 h-20 rounded-xl border-4 border-white shadow-md object-cover bg-white">
-                {% else %}
-                <div class="w-20 h-20 rounded-xl border-4 border-white shadow-md bg-gradient-to-br from-stone-800 to-stone-900 flex items-center justify-center text-white text-2xl font-bold">
-                    {{ retailer.name[0]|upper }}
-                </div>
-                {% endif %}
-                <div class="flex-1 pt-4">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                            <h1 class="text-2xl font-heading font-bold text-stone-900">{{ retailer.name }}</h1>
-                            <p class="text-sm text-stone-400">{{ retailer.location or '' }}</p>
-                        </div>
-                        <a href="/admin/retailers/{{ retailer.slug }}/edit" class="min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-stone-800 to-stone-900 text-white text-sm font-bold rounded-xl hover:from-stone-900 hover:to-stone-950 transition-all shadow-md hover:shadow-lg">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                            <span class="hidden sm:inline">Edit Retailer</span>
-                            <span class="sm:hidden">Edit</span>
-                        </a>
+        <div class="admin-header-row {% if retailer.banner_url %}has-banner{% endif %}">
+            {% if retailer.logo_url %}
+            <img src="{{ retailer.logo_url }}" alt="{{ retailer.name }}" class="admin-logo">
+            {% else %}
+            <div class="admin-logo-placeholder">{{ retailer.name[0]|upper }}</div>
+            {% endif %}
+            <div class="admin-header-content">
+                <div class="admin-header-top">
+                    <div>
+                        <p class="admin-retailer-name">{{ retailer.name }}</p>
+                        <p class="admin-retailer-location">{{ retailer.location or '' }}</p>
                     </div>
+                    <a href="/admin/retailers/{{ retailer.slug }}/edit" class="admin-btn admin-btn-dark">
+                        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        <span class="admin-sm-hide" style="display:none;">Edit Retailer</span>
+                        <span>Edit</span>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <!-- Stats -->
-        <div class="lg:col-span-1 space-y-4">
-            <div class="bg-white rounded-2xl border border-stone-200 p-5 shadow-sm">
-                <h3 class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 mb-4">Details</h3>
-                <div class="space-y-3 text-sm">
-                    <div class="flex justify-between items-center">
-                        <span class="text-stone-400">Status</span>
-                        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full {% if retailer.status == 'ACTIVE' %}bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50{% else %}bg-stone-50 text-stone-400 ring-1 ring-stone-200/50{% endif %}">{{ retailer.status }}</span>
+    <div class="admin-grid-layout">
+        <div>
+            <div class="admin-card">
+                <div class="admin-card-body">
+                    <p class="admin-detail-label">Details</p>
+                    <div class="admin-detail-row">
+                        <span class="label">Status</span>
+                        <span class="admin-badge {% if retailer.status == 'ACTIVE' %}admin-badge--active{% else %}admin-badge--inactive{% endif %}">{{ retailer.status }}</span>
                     </div>
-                    <div class="flex justify-between"><span class="text-stone-400">Rating</span><span class="font-medium text-amber-700">★ {{ "%.1f"|format(retailer.rating) if retailer.rating else '—' }}</span></div>
-                    <div class="flex justify-between"><span class="text-stone-400">Products</span><span class="font-medium text-stone-700">{{ products|length }}</span></div>
+                    <div class="admin-detail-row">
+                        <span class="label">Rating</span>
+                        <span class="value admin-star">&#9733; {{ "%.1f"|format(retailer.rating) if retailer.rating else '—' }}</span>
+                    </div>
+                    <div class="admin-detail-row">
+                        <span class="label">Products</span>
+                        <span class="value">{{ products|length }}</span>
+                    </div>
+                    {% if retailer.bio %}
+                    <p class="admin-section-border" style="font-size:.875rem;color:var(--stone-500);line-height:1.6;">{{ retailer.description }}</p>
+                    {% endif %}
+                    {% if retailer.location %}
+                    <div class="admin-section-border">
+                        <p class="admin-detail-label" style="margin-bottom:.375rem;">Location</p>
+                        <p style="font-size:.75rem;color:var(--stone-500);">{{ retailer.location }}</p>
+                    </div>
+                    {% endif %}
                 </div>
-                {% if retailer.bio %}
-                <p class="text-sm text-stone-500 mt-4 pt-4 border-t border-stone-100 leading-relaxed">{{ retailer.description }}</p>
-                {% endif %}
-                {% if retailer.location %}
-                <div class="mt-3 pt-3 border-t border-stone-100">
-                    <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 mb-1.5">Location</p>
-                    <p class="text-xs text-stone-500">{{ retailer.location }}</p>
-                </div>
-                {% endif %}
             </div>
         </div>
 
-        <!-- Products -->
-        <div class="lg:col-span-3">
-            <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
-                <div class="px-6 py-4 border-b border-stone-100 flex items-center justify-between">
-                    <h2 class="text-sm font-bold text-stone-900 uppercase tracking-wider flex items-center gap-2">
-                        <svg class="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        <div>
+            <div class="admin-card">
+                <div class="admin-table-header">
+                    <h2>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                         Products
                     </h2>
-                    <span class="text-xs text-stone-400 bg-stone-50 px-2.5 py-1 rounded-full">{{ products|length }} products</span>
+                    <span class="admin-table-count">{{ products|length }} products</span>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full">
+                <div class="admin-table-wrap">
+                    <table class="admin-table">
                         <thead>
-                            <tr class="border-b border-stone-50 bg-stone-50/50">
-                                <th class="text-left px-6 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Product</th>
-                                <th class="text-left px-6 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400">Price</th>
-                                <th class="text-left px-6 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 hidden sm:table-cell">Stock</th>
-                                <th class="text-left px-6 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-stone-400 hidden sm:table-cell">Status</th>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th class="admin-sm-hide">Stock</th>
+                                <th class="admin-sm-hide">Status</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-stone-50">
+                        <tbody>
                             {% for p in products %}
-                            <tr class="hover:bg-amber-50/20 transition-colors">
-                                <td class="px-6 py-3">
-                                    <a href="/admin/catalog/{{ p.id }}" class="flex items-center gap-3">
+                            <tr>
+                                <td>
+                                    <a href="/admin/catalog/{{ p.id }}" class="admin-product-link">
                                         {% if p.images and p.images|length > 0 %}
-                                        <img src="{{ p.images[0] }}" alt="" class="w-10 h-10 rounded-lg object-cover ring-1 ring-stone-200">
+                                        <img src="{{ p.images[0] }}" alt="" class="admin-product-thumb">
                                         {% else %}
-                                        <div class="w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center text-stone-300 ring-1 ring-stone-200">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                        <div class="admin-product-thumb-placeholder">
+                                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                                         </div>
                                         {% endif %}
-                                        <span class="text-sm font-medium text-stone-900 hover:text-amber-700 transition-colors">{{ p.name }}</span>
+                                        <span class="admin-product-link-name">{{ p.name }}</span>
                                     </a>
                                 </td>
-                                <td class="px-6 py-3 text-sm text-stone-600">₦{{ "%.2f"|format(p.price) }}</td>
-                                <td class="px-6 py-3 text-sm text-stone-500 hidden sm:table-cell">{{ p.inventory or 0 }}</td>
-                                <td class="px-6 py-3 hidden sm:table-cell">
-                                    <span class="px-2 py-0.5 text-[10px] font-medium rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50">{% if p.inventory and p.inventory > 0 %}In Stock{% else %}Out of Stock{% endif %}</span>
+                                <td style="color:var(--stone-600);">&#8358;{{ "%.2f"|format(p.price) }}</td>
+                                <td class="admin-sm-hide" style="color:var(--stone-500);">{{ p.inventory or 0 }}</td>
+                                <td class="admin-sm-hide">
+                                    <span class="admin-stock-badge {% if not p.inventory or p.inventory <= 0 %}out{% endif %}">{% if p.inventory and p.inventory > 0 %}In Stock{% else %}Out of Stock{% endif %}</span>
                                 </td>
                             </tr>
                             {% else %}
-                            <tr><td colspan="4" class="px-6 py-16 text-center text-sm text-stone-400">No products yet</td></tr>
+                            <tr><td colspan="4" class="admin-empty-state">No products yet</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>

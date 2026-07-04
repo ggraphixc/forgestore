@@ -1,75 +1,86 @@
 {% extends "web/base.html" %}
 {% block title %}My Orders — ForgeStore{% endblock %}
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-stone-50 via-white to-amber-50/20 dark:from-stone-950 dark:via-stone-900 dark:to-amber-950/20">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sm:mb-10 reveal">
-      <div>
-        <div class="flex items-center gap-3 mb-2">
-          <a href="/shop/account" class="p-2 -ml-2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-all" aria-label="Back to dashboard">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 12H5m7-7l-7 7 7 7"/></svg>
-          </a>
-          <h1 class="text-2xl sm:text-3xl lg:text-4xl font-display font-black text-stone-900 dark:text-stone-100">My <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Orders</span></h1>
-        </div>
-        <p class="text-sm text-stone-500 dark:text-stone-400 ml-2">Track and manage your purchases</p>
-      </div>
-    </div>
+<style>
+  .acct-page{padding:2rem 1rem;max-width:72rem;margin:0 auto}
+  .acct-header{display:flex;flex-direction:column;gap:.25rem}
+  .acct-header h1{font-size:1.875rem;font-weight:800;color:var(--color-stone-900)}
+  .acct-header p{font-size:.875rem;color:var(--color-stone-500)}
+  .acct-card{background:var(--color-white);border:1px solid var(--color-stone-200);border-radius:1rem;padding:1.5rem}
+  .acct-badge{display:inline-flex;align-items:center;padding:.25rem .75rem;border-radius:9999px;font-size:.75rem;font-weight:600}
+  .acct-badge--amber{background:var(--color-amber-100);color:var(--color-amber-700)}
+  .acct-badge--emerald{background:var(--color-emerald-100);color:var(--color-emerald-700)}
+  .acct-badge--blue{background:var(--color-blue-100);color:var(--color-blue-700)}
+  .acct-badge--red{background:var(--color-red-100);color:var(--color-red-700)}
+  .acct-badge--stone{background:var(--color-stone-100);color:var(--color-stone-600)}
+  .acct-btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.5rem;border-radius:.75rem;font-size:.875rem;font-weight:600;min-height:44px;border:none;cursor:pointer;transition:all .15s;text-decoration:none}
+  .acct-btn--primary{background:var(--color-amber-600);color:white}
+  .acct-btn--primary:hover{background:var(--color-amber-700)}
+  .order-row{display:flex;align-items:center;justify-content:space-between;padding:1rem 0;border-bottom:1px solid var(--color-stone-100);gap:1rem;text-decoration:none;min-height:44px;transition:background .15s}
+  .order-row:last-child{border-bottom:none}
+  .order-row:hover{background:var(--color-stone-50);margin:0 -1.5rem;padding-left:1.5rem;padding-right:1.5rem;border-radius:.75rem}
+  .back-link{display:inline-flex;align-items:center;gap:.5rem;font-size:.875rem;color:var(--color-stone-500);text-decoration:none;min-height:44px;margin-bottom:1rem}
+  .back-link:hover{color:var(--color-stone-900)}
+  @media(min-width:768px){.acct-page{padding:2.5rem 1.5rem}.acct-header h1{font-size:2.25rem}}
+</style>
 
-    <!-- Orders List -->
-    {% if orders %}
-    <div class="space-y-4">
-      {% for order in orders %}
-      <a href="/shop/account/orders/{{ order.id }}" class="block reveal{% if loop.index > 1 %} stagger-{{ loop.index % 6 + 1 }}{% endif %}">
-        <div class="card-artisan p-4 sm:p-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                </svg>
-              </div>
-              <div>
-                <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">{{ order.order_number }}</p>
-                <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">{{ order.created_at.strftime('%b %d, %Y at %I:%M %p') if order.created_at else '—' }}</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-3 sm:gap-4">
-              <span class="text-sm font-mono font-bold text-stone-900 dark:text-stone-100">{{ format_price(order.total_amount, currency) if format_price else '₦' + '{:,.2f}'.format(order.total_amount) }}</span>
-              {% set status = order.status.value if order.status is mapping == false and order.status is not string else order.status %}
-              {% set status_str = status|string|lower if status else 'pending' %}
-              {% if 'delivered' in status_str or 'completed' in status_str %}
-              <span class="badge-emerald">{{ status|string|replace('_', ' ')|title if status else 'Pending' }}</span>
-              {% elif 'processing' in status_str or 'shipped' in status_str %}
-              <span class="badge-blue">{{ status|string|replace('_', ' ')|title if status else 'Pending' }}</span>
-              {% elif 'cancelled' in status_str or 'refunded' in status_str %}
-              <span class="badge-red">{{ status|string|replace('_', ' ')|title if status else 'Pending' }}</span>
-              {% else %}
-              <span class="badge-amber">{{ status|string|replace('_', ' ')|title if status else 'Pending' }}</span>
-              {% endif %}
-              <svg class="w-4 h-4 text-stone-300 dark:text-stone-600 flex-shrink-0 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            </div>
-          </div>
-        </div>
-      </a>
-      {% endfor %}
-    </div>
-    {% else %}
-    <!-- Empty State -->
-    <div class="text-center py-16 sm:py-24 reveal">
-      <div class="w-20 h-20 bg-stone-100 dark:bg-stone-800 rounded-2xl flex items-center justify-center mx-auto mb-6">
-        <svg class="w-10 h-10 text-stone-400 dark:text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-        </svg>
-      </div>
-      <h2 class="text-xl font-bold text-stone-900 dark:text-stone-100 mb-2">No orders yet</h2>
-      <p class="text-sm text-stone-500 dark:text-stone-400 max-w-sm mx-auto mb-8">Your order history will appear here once you make a purchase.</p>
-      <a href="/shop/marketplace" class="btn-forge inline-flex">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        Start Shopping
-      </a>
-    </div>
-    {% endif %}
+<div class="acct-page">
+  <div class="acct-header" style="margin-bottom:2rem">
+    <a href="/shop/account" class="back-link">
+      <svg style="width:1.25rem;height:1.25rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 12H5m7-7l-7 7 7 7"/></svg>
+      Back to Account
+    </a>
+    <h1>My <span style="color:var(--color-amber-600)">Orders</span></h1>
+    <p>Track and manage your purchases</p>
   </div>
+
+  {% if orders %}
+  <div style="display:flex;flex-direction:column;gap:1rem">
+    {% for order in orders %}
+    <a href="/shop/account/orders/{{ order.id }}" class="order-row" style="background:var(--color-white);border:1px solid var(--color-stone-200);border-radius:1rem;padding:1rem 1.25rem">
+      <div style="display:flex;align-items:center;gap:1rem">
+        <div style="width:3rem;height:3rem;background:var(--color-amber-50);border-radius:.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg style="width:1.5rem;height:1.5rem;color:var(--color-amber-600)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+          </svg>
+        </div>
+        <div>
+          <p style="font-size:.875rem;font-weight:600;color:var(--color-stone-900)">{{ order.order_number }}</p>
+          <p style="font-size:.75rem;color:var(--color-stone-500)">{{ order.created_at.strftime('%b %d, %Y at %I:%M %p') if order.created_at else '—' }}</p>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:.75rem">
+        <span style="font-size:.875rem;font-family:monospace;font-weight:700;color:var(--color-stone-900)">{{ format_price(order.total_amount, currency) if format_price else '₦' + '{:,.2f}'.format(order.total_amount) }}</span>
+        {% set status = order.status.value if order.status is mapping == false and order.status is not string else order.status %}
+        {% set status_str = status|string|lower if status else 'pending' %}
+        {% if 'delivered' in status_str or 'completed' in status_str %}
+        <span class="acct-badge acct-badge--emerald">{{ status|string|replace('_', ' ')|title if status else 'Pending' }}</span>
+        {% elif 'processing' in status_str or 'shipped' in status_str %}
+        <span class="acct-badge acct-badge--blue">{{ status|string|replace('_', ' ')|title if status else 'Pending' }}</span>
+        {% elif 'cancelled' in status_str or 'refunded' in status_str %}
+        <span class="acct-badge acct-badge--red">{{ status|string|replace('_', ' ')|title if status else 'Pending' }}</span>
+        {% else %}
+        <span class="acct-badge acct-badge--amber">{{ status|string|replace('_', ' ')|title if status else 'Pending' }}</span>
+        {% endif %}
+        <svg style="width:1rem;height:1rem;color:var(--color-stone-300);flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:4rem 1rem">
+    <div style="width:5rem;height:5rem;background:var(--color-stone-100);border-radius:1.25rem;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem">
+      <svg style="width:2.5rem;height:2.5rem;color:var(--color-stone-400)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+      </svg>
+    </div>
+    <h2 style="font-size:1.25rem;font-weight:700;color:var(--color-stone-900);margin-bottom:.5rem">No orders yet</h2>
+    <p style="font-size:.875rem;color:var(--color-stone-500);max-width:24rem;margin:0 auto 2rem">Your order history will appear here once you make a purchase.</p>
+    <a href="/shop/marketplace" class="acct-btn acct-btn--primary">
+      <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Start Shopping
+    </a>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

@@ -3,35 +3,90 @@
 {% block title %}Notifications — ForgeStore Admin{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
+<style>
+  :root {
+    --amber-50:#fffbeb;--amber-100:#fef3c7;--amber-200:#fde68a;--amber-300:#fcd34d;
+    --amber-400:#fbbf24;--amber-500:#f59e0b;--amber-600:#d97706;--amber-700:#b45309;
+    --amber-800:#92400e;
+    --stone-50:#fafaf9;--stone-100:#f5f5f4;--stone-200:#e7e5e4;--stone-300:#d6d3d1;
+    --stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#57534e;--stone-700:#44403c;
+    --stone-800:#292524;--stone-900:#1c1917;
+    --emerald-100:#d1fae5;--emerald-600:#059669;
+    --blue-100:#dbeafe;--blue-600:#2563eb;
+    --purple-100:#f3e8ff;--purple-600:#9333ea;
+    --red-100:#fee2e2;--red-500:#ef4444;
+    --radius-sm:6px;--radius-md:10px;--radius-lg:14px;--radius-xl:16px;--radius-full:9999px;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 12px rgba(0,0,0,.06);
+    --transition-fast:150ms ease;--transition-base:200ms ease;
+  }
+  .admin-page{max-width:800px;margin:0 auto;padding:0}
+  .admin-page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;gap:1rem;flex-wrap:wrap}
+  .admin-page-eyebrow{font-size:.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:.2em;color:var(--amber-600);margin-bottom:.5rem}
+  .admin-page-title{font-size:1.875rem;font-weight:900;color:var(--stone-900);display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+  .admin-page-subtitle{font-size:.875rem;color:var(--stone-500);margin-top:.5rem}
+  .admin-unread-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:var(--radius-full);font-size:.625rem;font-weight:700;background:var(--amber-100);color:#92400e;border:1px solid var(--amber-200)}
+  .admin-btn-outline{display:inline-flex;align-items:center;padding:.5rem 1rem;font-size:.75rem;font-weight:500;color:var(--stone-500);background:#fff;border:1px solid var(--stone-200);border-radius:var(--radius-md);cursor:pointer;transition:all var(--transition-fast);min-height:44px}
+  .admin-btn-outline:hover{color:var(--stone-900);border-color:var(--stone-300)}
+  .admin-card{background:#fff;border:1px solid var(--stone-200);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm)}
+  .admin-card-body{padding:1.5rem}
+  .admin-empty-icon{width:64px;height:64px;background:var(--stone-50);border-radius:var(--radius-full);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
+  .admin-empty-icon svg{width:32px;height:32px;color:var(--stone-300)}
+  .admin-empty-title{font-size:.875rem;font-weight:500;color:var(--stone-500)}
+  .admin-empty-sub{font-size:.75rem;color:var(--stone-400);margin-top:.25rem}
+  .admin-notif-item{background:#fff;border-radius:var(--radius-md);padding:1rem;display:flex;align-items:flex-start;gap:1rem;border:1px solid var(--stone-200);transition:box-shadow var(--transition-base);margin-bottom:.5rem}
+  .admin-notif-item.unread{border-color:var(--amber-200);background:rgba(255,251,235,.3)}
+  .admin-notif-item.clickable{cursor:pointer}
+  .admin-notif-item:hover{box-shadow:var(--shadow-md)}
+  .admin-notif-icon{width:40px;height:40px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .admin-notif-icon svg{width:20px;height:20px}
+  .admin-notif-icon.green{background:var(--emerald-100);color:var(--emerald-600)}
+  .admin-notif-icon.blue{background:var(--blue-100);color:var(--blue-600)}
+  .admin-notif-icon.purple{background:var(--purple-100);color:var(--purple-600)}
+  .admin-notif-icon.red{background:var(--red-100);color:var(--red-500)}
+  .admin-notif-icon.amber{background:var(--amber-100);color:var(--amber-600)}
+  .admin-notif-icon.gray{background:var(--stone-100);color:var(--stone-600)}
+  .admin-notif-body{flex:1;min-width:0}
+  .admin-notif-title-row{display:flex;align-items:center;gap:.5rem}
+  .admin-notif-title{font-size:.875rem;font-weight:600;color:var(--stone-900)}
+  .admin-notif-dot{width:8px;height:8px;border-radius:var(--radius-full);background:var(--amber-500);flex-shrink:0}
+  .admin-notif-message{font-size:.75rem;color:var(--stone-500);margin-top:2px}
+  .admin-notif-time{font-size:.625rem;color:var(--stone-400);margin-top:.375rem}
+  .admin-notif-check{flex-shrink:0;padding:6px;color:var(--stone-400);border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition-fast);border:none;background:none}
+  .admin-notif-check:hover{color:var(--stone-600);background:var(--stone-100)}
+  .admin-notif-check svg{width:16px;height:16px}
+  .admin-load-more{text-align:center;margin-top:1.5rem}
+  .admin-load-more-btn{padding:.75rem 1.5rem;font-size:.875rem;font-weight:500;color:var(--stone-600);background:#fff;border:1px solid var(--stone-200);border-radius:var(--radius-md);cursor:pointer;transition:all var(--transition-fast);box-shadow:var(--shadow-sm);min-height:44px}
+  .admin-load-more-btn:hover{border-color:var(--stone-300);color:var(--stone-900)}
+  .admin-spinner{width:24px;height:24px;border:2px solid var(--amber-500);border-top-color:transparent;border-radius:var(--radius-full);animation:spin 1s linear infinite;margin:0 auto 1rem}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .admin-hidden{display:none !important}
+  @media(max-width:640px){.admin-page-header{flex-direction:column;align-items:flex-start}.admin-card-body{padding:1rem}.admin-page-title{font-size:1.5rem}}
+</style>
+
+<div class="admin-page">
+    <div class="admin-page-header">
         <div>
-            <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 mb-2 block">System</span>
-            <h1 class="text-2xl sm:text-3xl md:text-4xl font-display font-black text-stone-900">
+            <p class="admin-page-eyebrow">System</p>
+            <h1 class="admin-page-title">
                 Notifications
-                <span id="unread-badge" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 hidden"></span>
+                <span id="unread-badge" class="admin-unread-badge admin-hidden"></span>
             </h1>
-            <p class="text-sm text-stone-500 mt-2">Stay informed about new orders and system events</p>
+            <p class="admin-page-subtitle">Stay informed about new orders and system events</p>
         </div>
-        <button onclick="markAllRead()" class="text-xs font-medium text-stone-500 hover:text-stone-900 bg-white border border-stone-200 px-4 py-2 rounded-xl hover:border-stone-300 transition-all duration-150">
-            Mark All Read
-        </button>
+        <button onclick="markAllRead()" class="admin-btn-outline">Mark All Read</button>
     </div>
 
-    <!-- Notifications List -->
-    <div id="notifications-container" class="space-y-2">
-        <div class="bg-white rounded-2xl border border-stone-200 p-12 text-center shadow-sm">
-            <div class="animate-spin w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p class="text-sm text-stone-400">Loading notifications...</p>
+    <div id="notifications-container">
+        <div class="admin-card">
+            <div class="admin-card-body" style="text-align:center;">
+                <div class="admin-spinner"></div>
+                <p class="admin-empty-title">Loading notifications...</p>
+            </div>
         </div>
     </div>
 
-    <!-- Load More -->
-    <div id="load-more-container" class="text-center mt-6 hidden">
-        <button id="load-more-btn" onclick="loadMore()" class="px-6 py-3 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:border-stone-300 hover:text-stone-900 transition-all duration-150 shadow-sm">
-            Load More
-        </button>
+    <div id="load-more-container" class="admin-load-more admin-hidden">
+        <button id="load-more-btn" onclick="loadMore()" class="admin-load-more-btn">Load More</button>
     </div>
 </div>
 {% endblock %}
@@ -45,113 +100,69 @@ let isLoading = false;
 async function loadNotifications(append = false) {
     if (isLoading) return;
     isLoading = true;
-
     const container = document.getElementById('notifications-container');
     const loadMoreContainer = document.getElementById('load-more-container');
-
     try {
         const res = await fetch(`/api/admin/notifications?limit=${LIMIT}&offset=${currentOffset}`);
         if (!res.ok) throw new Error('Failed to load');
         const data = await res.json();
-
         if (!data.notifications || data.notifications.length === 0) {
             if (!append) {
-                container.innerHTML = `<div class="bg-white rounded-2xl border border-stone-200 p-12 text-center shadow-sm">
-                    <div class="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-8 h-8 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                    </div>
-                    <p class="text-sm text-stone-500 font-medium">No notifications yet</p>
-                    <p class="text-xs text-stone-400 mt-1">Notifications will appear when new orders are placed.</p>
-                </div>`;
+                container.innerHTML = `<div class="admin-card"><div class="admin-card-body" style="text-align:center;"><div class="admin-empty-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg></div><p class="admin-empty-title">No notifications yet</p><p class="admin-empty-sub">Notifications will appear when new orders are placed.</p></div></div>`;
             }
-            loadMoreContainer.classList.add('hidden');
+            loadMoreContainer.classList.add('admin-hidden');
             isLoading = false;
             return;
         }
-
         let html = '';
         for (const n of data.notifications) {
             const date = n.created_at ? new Date(n.created_at).toLocaleString() : '';
             const typeIcons = {
-                'new_order': 'bg-emerald-100 text-emerald-600',
-                'new_customer': 'bg-blue-100 text-blue-600',
-                'new_review': 'bg-purple-100 text-purple-600',
-                'low_stock': 'bg-red-100 text-red-600',
-                'info': 'bg-blue-100 text-blue-600',
-                'warning': 'bg-amber-100 text-amber-600',
+                'new_order': 'green', 'new_customer': 'blue', 'new_review': 'purple',
+                'low_stock': 'red', 'info': 'blue', 'warning': 'amber',
             };
-            const iconColor = typeIcons[n.type] || 'bg-stone-100 text-stone-600';
-            const row = `<div class="bg-white rounded-xl border ${n.read ? 'border-stone-200' : 'border-amber-200 bg-amber-50/30'} p-4 hover:shadow-sm transition-all duration-150 flex items-start gap-4 ${n.link ? 'cursor-pointer' : ''}" onclick="${n.link ? `window.location.href='${n.link}'` : ''}">
-                <div class="w-10 h-10 rounded-xl ${iconColor} flex items-center justify-center shrink-0">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        ${n.type === 'new_order' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>' : n.type === 'new_customer' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>' : n.type === 'new_review' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>' : n.type === 'low_stock' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/>' : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'}
-                    </svg>
+            const iconClass = typeIcons[n.type] || 'gray';
+            const iconPaths = {
+                'new_order': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>',
+                'new_customer': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>',
+                'new_review': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>',
+                'low_stock': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/>',
+                'default': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+            };
+            const iconPath = iconPaths[n.type] || iconPaths['default'];
+            html += `<div class="admin-notif-item ${n.read ? '' : 'unread'} ${n.link ? 'clickable' : ''}" onclick="${n.link ? `window.location.href='${n.link}'` : ''}">
+                <div class="admin-notif-icon ${iconClass}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24">${iconPath}</svg></div>
+                <div class="admin-notif-body">
+                    <div class="admin-notif-title-row"><p class="admin-notif-title">${n.title}</p>${!n.read ? '<span class="admin-notif-dot"></span>' : ''}</div>
+                    <p class="admin-notif-message">${n.message || ''}</p>
+                    <p class="admin-notif-time">${date}</p>
                 </div>
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2">
-                        <p class="text-sm font-semibold text-stone-900">${n.title}</p>
-                        ${!n.read ? '<span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>' : ''}
-                    </div>
-                    <p class="text-xs text-stone-500 mt-0.5">${n.message || ''}</p>
-                    <p class="text-[10px] text-stone-400 mt-1.5">${date}</p>
-                </div>
-                ${!n.read ? `<button onclick="event.stopPropagation(); markRead('${n.id}')" class="shrink-0 p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-lg transition-all" title="Mark as read">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/></svg>
-                </button>` : ''}
+                ${!n.read ? `<button onclick="event.stopPropagation(); markRead('${n.id}')" class="admin-notif-check" title="Mark as read"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/></svg></button>` : ''}
             </div>`;
-            html += row;
         }
-
-        if (append) {
-            container.insertAdjacentHTML('beforeend', html);
-        } else {
-            container.innerHTML = html;
-        }
-
+        if (append) { container.insertAdjacentHTML('beforeend', html); } else { container.innerHTML = html; }
         currentOffset += data.notifications.length;
-        if (data.has_more) {
-            loadMoreContainer.classList.remove('hidden');
-        } else {
-            loadMoreContainer.classList.add('hidden');
-        }
+        if (data.has_more) { loadMoreContainer.classList.remove('admin-hidden'); } else { loadMoreContainer.classList.add('admin-hidden'); }
     } catch (err) {
-        if (!append) {
-            container.innerHTML = `<div class="bg-white rounded-2xl border border-stone-200 p-12 text-center shadow-sm">
-                <p class="text-sm text-red-500">Failed to load notifications.</p>
-            </div>`;
-        }
+        if (!append) { container.innerHTML = `<div class="admin-card"><div class="admin-card-body"><p style="font-size:.875rem;color:var(--red-500);text-align:center;">Failed to load notifications.</p></div></div>`; }
     }
     isLoading = false;
 }
 
-function loadMore() {
-    loadNotifications(true);
-}
+function loadMore() { loadNotifications(true); }
 
 async function markRead(id) {
     try {
         await fetch(`/api/admin/notifications/${id}/read`, { method: 'PUT' });
-        // Reload the first page
-        currentOffset = 0;
-        loadNotifications(false);
-        updateUnreadCount();
-    } catch (e) {
-        console.error('Failed to mark as read:', e);
-    }
+        currentOffset = 0; loadNotifications(false); updateUnreadCount();
+    } catch (e) { console.error('Failed to mark as read:', e); }
 }
 
 async function markAllRead() {
-    // Use the new bulk read-all endpoint
     try {
         const res = await fetch('/api/admin/notifications/read-all', { method: 'PUT' });
-        if (res.ok) {
-            currentOffset = 0;
-            loadNotifications(false);
-            updateUnreadCount();
-        }
-    } catch (e) {
-        console.error('Failed to mark all as read:', e);
-    }
+        if (res.ok) { currentOffset = 0; loadNotifications(false); updateUnreadCount(); }
+    } catch (e) { console.error('Failed to mark all as read:', e); }
 }
 
 async function updateUnreadCount() {
@@ -159,18 +170,10 @@ async function updateUnreadCount() {
         const res = await fetch('/api/admin/notifications/unread-count');
         const data = await res.json();
         const badge = document.getElementById('unread-badge');
-        if (data.count > 0) {
-            badge.textContent = data.count;
-            badge.classList.remove('hidden');
-        } else {
-            badge.classList.add('hidden');
-        }
+        if (data.count > 0) { badge.textContent = data.count; badge.classList.remove('admin-hidden'); } else { badge.classList.add('admin-hidden'); }
     } catch (e) {}
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadNotifications(false);
-    updateUnreadCount();
-});
+document.addEventListener('DOMContentLoaded', () => { loadNotifications(false); updateUnreadCount(); });
 </script>
 {% endblock %}

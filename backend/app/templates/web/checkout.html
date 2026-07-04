@@ -1,81 +1,424 @@
 {% extends "web/base.html" %}
 {% block title %}Checkout — ForgeStore{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-  <div class="reveal">
-    <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Checkout</span>
-    <h1 class="text-3xl sm:text-4xl font-black text-stone-900 dark:text-stone-100 font-display mb-8">
-      Complete Your <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Order</span>
-    </h1>
+<style>
+:root {
+  --ck-amber-50: #fffbeb;
+  --ck-amber-100: #fef3c7;
+  --ck-amber-200: #fde68a;
+  --ck-amber-300: #fcd34d;
+  --ck-amber-400: #fbbf24;
+  --ck-amber-500: #f59e0b;
+  --ck-amber-600: #d97706;
+  --ck-amber-700: #b45309;
+  --ck-stone-50: #fafaf9;
+  --ck-stone-100: #f5f5f4;
+  --ck-stone-200: #e7e5e4;
+  --ck-stone-300: #d6d3d1;
+  --ck-stone-400: #a8a29e;
+  --ck-stone-500: #78716c;
+  --ck-stone-600: #57534e;
+  --ck-stone-700: #44403c;
+  --ck-stone-800: #292524;
+  --ck-stone-900: #1c1917;
+}
+
+.ck-page {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+@media (min-width: 640px) { .ck-page { padding: 3rem 1.5rem; } }
+@media (min-width: 1024px) { .ck-page { padding: 3rem 2rem; } }
+
+.ck-header-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--ck-amber-600);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+.ck-header h1 {
+  font-size: 1.875rem;
+  font-weight: 900;
+  color: var(--ck-stone-900);
+  line-height: 1.1;
+  margin-bottom: 2rem;
+  font-family: 'Montserrat', sans-serif;
+}
+@media (min-width: 640px) { .ck-header h1 { font-size: 2.25rem; } }
+.ck-header h1 span {
+  background: linear-gradient(to right, var(--ck-amber-600), var(--ck-amber-500));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.ck-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+@media (min-width: 1024px) {
+  .ck-layout { grid-template-columns: 3fr 2fr; }
+}
+
+.ck-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.ck-form-group {
+  display: flex;
+  flex-direction: column;
+}
+.ck-form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ck-stone-700);
+  margin-bottom: 0.375rem;
+}
+
+.ck-input {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--ck-stone-200);
+  background: var(--ck-stone-50);
+  color: var(--ck-stone-900);
+  outline: none;
+  transition: all 0.2s;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+.ck-input:focus {
+  border-color: var(--ck-amber-500);
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+  background: #fff;
+}
+.ck-input::placeholder { color: var(--ck-stone-400); }
+
+.ck-select {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--ck-stone-200);
+  background: var(--ck-stone-50);
+  color: var(--ck-stone-900);
+  outline: none;
+  transition: all 0.2s;
+  min-height: 44px;
+  box-sizing: border-box;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2378716c' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.25rem;
+}
+.ck-select:focus {
+  border-color: var(--ck-amber-500);
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+  background-color: #fff;
+}
+
+.ck-card {
+  padding: 1.5rem;
+  background: #fff;
+  border-radius: 1rem;
+  border: 1px solid var(--ck-stone-200);
+  margin-bottom: 1rem;
+}
+.ck-card-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ck-stone-900);
+  margin-bottom: 1rem;
+}
+.ck-item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.ck-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: var(--ck-stone-50);
+  border-radius: 0.75rem;
+}
+.ck-item-img {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: var(--ck-stone-100);
+  flex-shrink: 0;
+}
+.ck-item-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ck-item-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ck-stone-300);
+}
+.ck-item-info {
+  flex: 1;
+  min-width: 0;
+}
+.ck-item-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ck-stone-900);
+}
+.ck-item-qty {
+  font-size: 0.75rem;
+  color: var(--ck-stone-500);
+}
+.ck-item-price {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ck-stone-900);
+  font-family: 'JetBrains Mono', monospace;
+  flex-shrink: 0;
+}
+
+.ck-summary {
+  padding: 1.5rem;
+  background: #fff;
+  border-radius: 1rem;
+  border: 1px solid var(--ck-stone-200);
+}
+.ck-summary-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ck-stone-900);
+  margin-bottom: 1rem;
+}
+.ck-summary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.ck-summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+}
+.ck-summary-label { color: var(--ck-stone-500); }
+.ck-summary-value {
+  font-weight: 500;
+  color: var(--ck-stone-900);
+}
+.ck-summary-value--mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.ck-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--ck-stone-200);
+  margin-top: 0.75rem;
+}
+.ck-total-label {
+  font-weight: 700;
+  color: var(--ck-stone-900);
+}
+.ck-total-value {
+  font-weight: 700;
+  color: var(--ck-amber-600);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.125rem;
+}
+
+.ck-pay-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 1rem;
+  margin-top: 1rem;
+  background: var(--ck-stone-900);
+  color: #fff;
+  border: none;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  min-height: 44px;
+}
+.ck-pay-btn:hover { background: var(--ck-stone-700); }
+.ck-pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.ck-pay-btn-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: rgba(255,255,255,0.15);
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--ck-amber-300);
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.ck-pay-btn:hover .ck-pay-btn-icon { transform: scale(1.05); }
+.ck-pay-btn-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+}
+.ck-pay-btn-desc {
+  font-size: 0.75rem;
+  color: var(--ck-stone-400);
+}
+.ck-pay-btn-arrow {
+  margin-left: auto;
+  color: var(--ck-stone-400);
+  transition: color 0.2s;
+}
+.ck-pay-btn:hover .ck-pay-btn-arrow { color: var(--ck-amber-400); }
+
+.ck-error {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  color: #ef4444;
+  padding: 0.75rem;
+  background: rgba(239,68,68,0.08);
+  border-radius: 0.75rem;
+}
+
+.ck-empty {
+  text-align: center;
+  padding: 5rem 1rem;
+}
+.ck-empty-icon {
+  width: 5rem;
+  height: 5rem;
+  background: var(--ck-stone-100);
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+}
+.ck-empty h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ck-stone-900);
+  margin-bottom: 0.5rem;
+}
+.ck-empty p {
+  font-size: 0.875rem;
+  color: var(--ck-stone-500);
+  margin-bottom: 1.5rem;
+}
+.ck-empty-btn {
+  display: inline-block;
+  padding: 0.625rem 1.5rem;
+  background: var(--ck-stone-900);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  text-decoration: none;
+  transition: all 0.2s;
+  min-height: 44px;
+  line-height: 44px;
+}
+.ck-empty-btn:hover { background: var(--ck-stone-700); }
+
+.ck-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 9999px;
+  animation: ck-spin 0.6s linear infinite;
+  margin: 0 auto;
+}
+@keyframes ck-spin { to { transform: rotate(360deg); } }
+</style>
+
+<div class="ck-page">
+  <div class="ck-header">
+    <span class="ck-header-label">Checkout</span>
+    <h1>Complete Your <span>Order</span></h1>
   </div>
 
   {% if order %}
-  <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
-    <!-- Order Items -->
-    <div class="lg:col-span-3 space-y-4">
-      <div class="p-6 bg-white dark:bg-stone-800/60 rounded-2xl border border-stone-200 dark:border-stone-700/50 reveal">
-        <h3 class="text-sm font-bold text-stone-900 dark:text-stone-100 mb-4">Order Items</h3>
-        <div class="space-y-3">
+  <div class="ck-layout">
+    <div>
+      <div class="ck-card">
+        <h3 class="ck-card-title">Order Items</h3>
+        <div class="ck-item-list">
           {% for item in order_items %}
           {% set p = product_map.get(item.product_id) %}
-          <div class="flex items-center gap-4 p-3 bg-stone-50 dark:bg-stone-700/30 rounded-xl">
-            <div class="w-16 h-16 rounded-xl overflow-hidden bg-stone-100 dark:bg-stone-700 flex-shrink-0">
+          <div class="ck-item">
+            <div class="ck-item-img">
               {% if p and p.images and p.images|length > 0 %}
-              <img src="{{ p.images[0] }}" alt="{{ p.name }}" class="w-full h-full object-cover">
+              <img src="{{ p.images[0] }}" alt="{{ p.name }}">
               {% else %}
-              <div class="w-full h-full flex items-center justify-center text-stone-300 dark:text-stone-500">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+              <div class="ck-item-placeholder">
+                <svg style="width:2rem;height:2rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
               </div>
               {% endif %}
             </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">{{ p.name if p else 'Product' }}</p>
-              <p class="text-xs text-stone-500 dark:text-stone-400">Qty: {{ item.quantity }}</p>
+            <div class="ck-item-info">
+              <p class="ck-item-name">{{ p.name if p else 'Product' }}</p>
+              <p class="ck-item-qty">Qty: {{ item.quantity }}</p>
             </div>
-            <span class="text-sm font-bold text-stone-900 dark:text-stone-100 font-mono">{{ format_price(item.price * item.quantity, currency) }}</span>
+            <span class="ck-item-price">{{ format_price(item.price * item.quantity, currency) }}</span>
           </div>
           {% endfor %}
         </div>
       </div>
     </div>
 
-    <!-- Payment -->
-    <div class="lg:col-span-2 space-y-4">
-      <div class="p-6 bg-white dark:bg-stone-800/60 rounded-2xl border border-stone-200 dark:border-stone-700/50 reveal">
-        <h3 class="text-sm font-bold text-stone-900 dark:text-stone-100 mb-4">Payment Method</h3>
-
-        <!-- Paystack -->
-        <button onclick="initializePayment('paystack')" id="paystack-btn" class="w-full p-4 mb-3 bg-stone-50 dark:bg-stone-700/30 hover:bg-stone-100 dark:hover:bg-stone-700/50 rounded-xl border border-stone-200 dark:border-stone-700 text-left transition-all duration-200 cursor-pointer group">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold text-sm group-hover:scale-105 transition-transform">
-              P
-            </div>
-            <div>
-              <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">Paystack</p>
-              <p class="text-xs text-stone-500 dark:text-stone-400">Pay with card, bank transfer, or USSD</p>
-            </div>
-            <svg class="w-5 h-5 ml-auto text-stone-300 dark:text-stone-600 group-hover:text-amber-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <div>
+      <div class="ck-card">
+        <h3 class="ck-card-title">Payment Method</h3>
+        <button onclick="initializePayment('paystack')" id="paystack-btn" class="ck-pay-btn">
+          <div class="ck-pay-btn-icon">P</div>
+          <div>
+            <p class="ck-pay-btn-text">Paystack</p>
+            <p class="ck-pay-btn-desc">Pay with card, bank transfer, or USSD</p>
           </div>
+          <svg class="ck-pay-btn-arrow" style="width:1.25rem;height:1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         </button>
-
-        <div id="payment-error" class="mt-3 text-sm text-red-500 hidden p-3 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-xl"></div>
+        <div id="payment-error" class="ck-error" style="display:none;"></div>
       </div>
 
-      <!-- Order Summary -->
-      <div class="p-6 bg-white dark:bg-stone-800/60 rounded-2xl border border-stone-200 dark:border-stone-700/50 reveal">
-        <h3 class="text-sm font-bold text-stone-900 dark:text-stone-100 mb-4">Summary</h3>
-        <div class="space-y-3 text-sm">
-          <div class="flex justify-between">
-            <span class="text-stone-500 dark:text-stone-400">Subtotal</span>
-            <span class="font-medium text-stone-900 dark:text-stone-100 font-mono">{{ format_price(order.total_amount, currency) }}</span>
+      <div class="ck-summary">
+        <h3 class="ck-summary-title">Summary</h3>
+        <div class="ck-summary-list">
+          <div class="ck-summary-item">
+            <span class="ck-summary-label">Subtotal</span>
+            <span class="ck-summary-value ck-summary-value--mono">{{ format_price(order.total_amount, currency) }}</span>
           </div>
-          <div class="flex justify-between">
-            <span class="text-stone-500 dark:text-stone-400">Shipping</span>
-            <span class="font-medium text-stone-900 dark:text-stone-100">{% if order.total_amount >= 50000 %}Free{% else %}₦2,500.00{% endif %}</span>
+          <div class="ck-summary-item">
+            <span class="ck-summary-label">Shipping</span>
+            <span class="ck-summary-value">{% if order.total_amount >= 50000 %}Free{% else %}₦2,500.00{% endif %}</span>
           </div>
-          <div class="pt-3 border-t border-stone-200 dark:border-stone-700 flex justify-between">
-            <span class="font-bold text-stone-900 dark:text-stone-100">Total</span>
-            <span class="font-bold text-amber-600 dark:text-amber-400 font-mono text-lg">{{ format_price(order.total_amount, currency) }}</span>
+          <div class="ck-total">
+            <span class="ck-total-label">Total</span>
+            <span class="ck-total-value">{{ format_price(order.total_amount, currency) }}</span>
           </div>
         </div>
       </div>
@@ -83,15 +426,15 @@
   </div>
 
   {% else %}
-  <div class="text-center py-20 reveal">
-    <div class="w-20 h-20 bg-stone-100 dark:bg-stone-800 rounded-full flex items-center justify-center mx-auto mb-6">
-      <svg class="w-10 h-10 text-stone-300 dark:text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <div class="ck-empty">
+    <div class="ck-empty-icon">
+      <svg style="width:2.5rem;height:2.5rem;color:var(--ck-stone-300);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
       </svg>
     </div>
-    <h3 class="text-lg font-bold text-stone-900 dark:text-stone-100 mb-2">No order found</h3>
-    <p class="text-sm text-stone-500 dark:text-stone-400 mb-6">Please start from your cart to checkout.</p>
-    <a href="/shop/cart" class="btn-forge text-sm">Back to Cart</a>
+    <h3>No order found</h3>
+    <p>Please start from your cart to checkout.</p>
+    <a href="/shop/cart" class="ck-empty-btn">Back to Cart</a>
   </div>
   {% endif %}
 </div>
@@ -99,13 +442,14 @@
 <script>
 function initializePayment(provider) {
   const err = document.getElementById('payment-error');
-  err.classList.add('hidden');
+  err.style.display = 'none';
+  err.textContent = '';
   const payBtn = document.getElementById('paystack-btn');
 
   {% if order %}
   if (provider === 'paystack') {
     payBtn.disabled = true;
-    payBtn.innerHTML = '<span class="animate-spin w-4 h-4 border-2 border-stone-600 border-t-transparent rounded-full mx-auto"></span>';
+    payBtn.innerHTML = '<div class="ck-spinner"></div>';
     fetch('/api/payments/initialize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -117,16 +461,16 @@ function initializePayment(provider) {
         window.location.href = data.authorization_url;
       } else {
         err.textContent = data.detail || 'Payment initialization failed';
-        err.classList.remove('hidden');
+        err.style.display = 'block';
         payBtn.disabled = false;
-        payBtn.innerHTML = 'Pay with Paystack';
+        payBtn.innerHTML = '<div class="ck-pay-btn-icon">P</div><div><p class="ck-pay-btn-text">Paystack</p><p class="ck-pay-btn-desc">Pay with card, bank transfer, or USSD</p></div><svg class="ck-pay-btn-arrow" style="width:1.25rem;height:1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
       }
     })
     .catch(() => {
       err.textContent = 'Network error. Please try again.';
-      err.classList.remove('hidden');
+      err.style.display = 'block';
       payBtn.disabled = false;
-      payBtn.innerHTML = 'Pay with Paystack';
+      payBtn.innerHTML = '<div class="ck-pay-btn-icon">P</div><div><p class="ck-pay-btn-text">Paystack</p><p class="ck-pay-btn-desc">Pay with card, bank transfer, or USSD</p></div><svg class="ck-pay-btn-arrow" style="width:1.25rem;height:1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
     });
   }
   {% endif %}

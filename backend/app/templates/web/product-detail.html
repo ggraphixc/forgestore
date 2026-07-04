@@ -1,103 +1,535 @@
 {% extends "web/base.html" %}
-{% block title %}{{ product.name }} — ForgeStore{% endblock %}
+{% block title %}{{ product.name }} \u2014 ForgeStore{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-  <!-- Back link -->
-  <a href="{% if retailer %}/shop/shops/{{ retailer.slug }}{% else %}/shop/marketplace{% endif %}" class="inline-flex items-center gap-1.5 text-sm text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors mb-8">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m0 0l7 7m-7-7l7-7"/></svg>
+<style>
+  :root {
+    --pd-bg: #faf9f7;
+    --pd-bg-card: #ffffff;
+    --pd-bg-card-alt: #f5f5f4;
+    --pd-bg-accent: #fef3c7;
+    --pd-text: #1c1917;
+    --pd-text-secondary: #78716c;
+    --pd-text-muted: #a8a29e;
+    --pd-border: #e7e5e4;
+    --pd-border-light: #f5f5f4;
+    --pd-accent: #d97706;
+    --pd-accent-hover: #b45309;
+    --pd-accent-light: #fbbf24;
+    --pd-accent-bg: #fef3c7;
+    --pd-sale-bg: #fef2f2;
+    --pd-sale-text: #dc2626;
+    --pd-shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --pd-shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+    --pd-shadow-lg: 0 8px 32px rgba(0,0,0,0.1);
+    --pd-radius-sm: 8px;
+    --pd-radius-md: 14px;
+    --pd-radius-lg: 20px;
+    --pd-radius-xl: 28px;
+    --pd-font-display: 'Inter', system-ui, sans-serif;
+    --pd-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --pd-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --pd-bg: #0c0a09;
+      --pd-bg-card: #1c1917;
+      --pd-bg-card-alt: #292524;
+      --pd-bg-accent: #422006;
+      --pd-text: #fafaf9;
+      --pd-text-secondary: #a8a29e;
+      --pd-text-muted: #78716c;
+      --pd-border: #292524;
+      --pd-border-light: #1c1917;
+      --pd-accent: #f59e0b;
+      --pd-accent-hover: #fbbf24;
+      --pd-accent-light: #fbbf24;
+      --pd-accent-bg: #422006;
+      --pd-sale-bg: #450a0a;
+      --pd-sale-text: #fca5a5;
+      --pd-shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+      --pd-shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+      --pd-shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+    }
+  }
+
+  .pd-page {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 16px 64px;
+    background: var(--pd-bg);
+    min-height: 100vh;
+  }
+  @media (min-width: 640px) { .pd-page { padding: 48px 24px 80px; } }
+  @media (min-width: 1024px) { .pd-page { padding: 56px 32px 96px; } }
+
+  .pd-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--pd-text-secondary);
+    text-decoration: none;
+    margin-bottom: 32px;
+    min-height: 44px;
+    transition: color var(--pd-transition);
+  }
+  .pd-back:hover { color: var(--pd-accent); }
+  .pd-back svg { width: 16px; height: 16px; }
+
+  .pd-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  @media (min-width: 1024px) {
+    .pd-layout { grid-template-columns: 1fr 1fr; gap: 48px; }
+  }
+
+  .pd-gallery { position: relative; }
+
+  .pd-main-image {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    border-radius: var(--pd-radius-xl);
+    overflow: hidden;
+    background: var(--pd-bg-card-alt);
+  }
+  .pd-main-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .pd-main-image:hover img { transform: scale(1.05); }
+
+  .pd-main-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--pd-text-muted);
+  }
+  .pd-main-placeholder svg { width: 80px; height: 80px; }
+
+  .pd-sale-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: var(--pd-sale-text);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 100px;
+    letter-spacing: 0.03em;
+  }
+
+  .pd-thumbnails {
+    display: none;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  @media (min-width: 640px) {
+    .pd-thumbnails { display: flex; }
+  }
+  .pd-thumb {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--pd-radius-sm);
+    overflow: hidden;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: border-color var(--pd-transition), opacity var(--pd-transition);
+    opacity: 0.6;
+  }
+  .pd-thumb.active, .pd-thumb:hover {
+    border-color: var(--pd-accent);
+    opacity: 1;
+  }
+  .pd-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+  .pd-info { display: flex; flex-direction: column; gap: 0; }
+
+  .pd-category {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 14px;
+    background: var(--pd-accent-bg);
+    color: var(--pd-accent);
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 100px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    width: fit-content;
+  }
+
+  .pd-title {
+    font-family: var(--pd-font-display);
+    font-size: clamp(24px, 4vw, 36px);
+    font-weight: 900;
+    color: var(--pd-text);
+    line-height: 1.15;
+    margin: 0 0 16px;
+  }
+
+  .pd-price {
+    font-family: var(--pd-font-mono);
+    font-size: clamp(24px, 3.5vw, 32px);
+    font-weight: 800;
+    color: var(--pd-accent);
+    margin-bottom: 20px;
+    display: block;
+  }
+  .pd-price-original {
+    font-family: var(--pd-font-mono);
+    font-size: 16px;
+    color: var(--pd-text-muted);
+    text-decoration: line-through;
+    margin-left: 10px;
+  }
+  .pd-discount-tag {
+    background: var(--pd-sale-bg);
+    color: var(--pd-sale-text);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 100px;
+    margin-left: 8px;
+  }
+
+  .pd-rating {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .pd-stars { display: flex; gap: 2px; }
+  .pd-star { width: 16px; height: 16px; color: var(--pd-accent-light); }
+  .pd-star.empty { color: var(--pd-border); }
+  .pd-rating-text { font-size: 13px; color: var(--pd-text-secondary); }
+
+  .pd-description {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--pd-text-secondary);
+    margin-bottom: 28px;
+  }
+
+  .pd-vendor {
+    padding: 16px;
+    background: var(--pd-bg-card-alt);
+    border-radius: var(--pd-radius-md);
+    border: 1px solid var(--pd-border);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .pd-vendor-avatar {
+    width: 48px; height: 48px; border-radius: 12px; overflow: hidden;
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    background: var(--pd-border); color: var(--pd-text-muted);
+    font-weight: 700; font-size: 18px; border: 2px solid var(--pd-border-light);
+  }
+  .pd-vendor-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .pd-vendor-label { font-size: 11px; color: var(--pd-text-muted); }
+  .pd-vendor-name {
+    font-size: 13px; font-weight: 600; color: var(--pd-text);
+    text-decoration: none; transition: color var(--pd-transition);
+  }
+  .pd-vendor-name:hover { color: var(--pd-accent); }
+
+  .pd-actions { display: flex; align-items: center; gap: 12px; }
+
+  .pd-quantity {
+    display: flex; align-items: center;
+    border: 1px solid var(--pd-border); border-radius: var(--pd-radius-md);
+    overflow: hidden; flex-shrink: 0;
+  }
+  .pd-qty-btn {
+    width: 44px; height: 44px; min-width: 44px; min-height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none; color: var(--pd-text-secondary);
+    cursor: pointer; transition: background var(--pd-transition), color var(--pd-transition);
+  }
+  .pd-qty-btn:hover { background: var(--pd-bg-card-alt); color: var(--pd-text); }
+  .pd-qty-btn svg { width: 16px; height: 16px; }
+  .pd-qty-input {
+    width: 48px; height: 44px; text-align: center; font-size: 14px;
+    font-weight: 600; color: var(--pd-text); background: transparent;
+    border: none; border-left: 1px solid var(--pd-border);
+    border-right: 1px solid var(--pd-border); outline: none;
+    font-family: var(--pd-font-mono);
+    -moz-appearance: textfield; appearance: textfield;
+  }
+  .pd-qty-input::-webkit-outer-spin-button,
+  .pd-qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  .pd-btn-add {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    gap: 8px; height: 48px; min-height: 44px;
+    background: var(--pd-accent); color: #fff; border: none;
+    border-radius: var(--pd-radius-md); font-size: 14px; font-weight: 700;
+    cursor: pointer;
+    transition: background var(--pd-transition), transform var(--pd-transition), box-shadow var(--pd-transition);
+    box-shadow: 0 4px 14px rgba(217, 119, 6, 0.3);
+  }
+  .pd-btn-add:hover {
+    background: var(--pd-accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(217, 119, 6, 0.4);
+  }
+  .pd-btn-add:active { transform: translateY(0); }
+  .pd-btn-add:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .pd-btn-add svg { width: 16px; height: 16px; }
+
+  .pd-btn-spinner {
+    width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff; border-radius: 50%;
+    animation: pd-spin 0.6s linear infinite;
+  }
+  @keyframes pd-spin { to { transform: rotate(360deg); } }
+
+  .pd-divider { height: 1px; background: var(--pd-border); margin: 40px 0 32px; }
+
+  .pd-chat-section { margin-top: 0; }
+  .pd-chat-toggle {
+    width: 100%; display: flex; align-items: center; gap: 12px;
+    background: none; border: none; cursor: pointer; padding: 0; min-height: 44px;
+  }
+  .pd-chat-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--pd-accent), #ea580c);
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
+  }
+  .pd-chat-icon svg { width: 16px; height: 16px; color: #fff; }
+  .pd-chat-label { text-align: left; flex: 1; }
+  .pd-chat-label h3 { font-size: 13px; font-weight: 700; color: var(--pd-text); margin: 0; }
+  .pd-chat-label p { font-size: 11px; color: var(--pd-text-muted); margin: 0; }
+  .pd-chat-status { display: flex; align-items: center; gap: 6px; }
+  .pd-chat-dot {
+    width: 6px; height: 6px; background: #34d399; border-radius: 50%;
+    animation: pd-pulse 2s ease-in-out infinite;
+  }
+  @keyframes pd-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .pd-chat-status-text { font-size: 10px; font-weight: 600; color: #34d399; }
+  .pd-chat-chevron { width: 16px; height: 16px; color: var(--pd-text-muted); transition: transform 0.3s ease; }
+
+  .pd-chat-body { display: none; margin-top: 16px; }
+  .pd-chat-body.open { display: block; }
+  .pd-chat-messages {
+    max-height: 256px; overflow-y: auto; border-radius: var(--pd-radius-md);
+    background: var(--pd-bg-card-alt); border: 1px solid var(--pd-border);
+    padding: 12px; margin-bottom: 12px; scrollbar-width: thin;
+  }
+  .pd-chat-msg { display: flex; gap: 10px; margin-bottom: 12px; }
+  .pd-chat-msg:last-child { margin-bottom: 0; }
+  .pd-chat-msg-avatar {
+    width: 32px; height: 32px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; flex-shrink: 0;
+  }
+  .pd-chat-msg-avatar.admin { background: linear-gradient(135deg, var(--pd-accent-light), #ea580c); color: #fff; box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2); }
+  .pd-chat-msg-avatar.user { background: var(--pd-border); color: var(--pd-text-secondary); }
+  .pd-chat-msg-content { flex: 1; min-width: 0; }
+  .pd-chat-msg-header { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+  .pd-chat-msg-name { font-size: 13px; font-weight: 600; color: var(--pd-text); }
+  .pd-chat-msg-staff { padding: 2px 6px; background: linear-gradient(135deg, var(--pd-accent-bg), #fed7aa); font-size: 9px; font-weight: 700; color: var(--pd-accent); border-radius: 100px; }
+  .pd-chat-msg-time { font-size: 10px; color: var(--pd-text-muted); margin-left: auto; opacity: 0; transition: opacity var(--pd-transition); }
+  .pd-chat-msg:hover .pd-chat-msg-time { opacity: 1; }
+  .pd-chat-msg-text { font-size: 13px; line-height: 1.6; color: var(--pd-text-secondary); word-break: break-word; }
+  .pd-chat-msg-text img { margin-top: 8px; max-height: 192px; border-radius: var(--pd-radius-md); object-fit: cover; cursor: pointer; transition: box-shadow var(--pd-transition); }
+  .pd-chat-msg-text img:hover { box-shadow: var(--pd-shadow-md); }
+
+  .pd-chat-input-area { position: relative; }
+  .pd-chat-image-preview { display: none; margin-bottom: 8px; padding: 6px; background: var(--pd-bg-card-alt); border-radius: var(--pd-radius-sm); border: 1px solid var(--pd-border); }
+  .pd-chat-image-preview.visible { display: block; }
+  .pd-chat-image-preview-inner { position: relative; display: inline-block; }
+  .pd-chat-image-preview-inner img { height: 56px; border-radius: 6px; object-fit: cover; }
+  .pd-chat-image-remove {
+    position: absolute; top: -6px; right: -6px; width: 20px; height: 20px;
+    background: var(--pd-sale-text); color: #fff; border: none; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; cursor: pointer; box-shadow: var(--pd-shadow-sm);
+  }
+  .pd-chat-image-remove svg { width: 10px; height: 10px; }
+
+  .pd-chat-input-row { display: flex; align-items: center; gap: 8px; }
+  .pd-chat-input-wrap {
+    flex: 1; display: flex; background: var(--pd-bg-card);
+    border: 1px solid var(--pd-border); border-radius: var(--pd-radius-md);
+    transition: border-color var(--pd-transition), box-shadow var(--pd-transition);
+  }
+  .pd-chat-input-wrap:focus-within { border-color: var(--pd-accent); box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12); }
+  .pd-chat-name-input { width: 80px; font-size: 11px; padding: 8px 10px; background: transparent; border: none; border-right: 1px solid var(--pd-border); outline: none; color: var(--pd-text); }
+  .pd-chat-name-input::placeholder { color: var(--pd-text-muted); }
+  .pd-chat-text-input { flex: 1; font-size: 12px; padding: 8px 10px; background: transparent; border: none; outline: none; color: var(--pd-text); }
+  .pd-chat-text-input::placeholder { color: var(--pd-text-muted); }
+  .pd-chat-attach { display: flex; align-items: center; justify-content: center; width: 32px; cursor: pointer; color: var(--pd-text-muted); transition: color var(--pd-transition); flex-shrink: 0; }
+  .pd-chat-attach:hover { color: var(--pd-accent); }
+  .pd-chat-attach svg { width: 16px; height: 16px; }
+
+  .pd-chat-send {
+    width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--pd-accent), #ea580c);
+    color: #fff; border: none; border-radius: 12px; cursor: pointer; flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+    transition: transform var(--pd-transition), box-shadow var(--pd-transition);
+  }
+  .pd-chat-send:hover { transform: scale(1.05); box-shadow: 0 6px 16px rgba(217, 119, 6, 0.4); }
+  .pd-chat-send:active { transform: scale(0.95); }
+  .pd-chat-send:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .pd-chat-send svg { width: 16px; height: 16px; }
+
+  .pd-reviews {
+    margin-top: 56px;
+    padding-top: 40px;
+    border-top: 1px solid var(--pd-border);
+  }
+  .pd-reviews-title {
+    font-family: var(--pd-font-display);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--pd-text);
+    margin: 0 0 24px;
+  }
+
+  .pd-related {
+    margin-top: 56px; padding-top: 40px;
+    border-top: 1px solid var(--pd-border); display: none;
+  }
+  .pd-related.visible { display: block; }
+  .pd-related-header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+  .pd-related-icon { width: 32px; height: 32px; background: var(--pd-accent-bg); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .pd-related-icon svg { width: 16px; height: 16px; color: var(--pd-accent); }
+  .pd-related-title { font-size: 18px; font-weight: 700; color: var(--pd-text); margin: 0; }
+  .pd-related-sub { font-size: 12px; color: var(--pd-text-muted); margin: 0; }
+
+  .pd-recs-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+  }
+  @media (min-width: 768px) {
+    .pd-recs-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  }
+
+  .pd-rec-card {
+    border-radius: var(--pd-radius-md); overflow: hidden;
+    background: var(--pd-bg-card); border: 1px solid var(--pd-border);
+    transition: transform var(--pd-transition), box-shadow var(--pd-transition);
+    text-decoration: none; color: inherit; display: block;
+  }
+  .pd-rec-card:hover { transform: translateY(-3px); box-shadow: var(--pd-shadow-md); }
+  .pd-rec-img { aspect-ratio: 3 / 4; overflow: hidden; background: var(--pd-bg-card-alt); position: relative; }
+  .pd-rec-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
+  .pd-rec-card:hover .pd-rec-img img { transform: scale(1.1); }
+  .pd-rec-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--pd-text-muted); }
+  .pd-rec-placeholder svg { width: 40px; height: 40px; }
+  .pd-rec-badge { position: absolute; top: 10px; left: 10px; background: rgba(255,255,255,0.85); backdrop-filter: blur(8px); font-size: 10px; padding: 3px 8px; border-radius: 100px; display: flex; align-items: center; gap: 4px; color: var(--pd-accent); font-weight: 600; }
+  .pd-rec-badge svg { width: 12px; height: 12px; }
+  .pd-rec-body { padding: 12px; }
+  .pd-rec-name { font-size: 12px; font-weight: 600; color: var(--pd-text); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; transition: color var(--pd-transition); }
+  .pd-rec-card:hover .pd-rec-name { color: var(--pd-accent); }
+  .pd-rec-price { font-family: var(--pd-font-mono); font-size: 12px; font-weight: 700; color: var(--pd-accent); margin-top: 4px; display: block; }
+  .pd-rec-reason { font-size: 10px; color: var(--pd-text-muted); margin-top: 4px; font-style: italic; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+
+  .pd-recs-loading { grid-column: 1 / -1; text-align: center; padding: 32px 0; color: var(--pd-text-muted); font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .pd-recs-spinner { width: 16px; height: 16px; border: 2px solid var(--pd-border); border-top-color: var(--pd-accent); border-radius: 50%; animation: pd-spin 0.6s linear infinite; }
+</style>
+
+<div class="pd-page">
+  <a href="{% if retailer %}/shop/shops/{{ retailer.slug }}{% else %}/shop/marketplace{% endif %}" class="pd-back">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m0 0l7 7m-7-7l7-7"/></svg>
     {% if retailer %}Back to {{ retailer.name }}{% else %}Back to Marketplace{% endif %}
   </a>
 
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-    <!-- ===== Product Image ===== -->
-    <div class="reveal-left">
-      <div class="aspect-[4/5] rounded-3xl overflow-hidden bg-stone-100 dark:bg-stone-800 relative group">
+  <div class="pd-layout">
+    <div class="pd-gallery">
+      <div class="pd-main-image">
         {% if product.images and product.images|length > 0 %}
-        <img src="{{ product.images[0] }}" alt="{{ product.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out">
+        <img src="{{ product.images[0] }}" alt="{{ product.name }}">
         {% else %}
-        <div class="w-full h-full flex items-center justify-center text-stone-300 dark:text-stone-600">
-          <svg class="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <div class="pd-main-placeholder">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         </div>
         {% endif %}
         {% if product.discount_price and product.discount_price < product.price %}
-        <span class="absolute top-4 left-4 badge-red text-xs">Sale</span>
+        <span class="pd-sale-badge">Sale</span>
         {% endif %}
       </div>
+      {% if product.images and product.images|length > 1 %}
+      <div class="pd-thumbnails">
+        {% for img in product.images[:6] %}
+        <div class="pd-thumb {% if loop.first %}active{% endif %}">
+          <img src="{{ img }}" alt="{{ product.name }} - Image {{ loop.index }}">
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
     </div>
 
-    <!-- ===== Product Details ===== -->
-    <div class="reveal-right">
-      <!-- Category & Tags -->
+    <div class="pd-info">
       {% if category %}
-      <span class="inline-flex items-center px-3 py-1 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-bold rounded-full mb-4">{{ category.name }}</span>
+      <span class="pd-category">{{ category.name }}</span>
       {% endif %}
 
-      <!-- Title -->
-      <h1 class="text-3xl sm:text-4xl font-black text-stone-900 dark:text-stone-100 font-display mb-4">{{ product.name }}</h1>
+      <h1 class="pd-title">{{ product.name }}</h1>
 
-      <!-- Price -->
-      <div class="flex items-center gap-3 mb-6">
+      <div class="pd-price">
         {% if product.discount_price and product.discount_price < product.price %}
-        <span class="text-3xl font-black text-amber-600 dark:text-amber-400 font-mono">{{ format_price(product.discount_price, currency) }}</span>
-        <span class="text-lg text-stone-400 line-through font-mono">{{ format_price(product.price, currency) }}</span>
-        <span class="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-[10px] font-bold rounded-full">
-          -{{ ((1 - product.discount_price / product.price) * 100)|round|int }}%
-        </span>
+        {{ format_price(product.discount_price, currency) }}
+        <span class="pd-price-original">{{ format_price(product.price, currency) }}</span>
+        <span class="pd-discount-tag">-{{ ((1 - product.discount_price / product.price) * 100)|round|int }}%</span>
         {% else %}
-        <span class="text-3xl font-black text-amber-600 dark:text-amber-400 font-mono">{{ format_price(product.price, currency) }}</span>
+        {{ format_price(product.price, currency) }}
         {% endif %}
       </div>
 
-      <!-- Rating -->
       {% if product.rating and product.rating > 0 %}
-      <div class="flex items-center gap-3 mb-6">
-        <div class="flex items-center gap-0.5">
+      <div class="pd-rating">
+        <div class="pd-stars">
           {% for i in range(5) %}
-          <svg class="w-4 h-4 {% if i < product.rating|round %}text-amber-400{% else %}text-stone-200 dark:text-stone-600{% endif %}" fill="currentColor" viewBox="0 0 20 20">
+          <svg class="pd-star {% if i >= product.rating|round %}empty{% endif %}" fill="currentColor" viewBox="0 0 20 20">
             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
           </svg>
           {% endfor %}
         </div>
-        <span class="text-sm text-stone-500 dark:text-stone-400">{{ "%.1f"|format(product.rating) }}{% if reviews %} ({{ reviews|length }} review{% if reviews|length != 1 %}s{% endif %}){% endif %}</span>
+        <span class="pd-rating-text">{{ "%.1f"|format(product.rating) }}{% if reviews %} ({{ reviews|length }} review{% if reviews|length != 1 %}s{% endif %}){% endif %}</span>
       </div>
       {% endif %}
 
-      <!-- Description -->
       {% if product.description %}
-      <div class="prose prose-sm dark:prose-invert max-w-none mb-8">
-        <p class="text-stone-600 dark:text-stone-400 leading-relaxed">{{ product.description }}</p>
-      </div>
+      <div class="pd-description">{{ product.description }}</div>
       {% endif %}
 
-      <!-- Artisan Info -->
       {% if retailer %}
-      <div class="p-4 bg-stone-50 dark:bg-stone-800/50 rounded-2xl border border-stone-200 dark:border-stone-700 mb-8">
-        <div class="flex items-center gap-3">
-          <div class="w-12 h-12 bg-stone-200 dark:bg-stone-700 rounded-xl overflow-hidden flex items-center justify-center text-lg font-bold text-stone-400 dark:text-stone-500 ring-2 ring-stone-200/50 dark:ring-stone-600/50">
-            {% if retailer.logo_url %}<img src="{{ retailer.logo_url }}" alt="{{ retailer.name }}" class="w-full h-full object-cover">{% else %}{{ retailer.name[0] }}{% endif %}
-          </div>
-          <div>
-            <p class="text-xs text-stone-500 dark:text-stone-400">Handcrafted by</p>
-            <a href="/shop/shops/{{ retailer.slug }}" class="text-sm font-semibold text-stone-900 dark:text-stone-100 hover:text-amber-700 dark:hover:text-amber-400 transition-colors">{{ retailer.name }}</a>
-          </div>
+      <div class="pd-vendor">
+        <div class="pd-vendor-avatar">
+          {% if retailer.logo_url %}<img src="{{ retailer.logo_url }}" alt="{{ retailer.name }}">{% else %}{{ retailer.name[0] }}{% endif %}
+        </div>
+        <div>
+          <p class="pd-vendor-label">Handcrafted by</p>
+          <a href="/shop/shops/{{ retailer.slug }}" class="pd-vendor-name">{{ retailer.name }}</a>
         </div>
       </div>
       {% endif %}
 
-      <!-- Add to Cart -->
-      <div class="flex items-center gap-4">
-        <div class="flex items-center border border-stone-200 dark:border-stone-700 rounded-xl overflow-hidden">
-          <button onclick="event.preventDefault(); updateQuantity(-1)" class="w-10 h-10 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors cursor-pointer" aria-label="Decrease quantity">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+      <div class="pd-actions">
+        <div class="pd-quantity">
+          <button onclick="event.preventDefault(); updateQuantity(-1)" class="pd-qty-btn" aria-label="Decrease quantity">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
           </button>
-          <input type="number" id="product-qty" value="1" min="1" max="99" readonly
-            class="w-12 h-10 min-h-[44px] text-center text-sm font-semibold text-stone-900 dark:text-stone-100 bg-transparent border-x border-stone-200 dark:border-stone-700 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-          <button onclick="event.preventDefault(); updateQuantity(1)" class="w-10 h-10 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors cursor-pointer" aria-label="Increase quantity">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          <input type="number" id="product-qty" value="1" min="1" max="99" readonly class="pd-qty-input">
+          <button onclick="event.preventDefault(); updateQuantity(1)" class="pd-qty-btn" aria-label="Increase quantity">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
           </button>
         </div>
-        <button onclick="addToCart('{{ product.id }}')" id="add-to-cart-btn" class="btn-forge flex-1 justify-center text-sm min-h-[44px]">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+        <button onclick="addToCart('{{ product.id }}')" id="add-to-cart-btn" class="pd-btn-add">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
           Add to Cart
         </button>
       </div>
@@ -112,7 +544,7 @@
         async function addToCart(productId) {
           const btn = document.getElementById('add-to-cart-btn');
           btn.disabled = true;
-          btn.innerHTML = '<span class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span> Adding...';
+          btn.innerHTML = '<span class="pd-btn-spinner"></span> Adding...';
           try {
             const res = await fetch('/api/cart/add', {
               method: 'POST',
@@ -120,71 +552,63 @@
               body: JSON.stringify({ product_id: productId, quantity: qty }),
             });
             if (!res.ok) throw new Error('Failed');
-            showToast('Added to cart! 🛒', 'success');
+            showToast('Added to cart!', 'success');
             updateCartBadge();
             broadcastCartUpdate();
           } catch {
             showToast('Failed to add to cart', 'error');
           } finally {
             btn.disabled = false;
-            btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> Add to Cart';
+            btn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg> Add to Cart';
           }
         }
       </script>
 
-      <!-- Live Product Chat — Compact -->
-      <div class="mt-12 pt-8 border-t border-stone-200 dark:border-stone-700" id="product-chat-section">
-        <button onclick="toggleProductChat()" class="w-full flex items-center gap-3 mb-0 group">
-          <div class="w-9 h-9 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20 flex-shrink-0">
-            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+      <div class="pd-divider"></div>
+      <div class="pd-chat-section" id="product-chat-section">
+        <button onclick="toggleProductChat()" class="pd-chat-toggle">
+          <div class="pd-chat-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
           </div>
-          <div class="text-left flex-1">
-            <h3 class="text-sm font-bold text-stone-900 dark:text-stone-100 font-display">Product Chat</h3>
-            <p class="text-[11px] text-stone-500 dark:text-stone-400">Ask questions about this product</p>
+          <div class="pd-chat-label">
+            <h3>Product Chat</h3>
+            <p>Ask questions about this product</p>
           </div>
-          <div class="flex items-center gap-2">
-            <span class="flex items-center gap-1">
-              <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
-              <span class="text-[10px] font-medium text-emerald-600 dark:text-emerald-400" id="chat-status">Live</span>
-            </span>
-            <svg id="chat-chevron" class="w-4 h-4 text-stone-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          <div class="pd-chat-status">
+            <span class="pd-chat-dot"></span>
+            <span class="pd-chat-status-text" id="chat-status">Live</span>
           </div>
+          <svg id="chat-chevron" class="pd-chat-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
 
-        <div id="product-chat-body" class="hidden mt-4">
-          <!-- Chat Messages Container -->
-          <div id="chat-messages" class="space-y-3 mb-4 max-h-64 overflow-y-auto pr-2 rounded-xl bg-stone-50 dark:bg-stone-800/30 border border-stone-100 dark:border-stone-700/50 p-3" style="scrollbar-width: thin;">
-            <div class="text-center py-8 text-stone-400 dark:text-stone-500 text-xs">
-              <svg class="w-8 h-8 mx-auto mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        <div id="product-chat-body" class="pd-chat-body">
+          <div id="chat-messages" class="pd-chat-messages">
+            <div style="text-align:center;padding:32px 0;color:var(--pd-text-muted);font-size:12px;">
+              <svg style="width:32px;height:32px;margin:0 auto 8px;opacity:0.4;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
               Loading messages...
             </div>
           </div>
 
-          <!-- Chat Input Area -->
-          <div class="relative">
-            <div id="chat-image-preview" class="hidden mb-2 p-1.5 bg-stone-100 dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700">
-              <div class="relative inline-block">
-                <img id="chat-preview-img" src="" alt="Preview" class="h-14 rounded-md object-cover">
-                <button onclick="removeChatImage()" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] hover:bg-red-600 transition-colors shadow">
-                  <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          <div class="pd-chat-input-area">
+            <div id="chat-image-preview" class="pd-chat-image-preview">
+              <div class="pd-chat-image-preview-inner">
+                <img id="chat-preview-img" src="" alt="Preview">
+                <button onclick="removeChatImage()" class="pd-chat-image-remove">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
               </div>
             </div>
-            <div class="flex items-center gap-2">
-              <div class="flex-1 flex bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl shadow-sm focus-within:ring-2 focus-within:ring-amber-500/30 focus-within:border-amber-400 transition-all">
-                <input type="text" id="chat-name" placeholder="Name" value="{{ user.name if user else '' }}" maxlength="50"
-                  class="w-20 text-[11px] py-2 px-3 bg-transparent border-r border-stone-100 dark:border-stone-700 focus:outline-none text-stone-900 dark:text-stone-100 placeholder-stone-400">
-                <input type="text" id="chat-input" placeholder="Ask about this product..." maxlength="1000"
-                  class="flex-1 text-xs py-2 px-3 bg-transparent focus:outline-none text-stone-900 dark:text-stone-100 placeholder-stone-400"
-                  onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendChatMessage()}">
-                <label class="flex items-center justify-center w-8 cursor-pointer text-stone-400 hover:text-amber-500 transition-colors" title="Attach image">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <div class="pd-chat-input-row">
+              <div class="pd-chat-input-wrap">
+                <input type="text" id="chat-name" placeholder="Name" value="{{ user.name if user else '' }}" maxlength="50" class="pd-chat-name-input">
+                <input type="text" id="chat-input" placeholder="Ask about this product..." maxlength="1000" class="pd-chat-text-input" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendChatMessage()}">
+                <label class="pd-chat-attach" title="Attach image">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                   <input type="file" id="chat-image-input" accept="image/jpeg,image/png,image/gif,image/webp" class="hidden" onchange="previewChatImage(this)">
                 </label>
               </div>
-              <button onclick="sendChatMessage()" id="chat-send-btn"
-                class="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-xl shadow-lg shadow-amber-500/25 hover:shadow-xl active:scale-95 transition-all duration-200 flex-shrink-0">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+              <button onclick="sendChatMessage()" id="chat-send-btn" class="pd-chat-send">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
               </button>
             </div>
           </div>
@@ -195,14 +619,14 @@
         function toggleProductChat() {
           const body = document.getElementById('product-chat-body');
           const chevron = document.getElementById('chat-chevron');
-          const isHidden = body.classList.contains('hidden');
-          if (isHidden) {
-            body.classList.remove('hidden');
+          const isOpen = body.classList.contains('open');
+          if (!isOpen) {
+            body.classList.add('open');
             chevron.style.transform = 'rotate(180deg)';
             loadChatMessages();
             connectChatWebSocket();
           } else {
-            body.classList.add('hidden');
+            body.classList.remove('open');
             chevron.style.transform = '';
           }
         }
@@ -211,8 +635,6 @@
         let chatWs = null;
         let chatReconnectTimer = null;
         let chatSelectedImage = null;
-
-        // ── Image Upload ────────────────────────────────────────────
 
         function previewChatImage(input) {
           const file = input.files[0];
@@ -225,7 +647,7 @@
           const reader = new FileReader();
           reader.onload = function(e) {
             document.getElementById('chat-preview-img').src = e.target.result;
-            document.getElementById('chat-image-preview').classList.remove('hidden');
+            document.getElementById('chat-image-preview').classList.add('visible');
             chatSelectedImage = file;
           };
           reader.readAsDataURL(file);
@@ -234,20 +656,15 @@
         function removeChatImage() {
           chatSelectedImage = null;
           document.getElementById('chat-image-input').value = '';
-          document.getElementById('chat-image-preview').classList.add('hidden');
+          document.getElementById('chat-image-preview').classList.remove('visible');
         }
 
-        // ── WebSocket Connection ─────────────────────────────────────
-
         function connectChatWebSocket() {
-          if (chatWs && (chatWs.readyState === WebSocket.OPEN || chatWs.readyState === WebSocket.CONNECTING)) {
-            return;
-          }
+          if (chatWs && (chatWs.readyState === WebSocket.OPEN || chatWs.readyState === WebSocket.CONNECTING)) return;
           const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
           chatWs = new WebSocket(protocol + '//' + window.location.host + '/ws/chat:' + PRODUCT_ID);
 
           chatWs.onopen = function() {
-            console.debug('Chat WebSocket connected');
             document.getElementById('chat-status').textContent = 'Connected';
             loadChatMessages();
           };
@@ -262,41 +679,33 @@
           };
 
           chatWs.onclose = function() {
-            console.debug('Chat WebSocket disconnected, reconnecting...');
             chatWs = null;
             document.getElementById('chat-status').textContent = 'Reconnecting...';
             if (chatReconnectTimer) clearTimeout(chatReconnectTimer);
             chatReconnectTimer = setTimeout(connectChatWebSocket, 3000);
           };
 
-          chatWs.onerror = function() {
-            chatWs.close();
-          };
+          chatWs.onerror = function() { chatWs.close(); };
         }
-
-        // ── Render Functions ────────────────────────────────────────
 
         function buildMessageHtml(m) {
           const initial = (m.author_name || 'A')[0].toUpperCase();
           const time = m.created_at ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-          const imageHtml = m.image_url ? '<div class="mt-2"><img src="' + escapeHtml(m.image_url) + '" alt="Shared image" class="rounded-xl max-h-48 object-cover cursor-pointer hover:shadow-lg transition-shadow" onclick="window.open(this.src, \'_blank\')"></div>' : '';
-          const flaggedHtml = m.is_flagged ? '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-[9px] font-bold text-red-600 dark:text-red-400 rounded-full ml-1"><svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>Flagged</span>' : '';
+          const imageHtml = m.image_url ? '<div style="margin-top:8px;"><img src="' + escapeHtml(m.image_url) + '" alt="Shared image" style="border-radius:12px;max-height:192px;object-fit:cover;cursor:pointer;" onclick="window.open(this.src, \'_blank\')"></div>' : '';
+          const flaggedHtml = m.is_flagged ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 6px;background:var(--pd-sale-bg);font-size:9px;font-weight:700;color:var(--pd-sale-text);border-radius:100px;margin-left:4px;"><svg style="width:10px;height:10px;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>Flagged</span>' : '';
 
-          return '<div class="flex items-start gap-3 group' + (m.is_flagged ? ' opacity-60' : '') + '">' +
-            '<div class="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 ' +
-            (m.is_admin ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-md shadow-amber-500/20' : 'bg-stone-200 dark:bg-stone-700 text-stone-600 dark:text-stone-300') +
-            '">' + initial + '</div>' +
-            '<div class="flex-1 min-w-0">' +
-            '<div class="flex items-center gap-2 mb-0.5">' +
-            '<span class="text-sm font-semibold text-stone-900 dark:text-stone-100">' + escapeHtml(m.author_name || 'Anonymous') + '</span>' +
-            (m.is_admin ? '<span class="px-1.5 py-0.5 bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 text-[9px] font-bold text-amber-700 dark:text-amber-400 rounded-full">Staff</span>' : '') +
+          return '<div class="pd-chat-msg' + (m.is_flagged ? '" style="opacity:0.6' : '') + '">' +
+            '<div class="pd-chat-msg-avatar ' + (m.is_admin ? 'admin' : 'user') + '">' + initial + '</div>' +
+            '<div class="pd-chat-msg-content">' +
+            '<div class="pd-chat-msg-header">' +
+            '<span class="pd-chat-msg-name">' + escapeHtml(m.author_name || 'Anonymous') + '</span>' +
+            (m.is_admin ? '<span class="pd-chat-msg-staff">Staff</span>' : '') +
             flaggedHtml +
-            '<span class="text-[10px] text-stone-400 dark:text-stone-500 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">' + time + '</span>' +
+            '<span class="pd-chat-msg-time">' + time + '</span>' +
             '</div>' +
-            (m.content ? '<p class="text-sm text-stone-600 dark:text-stone-400 leading-relaxed break-words">' + escapeHtml(m.content) + '</p>' : '') +
+            (m.content ? '<p class="pd-chat-msg-text">' + escapeHtml(m.content) + '</p>' : '') +
             imageHtml +
-            '</div>' +
-            '</div>';
+            '</div></div>';
         }
 
         function appendChatMessage(m) {
@@ -316,16 +725,13 @@
             if (!res.ok) return;
             const data = await res.json();
             if (!data.messages || data.messages.length === 0) {
-              container.innerHTML = '<div class="text-center py-10 text-stone-400 dark:text-stone-500 text-sm empty-chat-state">' +
-                '<svg class="w-10 h-10 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>' +
-                'No messages yet. Start the conversation!' +
-                '</div>';
+              container.innerHTML = '<div class="empty-chat-state" style="text-align:center;padding:40px 0;color:var(--pd-text-muted);font-size:13px;">' +
+                '<svg style="width:40px;height:40px;margin:0 auto 12px;opacity:0.4;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>' +
+                'No messages yet. Start the conversation!</div>';
               return;
             }
             let html = '';
-            for (const m of data.messages) {
-              html += buildMessageHtml(m);
-            }
+            for (const m of data.messages) { html += buildMessageHtml(m); }
             container.innerHTML = html;
             container.scrollTop = container.scrollHeight;
           } catch (e) {}
@@ -345,7 +751,7 @@
           const author_name = nameInput.value.trim() || 'Anonymous';
           if (!content && !chatSelectedImage) return;
           btn.disabled = true;
-          btn.innerHTML = '<span class="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></span>';
+          btn.innerHTML = '<span class="pd-btn-spinner"></span>';
 
           try {
             if (chatSelectedImage) {
@@ -353,10 +759,7 @@
               formData.append('content', content);
               formData.append('author_name', author_name);
               formData.append('image', chatSelectedImage);
-              const res = await fetch('/api/products/' + PRODUCT_ID + '/chat', {
-                method: 'POST',
-                body: formData,
-              });
+              const res = await fetch('/api/products/' + PRODUCT_ID + '/chat', { method: 'POST', body: formData });
               if (!res.ok) {
                 const errData = await res.json();
                 showToast(errData.detail || 'Failed to send message', 'error');
@@ -381,54 +784,37 @@
             showToast('Failed to send message', 'error');
           } finally {
             btn.disabled = false;
-            btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>';
+            btn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>';
           }
         }
 
-        // ── Lifecycle ───────────────────────────────────────────────
-
-        document.addEventListener('DOMContentLoaded', function() {
-          // Chat starts collapsed — don't auto-connect
-        });
-
         window.addEventListener('beforeunload', function() {
-          if (chatWs) {
-            chatWs.onclose = null;
-            chatWs.close();
-            chatWs = null;
-          }
-          if (chatReconnectTimer) {
-            clearTimeout(chatReconnectTimer);
-            chatReconnectTimer = null;
-          }
+          if (chatWs) { chatWs.onclose = null; chatWs.close(); chatWs = null; }
+          if (chatReconnectTimer) { clearTimeout(chatReconnectTimer); chatReconnectTimer = null; }
         });
       </script>
     </div>
   </div>
 
-  <!-- AI-Powered Similar Products -->
-  <div id="ai-product-recs" class="mt-16 pt-12 border-t border-stone-200 dark:border-stone-700" style="display: none;">
-    <div class="flex items-center gap-3 mb-8">
-      <div class="w-8 h-8 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-        <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+  <div id="ai-product-recs" class="pd-related">
+    <div class="pd-related-header">
+      <div class="pd-related-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
       </div>
       <div>
-        <h2 class="text-xl font-bold text-stone-900 dark:text-stone-100 font-display">You Might Also Like</h2>
-        <p class="text-xs text-stone-400 dark:text-stone-500">AI-powered recommendations based on this product</p>
+        <h2 class="pd-related-title">You Might Also Like</h2>
+        <p class="pd-related-sub">AI-powered recommendations based on this product</p>
       </div>
     </div>
-    <div id="ai-product-recs-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-      <div class="col-span-full text-center py-8">
-        <div class="inline-flex items-center gap-2 text-stone-400">
-          <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"/><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" class="opacity-75"/></svg>
-          <span class="text-xs">Loading AI picks...</span>
-        </div>
+    <div id="ai-product-recs-grid" class="pd-recs-grid">
+      <div class="pd-recs-loading">
+        <span class="pd-recs-spinner"></span>
+        <span>Loading AI picks...</span>
       </div>
     </div>
   </div>
 </div>
 
-<!-- AI Product Recommendations Loader -->
 <script>
 (async function() {
     const productId = '{{ product.id }}';
@@ -448,10 +834,15 @@
         items.forEach(function(p) {
             const price = p.discount_price && p.discount_price < p.price ? p.discount_price : p.price;
             const reason = p.reason || '';
-            grid.innerHTML += '<div class="card-product group relative"><a href="/shop/products/' + (p.slug || '') + '"><div class="aspect-[3/4] overflow-hidden bg-stone-50 dark:bg-stone-700 relative">' + (p.image ? '<img loading="lazy" src="' + p.image + '" alt="' + (p.name || '') + '" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">' : '<div class="w-full h-full flex items-center justify-center text-stone-300 dark:text-stone-500"><svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>') + '<span class="absolute top-3 left-3 badge-glass text-[10px]"><svg class="w-3 h-3 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg> AI Pick</span></div><div class="p-3"><h3 class="text-xs font-semibold text-stone-900 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors line-clamp-1">' + (p.name || '') + '</h3><span class="text-xs font-bold text-amber-600 dark:text-amber-400 font-mono mt-1 block">₦' + Number(price || 0).toLocaleString() + '</span>' + (reason ? '<p class="text-[10px] text-stone-400 mt-1 line-clamp-1 italic">' + reason + '</p>' : '') + '</div></a></div>';
+            grid.innerHTML += '<a href="/shop/products/' + (p.slug || '') + '" class="pd-rec-card"><div class="pd-rec-img">' +
+              (p.image ? '<img loading="lazy" src="' + p.image + '" alt="' + (p.name || '') + '">' :
+              '<div class="pd-rec-placeholder"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>') +
+              '<span class="pd-rec-badge"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>AI Pick</span></div>' +
+              '<div class="pd-rec-body"><h3 class="pd-rec-name">' + (p.name || '') + '</h3><span class="pd-rec-price">\u20a6' + Number(price || 0).toLocaleString() + '</span>' +
+              (reason ? '<p class="pd-rec-reason">' + reason + '</p>' : '') + '</div></a>';
         });
 
-        section.style.display = '';
+        section.classList.add('visible');
     } catch (e) {}
 })();
 </script>

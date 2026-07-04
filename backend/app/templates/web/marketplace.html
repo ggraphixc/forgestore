@@ -1,120 +1,315 @@
 {% extends "web/base.html" %}
 {% block title %}Marketplace — ForgeStore{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+<style>
+:root {
+  --c-amber-50: #fffbeb; --c-amber-100: #fef3c7; --c-amber-200: #fde68a; --c-amber-300: #fcd34d;
+  --c-amber-400: #fbbf24; --c-amber-500: #f59e0b; --c-amber-600: #d97706; --c-amber-700: #b45309;
+  --c-amber-800: #92400e; --c-amber-900: #78350f;
+  --c-stone-50: #fafaf9; --c-stone-100: #f5f5f4; --c-stone-200: #e7e5e3; --c-stone-300: #d6d3d1;
+  --c-stone-400: #a8a29e; --c-stone-500: #78716c; --c-stone-600: #57534e; --c-stone-700: #44403c;
+  --c-stone-800: #292524; --c-stone-900: #1c1917;
+}
+
+.mp-page {
+  max-width: 80rem; margin: 0 auto; padding: 2rem 1rem;
+}
+@media (min-width: 640px) { .mp-page { padding: 3rem 1.5rem; } }
+@media (min-width: 1024px) { .mp-page { padding: 3rem 2rem; } }
+
+.mp-header {
+  display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 2.5rem;
+}
+@media (min-width: 768px) {
+  .mp-header { flex-direction: row; align-items: flex-end; justify-content: space-between; }
+}
+.mp-header-label {
+  font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.2em; color: var(--c-amber-600); display: block; margin-bottom: 0.25rem;
+}
+.mp-header h1 {
+  font-size: 1.875rem; font-weight: 900; color: var(--c-stone-900); line-height: 1.1;
+}
+@media (min-width: 640px) { .mp-header h1 { font-size: 2.25rem; } }
+@media (min-width: 768px) { .mp-header h1 { font-size: 2.5rem; } }
+.mp-header h1 span {
+  background: linear-gradient(to right, var(--c-amber-600), var(--c-amber-500));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.mp-header-count { color: var(--c-stone-500); font-size: 0.875rem; margin-top: 0.25rem; }
+
+/* Ad banners */
+.mp-ad-grid {
+  display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 2.5rem;
+}
+@media (min-width: 640px) { .mp-ad-grid { grid-template-columns: 1fr 1fr; } }
+.mp-ad-card {
+  position: relative; overflow: hidden; border-radius: 1rem;
+  border: 1px solid var(--c-stone-200); background: #fff;
+  transition: all 0.3s ease;
+}
+.mp-ad-card:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.08); border-color: var(--c-amber-200); }
+.mp-ad-banner { height: 8rem; overflow: hidden; }
+.mp-ad-banner img {
+  width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;
+}
+.mp-ad-card:hover .mp-ad-banner img { transform: scale(1.05); }
+.mp-ad-placeholder {
+  height: 8rem; background: linear-gradient(135deg, var(--c-stone-100), var(--c-stone-50));
+  display: flex; align-items: center; justify-content: center;
+}
+.mp-ad-body { padding: 1rem; position: relative; z-index: 1; }
+.mp-ad-type {
+  font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+  padding: 0.125rem 0.5rem; border-radius: 9999px; display: inline-block; margin-right: 0.375rem;
+}
+.mp-ad-type--product { background: var(--c-amber-100); color: var(--c-amber-700); }
+.mp-ad-type--promo { background: #f3e8ff; color: #9333ea; }
+.mp-ad-type--shop { background: #dbeafe; color: #2563eb; }
+.mp-ad-sponsor { font-size: 0.5625rem; color: var(--c-stone-400); }
+.mp-ad-link {
+  display: flex; align-items: center; justify-content: space-between;
+  text-decoration: none; color: inherit;
+}
+.mp-ad-title {
+  font-size: 0.875rem; font-weight: 700; color: var(--c-stone-900);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mp-ad-desc {
+  font-size: 0.75rem; color: var(--c-stone-500); margin-top: 0.125rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mp-ad-price {
+  flex-shrink: 0; font-size: 0.875rem; font-weight: 700;
+  color: var(--c-amber-600); font-family: monospace; margin-left: 0.75rem;
+}
+.mp-ad-arrow {
+  flex-shrink: 0; font-size: 0.75rem; font-weight: 600; color: var(--c-amber-600);
+  margin-left: 0.75rem; display: flex; align-items: center; gap: 0.25rem; transition: gap 0.2s;
+}
+.mp-ad-card:hover .mp-ad-arrow { gap: 0.375rem; }
+
+/* Filters layout */
+.mp-layout { display: flex; flex-direction: column; gap: 2rem; }
+@media (min-width: 1024px) { .mp-layout { flex-direction: row; } }
+
+/* Sidebar filters */
+.mp-filters { width: 100%; flex-shrink: 0; }
+@media (min-width: 1024px) { .mp-filters { width: 16rem; } }
+.mp-filters-sticky {
+  position: sticky; top: 6rem; display: flex; flex-direction: column; gap: 1.5rem;
+}
+.mp-search-form { position: relative; }
+.mp-search-icon {
+  position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%);
+  width: 1rem; height: 1rem; color: var(--c-stone-400); pointer-events: none;
+}
+.mp-search-input {
+  width: 100%; padding: 0.625rem 0.75rem 0.625rem 2.25rem;
+  font-size: 0.875rem; border-radius: 0.75rem; border: 1px solid var(--c-stone-200);
+  background: var(--c-stone-50); color: var(--c-stone-900);
+  outline: none; transition: all 0.2s; min-height: 44px; box-sizing: border-box;
+}
+.mp-search-input:focus { border-color: var(--c-amber-500); box-shadow: 0 0 0 3px rgba(245,158,11,0.15); }
+.mp-search-input::placeholder { color: var(--c-stone-400); }
+.mp-category-title {
+  font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.15em; color: var(--c-stone-500); margin-bottom: 0.75rem;
+}
+.mp-category-list { display: flex; flex-direction: column; gap: 0.25rem; }
+.mp-category-link {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.5rem 0.75rem; font-size: 0.875rem; border-radius: 0.75rem;
+  text-decoration: none; transition: all 0.2s; min-height: 44px; color: var(--c-stone-600);
+}
+.mp-category-link:hover { background: var(--c-stone-50); }
+.mp-category-link--active { background: var(--c-amber-50); color: var(--c-amber-700); font-weight: 600; }
+.mp-category-count { font-size: 0.75rem; color: var(--c-stone-400); }
+
+/* Product grid */
+.mp-grid-wrap { flex: 1; min-width: 0; }
+.mp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+@media (min-width: 768px) { .mp-grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; } }
+@media (min-width: 1280px) { .mp-grid { grid-template-columns: repeat(4, 1fr); } }
+
+.mp-product-card {
+  position: relative; border-radius: 1rem; overflow: hidden;
+  background: #fff; border: 1px solid var(--c-stone-200); transition: all 0.3s ease;
+}
+.mp-product-card:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.08); transform: translateY(-2px); }
+.mp-product-img-wrap {
+  aspect-ratio: 3/4; overflow: hidden; background: var(--c-stone-100); position: relative;
+}
+.mp-product-img {
+  width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;
+}
+.mp-product-card:hover .mp-product-img { transform: scale(1.1); }
+.mp-product-placeholder {
+  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+  color: var(--c-stone-300);
+}
+.mp-sale-badge {
+  position: absolute; top: 0.75rem; left: 0.75rem;
+  padding: 0.125rem 0.5rem; font-size: 0.625rem; font-weight: 700;
+  text-transform: uppercase; border-radius: 9999px; background: #ef4444; color: #fff;
+}
+.mp-wishlist-btn {
+  position: absolute; top: 0.75rem; right: 0.75rem; z-index: 10;
+  width: 32px; height: 32px; background: rgba(255,255,255,0.8); backdrop-filter: blur(8px);
+  border-radius: 9999px; border: none; display: flex; align-items: center;
+  justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+.mp-wishlist-btn:hover { transform: scale(1.15); }
+.mp-wishlist-btn svg { width: 1rem; height: 1rem; color: var(--c-stone-400); }
+.mp-product-info { padding: 0.75rem; }
+.mp-product-vendor {
+  font-size: 0.625rem; color: var(--c-stone-400); margin-bottom: 0.25rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mp-product-name {
+  font-size: 0.75rem; font-weight: 600; color: var(--c-stone-900); line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.mp-product-name a { text-decoration: none; color: inherit; transition: color 0.2s; }
+.mp-product-name a:hover { color: var(--c-amber-700); }
+@media (min-width: 640px) { .mp-product-name { font-size: 0.875rem; } }
+.mp-product-meta {
+  display: flex; align-items: center; justify-content: space-between; margin-top: 0.5rem;
+}
+.mp-product-price {
+  font-size: 0.75rem; font-weight: 700; color: var(--c-amber-600); font-family: monospace;
+}
+@media (min-width: 640px) { .mp-product-price { font-size: 0.875rem; } }
+.mp-product-rating {
+  font-size: 0.625rem; color: var(--c-stone-400); display: flex; align-items: center; gap: 0.25rem;
+}
+.mp-product-rating svg { width: 0.75rem; height: 0.75rem; color: var(--c-amber-500); fill: var(--c-amber-500); }
+
+/* Empty state */
+.mp-empty { text-align: center; padding: 5rem 1rem; }
+.mp-empty-icon {
+  width: 5rem; height: 5rem; background: var(--c-stone-100); border-radius: 9999px;
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;
+}
+.mp-empty h3 { font-size: 1.125rem; font-weight: 700; color: var(--c-stone-900); margin-bottom: 0.5rem; }
+.mp-empty p { font-size: 0.875rem; color: var(--c-stone-500); margin-bottom: 1.5rem; }
+.mp-empty-btn {
+  display: inline-block; padding: 0.625rem 1.5rem; background: var(--c-stone-900);
+  color: #fff; font-size: 0.875rem; font-weight: 700; border-radius: 0.75rem;
+  text-decoration: none; transition: all 0.2s; min-height: 44px; line-height: 44px;
+}
+.mp-empty-btn:hover { background: var(--c-stone-700); }
+
+/* Pagination */
+.mp-pagination {
+  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  margin-top: 2.5rem; padding-bottom: 2rem;
+}
+.mp-page-btn {
+  min-width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+  font-size: 0.875rem; font-weight: 600; border-radius: 0.75rem;
+  border: 1px solid var(--c-stone-200); background: #fff; color: var(--c-stone-700);
+  text-decoration: none; transition: all 0.2s; cursor: pointer;
+}
+.mp-page-btn:hover { border-color: var(--c-amber-400); color: var(--c-amber-600); }
+.mp-page-btn--active {
+  background: var(--c-amber-500); color: #fff; border-color: var(--c-amber-500);
+}
+.mp-page-btn--active:hover { background: var(--c-amber-600); border-color: var(--c-amber-600); }
+.mp-page-btn--disabled { opacity: 0.4; pointer-events: none; }
+</style>
+
+<div class="mp-page">
   <!-- Header -->
-  <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 reveal">
+  <div class="mp-header">
     <div>
-      <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Browse</span>
-      <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-stone-900 dark:text-stone-100 font-display">
-        The <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Marketplace</span>
-      </h1>
-      <p class="text-stone-500 dark:text-stone-400 mt-2">{{ products|length }} unique piece{% if products|length != 1 %}s{% endif %}</p>
+      <span class="mp-header-label">Browse</span>
+      <h1>The <span>Marketplace</span></h1>
+      <p class="mp-header-count">{{ products|length }} unique piece{% if products|length != 1 %}s{% endif %}</p>
     </div>
   </div>
 
-  <!-- ===== Promotional Ad Banner Carousel ===== -->
   {% if active_ad_campaigns %}
-  <div class="mb-10">
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {% for ad in active_ad_campaigns %}
-      <div class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-xl hover:shadow-2xl hover:border-amber-400/30 transition-all duration-500 reveal" style="animation-delay: {{ (loop.index0 * 80) + 100 }}ms;">
-        <!-- Glass effects -->
-        <div class="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/[0.02] dark:from-white/[0.03] pointer-events-none"></div>
-        <div class="absolute -top-16 -right-16 w-32 h-32 bg-amber-500/10 rounded-full blur-[50px] group-hover:bg-amber-400/20 transition-all duration-700"></div>
-        
-        {% if ad.banner_url %}
-        <div class="h-32 sm:h-36 overflow-hidden">
-          <img loading="lazy" src="{{ ad.banner_url }}" alt="{{ ad.retailer.name if ad.retailer else 'Promotion' }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out">
-        </div>
-        {% else %}
-        <div class="h-32 sm:h-36 bg-gradient-to-br from-amber-900/30 via-stone-800/40 to-stone-900/30 flex items-center justify-center">
-          <div class="text-center">
-            <svg class="w-8 h-8 mx-auto text-amber-400/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
-            </svg>
-            <p class="text-xs text-amber-300/50 mt-1.5 font-semibold uppercase tracking-wider">{{ ad.ad_type }} PROMOTION</p>
-          </div>
-        </div>
-        {% endif %}
-        
-<div class="p-4 relative z-10">
-           <div class="flex items-center gap-2 mb-1.5">
-             <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full {% if ad.ad_type == 'PRODUCT' %}bg-amber-500/20 text-amber-300 border border-amber-400/20{% elif ad.ad_type == 'SYSTEM_PROMO' %}bg-purple-500/20 text-purple-300 border border-purple-400/20{% else %}bg-blue-500/20 text-blue-300 border border-blue-400/20{% endif %}">{{ ad.ad_type }}</span>
-             <span class="text-[9px] text-stone-500 dark:text-stone-400">Sponsored</span>
-           </div>
-           
-           {% if ad.ad_type == 'PRODUCT' and ad.product %}
-           <a href="/shop/products/{{ ad.product.slug }}" class="flex items-center justify-between">
-             <div class="min-w-0 flex-1">
-               <h4 class="text-sm font-bold text-stone-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors line-clamp-1">{{ ad.product.name }}</h4>
-               <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5 line-clamp-1">{{ ad.product.description|truncate(60) if ad.product.description else 'Featured product' }}</p>
-             </div>
-             <div class="flex-shrink-0 ml-3">
-               <span class="text-sm font-bold text-amber-600 dark:text-amber-400 font-mono">{{ format_price(ad.product.discount_price if ad.product.discount_price else ad.product.price, currency) }}</span>
-             </div>
-           </a>
-           {% elif ad.ad_type == 'SYSTEM_PROMO' %}
-           <a href="{{ ad.target_url or '/shop/marketplace' }}" class="flex items-center justify-between">
-             <div class="min-w-0 flex-1">
-               <h4 class="text-sm font-bold text-stone-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors line-clamp-1">Site Promotion</h4>
-               <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5 line-clamp-1">Check our latest offers</p>
-             </div>
-             <span class="flex-shrink-0 text-xs font-semibold text-purple-600 dark:text-purple-400 ml-3 flex items-center gap-1 group-hover:gap-1.5 transition-all">
-               Explore
-               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-             </span>
-           </a>
-           {% else %}
-           <a href="/shop/shops/{{ ad.retailer.slug if ad.retailer else '#' }}" class="flex items-center justify-between">
-             <div class="min-w-0 flex-1">
-               <h4 class="text-sm font-bold text-stone-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors line-clamp-1">
-                 {% if ad.retailer %}{{ ad.retailer.name }}{% else %}Featured Artisan{% endif %}
-               </h4>
-               <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5 line-clamp-1">
-                 {% if ad.retailer and ad.retailer.bio %}{{ ad.retailer.bio|truncate(60) }}{% else %}Visit this artisan's shop{% endif %}
-               </p>
-             </div>
-             <span class="flex-shrink-0 text-xs font-semibold text-amber-600 dark:text-amber-400 ml-3 flex items-center gap-1 group-hover:gap-1.5 transition-all">
-               View
-               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-             </span>
-           </a>
-           {% endif %}
-         </div>
+  <div class="mp-ad-grid">
+    {% for ad in active_ad_campaigns %}
+    <div class="mp-ad-card">
+      {% if ad.banner_url %}
+      <div class="mp-ad-banner">
+        <img loading="lazy" src="{{ ad.banner_url }}" alt="{{ ad.retailer.name if ad.retailer else 'Promotion' }}">
       </div>
-      {% endfor %}
+      {% else %}
+      <div class="mp-ad-placeholder">
+        <div style="text-align:center;">
+          <svg style="width:2rem;height:2rem;margin:0 auto;color:var(--c-stone-300);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+          </svg>
+          <p style="font-size:0.625rem;color:var(--c-stone-400);margin-top:0.375rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;">{{ ad.ad_type }} PROMOTION</p>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="mp-ad-body">
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.375rem;">
+          <span class="mp-ad-type {% if ad.ad_type == 'PRODUCT' %}mp-ad-type--product{% elif ad.ad_type == 'SYSTEM_PROMO' %}mp-ad-type--promo{% else %}mp-ad-type--shop{% endif %}">{{ ad.ad_type }}</span>
+          <span class="mp-ad-sponsor">Sponsored</span>
+        </div>
+
+        {% if ad.ad_type == 'PRODUCT' and ad.product %}
+        <a href="/shop/products/{{ ad.product.slug }}" class="mp-ad-link">
+          <div style="min-width:0;flex:1;">
+            <p class="mp-ad-title">{{ ad.product.name }}</p>
+            <p class="mp-ad-desc">{{ ad.product.description|truncate(60) if ad.product.description else 'Featured product' }}</p>
+          </div>
+          <span class="mp-ad-price">{{ format_price(ad.product.discount_price if ad.product.discount_price else ad.product.price, currency) }}</span>
+        </a>
+        {% elif ad.ad_type == 'SYSTEM_PROMO' %}
+        <a href="{{ ad.target_url or '/shop/marketplace' }}" class="mp-ad-link">
+          <div style="min-width:0;flex:1;">
+            <p class="mp-ad-title">Site Promotion</p>
+            <p class="mp-ad-desc">Check our latest offers</p>
+          </div>
+          <span class="mp-ad-arrow">Explore <svg style="width:0.75rem;height:0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></span>
+        </a>
+        {% else %}
+        <a href="/shop/shops/{{ ad.retailer.slug if ad.retailer else '#' }}" class="mp-ad-link">
+          <div style="min-width:0;flex:1;">
+            <p class="mp-ad-title">{% if ad.retailer %}{{ ad.retailer.name }}{% else %}Featured Artisan{% endif %}</p>
+            <p class="mp-ad-desc">{% if ad.retailer and ad.retailer.bio %}{{ ad.retailer.bio|truncate(60) }}{% else %}Visit this artisan's shop{% endif %}</p>
+          </div>
+          <span class="mp-ad-arrow">View <svg style="width:0.75rem;height:0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></span>
+        </a>
+        {% endif %}
+      </div>
     </div>
+    {% endfor %}
   </div>
   {% endif %}
 
-  <div class="flex flex-col lg:flex-row gap-8">
-    <!-- ===== Sidebar Filters ===== -->
-    <aside class="w-full lg:w-64 flex-shrink-0">
-      <div class="sticky top-24 space-y-6">
-        <!-- Search -->
+  <div class="mp-layout">
+    <!-- Sidebar Filters -->
+    <aside class="mp-filters">
+      <div class="mp-filters-sticky">
         <form method="get" action="/shop/marketplace">
-          <div class="relative">
-            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="mp-search-form">
+            <svg class="mp-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
-            <input type="text" name="q" placeholder="Search products..." value="{{ request.query_params.get('q', '') }}"
-              class="input-forge pl-9 text-sm">
+            <input type="text" name="q" placeholder="Search products..." value="{{ request.query_params.get('q', '') }}" class="mp-search-input">
           </div>
         </form>
 
-        <!-- Categories -->
         <div>
-          <h3 class="text-xs font-bold uppercase tracking-[0.15em] text-stone-500 dark:text-stone-400 mb-3">Categories</h3>
-          <div class="space-y-1">
-            <a href="/shop/marketplace" class="block px-3 py-2 text-sm rounded-xl transition-all duration-200 {% if not request.query_params.get('category') %}bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 font-semibold{% else %}text-stone-600 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800{% endif %}">
+          <h3 class="mp-category-title">Categories</h3>
+          <div class="mp-category-list">
+            <a href="/shop/marketplace" class="mp-category-link {% if not request.query_params.get('category') %}mp-category-link--active{% endif %}">
               All Categories
-              <span class="float-right text-xs text-stone-400 dark:text-stone-500">{{ products|length }}</span>
+              <span class="mp-category-count">{{ products|length }}</span>
             </a>
             {% for cat in categories %}
-            <a href="/shop/marketplace?category={{ cat.slug }}" class="block px-3 py-2 text-sm rounded-xl transition-all duration-200 {% if request.query_params.get('category') == cat.slug %}bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 font-semibold{% else %}text-stone-600 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800{% endif %}">
+            <a href="/shop/marketplace?category={{ cat.slug }}" class="mp-category-link {% if request.query_params.get('category') == cat.slug %}mp-category-link--active{% endif %}">
               {{ cat.name }}
-              <span class="float-right text-xs text-stone-400 dark:text-stone-500">{{ cat_counts.get(cat.id, 0) }}</span>
+              <span class="mp-category-count">{{ cat_counts.get(cat.id, 0) }}</span>
             </a>
             {% endfor %}
           </div>
@@ -122,39 +317,38 @@
       </div>
     </aside>
 
-    <!-- ===== Product Grid ===== -->
-    <div class="flex-1 min-w-0">
+    <!-- Product Grid -->
+    <div class="mp-grid-wrap">
       {% if products %}
-      <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+      <div class="mp-grid">
         {% for p in products %}
-        <div class="card-product group reveal-scale relative" style="animation-delay: {{ (loop.index0 * 50) + 100 }}ms;">
-          <!-- Wishlist heart -->
-          <button onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist('{{ p.id }}', this)" class="wishlist-heart absolute top-3 right-3 z-10 w-8 h-8 bg-white/80 dark:bg-stone-800/80 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform duration-200 md:opacity-0 md:group-hover:opacity-100" data-product-id="{{ p.id }}" aria-label="Add to wishlist">
-            <svg class="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="mp-product-card">
+          <button onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist('{{ p.id }}', this)" class="mp-wishlist-btn" data-product-id="{{ p.id }}" aria-label="Add to wishlist">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
             </svg>
           </button>
           <a href="/shop/products/{{ p.slug }}">
-            <div class="aspect-[3/4] overflow-hidden bg-stone-50 dark:bg-stone-700 relative">
+            <div class="mp-product-img-wrap">
               {% if p.images and p.images|length > 0 %}
-              <img loading="lazy" src="{{ p.images[0] }}" alt="{{ p.name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
+              <img loading="lazy" src="{{ p.images[0] }}" alt="{{ p.name }}" class="mp-product-img">
               {% else %}
-              <div class="w-full h-full flex items-center justify-center text-stone-300 dark:text-stone-500">
-                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+              <div class="mp-product-placeholder">
+                <svg style="width:3rem;height:3rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
               </div>
               {% endif %}
               {% if p.discount_price and p.discount_price < p.price %}
-              <span class="absolute top-3 left-3 badge-red">Sale</span>
+              <span class="mp-sale-badge">Sale</span>
               {% endif %}
             </div>
-            <div class="p-3 sm:p-4">
-              <p class="text-[10px] text-stone-400 dark:text-stone-500 mb-1 truncate">{{ retailers.get(p.retailer_id, 'Artisan') }}</p>
-              <h3 class="text-xs sm:text-sm font-semibold text-stone-900 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors line-clamp-2 leading-snug">{{ p.name }}</h3>
-              <div class="flex items-center justify-between mt-2">
-                <span class="text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 font-mono">{{ format_price(p.price, currency) }}</span>
+            <div class="mp-product-info">
+              <p class="mp-product-vendor">{{ retailers.get(p.retailer_id, 'Artisan') }}</p>
+              <h3 class="mp-product-name"><a href="/shop/products/{{ p.slug }}">{{ p.name }}</a></h3>
+              <div class="mp-product-meta">
+                <span class="mp-product-price">{{ format_price(p.price, currency) }}</span>
                 {% if p.rating and p.rating > 0 %}
-                <span class="text-[10px] text-stone-400 flex items-center gap-1">
-                  <svg class="w-3 h-3 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                <span class="mp-product-rating">
+                  <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                   {{ "%.1f"|format(p.rating) }}
                 </span>
                 {% endif %}
@@ -165,15 +359,15 @@
         {% endfor %}
       </div>
       {% else %}
-      <div class="text-center py-20">
-        <div class="w-20 h-20 bg-stone-100 dark:bg-stone-800 rounded-full flex items-center justify-center mx-auto mb-6">
-          <svg class="w-10 h-10 text-stone-300 dark:text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="mp-empty">
+        <div class="mp-empty-icon">
+          <svg style="width:2.5rem;height:2.5rem;color:var(--c-stone-300);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
           </svg>
         </div>
-        <h3 class="text-lg font-bold text-stone-900 dark:text-stone-100 mb-2">No products found</h3>
-        <p class="text-sm text-stone-500 dark:text-stone-400 mb-6">Try adjusting your search or browse all categories.</p>
-        <a href="/shop/marketplace" class="btn-forge text-sm">View All Products</a>
+        <h3>No products found</h3>
+        <p>Try adjusting your search or browse all categories.</p>
+        <a href="/shop/marketplace" class="mp-empty-btn">View All Products</a>
       </div>
       {% endif %}
     </div>

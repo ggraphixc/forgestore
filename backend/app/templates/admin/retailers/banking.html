@@ -1,121 +1,228 @@
 {% extends "admin/base.html" %}
 {% block title %}Banking Setup — ForgeStore{% endblock %}
 {% block content %}
+<style>
+:root {
+    --page-bg: #faf9f6;
+    --card-bg: #ffffff;
+    --text-primary: #1c1917;
+    --text-secondary: #78716c;
+    --text-muted: #a8a29e;
+    --border-color: #e7e5e4;
+    --amber: #d97706;
+    --amber-hover: #b45309;
+    --emerald: #059669;
+    --emerald-light: #d1fae5;
+    --emerald-light-dark: rgba(5,150,105,0.3);
+    --red: #dc2626;
+    --amber-light: #fef3c7;
+    --amber-light-dark: rgba(217,119,6,0.3);
+    --amber-glow: rgba(217,119,6,0.2);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+    --radius: 8px;
+    --radius-lg: 12px;
+}
+.dark {
+    --page-bg: #1c1917;
+    --card-bg: #292524;
+    --text-primary: #faf9f6;
+    --text-secondary: #a8a29e;
+    --text-muted: #78716c;
+    --border-color: #44403c;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+}
 
-<div class="max-w-3xl mx-auto">
-  <!-- Header -->
-  <div class="mb-8">
-    <a href="/admin/retailers" class="inline-flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 mb-3 transition-colors">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m7 7l-7-7 7-7"/></svg>
-      Back to Retailers
-    </a>
-    <h1 class="text-2xl sm:text-3xl font-black text-stone-900 dark:text-stone-100 font-display">Banking Setup</h1>
-    <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">Link your bank account for automated payouts and split payments</p>
-  </div>
+.banking-container { max-width: 768px; margin: 0 auto; padding: 24px 16px; }
 
-  <!-- Banking Status Card -->
-  <div class="card-glass p-6 mb-8">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-sm font-bold text-stone-900 dark:text-stone-100">Current Status</h2>
-      <span id="banking-status-badge" class="text-xs font-bold px-2.5 py-1 rounded-full {% if retailer and retailer.account_number %}bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400{% else %}bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400{% endif %}">
-        {% if retailer and retailer.account_number %}Connected{% else %}Not Set Up{% endif %}
-      </span>
+.banking-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.875rem; color: var(--text-secondary);
+    text-decoration: none; margin-bottom: 12px;
+    transition: color 0.15s;
+}
+.banking-back:hover { color: var(--text-primary); }
+
+.banking-title { font-size: 1.75rem; font-weight: 900; color: var(--text-primary); margin: 0; }
+@media (min-width: 640px) { .banking-title { font-size: 1.875rem; } }
+.banking-subtitle { font-size: 0.875rem; color: var(--text-secondary); margin-top: 4px; }
+
+.banking-card {
+    background: var(--card-bg); border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg); padding: 24px;
+    margin-bottom: 32px; box-shadow: var(--shadow-sm);
+}
+.banking-card-title { font-size: 0.875rem; font-weight: 700; color: var(--text-primary); margin: 0 0 16px 0; }
+
+.banking-status-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+
+.banking-badge {
+    display: inline-block; padding: 4px 10px;
+    font-size: 0.75rem; font-weight: 700; border-radius: 9999px;
+}
+.banking-badge-connected { background: var(--emerald-light); color: var(--emerald); }
+.banking-badge-not-setup { background: var(--amber-light); color: var(--amber); }
+.dark .banking-badge-connected { background: var(--emerald-light-dark); color: #34d399; }
+.dark .banking-badge-not-setup { background: var(--amber-light-dark); color: #fbbf24; }
+
+.banking-detail-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid var(--border-color);
+    font-size: 0.875rem;
+}
+.banking-detail-row:last-child { border-bottom: none; }
+.banking-detail-label { color: var(--text-secondary); }
+.banking-detail-value { font-weight: 600; color: var(--text-primary); }
+.banking-detail-value.active { color: var(--emerald); }
+
+.banking-form-group { margin-bottom: 20px; }
+.banking-form-label {
+    display: block; font-size: 0.875rem;
+    font-weight: 500; color: var(--text-primary); margin-bottom: 6px;
+}
+.banking-form-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+
+.banking-input,
+.banking-select {
+    width: 100%; padding: 10px 14px; font-size: 0.875rem;
+    border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+    background: var(--card-bg); color: var(--text-primary);
+    min-height: 44px; transition: all 0.2s;
+}
+.banking-input:focus,
+.banking-select:focus {
+    outline: none; border-color: var(--amber);
+    box-shadow: 0 0 0 3px var(--amber-glow);
+}
+
+.banking-btn-row { display: flex; align-items: center; gap: 12px; padding-top: 16px; }
+
+.banking-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px; font-size: 0.875rem; font-weight: 500;
+    border-radius: var(--radius); border: none; cursor: pointer;
+    min-height: 44px; transition: all 0.2s;
+}
+.banking-btn-primary { background: var(--amber); color: white; }
+.banking-btn-primary:hover { background: var(--amber-hover); }
+.banking-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.banking-spinner {
+    display: inline-block; width: 16px; height: 16px;
+    border: 2px solid currentColor; border-top-color: transparent;
+    border-radius: 50%; animation: banking-spin 1s linear infinite;
+}
+@keyframes banking-spin { to { transform: rotate(360deg); } }
+
+.banking-error { font-size: 0.875rem; color: var(--red); }
+
+.banking-success {
+    margin-top: 24px; padding: 16px;
+    background: rgba(5,150,105,0.05); border: 1px solid rgba(5,150,105,0.2);
+    border-radius: var(--radius-lg);
+}
+.banking-success-row { display: flex; align-items: flex-start; gap: 12px; }
+.banking-success-icon { width: 20px; height: 20px; color: var(--emerald); flex-shrink: 0; }
+.banking-success-title { font-size: 0.875rem; font-weight: 600; color: var(--emerald); margin: 0; }
+.banking-success-detail { font-size: 0.75rem; color: var(--emerald); margin-top: 2px; opacity: 0.8; }
+</style>
+
+<div class="banking-container">
+    <div style="margin-bottom:32px">
+        <a href="/admin/retailers" class="banking-back">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m7 7l-7-7 7-7"/></svg>
+            Back to Retailers
+        </a>
+        <h1 class="banking-title">Banking Setup</h1>
+        <p class="banking-subtitle">Link your bank account for automated payouts and split payments</p>
     </div>
-    {% if retailer %}
-    <div id="banking-details" class="space-y-2 text-sm {% if not retailer.account_number %}hidden{% endif %}">
-      <div class="flex justify-between py-2 border-b border-stone-100 dark:border-stone-700">
-        <span class="text-stone-500">Account Name</span>
-        <span class="font-semibold text-stone-900 dark:text-stone-100">{{ retailer.account_name or '—' }}</span>
-      </div>
-      <div class="flex justify-between py-2 border-b border-stone-100 dark:border-stone-700">
-        <span class="text-stone-500">Account Number</span>
-        <span class="font-semibold text-stone-900 dark:text-stone-100">
-          {% if retailer.account_number %}{{ '*' * (retailer.account_number|length - 4) + retailer.account_number[-4:] }}{% else %}—{% endif %}
-        </span>
-      </div>
-      <div class="flex justify-between py-2 border-b border-stone-100 dark:border-stone-700">
-        <span class="text-stone-500">Bank</span>
-        <span class="font-semibold text-stone-900 dark:text-stone-100">{{ retailer.bank_name or '—' }}</span>
-      </div>
-      <div class="flex justify-between py-2 border-b border-stone-100 dark:border-stone-700">
-        <span class="text-stone-500">Commission Rate</span>
-        <span class="font-semibold text-stone-900 dark:text-stone-100">{{ retailer.commission_rate }}%</span>
-      </div>
-      <div class="flex justify-between py-2">
-        <span class="text-stone-500">Subaccount</span>
-        <span class="font-semibold text-stone-900 dark:text-stone-100">
-          {% if retailer.paystack_subaccount_code %}
-          <span class="text-emerald-600 dark:text-emerald-400">Active</span>
-          {% else %}—{% endif %}
-        </span>
-      </div>
-    </div>
-    {% endif %}
-  </div>
 
-  <!-- Bank Setup Form -->
-  <div class="card-glass p-6">
-    <h2 class="text-sm font-bold text-stone-900 dark:text-stone-100 mb-6">
-      {% if retailer and retailer.account_number %}Update Bank Details{% else %}Set Up Bank Account{% endif %}
-    </h2>
-
-    <form id="bank-setup-form" class="space-y-5">
-      <!-- Bank Selection -->
-      <div>
-        <label for="bank_code" class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">Bank</label>
-        <select id="bank_code" name="bank_code" required
-          class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 text-sm focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all duration-200">
-          <option value="">Select your bank...</option>
-          {% for bank in banks %}
-          <option value="{{ bank.code }}" {% if retailer and retailer.bank_code == bank.code %}selected{% endif %}>{{ bank.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <!-- Account Number -->
-      <div>
-        <label for="account_number" class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">Account Number</label>
-        <input type="text" id="account_number" name="account_number" value="{{ retailer.account_number or '' }}" required maxlength="10" pattern="\d{10}"
-          class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 text-sm focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all duration-200"
-          placeholder="0123456789">
-        <p class="text-xs text-stone-400 mt-1">10-digit NUBAN account number</p>
-      </div>
-
-      <!-- Bank Name -->
-      <div>
-        <label for="bank_name" class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">Bank Name <span class="text-stone-400 font-normal">(optional)</span></label>
-        <input type="text" id="bank_name" name="bank_name" value="{{ retailer.bank_name or '' }}"
-          class="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 text-sm focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all duration-200"
-          placeholder="e.g. Access Bank">
-      </div>
-
-      <!-- Submit -->
-      <div class="flex items-center gap-3 pt-4">
-        <button type="submit" id="bank-submit-btn"
-          class="btn-forge text-sm">
-          <span id="bank-btn-text">Save &amp; Create Subaccount</span>
-          <svg id="bank-btn-spinner" class="w-4 h-4 hidden animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        </button>
-        <span id="bank-error" class="text-sm text-red-500 hidden"></span>
-      </div>
-    </form>
-
-    <!-- Success message -->
-    <div id="bank-success" class="hidden mt-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
-      <div class="flex items-center gap-3">
-        <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <div>
-          <p class="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Bank account linked successfully!</p>
-          <p id="bank-success-detail" class="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5"></p>
+    <div class="banking-card">
+        <div class="banking-status-row">
+            <h2 class="banking-card-title" style="margin:0">Current Status</h2>
+            <span id="banking-status-badge" class="banking-badge {% if retailer and retailer.account_number %}banking-badge-connected{% else %}banking-badge-not-setup{% endif %}">
+                {% if retailer and retailer.account_number %}Connected{% else %}Not Set Up{% endif %}
+            </span>
         </div>
-      </div>
+        {% if retailer %}
+        <div id="banking-details" class="{% if not retailer.account_number %}hidden{% endif %}">
+            <div class="banking-detail-row">
+                <span class="banking-detail-label">Account Name</span>
+                <span class="banking-detail-value">{{ retailer.account_name or '—' }}</span>
+            </div>
+            <div class="banking-detail-row">
+                <span class="banking-detail-label">Account Number</span>
+                <span class="banking-detail-value">
+                    {% if retailer.account_number %}{{ '*' * (retailer.account_number|length - 4) + retailer.account_number[-4:] }}{% else %}—{% endif %}
+                </span>
+            </div>
+            <div class="banking-detail-row">
+                <span class="banking-detail-label">Bank</span>
+                <span class="banking-detail-value">{{ retailer.bank_name or '—' }}</span>
+            </div>
+            <div class="banking-detail-row">
+                <span class="banking-detail-label">Commission Rate</span>
+                <span class="banking-detail-value">{{ retailer.commission_rate }}%</span>
+            </div>
+            <div class="banking-detail-row">
+                <span class="banking-detail-label">Subaccount</span>
+                <span class="banking-detail-value">
+                    {% if retailer.paystack_subaccount_code %}
+                    <span class="banking-detail-value active">Active</span>
+                    {% else %}—{% endif %}
+                </span>
+            </div>
+        </div>
+        {% endif %}
     </div>
-  </div>
+
+    <div class="banking-card">
+        <h2 class="banking-card-title">
+            {% if retailer and retailer.account_number %}Update Bank Details{% else %}Set Up Bank Account{% endif %}
+        </h2>
+
+        <form id="bank-setup-form">
+            <div class="banking-form-group">
+                <label for="bank_code" class="banking-form-label">Bank</label>
+                <select id="bank_code" name="bank_code" required class="banking-select">
+                    <option value="">Select your bank...</option>
+                    {% for bank in banks %}
+                    <option value="{{ bank.code }}" {% if retailer and retailer.bank_code == bank.code %}selected{% endif %}>{{ bank.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="banking-form-group">
+                <label for="account_number" class="banking-form-label">Account Number</label>
+                <input type="text" id="account_number" name="account_number" value="{{ retailer.account_number or '' }}" required maxlength="10" pattern="\d{10}" class="banking-input" placeholder="0123456789">
+                <p class="banking-form-hint">10-digit NUBAN account number</p>
+            </div>
+
+            <div class="banking-form-group">
+                <label for="bank_name" class="banking-form-label">Bank Name <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+                <input type="text" id="bank_name" name="bank_name" value="{{ retailer.bank_name or '' }}" class="banking-input" placeholder="e.g. Access Bank">
+            </div>
+
+            <div class="banking-btn-row">
+                <button type="submit" id="bank-submit-btn" class="banking-btn banking-btn-primary">
+                    <span id="bank-btn-text">Save &amp; Create Subaccount</span>
+                    <svg id="bank-btn-spinner" class="banking-spinner" style="display:none" fill="none" viewBox="0 0 24 24"></svg>
+                </button>
+                <span id="bank-error" class="banking-error" style="display:none"></span>
+            </div>
+        </form>
+
+        <div id="bank-success" class="banking-success" style="display:none">
+            <div class="banking-success-row">
+                <svg class="banking-success-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div>
+                    <p class="banking-success-title">Bank account linked successfully!</p>
+                    <p id="bank-success-detail" class="banking-success-detail"></p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -128,12 +235,12 @@ document.getElementById('bank-setup-form').addEventListener('submit', async func
   const successEl = document.getElementById('bank-success');
   const successDetail = document.getElementById('bank-success-detail');
 
-  errorEl.classList.add('hidden');
-  successEl.classList.add('hidden');
+  errorEl.style.display = 'none';
+  successEl.style.display = 'none';
 
   btn.disabled = true;
   btnText.textContent = 'Processing...';
-  spinner.classList.remove('hidden');
+  spinner.style.display = 'inline-block';
 
   try {
     const res = await fetch('/api/admin/retailer/bank-setup', {
@@ -148,24 +255,22 @@ document.getElementById('bank-setup-form').addEventListener('submit', async func
     const data = await res.json();
     if (data.success) {
       successDetail.textContent = `Account: ${data.account_name} — Subaccount: ${data.subaccount_id}`;
-      successEl.classList.remove('hidden');
-      // Update status
+      successEl.style.display = 'block';
       document.getElementById('banking-status-badge').textContent = 'Connected';
-      document.getElementById('banking-status-badge').className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+      document.getElementById('banking-status-badge').className = 'banking-badge banking-badge-connected';
       document.getElementById('banking-details').classList.remove('hidden');
-      // Refresh page after short delay
       setTimeout(() => location.reload(), 2000);
     } else {
       errorEl.textContent = data.detail || 'Failed to link bank account';
-      errorEl.classList.remove('hidden');
+      errorEl.style.display = 'inline';
     }
   } catch (err) {
     errorEl.textContent = 'Network error. Please try again.';
-    errorEl.classList.remove('hidden');
+    errorEl.style.display = 'inline';
   } finally {
     btn.disabled = false;
     btnText.textContent = 'Save & Create Subaccount';
-    spinner.classList.add('hidden');
+    spinner.style.display = 'none';
   }
 });
 </script>

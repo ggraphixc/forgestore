@@ -1,47 +1,105 @@
 {% extends "admin/base.html" %}
 {% block title %}Send Newsletter — ForgeStore Admin{% endblock %}
 {% block content %}
-<div class="max-w-3xl mx-auto">
-    <div class="flex items-center justify-between mb-8">
+<style>
+  :root {
+    --admin-amber-50: #fffbeb; --admin-amber-100: #fef3c7; --admin-amber-200: #fde68a;
+    --admin-amber-300: #fcd34d; --admin-amber-400: #fbbf24; --admin-amber-500: #f59e0b;
+    --admin-amber-600: #d97706; --admin-amber-700: #b45309; --admin-amber-800: #92400e;
+    --admin-stone-50: #fafaf9; --admin-stone-100: #f5f5f4; --admin-stone-200: #e7e5e4;
+    --admin-stone-300: #d6d3d1; --admin-stone-400: #a8a29e; --admin-stone-500: #78716c;
+    --admin-stone-600: #57534e; --admin-stone-700: #44403c; --admin-stone-800: #292524;
+    --admin-stone-900: #1c1917; --admin-stone-950: #0c0a09;
+    --admin-emerald-50: #ecfdf5; --admin-emerald-100: #d1fae5; --admin-emerald-500: #10b981;
+    --admin-emerald-600: #059669; --admin-emerald-700: #047857;
+    --admin-red-50: #fef2f2; --admin-red-100: #fee2e2; --admin-red-200: #fecaca;
+    --admin-red-500: #ef4444; --admin-red-600: #dc2626; --admin-red-700: #b91c1c;
+    --admin-radius: 0.75rem; --admin-radius-lg: 1rem;
+    --admin-shadow: 0 1px 2px rgba(0,0,0,0.04); --admin-shadow-lg: 0 25px 50px -12px rgba(0,0,0,0.25);
+    --admin-touch: 44px;
+  }
+  .admin-bc-page { max-width: 48rem; margin: 0 auto; padding: 1.5rem; }
+  .admin-bc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+  .admin-bc-header h1 { font-size: 1.5rem; font-weight: 800; color: var(--admin-stone-900); }
+  @media (min-width: 768px) { .admin-bc-header h1 { font-size: 1.875rem; } }
+  .admin-bc-header p { font-size: 0.875rem; color: var(--admin-stone-500); margin-top: 0.25rem; }
+  .admin-bc-nav { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  .admin-bc-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: var(--admin-radius); cursor: pointer; transition: all 0.2s; min-height: var(--admin-touch); text-decoration: none; border: none; }
+  .admin-bc-btn-outline { background: #fff; color: var(--admin-stone-700); border: 1px solid var(--admin-stone-300); }
+  .admin-bc-btn-outline:hover { background: var(--admin-stone-50); }
+  .admin-bc-card { background: #fff; border-radius: var(--admin-radius-lg); border: 1px solid var(--admin-stone-200); overflow: hidden; box-shadow: var(--admin-shadow); }
+  .admin-bc-card-head { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--admin-stone-100); background: rgba(250,250,249,0.5); }
+  .admin-bc-card-head h2 { font-size: 0.875rem; font-weight: 700; color: var(--admin-stone-900); }
+  .admin-bc-card-head p { font-size: 0.75rem; color: var(--admin-stone-400); margin-top: 0.125rem; }
+  .admin-bc-card-body { padding: 1.5rem; }
+  .admin-bc-label { display: block; font-size: 0.875rem; font-weight: 600; color: var(--admin-stone-800); margin-bottom: 0.375rem; }
+  .admin-bc-help { font-size: 0.75rem; color: var(--admin-stone-400); margin-top: 0.25rem; }
+  .admin-bc-input, .admin-bc-select, .admin-bc-textarea { width: 100%; padding: 0.625rem 1rem; background: #fff; border: 1px solid var(--admin-stone-300); border-radius: var(--admin-radius); font-size: 0.875rem; transition: all 0.2s; min-height: var(--admin-touch); }
+  .admin-bc-input:focus, .admin-bc-select:focus, .admin-bc-textarea:focus { outline: none; box-shadow: 0 0 0 3px rgba(245,158,11,0.1); border-color: var(--admin-amber-500); }
+  .admin-bc-textarea { resize: vertical; font-family: monospace; padding: 0.75rem 1rem; }
+  .admin-bc-select { cursor: pointer; appearance: auto; }
+  .admin-bc-preview-wrap { border: 1px solid var(--admin-stone-200); border-radius: var(--admin-radius); overflow: hidden; }
+  .admin-bc-preview-head { padding: 0.625rem 1rem; background: var(--admin-stone-50); border-bottom: 1px solid var(--admin-stone-200); display: flex; align-items: center; justify-content: space-between; }
+  .admin-bc-preview-head span { font-size: 0.75rem; font-weight: 600; color: var(--admin-stone-500); text-transform: uppercase; letter-spacing: 0.05em; }
+  .admin-bc-preview-head button { font-size: 0.75rem; color: var(--admin-amber-600); font-weight: 600; cursor: pointer; background: none; border: none; }
+  .admin-bc-preview-frame { width: 100%; height: 16rem; background: #fff; border: none; }
+  .admin-bc-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 0.5rem; border-top: 1px solid var(--admin-stone-100); }
+  .admin-bc-footer .admin-bc-info { font-size: 0.75rem; color: var(--admin-stone-400); }
+  .admin-bc-send { padding: 0.625rem 1.5rem; background: linear-gradient(135deg, var(--admin-stone-800), var(--admin-stone-900)); color: #fff; font-size: 0.875rem; font-weight: 700; border-radius: var(--admin-radius); border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; min-height: var(--admin-touch); }
+  .admin-bc-send:hover { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+  .admin-bc-send:disabled { opacity: 0.5; cursor: not-allowed; }
+  .admin-bc-recent { margin-top: 2rem; }
+  .admin-bc-recent-list { display: flex; flex-direction: column; }
+  .admin-bc-recent-empty { padding: 2rem; text-align: center; font-size: 0.875rem; color: var(--admin-stone-400); }
+  .admin-bc-form-field { margin-bottom: 1.25rem; }
+  .admin-bc-char-count { font-size: 0.75rem; color: var(--admin-stone-400); margin-top: 0.25rem; }
+  @media (max-width: 640px) {
+    .admin-bc-header { flex-direction: column; align-items: flex-start; }
+    .admin-bc-nav { width: 100%; }
+    .admin-bc-footer { flex-direction: column; gap: 1rem; text-align: center; }
+  }
+</style>
+
+<div class="admin-bc-page">
+    <div class="admin-bc-header">
         <div>
-            <h1 class="text-2xl md:text-3xl font-heading font-bold text-stone-900">Send Newsletter</h1>
-            <p class="text-sm text-stone-500 mt-1">Compose and send an email campaign to your subscribers</p>
+            <h1>Send Newsletter</h1>
+            <p>Compose and send an email campaign to your subscribers</p>
         </div>
-        <div class="flex items-center gap-3">
-            <a href="/admin/newsletter/templates" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-stone-700 text-xs font-bold uppercase tracking-wider rounded-xl border border-stone-300 hover:bg-stone-50 transition-all duration-200">
+        <div class="admin-bc-nav">
+            <a href="/admin/newsletter/templates" class="admin-bc-btn admin-bc-btn-outline">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 Templates
             </a>
-            <a href="/admin/newsletter/broadcast-analytics" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-stone-700 text-xs font-bold uppercase tracking-wider rounded-xl border border-stone-300 hover:bg-stone-50 transition-all duration-200">
+            <a href="/admin/newsletter/broadcast-analytics" class="admin-bc-btn admin-bc-btn-outline">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                 Analytics
             </a>
         </div>
     </div>
 
-    <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
-        <div class="px-6 py-5 border-b border-stone-100 bg-stone-50/50">
-            <h2 class="text-sm font-bold text-stone-900">Campaign Details</h2>
-            <p class="text-xs text-stone-400 mt-0.5">Your email will be wrapped in the branded ForgeStore template with open/click tracking</p>
+    <div class="admin-bc-card">
+        <div class="admin-bc-card-head">
+            <h2>Campaign Details</h2>
+            <p>Your email will be wrapped in the branded ForgeStore template with open/click tracking</p>
         </div>
-        <div class="p-6 space-y-5">
-            <!-- Template picker -->
-            <div>
-                <label for="template-select" class="block text-sm font-semibold text-stone-800 mb-1.5">Use a Template (optional)</label>
-                <select id="template-select" class="w-full px-4 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all cursor-pointer">
+        <div class="admin-bc-card-body" style="display:flex;flex-direction:column;gap:1.25rem">
+            <div class="admin-bc-form-field">
+                <label for="template-select" class="admin-bc-label">Use a Template (optional)</label>
+                <select id="template-select" class="admin-bc-select">
                     <option value="">Start from scratch</option>
                 </select>
             </div>
 
-            <div>
-                <label for="subject" class="block text-sm font-semibold text-stone-800 mb-1.5">Subject Line *</label>
-                <input type="text" id="subject" class="w-full px-4 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all" placeholder="e.g. New Collection Just Dropped!">
-                <p class="text-xs text-stone-400 mt-1" id="subject-count">0 characters</p>
+            <div class="admin-bc-form-field">
+                <label for="subject" class="admin-bc-label">Subject Line *</label>
+                <input type="text" id="subject" class="admin-bc-input" placeholder="e.g. New Collection Just Dropped!">
+                <p class="admin-bc-char-count" id="subject-count">0 characters</p>
             </div>
 
-            <div>
-                <label for="tag-filter" class="block text-sm font-semibold text-stone-800 mb-1.5">Send to Tag (optional)</label>
-                <select id="tag-filter" class="w-full px-4 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all cursor-pointer">
+            <div class="admin-bc-form-field">
+                <label for="tag-filter" class="admin-bc-label">Send to Tag (optional)</label>
+                <select id="tag-filter" class="admin-bc-select">
                     <option value="">All confirmed subscribers</option>
                     <option value="new">New subscribers</option>
                     <option value="vip">VIP</option>
@@ -50,33 +108,31 @@
                 </select>
             </div>
 
-            <div>
-                <label for="content" class="block text-sm font-semibold text-stone-800 mb-1.5">Email Content (HTML) *</label>
-                <p class="text-xs text-stone-400 mb-2">Write HTML that will be placed inside the branded email wrapper. Links will be wrapped for click tracking.</p>
-                <textarea id="content" rows="12" class="w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all resize-y" placeholder="<h1>Hello there!</h1>&#10;<p>Your content goes here...</p>&#10;<div style=&quot;text-align:center;margin:24px 0;&quot;>&#10;  <a href=&quot;https://example.com/shop&quot;>Shop Now</a>&#10;</div>"></textarea>
+            <div class="admin-bc-form-field">
+                <label for="content" class="admin-bc-label">Email Content (HTML) *</label>
+                <p class="admin-bc-help" style="margin-bottom:0.5rem">Write HTML that will be placed inside the branded email wrapper. Links will be wrapped for click tracking.</p>
+                <textarea id="content" rows="12" class="admin-bc-textarea" placeholder="<h1>Hello there!</h1>&#10;<p>Your content goes here...</p>&#10;<div style=&quot;text-align:center;margin:24px 0;&quot;>&#10;  <a href=&quot;https://example.com/shop&quot;>Shop Now</a>&#10;</div>"></textarea>
             </div>
 
-            <!-- Schedule picker -->
-            <div>
-                <label for="schedule-time" class="block text-sm font-semibold text-stone-800 mb-1.5">Schedule (optional)</label>
-                <input type="datetime-local" id="schedule-time" class="w-full px-4 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">
-                <p class="text-xs text-stone-400 mt-1">Leave empty to send immediately. Uses your local time.</p>
+            <div class="admin-bc-form-field">
+                <label for="schedule-time" class="admin-bc-label">Schedule (optional)</label>
+                <input type="datetime-local" id="schedule-time" class="admin-bc-input">
+                <p class="admin-bc-help">Leave empty to send immediately. Uses your local time.</p>
             </div>
 
-            <!-- Preview pane -->
-            <div class="border border-stone-200 rounded-xl overflow-hidden">
-                <div class="px-4 py-2.5 bg-stone-50 border-b border-stone-200 flex items-center justify-between">
-                    <span class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Preview</span>
-                    <button type="button" onclick="updatePreview()" class="text-xs text-amber-600 hover:text-amber-800 font-semibold cursor-pointer">Refresh ↻</button>
+            <div class="admin-bc-preview-wrap">
+                <div class="admin-bc-preview-head">
+                    <span>Preview</span>
+                    <button type="button" onclick="updatePreview()">Refresh</button>
                 </div>
-                <iframe id="preview-frame" class="w-full h-64 bg-white" sandbox="allow-same-origin" srcdoc=""></iframe>
+                <iframe id="preview-frame" class="admin-bc-preview-frame" sandbox="allow-same-origin" srcdoc=""></iframe>
             </div>
 
-            <div class="flex items-center justify-between pt-2 border-t border-stone-100">
-                <div id="recipient-info" class="text-xs text-stone-400">
+            <div class="admin-bc-footer">
+                <div id="recipient-info" class="admin-bc-info">
                     <span id="recipient-count">—</span> confirmed subscriber(s) will receive this
                 </div>
-                <button onclick="sendBroadcast()" id="send-btn" class="px-6 py-2.5 bg-gradient-to-r from-stone-800 to-stone-900 text-white text-sm font-bold rounded-xl hover:from-stone-900 hover:to-stone-950 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer inline-flex items-center gap-2">
+                <button onclick="sendBroadcast()" id="send-btn" class="admin-bc-send">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                     <span id="send-btn-text">Send Now</span>
                 </button>
@@ -84,21 +140,21 @@
         </div>
     </div>
 
-    <!-- Recent broadcasts -->
-    <div class="mt-8 bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
-        <div class="px-6 py-4 border-b border-stone-100">
-            <h2 class="text-sm font-bold text-stone-900">Recent Broadcasts</h2>
-        </div>
-        <div class="divide-y divide-stone-100" id="recent-broadcasts">
-            <div class="px-6 py-8 text-center text-sm text-stone-400">
-                No broadcasts sent yet. Send your first campaign above.
+    <div class="admin-bc-recent">
+        <div class="admin-bc-card">
+            <div style="padding:1rem 1.5rem;border-bottom:1px solid var(--admin-stone-100)">
+                <h2 style="font-size:0.875rem;font-weight:700;color:var(--admin-stone-900)">Recent Broadcasts</h2>
+            </div>
+            <div class="admin-bc-recent-list" id="recent-broadcasts">
+                <div class="admin-bc-recent-empty">
+                    No broadcasts sent yet. Send your first campaign above.
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-// Load templates and subscriber count on page load
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const [subRes, tmplRes] = await Promise.all([
@@ -109,8 +165,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const tmplData = await tmplRes.json();
         const confirmed = subData.subscribers.filter(s => s.confirmed);
         document.getElementById('recipient-count').textContent = confirmed.length;
-
-        // Populate template selector
         const select = document.getElementById('template-select');
         tmplData.templates.forEach(t => {
             const opt = document.createElement('option');
@@ -121,7 +175,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch {}
 });
 
-// Template loader
 document.getElementById('template-select').addEventListener('change', async function() {
     if (!this.value) return;
     try {
@@ -138,21 +191,17 @@ document.getElementById('template-select').addEventListener('change', async func
     } catch {}
 });
 
-// Character counter
 document.getElementById('subject').addEventListener('input', function() {
     document.getElementById('subject-count').textContent = this.value.length + ' characters';
 });
 
-// Live preview
 function updatePreview() {
     const content = document.getElementById('content').value || '';
     const subject = document.getElementById('subject').value || '(No subject)';
     const previewSrc = `<html><head><style>body{margin:0;padding:24px;background:#f5f5f4;font-family:'Helvetica Neue',Arial,sans-serif}</style></head><body>
         <div style="max-width:520px;margin:0 auto;padding:32px 24px;background:#fafaf9;border-radius:16px;">
             <div style="text-align:center;margin-bottom:24px;">
-                <div style="display:inline-block;background:#1c1917;color:white;font-weight:800;font-size:20px;padding:10px 18px;border-radius:12px;">
-                    ForgeStore
-                </div>
+                <div style="display:inline-block;background:#1c1917;color:white;font-weight:800;font-size:20px;padding:10px 18px;border-radius:12px;">ForgeStore</div>
             </div>
             <p style="font-size:11px;color:#a8a29e;text-align:center;margin-bottom:16px;">Subject: ${subject.replace(/</g,'&lt;')}</p>
             ${content}
@@ -166,17 +215,11 @@ function updatePreview() {
     document.getElementById('preview-frame').srcdoc = previewSrc;
 }
 
-// Auto-preview on input
 document.getElementById('content').addEventListener('input', updatePreview);
 
-// Schedule toggle handler
 document.getElementById('schedule-time').addEventListener('input', function() {
     const btnText = document.getElementById('send-btn-text');
-    if (this.value) {
-        btnText.textContent = 'Schedule';
-    } else {
-        btnText.textContent = 'Send Now';
-    }
+    btnText.textContent = this.value ? 'Schedule' : 'Send Now';
 });
 
 async function sendBroadcast() {
@@ -185,59 +228,48 @@ async function sendBroadcast() {
     const tagFilter = document.getElementById('tag-filter').value;
     const scheduleTime = document.getElementById('schedule-time').value;
     const templateId = document.getElementById('template-select').value;
-
-    if (!subject || !content) {
-        showToast('Please enter both a subject and content', 'warning');
-        return;
-    }
-
+    if (!subject || !content) { showToast('Please enter both a subject and content', 'warning'); return; }
     const isScheduled = !!scheduleTime;
-    const confirmMsg = isScheduled
-        ? `Schedule "${subject}" for ${scheduleTime}?`
-        : `Send "${subject}" to all confirmed subscribers immediately? This cannot be undone.`;
-
-    if (!confirm(confirmMsg)) return;
-
-    // Convert local datetime to ISO for the server
+    if (!confirm(isScheduled ? `Schedule "${subject}" for ${scheduleTime}?` : `Send "${subject}" to all confirmed subscribers immediately? This cannot be undone.`)) return;
     let scheduledAt = null;
-    if (scheduleTime) {
-        scheduledAt = new Date(scheduleTime).toISOString();
-    }
-
+    if (scheduleTime) { scheduledAt = new Date(scheduleTime).toISOString(); }
     const btn = document.getElementById('send-btn');
     btn.disabled = true;
     btn.innerHTML = '<svg class="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> ' + (isScheduled ? 'Scheduling...' : 'Sending...');
-
     try {
         const res = await fetch('/api/admin/newsletter-subscribers/broadcast', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                subject,
-                content,
-                tag_filter: tagFilter || null,
-                scheduled_at: scheduledAt,
-                template_id: templateId || null,
-            }),
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ subject, content, tag_filter: tagFilter || null, scheduled_at: scheduledAt, template_id: templateId || null }),
         });
         const data = await res.json();
         if (data.success) {
             showToast(data.message, 'success');
             btn.innerHTML = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> ' + (isScheduled ? 'Scheduled!' : 'Sent!');
-            setTimeout(() => {
-                btn.disabled = false;
-                btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> <span id="send-btn-text">Send Another</span>';
-            }, 3000);
+            setTimeout(() => { btn.disabled = false; btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> <span id="send-btn-text">Send Another</span>'; }, 3000);
         } else {
-            showToast(data.detail || 'Failed to ' + (isScheduled ? 'schedule' : 'send'), 'error');
+            showToast(data.detail || 'Failed to send', 'error');
             btn.disabled = false;
-            btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> <span id="send-btn-text">' + (isScheduled ? 'Schedule' : 'Send Now') + '</span>';
+            btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> <span id="send-btn-text">Send Now</span>';
         }
     } catch {
         showToast('Network error', 'error');
         btn.disabled = false;
-        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> <span id="send-btn-text">' + (isScheduled ? 'Schedule' : 'Send Now') + '</span>';
+        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> <span id="send-btn-text">Send Now</span>';
     }
+}
+
+function showToast(message, type) {
+    const existing = document.querySelector('.admin-toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.className = 'admin-toast';
+    toast.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:100;padding:0.75rem 1.25rem;border-radius:0.75rem;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);font-size:0.875rem;font-weight:500;color:#fff;transition:opacity 0.3s;opacity:0';
+    const colors = { success: 'var(--admin-emerald-600)', error: 'var(--admin-red-600)', warning: 'var(--admin-amber-600)' };
+    toast.style.background = colors[type] || 'var(--admin-stone-700)';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => toast.style.opacity = '1');
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 4000);
 }
 </script>
 {% endblock %}

@@ -1,458 +1,842 @@
 {% extends "base.html" %}
 
 {% block body %}
+<style>
+:root {
+  --c-amber-50: #fffbeb; --c-amber-100: #fef3c7; --c-amber-200: #fde68a; --c-amber-300: #fcd34d;
+  --c-amber-400: #fbbf24; --c-amber-500: #f59e0b; --c-amber-600: #d97706; --c-amber-700: #b45309;
+  --c-amber-800: #92400e; --c-amber-900: #78350f;
+  --c-stone-50: #fafaf9; --c-stone-100: #f5f5f4; --c-stone-200: #e7e5e3; --c-stone-300: #d6d3d1;
+  --c-stone-400: #a8a29e; --c-stone-500: #78716c; --c-stone-600: #57534e; --c-stone-700: #44403c;
+  --c-stone-800: #292524; --c-stone-900: #1c1917; --c-stone-950: #0c0a09;
+  --web-header-h: 72px;
+}
+
+/* ===== Header ===== */
+.web-header {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 999;
+  background: rgba(250,250,249,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--c-stone-200);
+}
+@media (prefers-color-scheme: dark) {
+  .web-header { background: rgba(28,25,23,0.92); border-color: var(--c-stone-800); }
+}
+.dark .web-header { background: rgba(28,25,23,0.92); border-color: var(--c-stone-800); }
+
+.web-header-inner {
+  max-width: 80rem; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  height: var(--web-header-h); padding: 0 1rem;
+}
+@media (min-width: 640px) { .web-header-inner { padding: 0 1.25rem; } }
+@media (min-width: 1024px) { .web-header-inner { padding: 0 2rem; } }
+
+.web-logo {
+  display: flex; align-items: center; gap: 0.5rem; gap: 0.75rem;
+  text-decoration: none; min-height: 44px; min-width: 44px;
+}
+.web-logo-box {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--c-stone-900), var(--c-stone-700));
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 0.875rem; font-weight: 900; flex-shrink: 0;
+}
+@media (min-width: 768px) { .web-logo-box { width: 40px; height: 40px; } }
+@media (min-width: 1024px) { .web-logo-box { width: 44px; height: 44px; font-size: 1rem; } }
+.web-logo-text { color: var(--c-stone-900); font-weight: 700; font-size: 0.875rem; }
+@media (min-width: 768px) { .web-logo-text { font-size: 1rem; } }
+.dark .web-logo-text { color: var(--c-stone-100); }
+.web-logo-tagline { display: none; font-size: 0.625rem; color: var(--c-amber-600); text-transform: uppercase; letter-spacing: 0.2em; margin-top: -2px; }
+@media (min-width: 1024px) { .web-logo-tagline { display: block; } }
+.dark .web-logo-tagline { color: var(--c-amber-400); }
+
+/* Nav links */
+.web-nav { display: none; align-items: center; gap: 2px; }
+@media (min-width: 1024px) { .web-nav { display: flex; } }
+.web-nav-link {
+  padding: 0.5rem 0.75rem; font-size: 0.75rem; white-space: nowrap;
+  text-decoration: none; color: var(--c-stone-500); border-radius: 8px;
+  min-height: 44px; display: flex; align-items: center;
+  transition: color 0.2s, background 0.2s;
+}
+@media (min-width: 1280px) { .web-nav-link { padding: 0.5rem 1rem; font-size: 0.875rem; } }
+.web-nav-link:hover { color: var(--c-stone-900); background: var(--c-stone-100); }
+.dark .web-nav-link:hover { color: var(--c-stone-100); background: var(--c-stone-800); }
+.web-nav-link--active { color: var(--c-amber-700); background: var(--c-amber-50); font-weight: 600; }
+.dark .web-nav-link--active { color: var(--c-amber-400); background: rgba(245,158,11,0.15); }
+
+/* Desktop search */
+.web-desktop-search { display: none; flex: 1; max-width: 200px; margin: 0 0.5rem; position: relative; }
+@media (min-width: 1024px) { .web-desktop-search { display: block; } }
+@media (min-width: 1280px) { .web-desktop-search { max-width: 280px; margin: 0 0.75rem; } }
+.web-desktop-search input {
+  width: 100%; padding: 0.5rem 0.5rem 0.5rem 2.25rem;
+  font-size: 0.75rem; border-radius: 10px;
+  border: 1px solid var(--c-stone-200); background: var(--c-stone-100);
+  color: var(--c-stone-900); outline: none; transition: all 0.2s;
+}
+.web-desktop-search input:focus { border-color: var(--c-amber-500); box-shadow: 0 0 0 3px rgba(245,158,11,0.15); }
+.web-desktop-search input::placeholder { color: var(--c-stone-400); }
+.dark .web-desktop-search input { background: var(--c-stone-800); border-color: var(--c-stone-700); color: var(--c-stone-100); }
+.dark .web-desktop-search input::placeholder { color: var(--c-stone-500); }
+.web-desktop-search .search-icon {
+  position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; color: var(--c-stone-400); pointer-events: none;
+}
+.web-desktop-search .search-kbd {
+  position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%);
+  padding: 2px 6px; font-size: 9px; font-family: monospace; color: var(--c-stone-400);
+  background: var(--c-stone-200); border-radius: 4px; display: none;
+}
+@media (min-width: 1280px) { .web-desktop-search .search-kbd { display: inline-flex; } }
+.dark .web-desktop-search .search-kbd { background: var(--c-stone-700); }
+
+/* Action buttons */
+.web-actions { display: flex; align-items: center; gap: 4px; }
+.web-action-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: 10px; border: none; background: none;
+  color: var(--c-stone-500); cursor: pointer; transition: all 0.2s; position: relative;
+}
+.web-action-btn:hover { color: var(--c-stone-900); background: var(--c-stone-100); }
+.dark .web-action-btn:hover { color: var(--c-stone-100); background: var(--c-stone-800); }
+.web-action-btn svg { width: 20px; height: 20px; }
+
+.web-action-link {
+  display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: 10px;
+  color: var(--c-stone-500); text-decoration: none; transition: all 0.2s; position: relative;
+}
+.web-action-link:hover { color: var(--c-stone-900); background: var(--c-stone-100); }
+.dark .web-action-link:hover { color: var(--c-stone-100); background: var(--c-stone-800); }
+.web-action-link svg { width: 20px; height: 20px; }
+
+.web-badge {
+  position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 4px;
+  background: var(--c-amber-500); color: #fff; font-size: 9px; font-weight: 700;
+  border-radius: 9999px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.web-badge::after {
+  content: ''; position: absolute; inset: -2px; border-radius: 9999px;
+  border: 2px solid #fff;
+}
+.dark .web-badge::after { border-color: var(--c-stone-800); }
+
+.web-action-btn--hidden { display: none; }
+@media (min-width: 768px) {
+  .web-action-btn--md { display: flex; }
+  .web-action-btn--lg { display: flex; }
+}
+.web-action-link--hidden { display: none; }
+@media (min-width: 768px) {
+  .web-action-link--md { display: flex; }
+}
+
+/* Search overlay */
+.web-search-overlay {
+  display: none; position: absolute; top: 100%; left: 0; right: 0;
+  background: rgba(250,250,249,0.97); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--c-stone-200);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08); z-index: 100;
+  padding: 0.75rem;
+}
+.dark .web-search-overlay { background: rgba(28,25,23,0.97); border-color: var(--c-stone-700); }
+.web-search-overlay-input-wrap {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.625rem 1rem; background: var(--c-stone-100); border-radius: 10px;
+  border: 1px solid var(--c-stone-200);
+}
+.web-search-overlay-input-wrap:focus-within { border-color: var(--c-amber-400); box-shadow: 0 0 0 3px rgba(245,158,11,0.15); }
+.dark .web-search-overlay-input-wrap { background: var(--c-stone-800); border-color: var(--c-stone-700); }
+.web-search-overlay-input {
+  flex: 1; background: none; border: none; outline: none;
+  font-size: 0.875rem; color: var(--c-stone-900); min-height: 44px;
+}
+.web-search-overlay-input::placeholder { color: var(--c-stone-400); }
+.dark .web-search-overlay-input { color: var(--c-stone-100); }
+.web-search-overlay-close {
+  display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: 8px; border: none; background: none;
+  color: var(--c-stone-500); cursor: pointer; transition: all 0.2s;
+}
+.web-search-overlay-close:hover { background: var(--c-stone-200); }
+.web-search-suggestions {
+  margin-top: 0.5rem; background: #fff; border-radius: 10px;
+  border: 1px solid var(--c-stone-200); box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+.dark .web-search-suggestions { background: var(--c-stone-900); border-color: var(--c-stone-700); }
+
+/* ===== Mobile Menu ===== */
+.web-mobile-backdrop {
+  position: fixed; inset: 0; background: rgba(28,25,23,0.6); backdrop-filter: blur(8px);
+  opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 1000;
+}
+.web-mobile-backdrop.web-open { opacity: 1; pointer-events: auto; }
+
+.web-mobile-menu {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 320px; max-width: 85vw;
+  background: linear-gradient(180deg, var(--c-stone-900), var(--c-stone-950));
+  transform: translateX(100%); transition: transform 0.3s ease-out;
+  overflow-y: auto; overscroll-behavior: contain; z-index: 1001;
+  padding-bottom: env(safe-area-inset-bottom, 24px);
+}
+.web-mobile-menu.web-open { transform: translateX(0); }
+
+.web-mobile-menu-header {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.75rem 1rem; background: rgba(28,25,23,0.85); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--c-stone-800);
+}
+.web-mobile-menu-header span {
+  font-size: 0.75rem; font-weight: 700; color: var(--c-stone-500);
+  text-transform: uppercase; letter-spacing: 0.15em;
+}
+.web-mobile-close {
+  display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: 10px; border: none; background: none;
+  color: var(--c-stone-500); cursor: pointer; transition: all 0.2s;
+}
+.web-mobile-close:hover { color: var(--c-stone-100); background: var(--c-stone-800); }
+.web-mobile-close svg { width: 20px; height: 20px; }
+
+/* Mobile account card */
+.web-mobile-account {
+  margin: 1rem; border-radius: 16px;
+  background: linear-gradient(135deg, var(--c-amber-50), rgba(254,243,199,0.5));
+  border: 1px solid rgba(251,191,36,0.2); overflow: hidden;
+}
+.dark .web-mobile-account { background: var(--c-stone-800); border-color: var(--c-stone-700); }
+.web-mobile-account a, .web-mobile-account > div { display: flex; align-items: center; gap: 1rem; padding: 1rem; }
+.web-mobile-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--c-amber-200); display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 1.125rem; font-weight: 700; color: var(--c-amber-700);
+}
+.dark .web-mobile-avatar { background: rgba(120,53,15,0.5); color: var(--c-amber-300); }
+.web-mobile-auth-btns { display: flex; gap: 0.5rem; }
+.web-mobile-auth-btn {
+  flex: 1; padding: 0.75rem 1rem; font-size: 0.875rem; font-weight: 700;
+  border-radius: 10px; text-align: center; text-decoration: none; transition: all 0.2s;
+  min-height: 44px; display: flex; align-items: center; justify-content: center;
+}
+.web-mobile-auth-btn--primary { background: var(--c-stone-900); color: #fff; }
+.dark .web-mobile-auth-btn--primary { background: var(--c-amber-600); color: var(--c-stone-950); }
+.web-mobile-auth-btn--secondary { background: #fff; color: var(--c-stone-900); border: 1px solid var(--c-stone-200); }
+.dark .web-mobile-auth-btn--secondary { background: var(--c-stone-700); color: var(--c-stone-100); border-color: var(--c-stone-600); }
+
+/* Mobile category chips */
+.web-mobile-categories { padding: 0 1rem; margin-bottom: 1.25rem; }
+.web-mobile-categories-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+.web-mobile-categories-header p { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.18em; color: var(--c-stone-500); }
+.web-mobile-categories-header a { font-size: 10px; font-weight: 600; color: var(--c-amber-600); text-decoration: none; }
+.web-mobile-chips { display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 4px; -ms-overflow-style: none; scrollbar-width: none; }
+.web-mobile-chips::-webkit-scrollbar { display: none; }
+.web-mobile-chip {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  min-width: 72px; padding: 12px; background: rgba(41,37,36,0.6);
+  border-radius: 12px; border: 1px solid rgba(68,64,60,0.5);
+  text-decoration: none; transition: all 0.2s; flex-shrink: 0;
+}
+.web-mobile-chip:hover { border-color: rgba(251,191,36,0.3); }
+.web-mobile-chip-icon {
+  width: 36px; height: 36px; background: var(--c-stone-700); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.web-mobile-chip-icon svg { width: 16px; height: 16px; color: var(--c-stone-400); }
+.web-mobile-chip span { font-size: 10px; font-weight: 500; color: var(--c-stone-400); white-space: nowrap; }
+
+/* Mobile nav links */
+.web-mobile-nav { padding: 0 1rem; margin-bottom: 0.5rem; }
+.web-mobile-nav-title { padding: 0 0.25rem; margin-bottom: 0.625rem; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.18em; color: var(--c-stone-500); }
+.web-mobile-nav-list { display: flex; flex-direction: column; gap: 2px; }
+.web-mobile-nav-link {
+  display: flex; align-items: center; gap: 0.875rem; padding: 0.875rem 1rem;
+  font-size: 0.875rem; font-weight: 500; color: var(--c-stone-300);
+  text-decoration: none; border-radius: 12px; transition: all 0.2s;
+  border-left: 2px solid transparent;
+}
+.web-mobile-nav-link:hover { background: var(--c-stone-800); padding-left: 1.25rem; }
+.web-mobile-nav-link--active {
+  background: rgba(245,158,11,0.15); color: var(--c-amber-400); font-weight: 600;
+  border-left-color: var(--c-amber-500);
+}
+.web-mobile-nav-link svg { width: 20px; height: 20px; flex-shrink: 0; }
+.web-mobile-nav-badge {
+  margin-left: auto; font-size: 10px; padding: 2px 8px; border-radius: 9999px;
+}
+.web-mobile-nav-badge--amber { background: var(--c-amber-900); color: var(--c-amber-400); }
+.web-mobile-nav-badge--neutral { background: var(--c-stone-800); color: var(--c-stone-500); }
+
+/* Mobile quick actions */
+.web-mobile-quick { padding: 0 1rem; margin-bottom: 0.5rem; }
+.web-mobile-quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.625rem; }
+.web-mobile-quick-card {
+  display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1rem;
+  background: rgba(41,37,36,0.6); border-radius: 12px;
+  border: 1px solid rgba(68,64,60,0.5); text-decoration: none; transition: all 0.2s;
+}
+.web-mobile-quick-card:hover { border-color: rgba(251,191,36,0.3); transform: translateY(-2px); }
+.web-mobile-quick-card-icon {
+  width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.web-mobile-quick-card-icon--amber { background: rgba(251,191,36,0.2); }
+.web-mobile-quick-card-icon--rose { background: rgba(244,63,94,0.15); }
+.web-mobile-quick-card-icon svg { width: 20px; height: 20px; }
+.web-mobile-quick-card-icon--amber svg { color: var(--c-amber-500); }
+.web-mobile-quick-card-icon--rose svg { color: #f43f5e; }
+.web-mobile-quick-card span { font-size: 0.75rem; font-weight: 600; color: var(--c-stone-200); }
+.web-mobile-quick-card small { font-size: 10px; color: var(--c-stone-500); display: block; margin-top: 1px; }
+
+/* Mobile promo & bottom actions */
+.web-mobile-promo {
+  margin: 0.75rem 1rem 1rem; padding: 0.75rem;
+  background: linear-gradient(90deg, var(--c-amber-50), #fff7ed); border-radius: 12px;
+  border: 1px solid rgba(251,191,36,0.2);
+}
+.dark .web-mobile-promo { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.2); }
+.web-mobile-bottom { padding: 0 1rem 1.5rem; border-top: 1px solid var(--c-stone-800); padding-top: 1rem; }
+.web-mobile-bottom-link {
+  display: flex; align-items: center; gap: 0.875rem; padding: 0.75rem 1rem;
+  font-size: 0.875rem; font-weight: 500; color: var(--c-stone-400);
+  text-decoration: none; border-radius: 12px; transition: all 0.2s;
+}
+.web-mobile-bottom-link:hover { background: rgba(245,244,244,0.05); }
+.web-mobile-bottom-link svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* Hamburger badge */
+.web-hamburger-badge {
+  position: absolute; top: -2px; right: -2px; min-width: 16px; height: 16px;
+  padding: 0 4px; background: var(--c-amber-500); color: #fff;
+  font-size: 7px; font-weight: 700; border-radius: 9999px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Back to top */
+.web-back-to-top {
+  position: fixed; bottom: 12px; right: 32px;
+  width: 48px; height: 48px; border-radius: 16px; border: none;
+  background: var(--c-stone-900); color: #fff;
+  box-shadow: 0 4px 16px rgba(28,25,23,0.25);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transform: translateY(16px); pointer-events: none;
+  transition: all 0.3s; cursor: pointer; z-index: 50;
+}
+.dark .web-back-to-top { background: var(--c-amber-600); color: var(--c-stone-950); }
+.web-back-to-top.web-visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.web-back-to-top:hover { transform: scale(1.1); }
+.web-back-to-top svg { width: 20px; height: 20px; }
+
+/* ===== Footer ===== */
+.web-footer {
+  background: var(--c-stone-900); color: var(--c-stone-400);
+  position: relative; overflow: hidden;
+}
+.web-footer::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245,158,11,0.3), transparent);
+}
+.web-footer-inner { position: relative; padding: 2rem 1rem; }
+@media (min-width: 640px) { .web-footer-inner { padding: 3rem 1.5rem; } }
+@media (min-width: 1024px) { .web-footer-inner { padding: 4rem 2rem; } }
+
+.web-footer-newsletter {
+  margin-bottom: 2rem; padding: 1rem; background: rgba(255,255,255,0.05);
+  border-radius: 16px; border: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(8px);
+}
+@media (min-width: 640px) { .web-footer-newsletter { padding: 1.5rem; } }
+@media (min-width: 768px) { .web-footer-newsletter { padding: 2rem; } }
+.web-footer-newsletter-inner { max-width: 36rem; margin: 0 auto; text-align: center; }
+.web-footer-newsletter h3 { color: #fff; font-size: 0.875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 0.5rem; }
+.web-footer-newsletter p { color: var(--c-stone-400); font-size: 0.875rem; margin-bottom: 1.25rem; }
+.web-footer-newsletter-form { display: flex; flex-direction: column; gap: 0.75rem; }
+@media (min-width: 640px) { .web-footer-newsletter-form { flex-direction: row; } }
+.web-footer-newsletter-input {
+  flex: 1; padding: 0.75rem 1rem; background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
+  font-size: 0.875rem; color: #fff; outline: none; min-height: 44px;
+}
+.web-footer-newsletter-input::placeholder { color: var(--c-stone-500); }
+.web-footer-newsletter-input:focus { box-shadow: 0 0 0 2px rgba(245,158,11,0.4); border-color: var(--c-amber-500); }
+.web-footer-newsletter-btn {
+  padding: 0.75rem 1.5rem; background: var(--c-amber-500); color: var(--c-stone-950);
+  font-size: 0.875rem; font-weight: 700; border-radius: 12px; border: none;
+  cursor: pointer; white-space: nowrap; min-height: 44px;
+  box-shadow: 0 4px 12px rgba(245,158,11,0.25); transition: background 0.2s;
+}
+.web-footer-newsletter-btn:hover { background: var(--c-amber-400); }
+.web-footer-newsletter-msg { font-size: 0.75rem; margin-top: 0.75rem; }
+
+.web-footer-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem;
+}
+@media (min-width: 640px) { .web-footer-grid { grid-template-columns: repeat(4, 1fr); gap: 1.5rem; } }
+@media (min-width: 1024px) { .web-footer-grid { gap: 3rem; } }
+.web-footer-brand { grid-column: 1 / -1; }
+@media (min-width: 640px) { .web-footer-brand { grid-column: auto; } }
+.web-footer-brand-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+.web-footer-brand-box {
+  width: 40px; height: 40px; background: rgba(255,255,255,0.08);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(8px);
+}
+.web-footer-brand-box span { color: #fff; font-size: 0.875rem; font-weight: 900; }
+.web-footer-brand-name { color: #fff; font-weight: 700; }
+.web-footer-brand-tagline { display: block; font-size: 0.75rem; color: rgba(251,191,36,0.8); margin-top: -2px; }
+.web-footer-brand p { font-size: 0.875rem; color: var(--c-stone-400); line-height: 1.6; max-width: 24rem; }
+.web-footer-social { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+.web-footer-social-icon {
+  width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.04);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--c-stone-400); transition: all 0.2s; cursor: pointer;
+}
+.web-footer-social-icon:hover { background: rgba(255,255,255,0.08); color: var(--c-amber-400); }
+.web-footer-social-icon svg { width: 16px; height: 16px; }
+.web-footer-col h4 {
+  color: #fff; font-size: 0.75rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 1.25rem;
+}
+.web-footer-col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+.web-footer-col a { font-size: 0.875rem; color: var(--c-stone-400); text-decoration: none; transition: color 0.2s; }
+.web-footer-col a:hover { color: #fff; }
+.web-footer-bottom {
+  margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.04);
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  gap: 0.75rem; font-size: 0.875rem;
+}
+@media (min-width: 768px) { .web-footer-bottom { flex-direction: row; } }
+.web-footer-bottom p { color: var(--c-stone-500); }
+.web-footer-bottom-links { display: flex; align-items: center; gap: 1.5rem; }
+.web-footer-bottom-links a { font-size: 0.75rem; color: var(--c-stone-500); text-decoration: none; transition: color 0.2s; }
+.web-footer-bottom-links a:hover { color: var(--c-stone-300); }
+.web-footer-bottom-links a--highlight { color: var(--c-amber-400); font-weight: 700; }
+.web-footer-bottom-links a--highlight:hover { color: var(--c-amber-300); }
+</style>
+
 <!-- Navigation -->
-<header class="fixed top-0 inset-x-0" style="z-index: var(--z-header);">
-    <!-- Inline Search Overlay (phone/tablet, slides down) -->        <div id="search-overlay" class="hidden absolute top-full inset-x-0 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border-b border-stone-200 dark:border-stone-700 shadow-lg transition-all duration-200">
-            <div class="px-3 sm:px-4 py-3">
-                <div class="flex items-center gap-2 sm:gap-3">
-                    <div class="flex-1 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 bg-stone-100 dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 focus-within:border-amber-300 dark:focus-within:border-amber-700/50 focus-within:ring-2 focus-within:ring-amber-500/20 transition-all">
-                    <svg class="w-5 h-5 flex-shrink-0 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    <input id="search-overlay-input" type="text" placeholder="Search products..." autocomplete="off" class="flex-1 bg-transparent text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none"/>
-                    <kbd class="hidden sm:inline-flex px-1.5 py-0.5 text-[10px] font-mono text-stone-400 bg-stone-200 dark:bg-stone-700 rounded">esc</kbd>
-                </div>                    <button id="search-overlay-close" class="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-500 hover:text-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-all" aria-label="Close search">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-            <div id="search-overlay-suggestions" class="mt-2 hidden bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 shadow-xl overflow-hidden"></div>
-        </div>
+<header class="web-header">
+  <!-- Search Overlay (phone/tablet) -->
+  <div id="search-overlay" class="web-search-overlay">
+    <div class="web-search-overlay-input-wrap">
+      <svg style="width:20px;height:20px;flex-shrink:0;color:var(--c-stone-400);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      </svg>
+      <input id="search-overlay-input" type="text" placeholder="Search products..." autocomplete="off" class="web-search-overlay-input"/>
+      <button id="search-overlay-close" class="web-search-overlay-close" aria-label="Close search">
+        <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
     </div>
-    <nav class="w-full">
-        <div class="relative glass-strong shadow-glass px-3 sm:px-5 md:px-6 lg:px-8">
-            <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/15 to-transparent"></div>
-            <div class="flex items-center justify-between h-14 md:h-16 lg:h-[72px]">
-                <!-- Logo -->
-                <a href="/shop" class="flex items-center gap-2 md:gap-3 group min-h-[44px] min-w-[44px]">
-                    <div class="w-9 h-9 md:w-10 md:h-10 lg:w-11 lg:h-11 bg-gradient-to-br from-stone-900 to-stone-700 dark:from-amber-600 dark:to-amber-700 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-amber-500/20 transition-shadow duration-300 relative overflow-hidden flex-shrink-0">
-                        <div class="absolute inset-0 bg-gradient-to-br from-amber-400/0 to-amber-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <span class="text-white text-sm md:text-base lg:text-lg font-black tracking-tight relative z-10">FS</span>
-                    </div>
-                    <div class="hidden sm:block">
-                        <span class="text-sm md:text-base lg:text-lg font-bold text-stone-900 font-display dark:text-stone-100 truncate max-w-[120px] md:max-w-[200px] lg:max-w-none">{{ settings.site_name|default('ForgeStore') }}</span>
-                        <span class="hidden lg:block text-[9px] lg:text-[10px] font-medium text-amber-600 uppercase tracking-[0.2em] -mt-0.5 dark:text-amber-400">{{ settings.site_tagline|default('Your One-Stop Marketplace') }}</span>
-                    </div>
-                </a>
+    <div id="search-overlay-suggestions" class="web-search-suggestions" style="display:none;"></div>
+  </div>
 
-                <!-- Desktop Nav (visible lg+) -->
-                <nav class="hidden lg:flex items-center gap-0.5 xl:gap-1">
-                    <a href="/shop" class="nav-link px-2.5 xl:px-4 py-2 text-xs xl:text-sm whitespace-nowrap {% if request.url.path == '/shop' %}active{% endif %}">Home</a>
-                    <a href="/shop/marketplace" class="nav-link px-2.5 xl:px-4 py-2 text-xs xl:text-sm whitespace-nowrap {% if request.url.path.startswith('/shop/marketplace') %}active{% endif %}">Marketplace</a>
-                    <a href="/shop/shops" class="nav-link px-2.5 xl:px-4 py-2 text-xs xl:text-sm whitespace-nowrap {% if request.url.path.startswith('/shop/shops') %}active{% endif %}">Vendors</a>
-                    <a href="/shop/wishlist" class="nav-link px-2.5 xl:px-4 py-2 text-xs xl:text-sm whitespace-nowrap {% if request.url.path.startswith('/shop/wishlist') %}active{% endif %}">Wishlist</a>
-                </nav>
+  <div class="web-header-inner">
+    <!-- Logo -->
+    <a href="/shop" class="web-logo">
+      <div class="web-logo-box"><span>FS</span></div>
+      <div>
+        <span class="web-logo-text">{{ settings.site_name|default('ForgeStore') }}</span>
+        <span class="web-logo-tagline">{{ settings.site_tagline|default('Your One-Stop Marketplace') }}</span>
+      </div>
+    </a>
 
-                <!-- Desktop Inline Search (visible lg+) -->
-                <div class="hidden lg:relative lg:block flex-1 max-w-[200px] xl:max-w-xs mx-2 xl:mx-3" id="desktop-search-wrapper">
-                    <div class="relative">
-                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                        <input id="desktop-search-input" type="text" placeholder="Search products..." autocomplete="off" class="w-full pl-9 pr-7 py-2 bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-xs text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all" onkeydown="if(event.key==='Enter' && this.value.trim()) window.location.href='/shop/marketplace?q='+encodeURIComponent(this.value.trim())"/>
-                        <kbd class="absolute right-2.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[9px] font-mono text-stone-400 bg-stone-200 dark:bg-stone-700 rounded hidden xl:inline-flex">/</kbd>
-                    </div>
-                    <div id="desktop-search-suggestions" class="hidden absolute top-full mt-1 left-0 right-0 bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 shadow-xl shadow-stone-900/10 z-50 overflow-hidden"></div>
-                </div>
-
-                <!-- Actions -->
-                <div class="flex items-center gap-1 sm:gap-1.5">
-                    <!-- Search (phone/tablet only, hidden on desktop) -->
-                    <button id="search-toggle" class="lg:hidden p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 transition-colors duration-200 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800" aria-label="Search">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                    </button>
-
-                    <!-- Cart -->
-                    <a href="/shop/cart" class="relative p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 transition-colors duration-200 group rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800" aria-label="Shopping Cart">
-                        <svg class="w-5 h-5 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                        </svg>
-                        <span class="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 bg-amber-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center cart-count hidden shadow-sm ring-2 ring-white dark:ring-stone-800">0</span>
-                    </a>
-
-                    <!-- Global Logout (visible when any session exists) -->
-                    <button onclick="handleGlobalLogout()" id="global-logout-btn" class="hidden p-2.5 min-w-[44px] min-h-[44px] items-center justify-center text-red-500 hover:text-red-600 transition-colors duration-200 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20" aria-label="Sign Out" title="Sign Out">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                        </svg>
-                    </button>
-
-                    <!-- Account (md+) -->
-                    <a href="{{ '/shop/account' if user else '/shop/login' }}" class="hidden md:flex p-2.5 min-w-[44px] min-h-[44px] items-center justify-center text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 transition-colors duration-200 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800" aria-label="My Account">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                        </svg>
-                    </a>
-
-                    <!-- Dark Mode Toggle (md+) -->
-                    <button id="theme-toggle" class="hidden md:flex p-2.5 min-w-[44px] min-h-[44px] items-center justify-center text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 transition-colors duration-200 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 relative" aria-label="Toggle dark mode">
-                        <svg class="theme-toggle-icon sun w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-                        </svg>
-                        <svg class="theme-toggle-icon moon w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                        </svg>
-                    </button>
-
-                    <!-- Mobile menu toggle -->
-                    <button id="mobile-menu-toggle" onclick="toggleMobileMenu(event)" class="lg:hidden p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 transition-colors rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 relative" aria-label="Toggle menu" aria-expanded="false">
-                        <svg id="menu-icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/>
-                        </svg>
-                        <svg id="menu-icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                        <span class="cart-count-mobile hidden absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-0.5 bg-amber-500 text-white text-[7px] font-bold rounded-full flex items-center justify-center ring-2 ring-white dark:ring-stone-800">0</span>
-                    </button>
-                </div>
-            </div>
-        </div>
+    <!-- Desktop Nav -->
+    <nav class="web-nav">
+      <a href="/shop" class="web-nav-link {% if request.url.path == '/shop' %}web-nav-link--active{% endif %}">Home</a>
+      <a href="/shop/marketplace" class="web-nav-link {% if request.url.path.startswith('/shop/marketplace') %}web-nav-link--active{% endif %}">Marketplace</a>
+      <a href="/shop/shops" class="web-nav-link {% if request.url.path.startswith('/shop/shops') %}web-nav-link--active{% endif %}">Vendors</a>
+      <a href="/shop/wishlist" class="web-nav-link {% if request.url.path.startswith('/shop/wishlist') %}web-nav-link--active{% endif %}">Wishlist</a>
     </nav>
+
+    <!-- Desktop Search -->
+    <div class="web-desktop-search" id="desktop-search-wrapper">
+      <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      </svg>
+      <input id="desktop-search-input" type="text" placeholder="Search products..." autocomplete="off" onkeydown="if(event.key==='Enter' && this.value.trim()) window.location.href='/shop/marketplace?q='+encodeURIComponent(this.value.trim())"/>
+      <kbd class="search-kbd">/</kbd>
+      <div id="desktop-search-suggestions" class="web-search-suggestions" style="display:none;position:absolute;top:100%;margin-top:4px;left:0;right:0;"></div>
+    </div>
+
+    <!-- Actions -->
+    <div class="web-actions">
+      <!-- Search (phone/tablet) -->
+      <button id="search-toggle" class="web-action-btn" style="display:flex;" aria-label="Search">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+      </button>
+      <style>@media(min-width:1024px){#search-toggle{display:none!important;}}</style>
+
+      <!-- Cart -->
+      <a href="/shop/cart" class="web-action-link" aria-label="Shopping Cart">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+        </svg>
+        <span class="web-badge cart-count" style="display:none;">0</span>
+      </a>
+
+      <!-- Logout -->
+      <button onclick="handleGlobalLogout()" id="global-logout-btn" class="web-action-btn web-action-btn--hidden" style="color:var(--c-red-500,#ef4444);" aria-label="Sign Out">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+        </svg>
+      </button>
+
+      <!-- Account (md+) -->
+      <a href="{{ '/shop/account' if user else '/shop/login' }}" class="web-action-link web-action-link--hidden" aria-label="My Account">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+        </svg>
+      </a>
+
+      <!-- Theme toggle (md+) -->
+      <button id="theme-toggle" class="web-action-btn web-action-btn--hidden" aria-label="Toggle dark mode">
+        <svg class="dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+        </svg>
+        <svg class="hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+      </button>
+
+      <!-- Mobile menu toggle -->
+      <button id="mobile-menu-toggle" onclick="toggleMobileMenu(event)" class="web-action-btn" aria-label="Toggle menu" aria-expanded="false" style="position:relative;">
+        <svg id="menu-icon-open" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+        <svg id="menu-icon-close" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:none;">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        <span class="web-hamburger-badge cart-count-mobile" style="display:none;">0</span>
+      </button>
+    </div>
+  </div>
 </header>
 
-<!-- ===== MOBILE MENU (fullscreen overlay) ===== -->
-<!-- Backdrop -->
-<div id="mobile-backdrop" class="fixed inset-0 bg-stone-900/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-300 pointer-events-none" style="z-index: var(--z-mobile-backdrop);"></div>
+<!-- Mobile Menu Backdrop -->
+<div id="mobile-backdrop" class="web-mobile-backdrop" onclick="closeMobileMenu()"></div>
 
-<div id="mobile-menu" class="fixed inset-y-0 right-0 w-80 max-w-[85vw] pointer-events-none bg-gradient-to-b from-white to-stone-50/90 dark:from-stone-900 dark:to-stone-950 shadow-2xl overflow-y-auto overscroll-contain translate-x-full transition-transform duration-300 ease-out" style="z-index: var(--z-mobile-menu); padding-bottom: env(safe-area-inset-bottom, 24px);">
-    <!-- Close button -->
-    <div class="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-white/80 dark:from-stone-900/80 backdrop-blur-md border-b border-stone-100 dark:border-stone-800 pointer-events-auto">
-        <span class="text-xs font-bold text-stone-500 uppercase tracking-[0.15em]">Menu</span>
-        <button onclick="closeMobileMenu()" class="p-2 -mr-1 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-all duration-200" aria-label="Close menu">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-        </button>
-    </div>
-    <!-- Content wrapper with click-through disabled so backdrop can be clicked -->
-    <div class="pointer-events-auto">
-    
-    <!-- Account Section -->
-    <div class="mx-4 mb-4 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-stone-800 dark:to-stone-800/50 border border-amber-200/50 dark:border-stone-700 overflow-hidden shadow-sm">
-        {% if user %}
-        <a href="/shop/account" class="flex items-center gap-4 p-4">
-            <div class="w-12 h-12 bg-amber-200 dark:bg-amber-900/50 rounded-full flex items-center justify-center flex-shrink-0 ring-2 ring-amber-500/20 shadow-inner">
-                <span class="text-lg font-bold text-amber-700 dark:text-amber-300">{{ user.name[0]|default('U')|upper }}</span>
-            </div>
-            <div class="min-w-0 flex-1">
-                <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">{{ user.name|default('Customer') }}</p>
-                <p class="text-xs text-stone-500 dark:text-stone-400 truncate">{{ user.email }}</p>
-                <span class="inline-flex items-center gap-1 mt-1 text-[10px] font-medium text-amber-700 dark:text-amber-400">
-                    View My Account
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </span>
-            </div>
-        </a>
-        {% else %}
-        <div class="p-4">
-            <div class="flex items-center gap-3 mb-3">
-                <div class="w-12 h-12 bg-white dark:bg-stone-700 rounded-full flex items-center justify-center flex-shrink-0 ring-2 ring-amber-500/20 shadow-inner">
-                    <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">Welcome!</p>
-                    <p class="text-xs text-stone-500 dark:text-stone-400">Sign in for faster checkout</p>
-                </div>
-            </div>
-            <div class="flex gap-2">
-                <a href="/shop/login" class="flex-1 px-4 py-3 bg-stone-900 hover:bg-stone-800 dark:bg-amber-600 dark:hover:bg-amber-500 dark:text-stone-950 text-white text-sm font-bold rounded-xl text-center transition-all shadow-sm active:scale-[0.97]">Sign In</a>
-                <a href="/shop/signup" class="flex-1 px-4 py-3 bg-white hover:bg-stone-50 dark:bg-stone-700 dark:hover:bg-stone-600 text-stone-900 dark:text-stone-100 text-sm font-bold rounded-xl border border-stone-200 dark:border-stone-600 text-center transition-all active:scale-[0.97]">Register</a>
-            </div>
-        </div>
-        {% endif %}
-    </div>
+<!-- Mobile Menu -->
+<div id="mobile-menu" class="web-mobile-menu">
+  <div class="web-mobile-menu-header">
+    <span>Menu</span>
+    <button onclick="closeMobileMenu()" class="web-mobile-close" aria-label="Close menu">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
 
-    <!-- Browse Categories (dynamic) -->
-    <div class="px-4 mb-5">
-        <div class="flex items-center justify-between mb-3">
-            <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-stone-400 dark:text-stone-500">Shop by Category</p>
-            <a href="/shop/marketplace" class="text-[10px] font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 transition-colors">See All</a>
+  <!-- Account -->
+  <div class="web-mobile-account">
+    {% if user %}
+    <a href="/shop/account">
+      <div class="web-mobile-avatar">{{ user.name[0]|default('U')|upper }}</div>
+      <div style="min-width:0;flex:1;">
+        <p style="font-size:0.875rem;font-weight:600;color:var(--c-stone-100);">{{ user.name|default('Customer') }}</p>
+        <p style="font-size:0.75rem;color:var(--c-stone-400);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ user.email }}</p>
+        <span style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:10px;font-weight:500;color:var(--c-amber-400);">
+          View My Account
+          <svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </span>
+      </div>
+    </a>
+    {% else %}
+    <div>
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
+        <div style="width:48px;height:48px;background:var(--c-stone-700);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg style="width:24px;height:24px;color:var(--c-amber-400);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
         </div>
-        {% if categories %}
-        <div class="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
-            {% set icon_map = {
-                'jewelry': 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01',
-                'home': 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
-                'art': 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z',
-                'ceramic': 'M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z',
-                'textile': 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01',
-                'cloth': 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z',
-                'accessory': 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4',
-                'gift': 'M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6M20 12V8a2 2 0 00-2-2H8a2 2 0 00-2 2v4m14-4h4M4 12H2m18 0h2M5.25 8.75A2.25 2.25 0 014 6.5a2.25 2.25 0 014.5 0v.75m-3.25 1.5h15m0 0A2.25 2.25 0 0020 6.5a2.25 2.25 0 00-4.5 0v.75',
-                'electronics': 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
-                'food': 'M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7',
-                'book': 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
-                'default': 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10',
-            } %}
-            {% for cat in categories[:10] %}
-            {% set icon = icon_map.get(cat.slug.split('-')[0]|lower, icon_map.get(cat.name|lower, icon_map['default'])) %}
-            <a href="/shop/marketplace?category={{ cat.slug }}" class="flex flex-col items-center gap-1.5 min-w-[72px] py-3 px-3 bg-white dark:bg-stone-800/60 rounded-xl border border-stone-200 dark:border-stone-700/50 hover:border-amber-200 dark:hover:border-amber-700/50 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200 group active:scale-[0.97]">
-                <div class="w-9 h-9 bg-stone-100 dark:bg-stone-700 rounded-lg flex items-center justify-center group-hover:bg-amber-50 dark:group-hover:bg-amber-900/20 transition-colors">
-                    <svg class="w-4 h-4 text-stone-500 dark:text-stone-400 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ icon }}"/>
-                    </svg>
-                </div>
-                <span class="text-[10px] font-medium text-stone-600 dark:text-stone-400 group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors whitespace-nowrap">{{ cat.name }}</span>
-            </a>
-            {% endfor %}
-            {% if categories|length > 10 %}
-            <a href="/shop/marketplace" class="flex flex-col items-center justify-center gap-1.5 min-w-[72px] py-3 px-3 bg-stone-50 dark:bg-stone-800/40 rounded-xl border border-dashed border-stone-200 dark:border-stone-700/50 hover:border-amber-200 dark:hover:border-amber-700/50 transition-all duration-200 group">
-                <div class="w-9 h-9 bg-stone-100 dark:bg-stone-700 rounded-lg flex items-center justify-center group-hover:bg-amber-50 dark:group-hover:bg-amber-900/20 transition-colors">
-                    <svg class="w-4 h-4 text-stone-400 dark:text-stone-500 group-hover:text-amber-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/>
-                    </svg>
-                </div>
-                <span class="text-[10px] font-medium text-stone-400 dark:text-stone-500 group-hover:text-amber-600 transition-colors">More</span>
-            </a>
-            {% endif %}
+        <div>
+          <p style="font-size:0.875rem;font-weight:600;color:var(--c-stone-100);">Welcome!</p>
+          <p style="font-size:0.75rem;color:var(--c-stone-400);">Sign in for faster checkout</p>
         </div>
-        {% else %}
-        <div class="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
-            {% for i in range(4) %}
-            <div class="flex flex-col items-center gap-1.5 min-w-[72px] py-3 px-3 bg-white dark:bg-stone-800/60 rounded-xl border border-stone-200 dark:border-stone-700/50">
-                <div class="w-9 h-9 bg-stone-100 dark:bg-stone-700 rounded-lg skeleton-shimmer"></div>
-                <span class="text-[10px] text-stone-300 dark:text-stone-600">Loading...</span>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
+      </div>
+      <div class="web-mobile-auth-btns">
+        <a href="/shop/login" class="web-mobile-auth-btn web-mobile-auth-btn--primary">Sign In</a>
+        <a href="/shop/signup" class="web-mobile-auth-btn web-mobile-auth-btn--secondary">Register</a>
+      </div>
     </div>
+    {% endif %}
+  </div>
 
-    <!-- Main Navigation -->
-    <div class="px-4 mb-2">
-        <p class="px-1 mb-2.5 text-[11px] font-bold uppercase tracking-[0.18em] text-stone-400 dark:text-stone-500">Browse</p>
-        <div class="space-y-0.5">
-            <a href="/shop" class="flex items-center gap-3.5 px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 {% if request.url.path == '/shop' %}bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 shadow-sm border-l-2 border-amber-500{% else %}text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 hover:pl-5 border-l-2 border-transparent{% endif %}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                </svg>
-                <span>Home</span>
-                <span class="ml-auto text-[10px] text-stone-400 dark:text-stone-500 bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded-full">Discover</span>
-            </a>
-            <a href="/shop/marketplace" class="flex items-center gap-3.5 px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 {% if request.url.path.startswith('/shop/marketplace') %}bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 shadow-sm border-l-2 border-amber-500{% else %}text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 hover:pl-5 border-l-2 border-transparent{% endif %}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                </svg>
-                <span>Marketplace</span>
-                <span class="ml-auto text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-full">All Items</span>
-            </a>
-            <a href="/shop/shops" class="flex items-center gap-3.5 px-4 py-3.5 text-sm font-medium rounded-xl transition-all duration-200 {% if request.url.path.startswith('/shop/shops') %}bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 shadow-sm border-l-2 border-amber-500{% else %}text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 hover:pl-5 border-l-2 border-transparent{% endif %}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                </svg>
-                <span>Vendor Shops</span>
-                <span class="ml-auto text-[10px] text-stone-400 dark:text-stone-500 bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded-full">Shops</span>
-            </a>
-        </div>
+  <!-- Categories -->
+  <div class="web-mobile-categories">
+    <div class="web-mobile-categories-header">
+      <p>Shop by Category</p>
+      <a href="/shop/marketplace">See All</a>
     </div>
-
-    <!-- Quick Actions grid -->
-    <div class="px-4 mb-2">
-        <p class="px-1 mb-2.5 text-[11px] font-bold uppercase tracking-[0.18em] text-stone-400 dark:text-stone-500">Quick Actions</p>
-        <div class="grid grid-cols-2 gap-2.5">
-            <a href="/shop/cart" class="flex items-center gap-3 px-4 py-3.5 bg-white dark:bg-stone-800/60 rounded-xl border border-stone-200 dark:border-stone-700/50 hover:border-amber-200 dark:hover:border-amber-700/50 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200 group active:scale-[0.98]">
-                <div class="w-9 h-9 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-amber-200 dark:group-hover:bg-amber-900/40 transition-colors">
-                    <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                    </svg>
-                </div>
-                <div>
-                    <span class="text-xs font-semibold text-stone-800 dark:text-stone-200 block">Shopping Cart</span>
-                    <span class="cart-count-mobile-inline text-[10px] text-stone-500 dark:text-stone-400">0 items</span>
-                </div>
-            </a>
-            <a href="/shop/wishlist" class="flex items-center gap-3 px-4 py-3.5 bg-white dark:bg-stone-800/60 rounded-xl border border-stone-200 dark:border-stone-700/50 hover:border-rose-200 dark:hover:border-rose-700/50 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200 group active:scale-[0.98]">
-                <div class="w-9 h-9 bg-rose-50 dark:bg-rose-900/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-rose-100 dark:group-hover:bg-rose-900/30 transition-colors">
-                    <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-                    </svg>
-                </div>
-                <div>
-                    <span class="text-xs font-semibold text-stone-800 dark:text-stone-200 block">Wishlist</span>
-                    <span class="text-[10px] text-stone-500 dark:text-stone-400">Saved items</span>
-                </div>
-            </a>
+    {% if categories %}
+    <div class="web-mobile-chips">
+      {% set icon_map = {
+        'jewelry': 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01',
+        'home': 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
+        'art': 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z',
+        'ceramic': 'M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z',
+        'textile': 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01',
+        'cloth': 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z',
+        'accessory': 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4',
+        'gift': 'M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6M20 12V8a2 2 0 00-2-2H8a2 2 0 00-2 2v4m14-4h4M4 12H2m18 0h2M5.25 8.75A2.25 2.25 0 014 6.5a2.25 2.25 0 014.5 0v.75m-3.25 1.5h15m0 0A2.25 2.25 0 0020 6.5a2.25 2.25 0 00-4.5 0v.75',
+        'electronics': 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+        'food': 'M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7',
+        'book': 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
+        'default': 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10',
+      } %}
+      {% for cat in categories[:10] %}
+      {% set icon = icon_map.get(cat.slug.split('-')[0]|lower, icon_map.get(cat.name|lower, icon_map['default'])) %}
+      <a href="/shop/marketplace?category={{ cat.slug }}" class="web-mobile-chip">
+        <div class="web-mobile-chip-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ icon }}"/>
+          </svg>
         </div>
+        <span>{{ cat.name }}</span>
+      </a>
+      {% endfor %}
+      {% if categories|length > 10 %}
+      <a href="/shop/marketplace" class="web-mobile-chip" style="border-style:dashed;">
+        <div class="web-mobile-chip-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/>
+          </svg>
+        </div>
+        <span>More</span>
+      </a>
+      {% endif %}
     </div>
-
-    <!-- Bottom actions with promotion banner -->
-    <div class="px-4 mt-3 mb-6">
-        <!-- Free shipping promo banner -->
-        <div class="mb-4 p-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/10 rounded-xl border border-amber-200/50 dark:border-amber-700/30">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-amber-100 dark:bg-amber-800/40 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-[11px] font-bold text-stone-800 dark:text-stone-200">Free Shipping</p>
-                    <p class="text-[10px] text-stone-500 dark:text-stone-400">On orders over ₦50,000</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="border-t border-stone-100 dark:border-stone-800 pt-4 space-y-0.5">
-            {% if user %}
-            <a href="/shop/account" class="flex items-center gap-3.5 px-4 py-3 text-sm font-medium text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800/50 rounded-xl transition-all">
-                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                Account Settings
-            </a>
-            <a href="/shop/logout" class="flex items-center gap-3.5 px-4 py-3 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all">
-                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                </svg>
-                Sign Out
-            </a>
-            {% else %}
-            <a href="/shop/signup" class="flex items-center gap-3.5 px-4 py-3 text-sm font-medium text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800/50 rounded-xl transition-all">
-                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                </svg>
-                Create Account
-            </a>
-            {% endif %}
-            <div class="pt-1 pb-2">
-                <button id="theme-toggle-mobile" aria-label="Toggle dark mode" class="flex items-center gap-3.5 w-full px-4 py-3 text-sm font-medium text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800/50 rounded-xl transition-all">
-                    <svg class="w-4 h-4 flex-shrink-0 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                    </svg>
-                    <svg class="w-4 h-4 flex-shrink-0 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-                    </svg>
-                    <span class="dark:text-stone-400">Dark Mode</span>
-                </button>
-            </div>
-        </div>
+    {% else %}
+    <div class="web-mobile-chips">
+      {% for i in range(4) %}
+      <div class="web-mobile-chip">
+        <div class="web-mobile-chip-icon skeleton-shimmer"></div>
+        <span style="color:var(--c-stone-600);">Loading...</span>
+      </div>
+      {% endfor %}
     </div>
-</div>
+    {% endif %}
+  </div>
+
+  <!-- Main Nav -->
+  <div class="web-mobile-nav">
+    <p class="web-mobile-nav-title">Browse</p>
+    <div class="web-mobile-nav-list">
+      <a href="/shop" class="web-mobile-nav-link {% if request.url.path == '/shop' %}web-mobile-nav-link--active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        <span>Home</span>
+        <span class="web-mobile-nav-badge web-mobile-nav-badge--neutral">Discover</span>
+      </a>
+      <a href="/shop/marketplace" class="web-mobile-nav-link {% if request.url.path.startswith('/shop/marketplace') %}web-mobile-nav-link--active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+        </svg>
+        <span>Marketplace</span>
+        <span class="web-mobile-nav-badge web-mobile-nav-badge--amber">All Items</span>
+      </a>
+      <a href="/shop/shops" class="web-mobile-nav-link {% if request.url.path.startswith('/shop/shops') %}web-mobile-nav-link--active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+        </svg>
+        <span>Vendor Shops</span>
+        <span class="web-mobile-nav-badge web-mobile-nav-badge--neutral">Shops</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="web-mobile-quick">
+    <p class="web-mobile-nav-title">Quick Actions</p>
+    <div class="web-mobile-quick-grid">
+      <a href="/shop/cart" class="web-mobile-quick-card">
+        <div class="web-mobile-quick-card-icon web-mobile-quick-card-icon--amber">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+          </svg>
+        </div>
+        <div>
+          <span>Shopping Cart</span>
+          <small class="cart-count-mobile-inline">0 items</small>
+        </div>
+      </a>
+      <a href="/shop/wishlist" class="web-mobile-quick-card">
+        <div class="web-mobile-quick-card-icon web-mobile-quick-card-icon--rose">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+          </svg>
+        </div>
+        <div>
+          <span>Wishlist</span>
+          <small>Saved items</small>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Promo & Bottom -->
+  <div class="web-mobile-promo">
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+      <div style="width:32px;height:32px;background:rgba(251,191,36,0.2);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg style="width:16px;height:16px;color:var(--c-amber-500);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+        </svg>
+      </div>
+      <div>
+        <p style="font-size:11px;font-weight:700;color:var(--c-stone-200);">Free Shipping</p>
+        <p style="font-size:10px;color:var(--c-stone-400);">On orders over &#8358;50,000</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="web-mobile-bottom">
+    {% if user %}
+    <a href="/shop/account" class="web-mobile-bottom-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+      Account Settings
+    </a>
+    <a href="/shop/logout" class="web-mobile-bottom-link" style="color:#ef4444;">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+      </svg>
+      Sign Out
+    </a>
+    {% else %}
+    <a href="/shop/signup" class="web-mobile-bottom-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+      </svg>
+      Create Account
+    </a>
+    {% endif %}
+    <button id="theme-toggle-mobile" aria-label="Toggle dark mode" class="web-mobile-bottom-link" style="width:100%;border:none;background:none;cursor:pointer;font-size:0.875rem;font-weight:500;">
+      <svg style="width:16px;height:16px;" class="dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+      </svg>
+      <svg style="width:16px;height:16px;" class="hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+      </svg>
+      <span>Dark Mode</span>
+    </button>
+  </div>
 </div>
 
-<!-- ===== Back to Top Button ===== -->
-<button id="back-to-top" onclick="window.scrollTo({top: document.documentElement.scrollHeight, behavior: 'smooth'});" class="fixed bottom-3 right-4 sm:right-8 w-12 h-12 bg-stone-900 dark:bg-amber-600 text-white dark:text-stone-950 rounded-2xl shadow-lg shadow-stone-900/20 dark:shadow-amber-500/20 flex items-center justify-center opacity-0 translate-y-4 pointer-events-none transition-all duration-300 hover:scale-110 active:scale-95" style="z-index: var(--z-tooltip);" aria-label="Back to top">
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-    </svg>
+<!-- Back to Top -->
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="web-back-to-top" aria-label="Back to top">
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+  </svg>
 </button>
 
 <script>
-// ===== Back to Top visibility =====
 document.addEventListener('scroll', function() {
-    const btn = document.getElementById('back-to-top');
-    if (!btn) return;
-    if (window.scrollY > 300) {
-        btn.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
-        btn.classList.add('opacity-100', 'translate-y-0');
-    } else {
-        btn.classList.remove('opacity-100', 'translate-y-0');
-        btn.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
-    }
+  const btn = document.getElementById('back-to-top');
+  if (!btn) return;
+  if (window.scrollY > 300) {
+    btn.classList.add('web-visible');
+  } else {
+    btn.classList.remove('web-visible');
+  }
 }, { passive: true });
 </script>
 
-<!-- Spacer for fixed navbar -->
-<div class="h-14 md:h-16 lg:h-[72px]"></div>
+<!-- Spacer -->
+<div style="height:var(--web-header-h);"></div>
 
 <!-- Main Content -->
-<main class="min-h-[60vh] max-w-full overflow-x-hidden">
-    {% block content %}{% endblock %}
+<main style="min-height:60vh;max-width:100%;overflow-x:hidden;">
+  {% block content %}{% endblock %}
 </main>
 
 {% block footer %}
-<footer class="bg-stone-900 text-stone-400 relative overflow-hidden">
-    <div class="absolute inset-0"><div class="absolute inset-0 bg-grain opacity-20"></div></div>
-    
-    <!-- Decorative top gradient line -->
-    <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent"></div>
+<footer class="web-footer">
+  <div class="web-footer-inner">
+    <!-- Newsletter -->
+    <div class="web-footer-newsletter">
+      <div class="web-footer-newsletter-inner">
+        <h3>Stay in the Loop</h3>
+        <p>Get exclusive vendor stories, new arrivals, and member-only offers.</p>
+        <form id="newsletter-form" class="web-footer-newsletter-form" onsubmit="event.preventDefault(); submitNewsletter()">
+          <input type="email" id="newsletter-email" required placeholder="Enter your email" class="web-footer-newsletter-input"/>
+          <button type="submit" id="newsletter-btn" class="web-footer-newsletter-btn">Subscribe</button>
+        </form>
+        <p id="newsletter-msg" class="web-footer-newsletter-msg" style="display:none;"></p>
+      </div>
+    </div>
 
-    <div class="relative px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
-        <!-- Newsletter Section -->
-        <div class="mb-8 sm:mb-14 p-4 sm:p-6 md:p-8 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
-            <div class="max-w-xl mx-auto text-center">
-                <h3 class="text-white text-sm font-bold uppercase tracking-[0.15em] mb-2">Stay in the Loop</h3>
-                <p class="text-stone-400 text-sm mb-5">Get exclusive vendor stories, new arrivals, and member-only offers.</p>
-                <form id="newsletter-form" class="flex flex-col sm:flex-row gap-3" onsubmit="event.preventDefault(); submitNewsletter()">
-                    <input type="email" id="newsletter-email" required placeholder="Enter your email"
-                        class="flex-1 px-4 py-3 bg-white/10 border border-white/10 rounded-xl text-sm text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all">
-                    <button type="submit" id="newsletter-btn"
-                        class="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-stone-950 text-sm font-bold rounded-xl transition-all whitespace-nowrap shadow-lg shadow-amber-500/20">
-                        Subscribe
-                    </button>
-                </form>
-                <p id="newsletter-msg" class="text-xs mt-3 hidden"></p>
-            </div>
+    <!-- Grid -->
+    <div class="web-footer-grid">
+      <!-- Brand -->
+      <div class="web-footer-brand">
+        <div class="web-footer-brand-header">
+          <div class="web-footer-brand-box"><span>FS</span></div>
+          <div>
+            <span class="web-footer-brand-name">{{ settings.site_name|default('ForgeStore') }}</span>
+            <span class="web-footer-brand-tagline">{{ settings.site_tagline|default('Where the Workshop Meets the World') }}</span>
+          </div>
         </div>
-
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-5 sm:gap-6 lg:gap-12">
-            <!-- Brand -->
-            <div class="col-span-2 md:col-span-1">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm ring-1 ring-white/10">
-                        <span class="text-white text-sm font-black">FS</span>
-                    </div>
-                    <div>
-                        <span class="text-white font-bold font-display">{{ settings.site_name|default('ForgeStore') }}</span>
-                        <span class="block text-xs text-amber-400/80 font-handwriting lowercase">{{ settings.site_tagline|default('Where the Workshop Meets the World') }}</span>
-                    </div>
-                </div>
-                <p class="text-sm text-stone-400 leading-relaxed max-w-xs">Handcrafted treasures from master vendors. Each piece tells a story of skill, passion, and tradition.</p>
-                <div class="flex items-center gap-3 mt-6">
-                    <span class="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 hover:text-amber-400 transition-all duration-200 cursor-pointer">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
-                    </span>
-                    <span class="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 hover:text-amber-400 transition-all duration-200 cursor-pointer">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
-                    </span>
-                    <span class="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 hover:text-amber-400 transition-all duration-200 cursor-pointer">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-                    </span>
-                </div>
-            </div>
-
-            <!-- Links -->
-            <div>
-                <h4 class="text-white text-xs font-bold uppercase tracking-[0.15em] mb-5">Shop</h4>
-                <ul class="space-y-3">
-                    <li><a href="/shop/marketplace" class="text-sm text-stone-400 hover:text-white transition-colors duration-200">Marketplace</a></li>
-                    <li><a href="/shop/shops" class="text-sm text-stone-400 hover:text-white transition-colors duration-200">Vendor Shops</a></li>
-                    <li><a href="/shop/marketplace" class="text-sm text-stone-400 hover:text-white transition-colors duration-200">All Products</a></li>
-                </ul>
-            </div>
-            <div>
-                <h4 class="text-white text-xs font-bold uppercase tracking-[0.15em] mb-5">Support</h4>
-                <ul class="space-y-3">
-                    <li><a href="#" class="text-sm text-stone-400 hover:text-white transition-colors duration-200">Contact Us</a></li>
-                    <li><a href="#" class="text-sm text-stone-400 hover:text-white transition-colors duration-200">Shipping Info</a></li>
-                    <li><a href="#" class="text-sm text-stone-400 hover:text-white transition-colors duration-200">Returns Policy</a></li>
-                    <li><a href="#" class="text-sm text-stone-400 hover:text-white transition-colors duration-200">FAQ</a></li>
-                </ul>
-            </div>
-            <div>
-                <h4 class="text-white text-xs font-bold uppercase tracking-[0.15em] mb-5">Company</h4>
-                <ul class="space-y-3">
-                    <li><a href="#" class="text-sm text-stone-400 hover:text-white transition-colors duration-200">About Us</a></li>
-                    <li><a href="/vendor/apply" class="text-sm text-stone-400 hover:text-white transition-colors duration-200">For Vendors</a></li>
-                    <li><a href="/admin/login" class="text-sm text-stone-400 hover:text-white transition-colors duration-200">Admin Panel</a></li>
-                </ul>
-            </div>
+        <p>Handcrafted treasures from master vendors. Each piece tells a story of skill, passion, and tradition.</p>
+        <div class="web-footer-social">
+          <span class="web-footer-social-icon">
+            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+          </span>
+          <span class="web-footer-social-icon">
+            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+          </span>
+          <span class="web-footer-social-icon">
+            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+          </span>
         </div>
+      </div>
 
-        <!-- Bottom bar -->
-        <div class="mt-10 sm:mt-12 pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4 text-sm">
-                <p class="text-stone-500">&copy; 2025 {{ settings.site_name|default('ForgeStore') }}. All rights reserved.</p>
-            <div class="flex items-center gap-6">
-                <a href="#" class="text-stone-500 hover:text-stone-300 transition-colors text-xs">Privacy Policy</a>
-                <a href="#" class="text-stone-500 hover:text-stone-300 transition-colors text-xs">Terms of Service</a>
-                <a href="/vendor/apply" class="text-amber-400 hover:text-amber-300 transition-colors text-xs font-bold">Become a Vendor</a>
-            </div>    </div>
-</div>
+      <!-- Shop -->
+      <div class="web-footer-col">
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="/shop/marketplace">Marketplace</a></li>
+          <li><a href="/shop/shops">Vendor Shops</a></li>
+          <li><a href="/shop/marketplace">All Products</a></li>
+        </ul>
+      </div>
+      <!-- Support -->
+      <div class="web-footer-col">
+        <h4>Support</h4>
+        <ul>
+          <li><a href="/shop/contact">Contact Us</a></li>
+          <li><a href="/shop/shipping">Shipping Info</a></li>
+          <li><a href="/shop/returns">Returns Policy</a></li>
+          <li><a href="/shop/faq">FAQ</a></li>
+        </ul>
+      </div>
+      <!-- Company -->
+      <div class="web-footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">About Us</a></li>
+          <li><a href="/vendor/apply">For Vendors</a></li>
+          <li><a href="/admin/login">Admin Panel</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Bottom -->
+    <div class="web-footer-bottom">
+      <p>&copy; 2025 {{ settings.site_name|default('ForgeStore') }}. All rights reserved.</p>
+      <div class="web-footer-bottom-links">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="/vendor/apply" class="a--highlight" style="color:var(--c-amber-400);font-weight:700;">Become a Vendor</a>
+      </div>
+    </div>
+  </div>
 </footer>
 {% endblock %}
 
@@ -463,526 +847,387 @@ document.addEventListener('scroll', function() {
 {% include "web/cookie_banner.html" %}
 
 <script>
-// ===== Password visibility toggle =====
 function togglePasswordVisibility(inputId, btn) {
-    const input = document.getElementById(inputId);
-    if (!input || !btn) return;
-    const isPassword = input.type === 'password';
-    input.type = isPassword ? 'text' : 'password';
-    btn.querySelector('.eye-open')?.classList.toggle('hidden');
-    btn.querySelector('.eye-closed')?.classList.toggle('hidden');
-    // Brief scale feedback
-    btn.style.transform = 'scale(0.9)';
-    setTimeout(() => btn.style.transform = '', 150);
+  const input = document.getElementById(inputId);
+  if (!input || !btn) return;
+  const isPassword = input.type === 'password';
+  input.type = isPassword ? 'text' : 'password';
+  btn.querySelector('.eye-open')?.classList.toggle('hidden');
+  btn.querySelector('.eye-closed')?.classList.toggle('hidden');
+  btn.style.transform = 'scale(0.9)';
+  setTimeout(() => btn.style.transform = '', 150);
 }
 
-// ===== Global helpers =====
 function formatCurrency(amount, currency) {
-    const symbols = {NGN: '₦', USD: '$', GBP: '£', EUR: '€'};
-    const symbol = symbols[currency] || '₦';
-    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-    if (isNaN(num)) return symbol + '0.00';
-    return symbol + num.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const symbols = {NGN: '₦', USD: '$', GBP: '£', EUR: '€'};
+  const symbol = symbols[currency] || '₦';
+  const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (isNaN(num)) return symbol + '0.00';
+  return symbol + num.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
 
 function showToast(message, type) {
-    const existing = document.querySelector('.web-toast');
-    if (existing) existing.remove();
-
-    const toast = document.createElement('div');
-    toast.className = 'web-toast fixed top-24 right-4 px-5 py-3 rounded-xl shadow-xl text-sm font-medium text-white transform transition-all duration-300 translate-x-0 opacity-0';
-    toast.style.zIndex = 'var(--z-toast)';
-
-    const colors = {
-        success: 'bg-emerald-600',
-        error: 'bg-red-600',
-        warning: 'bg-amber-600',
-        info: 'bg-blue-600',
-    };
-    toast.className += ' ' + (colors[type] || 'bg-stone-700');
-    toast.textContent = message;
-
-    document.body.appendChild(toast);
-    requestAnimationFrame(() => {
-        toast.classList.remove('opacity-0');
-    });
-
-    setTimeout(() => {
-        toast.classList.add('opacity-0');
-        setTimeout(() => toast.remove(), 300);
-    }, 4000);
+  const existing = document.querySelector('.web-toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = 'web-toast';
+  toast.style.cssText = 'position:fixed;top:6rem;right:1rem;padding:0.75rem 1.25rem;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.15);font-size:0.875rem;font-weight:500;color:#fff;z-index:9999;transition:opacity 0.3s;opacity:0;';
+  const colors = { success: '#059669', error: '#dc2626', warning: '#d97706', info: '#2563eb' };
+  toast.style.background = colors[type] || '#44403c';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => { toast.style.opacity = '1'; });
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
 }
 
-// ===== Cart Badge Update =====
 async function updateCartBadge() {
-    try {
-        const res = await fetch('/api/cart');
-        const data = await res.json();
-        const count = data.count || 0;
-
-        const badge = document.querySelector('.cart-count');
-        const badgeMobile = document.querySelector('.cart-count-mobile');
-        const badgeMobileInline = document.querySelector('.cart-count-mobile-inline');
-
-        if (badge) {
-            badge.textContent = count;
-            badge.classList.toggle('hidden', count === 0);
-        }
-        if (badgeMobile) {
-            badgeMobile.textContent = count;
-            badgeMobile.classList.toggle('hidden', count === 0);
-        }
-        if (badgeMobileInline) {
-            badgeMobileInline.textContent = count;
-            badgeMobileInline.classList.toggle('hidden', count === 0);
-        }
-    } catch {}
+  try {
+    const res = await fetch('/api/cart');
+    const data = await res.json();
+    const count = data.count || 0;
+    document.querySelectorAll('.cart-count').forEach(badge => {
+      badge.textContent = count;
+      badge.style.display = count === 0 ? 'none' : 'flex';
+    });
+    document.querySelectorAll('.cart-count-mobile').forEach(badge => {
+      badge.textContent = count;
+      badge.style.display = count === 0 ? 'none' : 'flex';
+    });
+    document.querySelectorAll('.cart-count-mobile-inline').forEach(el => {
+      el.textContent = count + ' items';
+      el.style.display = count === 0 ? 'none' : '';
+    });
+  } catch {}
 }
 
-// ===== Wishlist =====
 let wishlistIds = new Set();
-
 async function loadWishlistStatus() {
-    try {
-        const res = await fetch('/api/wishlist');
-        const data = await res.json();
-        if (data.items) {
-            wishlistIds = new Set(data.items.map(p => p.id));
-            // Update all heart buttons on the page
-            document.querySelectorAll('.wishlist-heart').forEach(btn => {
-                const pid = btn.dataset.productId;
-                if (wishlistIds.has(pid)) {
-                    btn.classList.add('active');
-                    btn.querySelector('svg').setAttribute('fill', 'currentColor');
-                } else {
-                    btn.classList.remove('active');
-                    btn.querySelector('svg').setAttribute('fill', 'none');
-                }
-            });
+  try {
+    const res = await fetch('/api/wishlist');
+    const data = await res.json();
+    if (data.items) {
+      wishlistIds = new Set(data.items.map(p => p.id));
+      document.querySelectorAll('.wishlist-heart').forEach(btn => {
+        const pid = btn.dataset.productId;
+        if (wishlistIds.has(pid)) {
+          btn.classList.add('active');
+          btn.querySelector('svg').setAttribute('fill', 'currentColor');
+        } else {
+          btn.classList.remove('active');
+          btn.querySelector('svg').setAttribute('fill', 'none');
         }
-    } catch {}
+      });
+    }
+  } catch {}
 }
 
 async function toggleWishlist(productId, btn) {
-    const wasActive = btn.classList.contains('active');
-    const svg = btn.querySelector('svg');
-    const textSpan = btn.querySelector('.wishlist-text');
-
-    // Optimistic update
+  const wasActive = btn.classList.contains('active');
+  const svg = btn.querySelector('svg');
+  const textSpan = btn.querySelector('.wishlist-text');
+  if (wasActive) {
+    btn.classList.remove('active');
+    svg.setAttribute('fill', 'none');
+    wishlistIds.delete(productId);
+    if (textSpan) textSpan.textContent = 'Add to Wishlist';
+  } else {
+    btn.classList.add('active');
+    svg.setAttribute('fill', 'currentColor');
+    wishlistIds.add(productId);
+    if (textSpan) textSpan.textContent = 'Remove from Wishlist';
+  }
+  btn.style.transform = 'scale(1.3)';
+  setTimeout(() => { btn.style.transform = ''; }, 200);
+  try {
+    const res = await fetch('/api/wishlist/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_id: productId }),
+    });
+    if (!res.ok) throw new Error('Failed');
+    showToast(wasActive ? 'Removed from wishlist' : 'Added to wishlist ❤️', wasActive ? 'info' : 'success');
+  } catch {
     if (wasActive) {
-        btn.classList.remove('active');
-        svg.setAttribute('fill', 'none');
-        svg.classList.remove('text-red-500');
-        svg.classList.add('text-stone-400');
-        wishlistIds.delete(productId);
-        if (textSpan) textSpan.textContent = 'Add to Wishlist';
+      btn.classList.add('active');
+      svg.setAttribute('fill', 'currentColor');
+      wishlistIds.add(productId);
+      if (textSpan) textSpan.textContent = 'Remove from Wishlist';
     } else {
-        btn.classList.add('active');
-        svg.setAttribute('fill', 'currentColor');
-        svg.classList.remove('text-stone-400');
-        svg.classList.add('text-red-500');
-        wishlistIds.add(productId);
-        if (textSpan) textSpan.textContent = 'Remove from Wishlist';
+      btn.classList.remove('active');
+      svg.setAttribute('fill', 'none');
+      wishlistIds.delete(productId);
+      if (textSpan) textSpan.textContent = 'Add to Wishlist';
     }
-
-    // Scale animation
-    btn.style.transform = 'scale(1.3)';
-    setTimeout(() => { btn.style.transform = ''; }, 200);
-
-    try {
-        const res = await fetch('/api/wishlist/add', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ product_id: productId }),
-        });
-        if (!res.ok) throw new Error('Failed');
-        if (!wasActive) {
-            showToast('Added to wishlist ❤️', 'success');
-        } else {
-            showToast('Removed from wishlist', 'info');
-        }
-    } catch {
-        // Revert optimistic update
-        if (wasActive) {
-            btn.classList.add('active');
-            svg.setAttribute('fill', 'currentColor');
-            svg.classList.remove('text-stone-400');
-            svg.classList.add('text-red-500');
-            wishlistIds.add(productId);
-            if (textSpan) textSpan.textContent = 'Remove from Wishlist';
-        } else {
-            btn.classList.remove('active');
-            svg.setAttribute('fill', 'none');
-            svg.classList.remove('text-red-500');
-            svg.classList.add('text-stone-400');
-            wishlistIds.delete(productId);
-            if (textSpan) textSpan.textContent = 'Add to Wishlist';
-        }
-        showToast('Failed to update wishlist', 'error');
-    }
+    showToast('Failed to update wishlist', 'error');
+  }
 }
 
-// ===== Mobile Menu =====
 function openMobileMenu() {
-    const menu = document.getElementById('mobile-menu');
-    const backdrop = document.getElementById('mobile-backdrop');
-    const toggle = document.getElementById('mobile-menu-toggle');
-    if (!menu || !backdrop) return;
-
-    menu.classList.remove('translate-x-full');
-    menu.classList.add('translate-x-0');
-    backdrop.classList.remove('hidden', 'pointer-events-none');
-    void backdrop.offsetHeight;
-    backdrop.classList.add('opacity-100');
-    document.body.classList.add('overflow-hidden');
-
-    // Close search overlay if open
-    const overlay = document.getElementById('search-overlay');
-    const overlaySuggestions = document.getElementById('search-overlay-suggestions');
-    if (overlay && !overlay.classList.contains('hidden')) {
-        overlay.classList.add('hidden');
-        if (overlaySuggestions) overlaySuggestions.classList.add('hidden');
-    }
-
-    // Update hamburger icon
-    const iconOpen = document.getElementById('menu-icon-open');
-    const iconClose = document.getElementById('menu-icon-close');
-    if (iconOpen && iconClose) {
-        iconOpen.classList.add('hidden');
-        iconClose.classList.remove('hidden');
-    }
-    if (toggle) toggle.setAttribute('aria-expanded', 'true');
+  const menu = document.getElementById('mobile-menu');
+  const backdrop = document.getElementById('mobile-backdrop');
+  if (!menu || !backdrop) return;
+  menu.classList.add('web-open');
+  backdrop.classList.add('web-open');
+  document.body.style.overflow = 'hidden';
+  const overlay = document.getElementById('search-overlay');
+  if (overlay && !overlay.contains('hidden')) overlay.style.display = 'none';
+  document.getElementById('menu-icon-open').style.display = 'none';
+  document.getElementById('menu-icon-close').style.display = '';
+  document.getElementById('mobile-menu-toggle').setAttribute('aria-expanded', 'true');
 }
 
 function closeMobileMenu() {
-    const menu = document.getElementById('mobile-menu');
-    const backdrop = document.getElementById('mobile-backdrop');
-    const toggle = document.getElementById('mobile-menu-toggle');
-    if (!menu || !backdrop) return;
-
-    menu.classList.add('translate-x-full');
-    menu.classList.remove('translate-x-0');
-    backdrop.classList.remove('opacity-100');
-    backdrop.classList.add('opacity-0', 'pointer-events-none');
-    document.body.classList.remove('overflow-hidden');
-
-    const iconOpen = document.getElementById('menu-icon-open');
-    const iconClose = document.getElementById('menu-icon-close');
-    if (iconOpen && iconClose) {
-        iconOpen.classList.remove('hidden');
-        iconClose.classList.add('hidden');
-    }
-    if (toggle) toggle.setAttribute('aria-expanded', 'false');
+  const menu = document.getElementById('mobile-menu');
+  const backdrop = document.getElementById('mobile-backdrop');
+  if (!menu || !backdrop) return;
+  menu.classList.remove('web-open');
+  backdrop.classList.remove('web-open');
+  document.body.style.overflow = '';
+  document.getElementById('menu-icon-open').style.display = '';
+  document.getElementById('menu-icon-close').style.display = 'none';
+  document.getElementById('mobile-menu-toggle').setAttribute('aria-expanded', 'false');
 }
 
 function toggleMobileMenu(event) {
-    if (event) event.stopPropagation();
-    const menu = document.getElementById('mobile-menu');
-    if (!menu) return;
-    if (menu.classList.contains('translate-x-full')) {
-        openMobileMenu();
-    } else {
-        closeMobileMenu();
-    }
+  if (event) event.stopPropagation();
+  const menu = document.getElementById('mobile-menu');
+  if (!menu) return;
+  if (menu.classList.contains('web-open')) {
+    closeMobileMenu();
+  } else {
+    openMobileMenu();
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Backdrop click and menu link clicks are bound via JS;
-    // the main toggle uses onclick="toggleMobileMenu(event)" on the button.
-    const mobileMenu = document.getElementById('mobile-menu');
-    const mobileBackdrop = document.getElementById('mobile-backdrop');
-    const mobileToggle = document.getElementById('mobile-menu-toggle');
-    if (mobileBackdrop) {
-        mobileBackdrop.addEventListener('click', closeMobileMenu);
-    }
-    if (mobileMenu) {
-        mobileMenu.querySelectorAll('a').forEach(link => {
-            if (!link.hasAttribute('data-js-bound')) {
-                link.setAttribute('data-js-bound', 'true');
-                link.addEventListener('click', closeMobileMenu);
-            }
-        });
-    }
-
-    // Close with Escape
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            if (mobileMenu && !mobileMenu.classList.contains('translate-x-full')) {
-                closeMobileMenu();
-            }
-        }
+  const mobileMenu = document.getElementById('mobile-menu');
+  const mobileBackdrop = document.getElementById('mobile-backdrop');
+  if (mobileBackdrop) mobileBackdrop.addEventListener('click', closeMobileMenu);
+  if (mobileMenu) {
+    mobileMenu.querySelectorAll('a').forEach(link => {
+      if (!link.hasAttribute('data-js-bound')) {
+        link.setAttribute('data-js-bound', 'true');
+        link.addEventListener('click', closeMobileMenu);
+      }
     });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && mobileMenu && menu.classList.contains('web-open')) closeMobileMenu();
+  });
 
-    // Dark mode
-    const themeToggle = document.getElementById('theme-toggle');
-    const themeToggleMobile = document.getElementById('theme-toggle-mobile');
-    const html = document.documentElement;
-    const storedTheme = localStorage.getItem('forge-theme');
-    if (storedTheme === 'dark') {
-        html.classList.add('dark');
-    } else if (!storedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        html.classList.add('dark');
-    }
-
-    function toggleTheme() {
-        html.classList.toggle('dark');
-        localStorage.setItem('forge-theme', html.classList.contains('dark') ? 'dark' : 'light');
-    }
-
-    if (themeToggle) {
-        themeToggle.addEventListener('click', toggleTheme);
-    }
-    if (themeToggleMobile) {
-        themeToggleMobile.addEventListener('click', function() {
-            toggleTheme();
-            // Also close the mobile menu after toggling
-            setTimeout(closeMobileMenu, 150);
-        });
-    }
-
-    // Scroll reveal
-    const revealObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-            }
-        });
-    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-
-    document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale').forEach(el => {
-        revealObserver.observe(el);
+  // Dark mode
+  const themeToggle = document.getElementById('theme-toggle');
+  const themeToggleMobile = document.getElementById('theme-toggle-mobile');
+  const html = document.documentElement;
+  const storedTheme = localStorage.getItem('forge-theme');
+  if (storedTheme === 'dark') {
+    html.classList.add('dark');
+  } else if (!storedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    html.classList.add('dark');
+  }
+  function toggleTheme() {
+    html.classList.toggle('dark');
+    localStorage.setItem('forge-theme', html.classList.contains('dark') ? 'dark' : 'light');
+  }
+  if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
+  if (themeToggleMobile) {
+    themeToggleMobile.addEventListener('click', function() {
+      toggleTheme();
+      setTimeout(closeMobileMenu, 150);
     });
+  }
 
-    // Fallback broken product images to placeholder
-    document.querySelectorAll('img').forEach(img => {
-        img.addEventListener('error', function() {
-            if (!this.dataset.fallbackAttempted) {
-                this.dataset.fallbackAttempted = 'true';
-                this.src = '/static/img/placeholder.svg';
-            }
-        });
+  // Scroll reveal
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('visible');
     });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+  document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale').forEach(el => revealObserver.observe(el));
 
-    // Lazy image shimmer
-    document.querySelectorAll('img[loading="lazy"]').forEach(img => {
-        const parent = img.parentElement;
-        if (!parent || !parent.classList.contains('overflow-hidden')) return;
-        const skeleton = document.createElement('div');
-        skeleton.className = 'skeleton-shimmer absolute inset-0 z-10';
-        parent.style.position = 'relative';
-        parent.appendChild(skeleton);
-        img.addEventListener('load', () => skeleton.remove());
-        setTimeout(() => { if (skeleton.parentElement) skeleton.remove(); }, 5000);
-        if (img.complete && img.naturalHeight > 0) skeleton.remove();
+  // Broken image fallback
+  document.querySelectorAll('img').forEach(img => {
+    img.addEventListener('error', function() {
+      if (!this.dataset.fallbackAttempted) {
+        this.dataset.fallbackAttempted = 'true';
+        this.src = '/static/img/placeholder.svg';
+      }
     });
+  });
 
-    
-    // ===== Search Overlay (phone/tablet) =====
-    const searchToggle = document.getElementById('search-toggle');
-    const searchOverlay = document.getElementById('search-overlay');
-    const searchOverlayInput = document.getElementById('search-overlay-input');
-    const searchOverlayClose = document.getElementById('search-overlay-close');
-    const searchOverlaySuggestions = document.getElementById('search-overlay-suggestions');
-    let searchTimeout = null;
+  // Lazy image shimmer
+  document.querySelectorAll('img[loading="lazy"]').forEach(img => {
+    const parent = img.parentElement;
+    if (!parent || !parent.classList.contains('overflow-hidden')) return;
+    const skeleton = document.createElement('div');
+    skeleton.className = 'skeleton-shimmer';
+    skeleton.style.cssText = 'position:absolute;inset:0;z-index:10;';
+    parent.style.position = 'relative';
+    parent.appendChild(skeleton);
+    img.addEventListener('load', () => skeleton.remove());
+    setTimeout(() => { if (skeleton.parentElement) skeleton.remove(); }, 5000);
+    if (img.complete && img.naturalHeight > 0) skeleton.remove();
+  });
 
-    if (searchToggle && searchOverlay) {
-        searchToggle.addEventListener('click', function() {
-            searchOverlay.classList.remove('hidden');
-            setTimeout(() => searchOverlayInput.focus(), 100);
-            if (mobileMenu && !mobileMenu.classList.contains('translate-x-full')) {
-                closeMobileMenu();
-            }
-        });
-
-        if (searchOverlayClose) {
-            searchOverlayClose.addEventListener('click', function() {
-                searchOverlay.classList.add('hidden');
-                if (searchOverlaySuggestions) searchOverlaySuggestions.classList.add('hidden');
-            });
-        }
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && !searchOverlay.classList.contains('hidden')) {
-                searchOverlay.classList.add('hidden');
-                if (searchOverlaySuggestions) searchOverlaySuggestions.classList.add('hidden');
-            }
-        });
-
-        if (searchOverlayInput && searchOverlaySuggestions) {
-            searchOverlayInput.addEventListener('input', function() {
-                const q = this.value.trim();
-                if (q.length < 2) {
-                    searchOverlaySuggestions.classList.add('hidden');
-                    return;
-                }
-                if (searchTimeout) clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(async () => {
-                    try {
-                        const res = await fetch('/api/search/suggestions?q=' + encodeURIComponent(q));
-                        const data = await res.json();
-                        const items = data.suggestions || [];
-                        if (items.length === 0) {
-                            searchOverlaySuggestions.classList.add('hidden');
-                            return;
-                        }
-                        searchOverlaySuggestions.innerHTML = items.map(p => {
-                            const price = p.discount_price || p.price;
-                            const img = p.image || '/static/img/placeholder.svg';
-                            return '<a href="/shop/products/' + p.slug + '" class="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors border-b border-stone-100 dark:border-stone-800 last:border-0">' +
-                                '<div class="w-10 h-10 rounded-lg bg-stone-100 dark:bg-stone-700 flex-shrink-0 overflow-hidden">' +
-                                    '<img src="' + img + '" alt="" class="w-full h-full object-cover">' +
-                                '</div>' +
-                                '<div class="min-w-0 flex-1">' +
-                                    '<p class="text-sm font-medium text-stone-800 dark:text-stone-200 truncate">' + p.name + '</p>' +
-                                    '<p class="text-xs text-stone-500">' + (p.retailer_name ? p.retailer_name + ' · ' : '') + formatCurrency(price, '') + '</p>' +
-                                '</div>' +
-                                '<svg class="w-4 h-4 text-stone-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>' +
-                            '</a>';
-                        }).join('');
-                        searchOverlaySuggestions.classList.remove('hidden');
-                    } catch {}
-                }, 250);
-            });
-
-            searchOverlayInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && this.value.trim()) {
-                    window.location.href = '/shop/marketplace?q=' + encodeURIComponent(this.value.trim());
-                }
-            });
-        }
+  // Search overlay (phone/tablet)
+  const searchToggle = document.getElementById('search-toggle');
+  const searchOverlay = document.getElementById('search-overlay');
+  const searchOverlayInput = document.getElementById('search-overlay-input');
+  const searchOverlayClose = document.getElementById('search-overlay-close');
+  const searchOverlaySuggestions = document.getElementById('search-overlay-suggestions');
+  let searchTimeout = null;
+  if (searchToggle && searchOverlay) {
+    searchToggle.addEventListener('click', function() {
+      searchOverlay.style.display = 'block';
+      setTimeout(() => searchOverlayInput.focus(), 100);
+      if (mobileMenu && mobileMenu.classList.contains('web-open')) closeMobileMenu();
+    });
+    if (searchOverlayClose) {
+      searchOverlayClose.addEventListener('click', function() {
+        searchOverlay.style.display = 'none';
+        if (searchOverlaySuggestions) searchOverlaySuggestions.style.display = 'none';
+      });
     }
-
-    // ===== Desktop Search (with suggestions) =====
-    const desktopSearchInput = document.getElementById('desktop-search-input');
-    const desktopSearchSuggestions = document.getElementById('desktop-search-suggestions');
-
-    if (desktopSearchInput && desktopSearchSuggestions) {
-        desktopSearchInput.addEventListener('input', function() {
-            const q = this.value.trim();
-            if (q.length < 2) {
-                desktopSearchSuggestions.classList.add('hidden');
-                return;
-            }
-            if (window._desktopSearchTimeout) clearTimeout(window._desktopSearchTimeout);
-            window._desktopSearchTimeout = setTimeout(async () => {
-                try {
-                    const res = await fetch('/api/search/suggestions?q=' + encodeURIComponent(q));
-                    const data = await res.json();
-                    const items = data.suggestions || [];
-                    if (items.length === 0) {
-                        desktopSearchSuggestions.classList.add('hidden');
-                        return;
-                    }
-                    desktopSearchSuggestions.innerHTML = items.map(p => {
-                        const price = p.discount_price || p.price;
-                        const img = p.image || '/static/img/placeholder.svg';
-                        return '<a href="/shop/products/' + p.slug + '" class="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors border-b border-stone-100 dark:border-stone-800 last:border-0">' +
-                            '<div class="w-10 h-10 rounded-lg bg-stone-100 dark:bg-stone-700 flex-shrink-0 overflow-hidden">' +
-                                '<img src="' + img + '" alt="" class="w-full h-full object-cover">' +
-                            '</div>' +
-                            '<div class="min-w-0 flex-1">' +
-                                '<p class="text-sm font-medium text-stone-800 dark:text-stone-200 truncate">' + p.name + '</p>' +
-                                '<p class="text-xs text-stone-500">' + (p.retailer_name ? p.retailer_name + ' · ' : '') + formatCurrency(price, '') + '</p>' +
-                            '</div>' +
-                            '<svg class="w-4 h-4 text-stone-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>' +
-                        '</a>';
-                    }).join('');
-                    desktopSearchSuggestions.classList.remove('hidden');
-                } catch {}
-            }, 250);
-        });
-
-        document.addEventListener('click', function(e) {
-            const wrapper = document.getElementById('desktop-search-wrapper');
-            if (wrapper && !wrapper.contains(e.target)) {
-                desktopSearchSuggestions.classList.add('hidden');
-            }
-        });
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
-                e.preventDefault();
-                desktopSearchInput.focus();
-            }
-        });
-    }
-
-// Initialize cart badge and wishlist status
-    updateCartBadge();
-    loadWishlistStatus();
-
-    // Global Logout Button Visibility & Handler
-    function checkAndShowLogout() {
-        const hasAdminSession = document.cookie.includes('access_token=');
-        const hasCustomerSession = document.cookie.includes('customer_token=');
-        const logoutBtn = document.getElementById('global-logout-btn');
-        if (logoutBtn && (hasAdminSession || hasCustomerSession)) {
-            logoutBtn.classList.remove('hidden');
-        }
-    }
-    window.handleGlobalLogout = async function() {
-        try {
-            await fetch('/api/auth/logout', { method: 'POST' });
-            document.cookie.split(';').forEach(c => {
-                const name = c.trim().split('=')[0];
-                if (name === 'access_token' || name === 'customer_token') {
-                    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
-                }
-            });
-            window.location.href = '/shop';
-        } catch (e) {
-            window.location.href = '/shop';
-        }
-    };
-    checkAndShowLogout();
-
-    // Newsletter subscription
-    window.submitNewsletter = async function() {
-        const btn = document.getElementById('newsletter-btn');
-        const msg = document.getElementById('newsletter-msg');
-        const email = document.getElementById('newsletter-email').value.trim();
-        msg.classList.add('hidden');
-        btn.disabled = true;
-        btn.textContent = 'Sending...';
-        try {
-            const res = await fetch('/api/newsletter/subscribe', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email }),
-            });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && searchOverlay.style.display !== 'none') {
+        searchOverlay.style.display = 'none';
+        if (searchOverlaySuggestions) searchOverlaySuggestions.style.display = 'none';
+      }
+    });
+    if (searchOverlayInput && searchOverlaySuggestions) {
+      searchOverlayInput.addEventListener('input', function() {
+        const q = this.value.trim();
+        if (q.length < 2) { searchOverlaySuggestions.style.display = 'none'; return; }
+        if (searchTimeout) clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(async () => {
+          try {
+            const res = await fetch('/api/search/suggestions?q=' + encodeURIComponent(q));
             const data = await res.json();
-            msg.classList.remove('hidden', 'text-red-400', 'text-emerald-400');
-            if (res.ok) {
-                msg.classList.add('text-emerald-400');
-                msg.textContent = data.message || 'Check your email to confirm!';
-                document.getElementById('newsletter-email').value = '';
-            } else {
-                msg.classList.add('text-red-400');
-                msg.textContent = data.detail || 'Something went wrong.';
-            }
-        } catch {
-            msg.classList.remove('hidden');
-            msg.classList.add('text-red-400');
-            msg.textContent = 'Network error. Please try again.';
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Subscribe';
+            const items = data.suggestions || [];
+            if (items.length === 0) { searchOverlaySuggestions.style.display = 'none'; return; }
+            searchOverlaySuggestions.innerHTML = items.map(p => {
+              const price = p.discount_price || p.price;
+              const img = p.image || '/static/img/placeholder.svg';
+              return '<a href="/shop/products/' + p.slug + '" style="display:flex;align-items:center;gap:12px;padding:12px 16px;text-decoration:none;color:inherit;border-bottom:1px solid var(--c-stone-100);transition:background 0.15s;">' +
+                '<div style="width:40px;height:40px;border-radius:8px;background:var(--c-stone-100);flex-shrink:0;overflow:hidden;"><img src="' + img + '" style="width:100%;height:100%;object-fit:cover;"></div>' +
+                '<div style="min-width:0;flex:1;"><p style="font-size:0.875rem;font-weight:500;color:var(--c-stone-800);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + p.name + '</p>' +
+                '<p style="font-size:0.75rem;color:var(--c-stone-500);">' + (p.retailer_name ? p.retailer_name + ' · ' : '') + formatCurrency(price, '') + '</p></div>' +
+                '<svg style="width:16px;height:16px;color:var(--c-stone-300);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></a>';
+            }).join('');
+            searchOverlaySuggestions.style.display = 'block';
+          } catch {}
+        }, 250);
+      });
+      searchOverlayInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && this.value.trim()) {
+          window.location.href = '/shop/marketplace?q=' + encodeURIComponent(this.value.trim());
         }
-    };
+      });
+    }
+  }
 
-    // Real-time cart sync via BroadcastChannel
-    const cartChannel = new BroadcastChannel('forge-cart');
-
-    // Update badge on external cart changes (other tabs)
-    cartChannel.addEventListener('message', function(event) {
-        if (event.data.type === 'cart-updated') {
-            updateCartBadge();
-        }
+  // Desktop search
+  const desktopSearchInput = document.getElementById('desktop-search-input');
+  const desktopSearchSuggestions = document.getElementById('desktop-search-suggestions');
+  if (desktopSearchInput && desktopSearchSuggestions) {
+    desktopSearchInput.addEventListener('input', function() {
+      const q = this.value.trim();
+      if (q.length < 2) { desktopSearchSuggestions.style.display = 'none'; return; }
+      if (window._desktopSearchTimeout) clearTimeout(window._desktopSearchTimeout);
+      window._desktopSearchTimeout = setTimeout(async () => {
+        try {
+          const res = await fetch('/api/search/suggestions?q=' + encodeURIComponent(q));
+          const data = await res.json();
+          const items = data.suggestions || [];
+          if (items.length === 0) { desktopSearchSuggestions.style.display = 'none'; return; }
+          desktopSearchSuggestions.innerHTML = items.map(p => {
+            const price = p.discount_price || p.price;
+            const img = p.image || '/static/img/placeholder.svg';
+            return '<a href="/shop/products/' + p.slug + '" style="display:flex;align-items:center;gap:12px;padding:12px 16px;text-decoration:none;color:inherit;border-bottom:1px solid var(--c-stone-100);transition:background 0.15s;">' +
+              '<div style="width:40px;height:40px;border-radius:8px;background:var(--c-stone-100);flex-shrink:0;overflow:hidden;"><img src="' + img + '" style="width:100%;height:100%;object-fit:cover;"></div>' +
+              '<div style="min-width:0;flex:1;"><p style="font-size:0.875rem;font-weight:500;color:var(--c-stone-800);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + p.name + '</p>' +
+              '<p style="font-size:0.75rem;color:var(--c-stone-500);">' + (p.retailer_name ? p.retailer_name + ' · ' : '') + formatCurrency(price, '') + '</p></div>' +
+              '<svg style="width:16px;height:16px;color:var(--c-stone-300);flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></a>';
+          }).join('');
+          desktopSearchSuggestions.style.display = 'block';
+        } catch {}
+      }, 250);
     });
+    document.addEventListener('click', function(e) {
+      const wrapper = document.getElementById('desktop-search-wrapper');
+      if (wrapper && !wrapper.contains(e.target)) desktopSearchSuggestions.style.display = 'none';
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+        e.preventDefault();
+        desktopSearchInput.focus();
+      }
+    });
+  }
 
-    window.broadcastCartUpdate = function() {
-        cartChannel.postMessage({ type: 'cart-updated' });
-    };
-});            
+  updateCartBadge();
+  loadWishlistStatus();
+
+  function checkAndShowLogout() {
+    const hasAdminSession = document.cookie.includes('access_token=');
+    const hasCustomerSession = document.cookie.includes('customer_token=');
+    const logoutBtn = document.getElementById('global-logout-btn');
+    if (logoutBtn && (hasAdminSession || hasCustomerSession)) logoutBtn.style.display = 'flex';
+  }
+  window.handleGlobalLogout = async function() {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      document.cookie.split(';').forEach(c => {
+        const name = c.trim().split('=')[0];
+        if (name === 'access_token' || name === 'customer_token') {
+          document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+        }
+      });
+      window.location.href = '/shop';
+    } catch (e) {
+      window.location.href = '/shop';
+    }
+  };
+  checkAndShowLogout();
+
+  window.submitNewsletter = async function() {
+    const btn = document.getElementById('newsletter-btn');
+    const msg = document.getElementById('newsletter-msg');
+    const email = document.getElementById('newsletter-email').value.trim();
+    msg.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    try {
+      const res = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      msg.style.display = 'block';
+      msg.style.color = res.ok ? '#059669' : '#dc2626';
+      msg.textContent = res.ok ? (data.message || 'Check your email to confirm!') : (data.detail || 'Something went wrong.');
+      if (res.ok) document.getElementById('newsletter-email').value = '';
+    } catch {
+      msg.style.display = 'block';
+      msg.style.color = '#dc2626';
+      msg.textContent = 'Network error. Please try again.';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Subscribe';
+    }
+  };
+
+  const cartChannel = new BroadcastChannel('forge-cart');
+  cartChannel.addEventListener('message', function(event) {
+    if (event.data.type === 'cart-updated') updateCartBadge();
+  });
+  window.broadcastCartUpdate = function() {
+    cartChannel.postMessage({ type: 'cart-updated' });
+  };
+});
 </script>
 {% endblock %}

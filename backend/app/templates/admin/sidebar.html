@@ -256,9 +256,16 @@
             </a>
             {% endif %}
 
-            {% if admin and admin.role.value == 'DIR_ADMIN' %}
-            <!-- INVENTORY (DIR_ADMIN only) -->
+            {% if admin and admin.role.value in ['DIR_ADMIN', 'MANAGEMENT'] %}
+            <!-- INVENTORY (DIR_ADMIN / MANAGEMENT) -->
             <div class="sidebar-section-label">Inventory</div>
+            {% if admin and admin.role.value in ['DIR_ADMIN', 'MANAGEMENT'] %}
+            <a href="/admin/catalog" class="sidebar-link group">
+                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                <span>Products</span>
+            </a>
+            {% endif %}
+            {% if admin and admin.role.value == 'DIR_ADMIN' %}
             <a href="/admin/categories" class="sidebar-link group">
                 <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z"/></svg>
                 <span>Categories</span>

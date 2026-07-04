@@ -2,63 +2,957 @@
 {% block title %}ForgeStore — Where the Workshop Meets the World{% endblock %}
 {% block content %}
 
+<style>
+  :root {
+    --color-primary: #f59e0b;
+    --color-primary-light: #fbbf24;
+    --color-primary-dark: #d97706;
+    --color-dark: #1c1917;
+    --color-dark-mid: #292524;
+    --color-dark-light: #44403c;
+    --color-light: #fafaf9;
+    --color-text: #44403c;
+    --color-text-light: #78716c;
+    --color-text-muted: #a8a29e;
+    --color-surface: #ffffff;
+    --color-surface-alt: #f5f5f4;
+    --color-border: #e7e5e4;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    --radius-2xl: 1.5rem;
+    --transition-fast: 150ms ease;
+    --transition-normal: 300ms ease;
+    --transition-slow: 500ms ease;
+  }
+
+  * { box-sizing: border-box; }
+
+  .container {
+    width: 100%;
+    max-width: 80rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  @media (min-width: 640px) { .container { padding-left: 1.5rem; padding-right: 1.5rem; } }
+  @media (min-width: 1024px) { .container { padding-left: 2rem; padding-right: 2rem; } }
+
+  /* ===== HERO ===== */
+  .home-hero {
+    position: relative;
+    background: var(--color-dark);
+    color: #fff;
+    overflow: hidden;
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+  }
+  @media (min-width: 640px) { .home-hero { min-height: 72vh; } }
+
+  .home-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #1c1917 0%, #292524 40%, #441a03 100%);
+  }
+
+  .home-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.035;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  .home-hero-title {
+    font-size: clamp(2rem, 5vw, 4.5rem);
+    font-weight: 700;
+    line-height: 0.95;
+    margin-bottom: 1.25rem;
+    letter-spacing: -0.02em;
+  }
+  @media (min-width: 640px) { .home-hero-title { margin-bottom: 1.5rem; } }
+
+  .home-hero-title .accent {
+    background: linear-gradient(90deg, var(--color-primary-light), var(--color-primary), var(--color-primary-dark));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .home-hero-subtitle {
+    font-size: clamp(0.875rem, 1.5vw, 1.125rem);
+    color: #a8a29e;
+    line-height: 1.7;
+    max-width: 36rem;
+    margin-bottom: 1.75rem;
+  }
+  @media (min-width: 640px) { .home-hero-subtitle { margin-bottom: 2rem; } }
+
+  .home-hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8125rem 1.75rem;
+    background: var(--color-primary);
+    color: var(--color-dark);
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+    border: none;
+    cursor: pointer;
+  }
+  .home-hero-cta:hover {
+    background: var(--color-primary-light);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 25px -5px rgba(245,158,11,0.35);
+  }
+  .home-hero-cta svg {
+    width: 1rem;
+    height: 1rem;
+    transition: transform var(--transition-fast);
+  }
+  .home-hero-cta:hover svg { transform: translateX(3px); }
+
+  .home-hero-cta-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8125rem 1.75rem;
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #fff;
+    font-weight: 500;
+    font-size: 0.875rem;
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+  }
+  .home-hero-cta-secondary:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.2);
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.85rem;
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(12px);
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--color-primary-light);
+    border: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 1.25rem;
+  }
+  .hero-badge-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--color-primary);
+    border-radius: 50%;
+    animation: pulse-dot 2s infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .hero-stats {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem;
+    margin-top: 2.25rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  @media (min-width: 640px) { .hero-stats { gap: 2rem; } }
+
+  .hero-stats-item strong {
+    display: block;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #fff;
+  }
+  @media (min-width: 640px) { .hero-stats-item strong { font-size: 1.25rem; } }
+  @media (min-width: 768px) { .hero-stats-item strong { font-size: 1.5rem; } }
+
+  .hero-stats-item span {
+    display: block;
+    font-size: 0.625rem;
+    color: #78716c;
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  @media (min-width: 640px) { .hero-stats-item span { font-size: 0.6875rem; } }
+
+  /* ===== SECTIONS ===== */
+  .home-section {
+    padding: 4rem 0;
+    overflow: hidden;
+  }
+  @media (min-width: 640px) { .home-section { padding: 6rem 0; } }
+
+  .home-section-title {
+    font-size: clamp(1.75rem, 4vw, 3rem);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.025em;
+    color: var(--color-dark);
+  }
+
+  .home-section-title .accent {
+    background: linear-gradient(90deg, var(--color-primary-dark), var(--color-primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .home-section-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-primary-dark);
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  .home-section-desc {
+    font-size: clamp(0.875rem, 1.5vw, 1rem);
+    color: var(--color-text-light);
+    margin-top: 0.75rem;
+    max-width: 32rem;
+    line-height: 1.6;
+  }
+
+  .home-section-header {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 2.5rem;
+  }
+  @media (min-width: 768px) {
+    .home-section-header {
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 3rem;
+    }
+  }
+
+  .home-section-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text);
+    text-decoration: none;
+    margin-top: 1rem;
+    transition: color var(--transition-fast);
+  }
+  @media (min-width: 768px) { .home-section-link { margin-top: 0; } }
+  .home-section-link:hover { color: var(--color-primary-dark); }
+  .home-section-link svg { width: 1rem; height: 1rem; }
+
+  /* ===== PRODUCTS GRID ===== */
+  .home-products-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  @media (min-width: 640px) { .home-products-grid { gap: 1.25rem; } }
+  @media (min-width: 768px) { .home-products-grid { grid-template-columns: repeat(3, 1fr); gap: 1.5rem; } }
+  @media (min-width: 1024px) { .home-products-grid { grid-template-columns: repeat(4, 1fr); } }
+
+  /* ===== PRODUCT CARD ===== */
+  .home-product-card {
+    position: relative;
+    background: var(--color-surface);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    transition: all var(--transition-normal);
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  .home-product-card:hover {
+    border-color: rgba(245,158,11,0.3);
+    box-shadow: var(--shadow-xl);
+    transform: translateY(-3px);
+  }
+
+  .home-product-img {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    background: var(--color-surface-alt);
+    display: block;
+    transition: transform 600ms ease;
+  }
+  .home-product-card:hover .home-product-img { transform: scale(1.06); }
+
+  .home-product-img-placeholder {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    background: var(--color-surface-alt);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+  }
+
+  .home-product-card-body {
+    padding: 0.75rem;
+  }
+  @media (min-width: 640px) { .home-product-card-body { padding: 1rem; } }
+
+  .home-product-name {
+    font-size: clamp(0.75rem, 1.2vw, 0.875rem);
+    font-weight: 600;
+    color: var(--color-dark);
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color var(--transition-fast);
+  }
+  .home-product-card:hover .home-product-name { color: var(--color-primary-dark); }
+
+  .home-product-price {
+    font-size: clamp(0.75rem, 1.2vw, 0.875rem);
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  .home-product-vendor {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+
+  .home-product-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+  }
+
+  .home-product-rating {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .home-product-rating svg { width: 0.875rem; height: 0.875rem; color: var(--color-primary); }
+
+  /* ===== BADGES ===== */
+  .badge-glass {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(8px);
+    border-radius: 9999px;
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: var(--color-dark);
+    border: 1px solid rgba(0,0,0,0.05);
+  }
+  .badge-sale {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    background: #dc2626;
+    border-radius: 9999px;
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: #fff;
+  }
+  .badge-ai {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.625rem;
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(8px);
+    border-radius: 9999px;
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: var(--color-dark);
+    border: 1px solid rgba(0,0,0,0.05);
+  }
+
+  /* ===== WISHLIST ===== */
+  .wishlist-btn {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 10;
+    width: 2rem;
+    height: 2rem;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(4px);
+    border-radius: 50%;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    transition: transform var(--transition-fast);
+    opacity: 1;
+  }
+  @media (min-width: 768px) {
+    .wishlist-btn { opacity: 0; }
+    .home-product-card:hover .wishlist-btn { opacity: 1; }
+  }
+  .wishlist-btn:hover { transform: scale(1.1); }
+  .wishlist-btn svg { width: 1rem; height: 1rem; color: var(--color-text-muted); }
+
+  /* ===== CATEGORIES GRID ===== */
+  .home-categories-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  @media (min-width: 640px) { .home-categories-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1024px) { .home-categories-grid { grid-template-columns: repeat(4, 1fr); } }
+
+  .home-category-card {
+    position: relative;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    transition: all var(--transition-normal);
+    overflow: hidden;
+  }
+  .home-category-card:hover {
+    border-color: rgba(245,158,11,0.3);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+  }
+
+  .home-category-card .icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-radius: var(--radius-2xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    transition: transform var(--transition-normal);
+  }
+  .home-category-card:hover .icon { transform: scale(1.05); }
+  .home-category-card .icon svg { width: 1.5rem; height: 1.5rem; color: var(--color-primary-dark); }
+  .home-category-card h3 { font-size: 0.875rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.25rem; }
+  .home-category-card p { font-size: 0.75rem; color: var(--color-text-muted); }
+
+  /* ===== VENDOR CARD ===== */
+  .home-vendor-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: all var(--transition-normal);
+  }
+  .home-vendor-card:hover {
+    border-color: rgba(245,158,11,0.3);
+    box-shadow: var(--shadow-xl);
+    transform: translateY(-2px);
+  }
+
+  .home-vendor-avatar {
+    width: 4rem;
+    height: 4rem;
+    background: var(--color-surface-alt);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    border: 2px solid var(--color-border);
+    flex-shrink: 0;
+    transition: border-color var(--transition-normal);
+  }
+  .home-vendor-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .home-vendor-card:hover .home-vendor-avatar { border-color: var(--color-primary-light); }
+
+  .home-vendor-name {
+    font-weight: 600;
+    color: var(--color-dark);
+    font-size: 0.9375rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color var(--transition-fast);
+  }
+  .home-vendor-card:hover .home-vendor-name { color: var(--color-primary-dark); }
+
+  .home-vendor-location {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.125rem;
+  }
+  .home-vendor-location svg { width: 0.75rem; height: 0.75rem; }
+
+  .home-vendor-bio {
+    font-size: 0.875rem;
+    color: var(--color-text-light);
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+
+  .home-vendor-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+    font-size: 0.75rem;
+  }
+
+  .home-vendor-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-weight: 500;
+    color: var(--color-primary-dark);
+  }
+  .home-vendor-rating svg { width: 0.875rem; height: 0.875rem; color: var(--color-primary); }
+
+  .home-vendor-count { color: var(--color-text-muted); }
+
+  .home-vendor-visit {
+    font-weight: 600;
+    color: var(--color-dark);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: color var(--transition-fast);
+  }
+  .home-vendor-card:hover .home-vendor-visit { color: var(--color-primary-dark); }
+  .home-vendor-visit svg { width: 0.75rem; height: 0.75rem; transition: transform var(--transition-fast); }
+  .home-vendor-card:hover .home-vendor-visit svg { transform: translateX(2px); }
+
+  /* ===== STATS BAR ===== */
+  .home-stats-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+  }
+  @media (min-width: 640px) { .home-stats-bar { gap: 2rem; padding: 2rem 2.5rem; } }
+
+  .home-stats-bar-item {
+    flex: 1;
+    min-width: 100px;
+    text-align: center;
+  }
+
+  .home-stats-bar-item .value {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--color-dark);
+    line-height: 1.2;
+  }
+  @media (min-width: 640px) { .home-stats-bar-item .value { font-size: 2rem; } }
+
+  .home-stats-bar-item .label {
+    font-size: 0.6875rem;
+    color: var(--color-text-muted);
+    margin-top: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+  }
+
+  /* ===== CTA SECTION ===== */
+  .home-cta-section {
+    position: relative;
+    background: var(--color-dark);
+    color: #fff;
+    overflow: hidden;
+    padding: 5rem 0;
+  }
+  @media (min-width: 640px) { .home-cta-section { padding: 7rem 0; } }
+  @media (min-width: 768px) { .home-cta-section { padding: 9rem 0; } }
+
+  .home-cta-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #292524 0%, #1c1917 50%, #441a03 100%);
+  }
+
+  .home-cta-section::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.03;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  .home-cta-section .cta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 1rem;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(12px);
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-primary-light);
+    border: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 2rem;
+  }
+
+  .home-cta-title {
+    font-size: clamp(1.875rem, 5vw, 3.75rem);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.025em;
+  }
+
+  .home-cta-title .accent {
+    font-size: clamp(2.25rem, 6vw, 4.5rem);
+    background: linear-gradient(90deg, var(--color-primary-light), var(--color-primary), var(--color-primary-dark));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .home-cta-desc {
+    font-size: clamp(0.875rem, 1.5vw, 1.125rem);
+    color: #a8a29e;
+    margin-bottom: 2.5rem;
+    max-width: 40rem;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.7;
+  }
+
+  .home-cta-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  /* ===== FEATURES GRID ===== */
+  .home-features-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  @media (min-width: 640px) { .home-features-grid { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; } }
+  @media (min-width: 1024px) { .home-features-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .home-feature-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: 1.75rem;
+    text-align: center;
+    transition: all var(--transition-normal);
+  }
+  .home-feature-card:hover {
+    border-color: rgba(245,158,11,0.3);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+  }
+
+  .home-feature-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-radius: var(--radius-xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+  }
+  .home-feature-icon svg { width: 1.75rem; height: 1.75rem; color: var(--color-primary-dark); }
+  .home-feature-card h3 { font-weight: 700; color: var(--color-dark); margin-bottom: 0.5rem; }
+  .home-feature-card p { font-size: 0.875rem; color: var(--color-text-light); line-height: 1.6; }
+
+  /* ===== PROMO SECTION ===== */
+  .home-promo-section {
+    position: relative;
+    background: var(--color-dark);
+    color: #fff;
+    padding: 2.5rem 0;
+    overflow: hidden;
+  }
+  @media (min-width: 640px) { .home-promo-section { padding: 3.5rem 0; } }
+
+  .home-promo-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #1c1917 0%, #292524 50%, #441a03 100%);
+  }
+
+  .home-promo-section::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.03;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  .home-promo-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  @media (min-width: 768px) { .home-promo-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .home-promo-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .home-promo-card {
+    position: relative;
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    transition: all var(--transition-slow);
+  }
+  .home-promo-card:hover {
+    border-color: rgba(245,158,11,0.3);
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
+  }
+
+  .home-promo-card-banner { height: 10rem; overflow: hidden; }
+  .home-promo-card-banner img { width: 100%; height: 100%; object-fit: cover; transition: transform 600ms ease; }
+  .home-promo-card:hover .home-promo-card-banner img { transform: scale(1.05); }
+
+  .home-promo-card-banner-placeholder {
+    height: 10rem;
+    background: linear-gradient(135deg, rgba(245,158,11,0.25), rgba(28,25,23,0.5));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .home-promo-card-body { padding: 1.25rem; position: relative; z-index: 1; }
+
+  .home-promo-tag {
+    display: inline-flex;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .home-promo-tag-product { background: rgba(245,158,11,0.2); color: var(--color-primary-light); border: 1px solid rgba(245,158,11,0.2); }
+  .home-promo-tag-system { background: rgba(168,85,247,0.2); color: #c084fc; border: 1px solid rgba(168,85,247,0.2); }
+  .home-promo-tag-shop { background: rgba(59,130,246,0.2); color: #93c5fd; border: 1px solid rgba(59,130,246,0.2); }
+
+  .home-promo-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    margin-top: 0.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .home-promo-card-desc {
+    font-size: 0.875rem;
+    color: #a8a29e;
+    margin-top: 0.25rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.5;
+  }
+
+  .home-promo-card-price {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    margin-top: 0.75rem;
+  }
+
+  .home-promo-card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-primary);
+    margin-top: 0.75rem;
+    transition: gap var(--transition-fast);
+  }
+  .home-promo-card:hover .home-promo-card-link { gap: 0.625rem; }
+  .home-promo-card-link svg { width: 0.875rem; height: 0.875rem; }
+
+  /* ===== AI RECOMMENDATIONS ===== */
+  .home-ai-section {
+    padding: 4rem 0;
+    background: linear-gradient(135deg, rgba(254,243,199,0.5), #fff);
+    overflow: hidden;
+  }
+  @media (min-width: 640px) { .home-ai-section { padding: 6rem 0; } }
+  @media (prefers-color-scheme: dark) {
+    .home-ai-section { background: linear-gradient(135deg, rgba(41,37,36,0.5), #1c1917); }
+  }
+
+  .home-ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 1rem;
+    background: #fef3c7;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-primary-dark);
+    border: 1px solid #fde68a;
+    margin-bottom: 1rem;
+  }
+  @media (prefers-color-scheme: dark) {
+    .home-ai-badge { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.25); color: var(--color-primary); }
+  }
+  .home-ai-badge svg { width: 0.875rem; height: 0.875rem; }
+
+  .home-ai-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 3rem 0;
+    color: var(--color-text-muted);
+  }
+
+  .home-ai-spinner {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+</style>
+
 <!-- ===== HERO SECTION ===== -->
-<section class="relative bg-stone-900 text-white overflow-hidden min-h-[60vh] sm:min-h-[70vh] flex items-center">
-  <!-- Gradient mesh background -->
-  <div class="absolute inset-0 bg-gradient-to-br from-stone-900 via-stone-800 to-amber-950"></div>
-
-  <!-- Animated orbs -->
-  <div class="absolute -top-1/3 -left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-amber-500/15 to-amber-600/5 rounded-full blur-[120px] animate-pulse" style="animation-duration: 8s;"></div>
-  <div class="absolute -bottom-1/3 -right-1/4 w-[400px] h-[400px] bg-gradient-to-br from-orange-500/10 to-transparent rounded-full blur-[100px]"></div>
-
-  <!-- Subtle grid overlay -->
-  <div class="absolute inset-0 opacity-[0.04]" style="background-image: linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px); background-size: 60px 60px;"></div>
-
-  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20 w-full">
-    <div class="max-w-3xl">
-      <!-- Pill badge -->
-      <div class="inline-flex items-center gap-2 px-3 py-1 bg-white/5 backdrop-blur-md rounded-full text-[10px] sm:text-xs font-medium text-amber-300 border border-white/10 mb-5 reveal">
-        <span class="w-1.5 h-1.5 bg-amber-400 rounded-full"></span>
+<section class="home-hero">
+  <div class="container" style="position: relative; z-index: 1;">
+    <div style="max-width: 48rem;">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
         Handcrafted with Purpose
       </div>
 
-      <!-- Main headline -->
-      <h1 class="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[0.95] mb-4 sm:mb-6 text-balance reveal" style="animation-delay: 100ms;">
+      <h1 class="home-hero-title">
         Where the<br>
-        <span class="font-handwriting text-3xl sm:text-5xl md:text-6xl lg:text-7xl text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500">Workshop</span><br>
-        <span class="text-stone-300">Meets the World</span>
+        <span class="accent">Workshop</span><br>
+        <span style="color: var(--color-text-light);">Meets the World</span>
       </h1>
 
-      <!-- Subtitle -->
-      <p class="text-sm sm:text-base md:text-lg text-stone-400 leading-relaxed max-w-xl mb-6 sm:mb-8 reveal" style="animation-delay: 200ms;">
+      <p class="home-hero-subtitle">
         A multi-vendor marketplace powered by AI. Shop from independent sellers, get smart recommendations, and chat with an AI assistant to find exactly what you need.
       </p>
 
-      <!-- CTA Buttons -->
-      <div class="flex flex-wrap gap-3 reveal" style="animation-delay: 300ms;">
-        <a href="/shop/marketplace" class="btn-forge group">
+      <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+        <a href="/shop/marketplace" class="home-hero-cta">
           Explore Marketplace
-          <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
         </a>
-        <a href="/shop/shops" class="btn-glass group">
+        <a href="/shop/shops" class="home-hero-cta-secondary">
           Meet Our Vendors
-          <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:1rem;height:1rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
         </a>
       </div>
 
-      <!-- Stats row -->
-      <div class="flex flex-wrap items-center gap-4 sm:gap-6 md:gap-8 mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-white/5 reveal" style="animation-delay: 400ms;">
-        <div>
-          <p class="text-lg sm:text-xl md:text-2xl font-bold text-white">AI</p>
-          <p class="text-[9px] sm:text-[10px] text-stone-500 mt-0.5">Shopping Assistant</p>
+      <div class="hero-stats">
+        <div class="hero-stats-item">
+          <strong>AI</strong>
+          <span>Shopping Assistant</span>
         </div>
-        <div>
-          <p class="text-lg sm:text-xl md:text-2xl font-bold text-white">Smart</p>
-          <p class="text-[9px] sm:text-[10px] text-stone-500 mt-0.5">Product Recommendations</p>
+        <div class="hero-stats-item">
+          <strong>Smart</strong>
+          <span>Product Recommendations</span>
         </div>
-        <div>
-          <p class="text-lg sm:text-xl md:text-2xl font-bold text-white">Multi</p>
-          <p class="text-[9px] sm:text-[10px] text-stone-500 mt-0.5">Vendor Marketplace</p>
+        <div class="hero-stats-item">
+          <strong>Multi</strong>
+          <span>Vendor Marketplace</span>
         </div>
       </div>
     </div>
@@ -67,81 +961,77 @@
 
 <!-- ===== PROMOTIONAL BANNERS ===== -->
 {% if active_ads %}
-<section class="py-10 sm:py-14 bg-gradient-to-br from-stone-900 via-stone-800 to-amber-950 overflow-hidden relative">
-  <div class="absolute inset-0 opacity-[0.03]" style="background-image: linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px); background-size: 40px 40px;"></div>
-  <div class="absolute -top-1/2 -right-1/4 w-[500px] h-[500px] bg-amber-500/8 rounded-full blur-[120px]"></div>
-  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-8 reveal">
-      <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/70 mb-2 block">Featured</span>
-      <h2 class="text-2xl sm:text-3xl font-black text-white font-display">Active <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-500">Campaigns</span></h2>
+<section class="home-promo-section">
+  <div class="container" style="position: relative; z-index: 1;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <span class="home-section-label" style="color: rgba(251,191,36,0.7);">Featured</span>
+      <h2 class="home-section-title" style="color: #fff;">
+        Active <span class="accent">Campaigns</span>
+      </h2>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    <div class="home-promo-grid">
       {% for ad in active_ads %}
-      <div class="group relative overflow-hidden rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl hover:shadow-2xl hover:border-amber-400/30 transition-all duration-500 reveal" style="animation-delay: {{ (loop.index0 * 100) + 100 }}ms;">
-        <!-- Glass shine overlay -->
-        <div class="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/[0.02] pointer-events-none"></div>
-        <div class="absolute -top-20 -right-20 w-40 h-40 bg-amber-500/10 rounded-full blur-[60px] group-hover:bg-amber-400/20 transition-all duration-700"></div>
-        
+      <div class="home-promo-card" style="animation: fadeIn 0.5s ease-out {{ (loop.index0 * 100) + 100 }}ms both;">
         {% if ad.banner_url %}
-        <div class="h-40 overflow-hidden">
-          <img loading="lazy" src="{{ ad.banner_url }}" alt="{{ ad.retailer.name if ad.retailer else 'Promotion' }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out">
+        <div class="home-promo-card-banner">
+          <img loading="lazy" src="{{ ad.banner_url }}" alt="{{ ad.retailer.name if ad.retailer else 'Promotion' }}">
         </div>
         {% else %}
-        <div class="h-40 bg-gradient-to-br from-amber-900/40 to-stone-800/60 flex items-center justify-center">
-          <div class="text-center">
-            <svg class="w-10 h-10 mx-auto text-amber-400/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="home-promo-card-banner-placeholder">
+          <div style="text-align: center;">
+            <svg style="width:2.5rem;height:2.5rem;margin:0 auto;color:rgba(251,191,36,0.6);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
             </svg>
-            <p class="text-xs text-amber-300/60 mt-2 font-medium">{{ ad.ad_type }} AD</p>
+            <p style="font-size: 0.75rem; color: rgba(251,191,36,0.6); margin-top: 0.5rem; font-weight: 500;">{{ ad.ad_type }} AD</p>
           </div>
         </div>
         {% endif %}
-        
-<div class="p-5 relative z-10">
-           <div class="flex items-center gap-2 mb-2">
-             <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full {% if ad.ad_type == 'PRODUCT' %}bg-amber-500/20 text-amber-300 border border-amber-400/20{% elif ad.ad_type == 'SYSTEM_PROMO' %}bg-purple-500/20 text-purple-300 border border-purple-400/20{% else %}bg-blue-500/20 text-blue-300 border border-blue-400/20{% endif %}">
-               {{ ad.ad_type }}
-             </span>
-             <span class="text-[10px] text-stone-400">Active</span>
-           </div>
-           
-           {% if ad.ad_type == 'PRODUCT' and ad.product %}
-           <a href="/shop/products/{{ ad.product.slug }}" class="block">
-             <h3 class="text-base font-bold text-white group-hover:text-amber-300 transition-colors line-clamp-1">{{ ad.product.name }}</h3>
-             <p class="text-sm text-stone-400 mt-1 line-clamp-2">{{ ad.product.description|truncate(80) if ad.product.description else 'Discover this featured product' }}</p>
-             <div class="flex items-center gap-3 mt-3">
-               {% if ad.product.discount_price %}
-               <span class="text-lg font-bold text-amber-400 font-mono">{{ format_price(ad.product.discount_price, currency) }}</span>
-               <span class="text-sm text-stone-500 line-through font-mono">{{ format_price(ad.product.price, currency) }}</span>
-               {% else %}
-               <span class="text-lg font-bold text-amber-400 font-mono">{{ format_price(ad.product.price, currency) }}</span>
-               {% endif %}
-             </div>
-           </a>
-           {% elif ad.ad_type == 'SYSTEM_PROMO' %}
-           <a href="{{ ad.target_url or '/shop/marketplace' }}" class="block">
-             <h3 class="text-base font-bold text-white group-hover:text-purple-300 transition-colors">Site Promotion</h3>
-             <p class="text-sm text-stone-400 mt-1 line-clamp-2">Check out our latest offers and seasonal campaigns</p>
-             <span class="inline-flex items-center gap-1.5 text-sm font-medium text-purple-400 mt-3 group-hover:gap-2.5 transition-all">
-               Explore Offers
-               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-             </span>
-           </a>
-           {% else %}
-           <a href="/shop/shops/{{ ad.retailer.slug if ad.retailer else '#' }}" class="block">
-             <h3 class="text-base font-bold text-white group-hover:text-amber-300 transition-colors">
-               {% if ad.retailer %}{{ ad.retailer.name }}{% else %}Featured Shop{% endif %}
-             </h3>
-             <p class="text-sm text-stone-400 mt-1 line-clamp-2">
-                {% if ad.retailer and ad.retailer.bio %}{{ ad.retailer.bio|truncate(100) }}{% else %}Visit this vendor's shop and explore their collection.{% endif %}
-             </p>
-             <span class="inline-flex items-center gap-1.5 text-sm font-medium text-amber-400 mt-3 group-hover:gap-2.5 transition-all">
-               Visit Shop
-               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-             </span>
-           </a>
-           {% endif %}
-         </div>
+
+        <div class="home-promo-card-body">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+            <span class="home-promo-tag {% if ad.ad_type == 'PRODUCT' %}home-promo-tag-product{% elif ad.ad_type == 'SYSTEM_PROMO' %}home-promo-tag-system{% else %}home-promo-tag-shop{% endif %}">
+              {{ ad.ad_type }}
+            </span>
+            <span style="font-size: 0.625rem; color: var(--color-text-muted);">Active</span>
+          </div>
+
+          {% if ad.ad_type == 'PRODUCT' and ad.product %}
+          <a href="/shop/products/{{ ad.product.slug }}" style="display: block; text-decoration: none; color: inherit;">
+            <h3 class="home-promo-card-title">{{ ad.product.name }}</h3>
+            <p class="home-promo-card-desc">{{ ad.product.description|truncate(80) if ad.product.description else 'Discover this featured product' }}</p>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.75rem;">
+              {% if ad.product.discount_price %}
+              <span class="home-promo-card-price">{{ format_price(ad.product.discount_price, currency) }}</span>
+              <span style="font-size: 0.875rem; color: var(--color-text-muted); text-decoration: line-through; font-family: ui-monospace, monospace;">{{ format_price(ad.product.price, currency) }}</span>
+              {% else %}
+              <span class="home-promo-card-price">{{ format_price(ad.product.price, currency) }}</span>
+              {% endif %}
+            </div>
+          </a>
+          {% elif ad.ad_type == 'SYSTEM_PROMO' %}
+          <a href="{{ ad.target_url or '/shop/marketplace' }}" style="display: block; text-decoration: none; color: inherit;">
+            <h3 class="home-promo-card-title" style="color: #c084fc;">Site Promotion</h3>
+            <p class="home-promo-card-desc">Check out our latest offers and seasonal campaigns</p>
+            <span class="home-promo-card-link" style="color: #c084fc; margin-top: 0.75rem;">
+              Explore Offers
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </span>
+          </a>
+          {% else %}
+          <a href="/shop/shops/{{ ad.retailer.slug if ad.retailer else '#' }}" style="display: block; text-decoration: none; color: inherit;">
+            <h3 class="home-promo-card-title">
+              {% if ad.retailer %}{{ ad.retailer.name }}{% else %}Featured Shop{% endif %}
+            </h3>
+            <p class="home-promo-card-desc">
+              {% if ad.retailer and ad.retailer.bio %}{{ ad.retailer.bio|truncate(100) }}{% else %}Visit this vendor's shop and explore their collection.{% endif %}
+            </p>
+            <span class="home-promo-card-link" style="margin-top: 0.75rem;">
+              Visit Shop
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </span>
+          </a>
+          {% endif %}
+        </div>
       </div>
       {% endfor %}
     </div>
@@ -151,47 +1041,51 @@
 
 <!-- ===== FEATURED VENDORS ===== -->
 {% if featured_retailers %}
-<section class="py-16 sm:py-24 bg-white dark:bg-stone-900 overflow-hidden">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 reveal">
+<section class="home-section" style="background: var(--color-surface);">
+  <div class="container">
+    <div class="home-section-header">
       <div>
-        <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Top Sellers</span>
-        <h2 class="text-3xl sm:text-4xl md:text-5xl font-black text-stone-900 dark:text-stone-100 font-display">Featured <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Vendors</span></h2>
-        <p class="text-sm sm:text-base text-stone-500 dark:text-stone-400 mt-3 max-w-lg">Independent sellers with their own shops, ratings, and product collections</p>
+        <span class="home-section-label">Top Sellers</span>
+        <h2 class="home-section-title">Featured <span class="accent">Vendors</span></h2>
+        <p class="home-section-desc">Independent sellers with their own shops, ratings, and product collections</p>
       </div>
-      <a href="/shop/shops" class="btn-ghost mt-4 md:mt-0">
+      <a href="/shop/shops" class="home-section-link">
         View All Vendors
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
       </a>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
       {% for r in featured_retailers %}
-      <a href="/shop/shops/{{ r.slug }}" class="card-artisan group reveal" style="animation-delay: {{ (loop.index0 * 100) + 100 }}ms;">
-        <div class="flex items-center gap-4 mb-4">
-          <div class="w-16 h-16 bg-stone-100 dark:bg-stone-700 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center text-2xl font-bold text-stone-300 dark:text-stone-500 ring-2 ring-stone-200/50 dark:ring-stone-600/50 group-hover:ring-amber-300/50 dark:group-hover:ring-amber-600/50 transition-all duration-300">
-            {% if r.logo_url %}<img loading="lazy" src="{{ r.logo_url }}" alt="{{ r.name }}" class="w-full h-full object-cover">{% else %}{{ r.name[0] }}{% endif %}
+      <a href="/shop/shops/{{ r.slug }}" class="home-vendor-card" style="animation: fadeIn 0.5s ease-out {{ (loop.index0 * 100) + 100 }}ms both;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+          <div class="home-vendor-avatar">
+            {% if r.logo_url %}<img loading="lazy" src="{{ r.logo_url }}" alt="{{ r.name }}">{% else %}{{ r.name[0] }}{% endif %}
           </div>
-          <div class="flex-1 min-w-0">
-            <h3 class="font-semibold text-stone-900 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors truncate">{{ r.name }}</h3>
-            {% if r.location %}<p class="text-xs text-stone-400 flex items-center gap-1 mt-0.5">
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <div style="flex: 1; min-width: 0;">
+            <h3 class="home-vendor-name">{{ r.name }}</h3>
+            {% if r.location %}
+            <p class="home-vendor-location">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
               {{ r.location }}
-            </p>{% endif %}
+            </p>
+            {% endif %}
           </div>
         </div>
-        {% if r.bio %}<p class="text-sm text-stone-500 dark:text-stone-400 leading-relaxed line-clamp-2 mb-5">{{ r.bio[:150] }}{% if r.bio|length > 150 %}...{% endif %}</p>{% endif %}
-        <div class="flex items-center justify-between pt-4 border-t border-stone-100 dark:border-stone-700">
-          <div class="flex items-center gap-4 text-xs">
-            <span class="flex items-center gap-1.5 font-medium text-amber-600 dark:text-amber-400">
-              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+        {% if r.bio %}
+        <p class="home-vendor-bio">{{ r.bio[:150] }}{% if r.bio|length > 150 %}...{% endif %}</p>
+        {% endif %}
+        <div class="home-vendor-footer">
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <span class="home-vendor-rating">
+              <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
               {{ "%.1f"|format(r.rating) }}
             </span>
-            <span class="text-stone-400">{{ retailer_counts.get(r.id, 0) }} pieces</span>
+            <span class="home-vendor-count">{{ retailer_counts.get(r.id, 0) }} pieces</span>
           </div>
-          <span class="text-xs font-semibold text-stone-900 dark:text-stone-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors flex items-center gap-1">
+          <span class="home-vendor-visit">
             Visit
-            <svg class="w-3 h-3 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
           </span>
         </div>
       </a>
@@ -203,39 +1097,37 @@
 
 <!-- ===== FLAGSHIP COLLECTION ===== -->
 {% if flagship_products %}
-<section class="py-16 sm:py-24 bg-stone-50 dark:bg-stone-800/50 overflow-hidden">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-12 reveal">
-      <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Curated Selection</span>
-      <h2 class="text-3xl sm:text-4xl md:text-5xl font-black text-stone-900 dark:text-stone-100 font-display">Flagship <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Collection</span></h2>
-      <p class="text-sm sm:text-base text-stone-500 dark:text-stone-400 mt-3 max-w-lg mx-auto">Top-rated products from our most active vendors</p>
+<section class="home-section" style="background: var(--color-surface-alt);">
+  <div class="container">
+    <div style="text-align: center; margin-bottom: 3rem;">
+      <span class="home-section-label">Curated Selection</span>
+      <h2 class="home-section-title">Flagship <span class="accent">Collection</span></h2>
+      <p class="home-section-desc" style="margin-left: auto; margin-right: auto;">Top-rated products from our most active vendors</p>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+    <div class="home-products-grid">
       {% for p in flagship_products %}
-      <div class="card-product group reveal-scale relative" style="animation-delay: {{ (loop.index0 * 80) + 100 }}ms;">
-        <button onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist('{{ p.id }}', this)" class="wishlist-heart absolute top-3 right-3 z-10 w-8 h-8 bg-white/80 dark:bg-stone-800/80 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform duration-200 md:opacity-0 md:group-hover:opacity-100" data-product-id="{{ p.id }}" aria-label="Add to wishlist">
-          <svg class="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="home-product-card" style="animation: fadeIn 0.5s ease-out {{ (loop.index0 * 80) + 100 }}ms both;">
+        <button onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist('{{ p.id }}', this)" class="wishlist-btn" data-product-id="{{ p.id }}" aria-label="Add to wishlist">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
           </svg>
         </button>
         <a href="/shop/products/{{ p.slug }}">
-          <div class="aspect-[4/5] overflow-hidden bg-stone-50 dark:bg-stone-700 relative">
-            {% if p.images and p.images|length > 0 %}
-            <img loading="lazy" src="{{ p.images[0] }}" alt="{{ p.name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
-            {% else %}
-            <div class="w-full h-full flex items-center justify-center text-stone-300 dark:text-stone-500">
-              <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            </div>
-            {% endif %}
-            <span class="absolute top-3 left-3 badge-glass">Flagship</span>
-            {% if p.discount_price and p.discount_price < p.price %}
-            <span class="absolute top-3 left-24 badge-red">Sale</span>
-            {% endif %}
+          {% if p.images and p.images|length > 0 %}
+          <img loading="lazy" src="{{ p.images[0] }}" alt="{{ p.name }}" class="home-product-img">
+          {% else %}
+          <div class="home-product-img-placeholder">
+            <svg style="width:3rem;height:3rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
           </div>
-          <div class="p-4">
-            <h3 class="text-sm font-semibold text-stone-900 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors line-clamp-1">{{ p.name }}</h3>
-            <p class="text-sm font-bold text-stone-900 dark:text-stone-100 mt-1 font-mono">{{ format_price(p.price, currency) }}</p>
+          {% endif %}
+          <div style="position: relative; padding: 0.75rem;">
+            <span class="badge-glass" style="position: absolute; top: -1rem; left: 0.75rem;">Flagship</span>
+            {% if p.discount_price and p.discount_price < p.price %}
+            <span class="badge-sale" style="position: absolute; top: -1rem; left: 5.5rem;">Sale</span>
+            {% endif %}
+            <h3 class="home-product-name">{{ p.name }}</h3>
+            <p class="home-product-price" style="margin-top: 0.25rem;">{{ format_price(p.price, currency) }}</p>
           </div>
         </a>
       </div>
@@ -246,70 +1138,65 @@
 {% endif %}
 
 <!-- ===== AI RECOMMENDATIONS SECTION ===== -->
-<section id="ai-recommendations-section" class="py-16 sm:py-24 bg-gradient-to-br from-amber-50/50 to-white dark:from-stone-800/50 dark:to-stone-900 overflow-hidden" style="display: none;">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-12 reveal">
-      <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-100 dark:bg-amber-900/30 rounded-full text-xs font-medium text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 mb-4">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+<section id="ai-recommendations-section" class="home-ai-section" style="display: none;">
+  <div class="container">
+    <div style="text-align: center; margin-bottom: 3rem;">
+      <div class="home-ai-badge">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
         Powered by AI
       </div>
-      <h2 class="text-3xl sm:text-4xl md:text-5xl font-black text-stone-900 dark:text-stone-100 font-display">Recommended <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">For You</span></h2>
-      <p class="text-sm sm:text-base text-stone-500 dark:text-stone-400 mt-3 max-w-lg mx-auto">Personalized picks based on what's trending and popular in the marketplace</p>
+      <h2 class="home-section-title">Recommended <span class="accent">For You</span></h2>
+      <p class="home-section-desc" style="margin-left: auto; margin-right: auto;">Personalized picks based on what's trending and popular in the marketplace</p>
     </div>
 
-    <div id="ai-recommendations-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-      <!-- Loaded via JS -->
-      <div class="col-span-full text-center py-12">
-        <div class="inline-flex items-center gap-2 text-stone-400 dark:text-stone-500">
-          <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"/><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" class="opacity-75"/></svg>
-          <span class="text-sm">Loading recommendations...</span>
-        </div>
+    <div id="ai-recommendations-grid" class="home-products-grid">
+      <div class="home-ai-loading" style="grid-column: 1 / -1;">
+        <div class="home-ai-spinner"></div>
+        <span style="font-size: 0.875rem;">Loading recommendations...</span>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ===== MARKET SECTION ===== -->
-<section class="py-16 sm:py-24 bg-white dark:bg-stone-900 overflow-hidden">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 reveal">
+<section class="home-section" style="background: var(--color-surface);">
+  <div class="container">
+    <div class="home-section-header">
       <div>
-        <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Discover</span>
-        <h2 class="text-3xl sm:text-4xl md:text-5xl font-black text-stone-900 dark:text-stone-100 font-display">The <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Market</span></h2>
-        <p class="text-sm sm:text-base text-stone-500 dark:text-stone-400 mt-3 max-w-lg">Browse products across all vendors. Filter by category, price, and rating.</p>
+        <span class="home-section-label">Discover</span>
+        <h2 class="home-section-title">The <span class="accent">Market</span></h2>
+        <p class="home-section-desc">Browse products across all vendors. Filter by category, price, and rating.</p>
       </div>
-      <a href="/shop/marketplace" class="btn-ghost mt-4 md:mt-0">
+      <a href="/shop/marketplace" class="home-section-link">
         View All Products
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
       </a>
     </div>
 
     {% if top_products %}
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+    <div class="home-products-grid">
       {% for p in top_products %}
-      <div class="card-product group reveal relative" style="animation-delay: {{ (loop.index0 * 80) + 100 }}ms;">
-        <button onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist('{{ p.id }}', this)" class="wishlist-heart absolute top-3 right-3 z-10 w-8 h-8 bg-white/80 dark:bg-stone-800/80 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform duration-200 md:opacity-0 md:group-hover:opacity-100" data-product-id="{{ p.id }}" aria-label="Add to wishlist">
-          <svg class="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="home-product-card" style="animation: fadeIn 0.5s ease-out {{ (loop.index0 * 80) + 100 }}ms both;">
+        <button onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist('{{ p.id }}', this)" class="wishlist-btn" data-product-id="{{ p.id }}" aria-label="Add to wishlist">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
           </svg>
         </button>
         <a href="/shop/products/{{ p.slug }}">
-          <div class="aspect-[3/4] overflow-hidden bg-stone-50 dark:bg-stone-700 relative">
-            {% if p.images and p.images|length > 0 %}
-            <img loading="lazy" src="{{ p.images[0] }}" alt="{{ p.name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
-            {% else %}
-            <div class="w-full h-full flex items-center justify-center text-stone-300 dark:text-stone-500">
-              <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-            </div>
-            {% endif %}
+          {% if p.images and p.images|length > 0 %}
+          <img loading="lazy" src="{{ p.images[0] }}" alt="{{ p.name }}" class="home-product-img">
+          {% else %}
+          <div class="home-product-img-placeholder">
+            <svg style="width:3rem;height:3rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
           </div>
-          <div class="p-3 sm:p-4">
-            <h3 class="text-xs sm:text-sm font-semibold text-stone-900 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors line-clamp-1">{{ p.name }}</h3>
-            <div class="flex items-center justify-between mt-2">
-              <span class="text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 font-mono">{{ format_price(p.price, currency) }}</span>
+          {% endif %}
+          <div class="home-product-card-body">
+            <h3 class="home-product-name">{{ p.name }}</h3>
+            <div class="home-product-meta">
+              <span class="home-product-price">{{ format_price(p.price, currency) }}</span>
               {% if p.rating and p.rating > 0 %}
-              <span class="text-xs text-stone-400 flex items-center gap-1">
-                <svg class="w-3.5 h-3.5 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+              <span class="home-product-rating">
+                <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                 {{ "%.1f"|format(p.rating) }}
               </span>
               {% endif %}
@@ -321,97 +1208,86 @@
     </div>
     {% endif %}
 
-    <div class="text-center mt-10 reveal">
-      <a href="/shop/marketplace" class="btn-forge group text-base">
+    <div style="text-align: center; margin-top: 2.5rem;">
+      <a href="/shop/marketplace" class="home-hero-cta" style="font-size: 1rem;">
         Browse Full Marketplace
-        <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
       </a>
     </div>
   </div>
 </section>
 
-<!-- ===== CTA SECTION ===== -->
-<section class="py-16 sm:py-24 bg-white dark:bg-stone-900 overflow-hidden">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-12 reveal">
-      <span class="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400 mb-2 block">Why ForgeStore</span>
-      <h2 class="text-3xl sm:text-4xl md:text-5xl font-black text-stone-900 dark:text-stone-100 font-display">Built for <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Real Commerce</span></h2>
+<!-- ===== WHY FORGESTORE ===== -->
+<section class="home-section" style="background: var(--color-surface);">
+  <div class="container">
+    <div style="text-align: center; margin-bottom: 3rem;">
+      <span class="home-section-label">Why ForgeStore</span>
+      <h2 class="home-section-title">Built for <span class="accent">Real Commerce</span></h2>
     </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div class="card-artisan text-center p-6 reveal" style="animation-delay: 100ms;">
-        <div class="w-14 h-14 bg-amber-100 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <svg class="w-7 h-7 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+    <div class="home-features-grid">
+      <div class="home-feature-card" style="animation: fadeIn 0.5s ease-out 100ms both;">
+        <div class="home-feature-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
         </div>
-        <h3 class="font-bold text-stone-900 dark:text-stone-100 mb-2">AI Shopping Assistant</h3>
-        <p class="text-sm text-stone-500 dark:text-stone-400">Chat with our AI to find products, compare options, and get personalized shopping advice — available 24/7.</p>
+        <h3>AI Shopping Assistant</h3>
+        <p>Chat with our AI to find products, compare options, and get personalized shopping advice — available 24/7.</p>
       </div>
-      <div class="card-artisan text-center p-6 reveal" style="animation-delay: 200ms;">
-        <div class="w-14 h-14 bg-amber-100 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <svg class="w-7 h-7 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+      <div class="home-feature-card" style="animation: fadeIn 0.5s ease-out 200ms both;">
+        <div class="home-feature-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
         </div>
-        <h3 class="font-bold text-stone-900 dark:text-stone-100 mb-2">Smart Recommendations</h3>
-        <p class="text-sm text-stone-500 dark:text-stone-400">AI-powered product suggestions based on what you browse, what's in your cart, and what's popular across the store.</p>
+        <h3>Smart Recommendations</h3>
+        <p>AI-powered product suggestions based on what you browse, what's in your cart, and what's popular across the store.</p>
       </div>
-      <div class="card-artisan text-center p-6 reveal" style="animation-delay: 300ms;">
-        <div class="w-14 h-14 bg-amber-100 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <svg class="w-7 h-7 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+      <div class="home-feature-card" style="animation: fadeIn 0.5s ease-out 300ms both;">
+        <div class="home-feature-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
         </div>
-        <h3 class="font-bold text-stone-900 dark:text-stone-100 mb-2">Multi-Vendor Marketplace</h3>
-        <p class="text-sm text-stone-500 dark:text-stone-400">Shop from independent sellers, each with their own storefront, ratings, and fulfillment. Compare across vendors easily.</p>
+        <h3>Multi-Vendor Marketplace</h3>
+        <p>Shop from independent sellers, each with their own storefront, ratings, and fulfillment. Compare across vendors easily.</p>
       </div>
-      <div class="card-artisan text-center p-6 reveal" style="animation-delay: 400ms;">
-        <div class="w-14 h-14 bg-amber-100 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <svg class="w-7 h-7 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+      <div class="home-feature-card" style="animation: fadeIn 0.5s ease-out 400ms both;">
+        <div class="home-feature-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
         </div>
-        <h3 class="font-bold text-stone-900 dark:text-stone-100 mb-2">Secure Paystack Payments</h3>
-        <p class="text-sm text-stone-500 dark:text-stone-400">Pay securely with Paystack. Support for cards, bank transfers, and mobile payments across Nigeria and beyond.</p>
+        <h3>Secure Paystack Payments</h3>
+        <p>Pay securely with Paystack. Support for cards, bank transfers, and mobile payments across Nigeria and beyond.</p>
       </div>
-      <div class="card-artisan text-center p-6 reveal" style="animation-delay: 500ms;">
-        <div class="w-14 h-14 bg-amber-100 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <svg class="w-7 h-7 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <div class="home-feature-card" style="animation: fadeIn 0.5s ease-out 500ms both;">
+        <div class="home-feature-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         </div>
-        <h3 class="font-bold text-stone-900 dark:text-stone-100 mb-2">Vendor Wallet & Payouts</h3>
-        <p class="text-sm text-stone-500 dark:text-stone-400">Vendors earn directly to their wallets. Automated settlements, transaction history, and withdrawal management built in.</p>
+        <h3>Vendor Wallet & Payouts</h3>
+        <p>Vendors earn directly to their wallets. Automated settlements, transaction history, and withdrawal management built in.</p>
       </div>
-      <div class="card-artisan text-center p-6 reveal" style="animation-delay: 600ms;">
-        <div class="w-14 h-14 bg-amber-100 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <svg class="w-7 h-7 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      <div class="home-feature-card" style="animation: fadeIn 0.5s ease-out 600ms both;">
+        <div class="home-feature-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
         </div>
-        <h3 class="font-bold text-stone-900 dark:text-stone-100 mb-2">Affiliate & Referral System</h3>
-        <p class="text-sm text-stone-500 dark:text-stone-400">Earn commissions by sharing product links. Vendor-to-vendor and customer-to-vendor affiliate tracking built in.</p>
+        <h3>Affiliate & Referral System</h3>
+        <p>Earn commissions by sharing product links. Vendor-to-vendor and customer-to-vendor affiliate tracking built in.</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ===== CTA SECTION ===== -->
-<section class="relative bg-stone-900 text-white overflow-hidden py-20 sm:py-28 md:py-36">
-  <div class="absolute inset-0 bg-gradient-to-br from-stone-800 via-stone-900 to-amber-950"></div>
-
-  <!-- Decorative orbs -->
-  <div class="absolute -top-1/3 -left-1/4 w-[700px] h-[700px] bg-gradient-to-br from-amber-500/10 to-amber-600/5 rounded-full blur-[140px] animate-pulse" style="animation-duration: 8s;"></div>
-  <div class="absolute -bottom-1/3 -right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-orange-500/8 to-transparent rounded-full blur-[100px]"></div>
-
-  <!-- Subtle grid overlay -->
-  <div class="absolute inset-0 opacity-[0.03]" style="background-image: linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px); background-size: 60px 60px;"></div>
-
-  <div class="relative max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-    <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 backdrop-blur-md rounded-full text-xs font-medium text-amber-300 border border-white/10 mb-8 reveal">
-      Powered by AI
-    </div>
-    <h2 class="text-3xl sm:text-4xl md:text-6xl font-black font-display leading-tight mb-6 reveal" style="animation-delay: 100ms;">
+<section class="home-cta-section">
+  <div class="container" style="position: relative; z-index: 1; text-align: center; max-width: 56rem;">
+    <div class="cta-badge">Powered by AI</div>
+    <h2 class="home-cta-title">
       Shopping Made<br>
-      <span class="font-handwriting text-4xl sm:text-5xl md:text-7xl text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500">Smarter Together</span>
+      <span class="accent">Smarter Together</span>
     </h2>
-    <p class="text-sm sm:text-lg text-stone-400 mb-10 max-w-2xl mx-auto leading-relaxed reveal" style="animation-delay: 200ms;">
+    <p class="home-cta-desc">
       Every customer gets access to an AI shopping assistant and personalized product recommendations. Whether you're browsing or ready to buy, our AI helps you discover exactly what you're looking for.
     </p>
-    <div class="flex flex-wrap justify-center gap-4 reveal" style="animation-delay: 300ms;">
-      <a href="/shop/marketplace" class="btn-forge text-base group">
+    <div class="home-cta-actions">
+      <a href="/shop/marketplace" class="home-hero-cta" style="font-size: 1rem;">
         Start Exploring
-        <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
       </a>
-      <a href="/shop/shops" class="btn-glass">
+      <a href="/shop/shops" class="home-hero-cta-secondary">
         Meet the Vendors
       </a>
     </div>
@@ -438,26 +1314,24 @@
             const hasDiscount = p.discount_price && p.discount_price < p.price;
             const reason = p.reason || '';
             grid.innerHTML += `
-                <div class="card-product group relative" style="animation: fadeIn 0.5s ease-out ${(i * 80) + 100}ms both;">
-                    <a href="/shop/products/${p.slug || ''}">
-                        <div class="aspect-[3/4] overflow-hidden bg-stone-50 dark:bg-stone-700 relative">
-                            ${p.image ? `<img loading="lazy" src="${p.image}" alt="${p.name || ''}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">` : `<div class="w-full h-full flex items-center justify-center text-stone-300 dark:text-stone-500"><svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>`}
-                            <span class="absolute top-3 left-3 badge-glass text-[10px]">
-                                <svg class="w-3 h-3 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-                                AI Pick
-                            </span>
-                            ${hasDiscount ? '<span class="absolute top-3 left-20 badge-red">Sale</span>' : ''}
+                <a href="/shop/products/${p.slug || ''}" class="home-product-card" style="animation: fadeIn 0.5s ease-out ${(i * 80) + 100}ms both;">
+                    <div style="position: relative;">
+                        ${p.image ? `<img loading="lazy" src="${p.image}" alt="${p.name || ''}" class="home-product-img">` : `<div class="home-product-img-placeholder"><svg style="width:3rem;height:3rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>`}
+                        <span class="badge-ai" style="position: absolute; top: 0.75rem; left: 0.75rem;">
+                            <svg style="width:0.75rem;height:0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                            AI Pick
+                        </span>
+                        ${hasDiscount ? '<span class="badge-sale" style="position: absolute; top: 0.75rem; left: 5rem;">Sale</span>' : ''}
+                    </div>
+                    <div class="home-product-card-body">
+                        <h3 class="home-product-name">${p.name || ''}</h3>
+                        <div class="home-product-meta">
+                            <span class="home-product-price">₦${Number(price || 0).toLocaleString()}</span>
+                            ${hasDiscount ? `<span style="font-size: 0.75rem; color: var(--color-text-muted); text-decoration: line-through;">₦${Number(p.price || 0).toLocaleString()}</span>` : ''}
                         </div>
-                        <div class="p-3 sm:p-4">
-                            <h3 class="text-xs sm:text-sm font-semibold text-stone-900 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors line-clamp-1">${p.name || ''}</h3>
-                            <div class="flex items-center justify-between mt-2">
-                                <span class="text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 font-mono">₦${Number(price || 0).toLocaleString()}</span>
-                                ${hasDiscount ? `<span class="text-xs text-stone-400 line-through">₦${Number(p.price || 0).toLocaleString()}</span>` : ''}
-                            </div>
-                            ${reason ? `<p class="text-[10px] text-stone-400 dark:text-stone-500 mt-1.5 line-clamp-1 italic">${reason}</p>` : ''}
-                        </div>
-                    </a>
-                </div>
+                        ${reason ? `<p style="font-size: 0.625rem; color: var(--color-text-muted); margin-top: 0.375rem; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${reason}</p>` : ''}
+                    </div>
+                </a>
             `;
         });
 

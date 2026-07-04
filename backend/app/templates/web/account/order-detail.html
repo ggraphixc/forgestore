@@ -1,145 +1,171 @@
 {% extends "web/base.html" %}
 {% block title %}Order {{ order.order_number }} — ForgeStore{% endblock %}
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-stone-50 via-white to-amber-50/20 dark:from-stone-950 dark:via-stone-900 dark:to-amber-950/20">
-  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
-    <!-- Back + Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sm:mb-10 reveal">
+<style>
+  .acct-page{padding:2rem 1rem;max-width:72rem;margin:0 auto}
+  .acct-header{display:flex;flex-direction:column;gap:.25rem}
+  .acct-header h1{font-size:1.875rem;font-weight:800;color:var(--color-stone-900)}
+  .acct-header p{font-size:.875rem;color:var(--color-stone-500)}
+  .acct-card{background:var(--color-white);border:1px solid var(--color-stone-200);border-radius:1rem;padding:1.5rem}
+  .acct-badge{display:inline-flex;align-items:center;padding:.25rem .75rem;border-radius:9999px;font-size:.75rem;font-weight:600}
+  .acct-badge--amber{background:var(--color-amber-100);color:var(--color-amber-700)}
+  .acct-badge--emerald{background:var(--color-emerald-100);color:var(--color-emerald-700)}
+  .acct-badge--blue{background:var(--color-blue-100);color:var(--color-blue-700)}
+  .acct-badge--red{background:var(--color-red-100);color:var(--color-red-700)}
+  .acct-form-group label{display:block;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-500);margin-bottom:.5rem}
+  .acct-form-input{width:100%;padding:.75rem 1rem;border:1px solid var(--color-stone-200);border-radius:.75rem;font-size:.875rem;color:var(--color-stone-900);background:var(--color-white);min-height:44px;transition:border-color .15s;box-sizing:border-box}
+  .acct-form-input:focus{outline:none;border-color:var(--color-amber-400);box-shadow:0 0 0 3px rgba(245,158,11,.1)}
+  .acct-btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.5rem;border-radius:.75rem;font-size:.875rem;font-weight:600;min-height:44px;border:none;cursor:pointer;transition:all .15s;text-decoration:none}
+  .acct-btn--primary{background:var(--color-amber-600);color:white}
+  .acct-btn--primary:hover{background:var(--color-amber-700)}
+  .acct-btn--ghost{background:transparent;color:var(--color-stone-600);border:1px solid var(--color-stone-200)}
+  .acct-btn--ghost:hover{background:var(--color-stone-50)}
+  .back-link{display:inline-flex;align-items:center;gap:.5rem;font-size:.875rem;color:var(--color-stone-500);text-decoration:none;min-height:44px;margin-bottom:1rem}
+  .back-link:hover{color:var(--color-stone-900)}
+  .timeline-dot{width:.75rem;height:.75rem;border-radius:50%;flex-shrink:0}
+  .timeline-dot--active{background:var(--color-emerald-500);box-shadow:0 0 0 4px var(--color-emerald-100)}
+  .timeline-dot--inactive{background:var(--color-stone-300)}
+  .timeline-line{width:2px;flex:1;margin-top:.25rem}
+  .timeline-line--active{background:var(--color-emerald-200)}
+  .timeline-line--inactive{background:var(--color-stone-200)}
+  .item-row{display:flex;align-items:center;gap:1rem;padding:1rem 0;border-bottom:1px solid var(--color-stone-100)}
+  .item-row:first-child{padding-top:0}
+  .item-row:last-child{border-bottom:none;padding-bottom:0}
+  @media(min-width:768px){.acct-page{padding:2.5rem 1.5rem}.acct-header h1{font-size:2.25rem}}
+  @media(min-width:1024px){.order-detail-grid{display:grid;grid-template-columns:2fr 1fr;gap:1.5rem}}
+</style>
+
+<div class="acct-page">
+  <div class="acct-header" style="margin-bottom:2rem">
+    <a href="/shop/account/orders" class="back-link">
+      <svg style="width:1.25rem;height:1.25rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 12H5m7-7l-7 7 7 7"/></svg>
+      Back to Orders
+    </a>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
       <div>
-        <div class="flex items-center gap-3 mb-2">
-          <a href="/shop/account/orders" class="p-2 -ml-2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-all" aria-label="Back to orders">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 12H5m7-7l-7 7 7 7"/></svg>
-          </a>
-          <div>
-            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-display font-black text-stone-900 dark:text-stone-100">Order <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">Details</span></h1>
-            <p class="text-sm text-stone-500 dark:text-stone-400 mt-0.5">{{ order.order_number }}</p>
-          </div>
-        </div>
+        <h1>Order <span style="color:var(--color-amber-600)">Details</span></h1>
+        <p style="font-size:.875rem;color:var(--color-stone-500)">{{ order.order_number }}</p>
       </div>
       {% set status = order.status.value if order.status is mapping == false and order.status is not string else order.status %}
       {% set status_str = status|string|lower if status else 'pending' %}
       {% if 'delivered' in status_str or 'completed' in status_str %}
-      <span class="badge-emerald text-xs sm:text-sm px-3 py-1.5">{{ status|string|replace('_', ' ')|title if status else 'Pending' }}</span>
+      <span class="acct-badge acct-badge--emerald">{{ status|string|replace('_', ' ')|title if status else 'Pending' }}</span>
       {% elif 'processing' in status_str or 'shipped' in status_str %}
-      <span class="badge-blue text-xs sm:text-sm px-3 py-1.5">{{ status|string|replace('_', ' ')|title if status else 'Pending' }}</span>
+      <span class="acct-badge acct-badge--blue">{{ status|string|replace('_', ' ')|title if status else 'Pending' }}</span>
       {% elif 'cancelled' in status_str or 'refunded' in status_str %}
-      <span class="badge-red text-xs sm:text-sm px-3 py-1.5">{{ status|string|replace('_', ' ')|title if status else 'Pending' }}</span>
+      <span class="acct-badge acct-badge--red">{{ status|string|replace('_', ' ')|title if status else 'Pending' }}</span>
       {% else %}
-      <span class="badge-amber text-xs sm:text-sm px-3 py-1.5">{{ status|string|replace('_', ' ')|title if status else 'Pending' }}</span>
+      <span class="acct-badge acct-badge--amber">{{ status|string|replace('_', ' ')|title if status else 'Pending' }}</span>
       {% endif %}
     </div>
+  </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-      <!-- Left: Order Items -->
-      <div class="lg:col-span-2 space-y-6">
-        <!-- Status Timeline -->
-        <div class="card-artisan p-5 sm:p-6 reveal">
-          <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-stone-400 dark:text-stone-500 mb-5">Order Timeline</h2>
-          <div class="space-y-4">
-            <div class="flex gap-3">
-              <div class="flex flex-col items-center">
-                <div class="w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-emerald-100 dark:ring-emerald-900/30"></div>
-                <div class="w-0.5 flex-1 bg-emerald-200 dark:bg-emerald-800/30 mt-1"></div>
-              </div>
-              <div class="pb-4">
-                <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">Order Placed</p>
-                <p class="text-xs text-stone-500 dark:text-stone-400">{{ order.created_at.strftime('%b %d, %Y at %I:%M %p') if order.created_at else '—' }}</p>
-              </div>
+  <div class="order-detail-grid">
+    <div style="display:flex;flex-direction:column;gap:1.5rem">
+      <div class="acct-card">
+        <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:1.25rem">Order Timeline</p>
+        <div style="display:flex;flex-direction:column;gap:1rem">
+          <div style="display:flex;gap:.75rem">
+            <div style="display:flex;flex-direction:column;align-items:center">
+              <div class="timeline-dot timeline-dot--active"></div>
+              <div class="timeline-line timeline-line--active"></div>
             </div>
-            <div class="flex gap-3">
-              <div class="flex flex-col items-center">
-                <div class="w-3 h-3 rounded-full {% if 'processing' in status_str or 'shipped' in status_str or 'delivered' in status_str or 'completed' in status_str %}bg-emerald-500 ring-4 ring-emerald-100 dark:ring-emerald-900/30{% else %}bg-stone-200 dark:bg-stone-700{% endif %}"></div>
-                <div class="w-0.5 flex-1 {% if 'shipped' in status_str or 'delivered' in status_str or 'completed' in status_str %}bg-emerald-200 dark:bg-emerald-800/30{% else %}bg-stone-200 dark:bg-stone-700{% endif %} mt-1"></div>
-              </div>
-              <div class="pb-4">
-                <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">Processing</p>
-                <p class="text-xs text-stone-500 dark:text-stone-400">Your order is being prepared</p>
-              </div>
-            </div>
-            <div class="flex gap-3">
-              <div class="flex flex-col items-center">
-                <div class="w-3 h-3 rounded-full {% if 'shipped' in status_str or 'delivered' in status_str or 'completed' in status_str %}bg-emerald-500 ring-4 ring-emerald-100 dark:ring-emerald-900/30{% else %}bg-stone-200 dark:bg-stone-700{% endif %}"></div>
-                <div class="w-0.5 flex-1 {% if 'delivered' in status_str or 'completed' in status_str %}bg-emerald-200 dark:bg-emerald-800/30{% else %}bg-stone-200 dark:bg-stone-700{% endif %} mt-1"></div>
-              </div>
-              <div class="pb-4">
-                <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">Shipped</p>
-                <p class="text-xs text-stone-500 dark:text-stone-400">On its way to you</p>
-              </div>
-            </div>
-            <div class="flex gap-3">
-              <div class="flex flex-col items-center">
-                <div class="w-3 h-3 rounded-full {% if 'delivered' in status_str or 'completed' in status_str %}bg-emerald-500 ring-4 ring-emerald-100 dark:ring-emerald-900/30{% else %}bg-stone-200 dark:bg-stone-700{% endif %}"></div>
-              </div>
-              <div>
-                <p class="text-sm font-semibold text-stone-900 dark:text-stone-100">Delivered</p>
-                <p class="text-xs text-stone-500 dark:text-stone-400">Order completed</p>
-              </div>
+            <div style="padding-bottom:1rem">
+              <p style="font-size:.875rem;font-weight:600;color:var(--color-stone-900)">Order Placed</p>
+              <p style="font-size:.75rem;color:var(--color-stone-500)">{{ order.created_at.strftime('%b %d, %Y at %I:%M %p') if order.created_at else '—' }}</p>
             </div>
           </div>
-        </div>
-
-        <!-- Items -->
-        <div class="card-artisan p-5 sm:p-6 reveal">
-          <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-stone-400 dark:text-stone-500 mb-5">Order Items ({{ items|length }})</h2>
-          <div class="space-y-4 divide-y divide-stone-100 dark:divide-stone-700">
-            {% for item in items %}
-            <div class="flex items-center gap-4 pt-4 first:pt-0">
-              <div class="w-16 h-16 bg-stone-100 dark:bg-stone-700 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center text-stone-400">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-semibold text-stone-900 dark:text-stone-100 truncate">Item {{ loop.index }}</p>
-                <p class="text-xs text-stone-500 dark:text-stone-400">Qty: {{ item.quantity }} × {{ format_price(item.price, currency) if format_price else '₦{:,.2f}'.format(item.price) }}</p>
-              </div>
-              <span class="text-sm font-mono font-bold text-stone-900 dark:text-stone-100">{{ format_price(item.price * item.quantity, currency) if format_price else '₦{:,.2f}'.format(item.price * item.quantity) }}</span>
+          <div style="display:flex;gap:.75rem">
+            <div style="display:flex;flex-direction:column;align-items:center">
+              <div class="timeline-dot {% if 'processing' in status_str or 'shipped' in status_str or 'delivered' in status_str or 'completed' in status_str %}timeline-dot--active{% else %}timeline-dot--inactive{% endif %}"></div>
+              <div class="timeline-line {% if 'shipped' in status_str or 'delivered' in status_str or 'completed' in status_str %}timeline-line--active{% else %}timeline-line--inactive{% endif %}"></div>
             </div>
-            {% endfor %}
+            <div style="padding-bottom:1rem">
+              <p style="font-size:.875rem;font-weight:600;color:var(--color-stone-900)">Processing</p>
+              <p style="font-size:.75rem;color:var(--color-stone-500)">Your order is being prepared</p>
+            </div>
+          </div>
+          <div style="display:flex;gap:.75rem">
+            <div style="display:flex;flex-direction:column;align-items:center">
+              <div class="timeline-dot {% if 'shipped' in status_str or 'delivered' in status_str or 'completed' in status_str %}timeline-dot--active{% else %}timeline-dot--inactive{% endif %}"></div>
+              <div class="timeline-line {% if 'delivered' in status_str or 'completed' in status_str %}timeline-line--active{% else %}timeline-line--inactive{% endif %}"></div>
+            </div>
+            <div style="padding-bottom:1rem">
+              <p style="font-size:.875rem;font-weight:600;color:var(--color-stone-900)">Shipped</p>
+              <p style="font-size:.75rem;color:var(--color-stone-500)">On its way to you</p>
+            </div>
+          </div>
+          <div style="display:flex;gap:.75rem">
+            <div style="display:flex;flex-direction:column;align-items:center">
+              <div class="timeline-dot {% if 'delivered' in status_str or 'completed' in status_str %}timeline-dot--active{% else %}timeline-dot--inactive{% endif %}"></div>
+            </div>
+            <div>
+              <p style="font-size:.875rem;font-weight:600;color:var(--color-stone-900)">Delivered</p>
+              <p style="font-size:.75rem;color:var(--color-stone-500)">Order completed</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Right: Order Summary -->
-      <div class="space-y-6">
-        <div class="card-artisan p-5 sm:p-6 reveal">
-          <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-stone-400 dark:text-stone-500 mb-5">Order Summary</h2>
-          <div class="space-y-3">
-            <div class="flex justify-between text-sm">
-              <span class="text-stone-500 dark:text-stone-400">Subtotal</span>
-              <span class="font-medium text-stone-900 dark:text-stone-100">{{ format_price(order.total_amount, currency) if format_price else '₦{:,.2f}'.format(order.total_amount) }}</span>
+      <div class="acct-card">
+        <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:1.25rem">Order Items ({{ items|length }})</p>
+        <div>
+          {% for item in items %}
+          <div class="item-row">
+            <div style="width:4rem;height:4rem;background:var(--color-stone-100);border-radius:.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--color-stone-400)">
+              <svg style="width:1.5rem;height:1.5rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
             </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-stone-500 dark:text-stone-400">Shipping</span>
-              <span class="font-medium text-emerald-600 dark:text-emerald-400">Free</span>
+            <div style="min-width:0;flex:1">
+              <p style="font-size:.875rem;font-weight:600;color:var(--color-stone-900)">Item {{ loop.index }}</p>
+              <p style="font-size:.75rem;color:var(--color-stone-500)">Qty: {{ item.quantity }} × {{ format_price(item.price, currency) if format_price else '₦{:,.2f}'.format(item.price) }}</p>
             </div>
-            <div class="border-t border-stone-200 dark:border-stone-700 pt-3 flex justify-between">
-              <span class="text-sm font-bold text-stone-900 dark:text-stone-100">Total</span>
-              <span class="text-lg font-bold font-mono text-stone-900 dark:text-stone-100">{{ format_price(order.total_amount, currency) if format_price else '₦{:,.2f}'.format(order.total_amount) }}</span>
-            </div>
+            <span style="font-size:.875rem;font-family:monospace;font-weight:700;color:var(--color-stone-900)">{{ format_price(item.price * item.quantity, currency) if format_price else '₦{:,.2f}'.format(item.price * item.quantity) }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:1.5rem">
+      <div class="acct-card">
+        <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:1.25rem">Order Summary</p>
+        <div style="display:flex;flex-direction:column;gap:.75rem">
+          <div style="display:flex;justify-content:space-between;font-size:.875rem">
+            <span style="color:var(--color-stone-500)">Subtotal</span>
+            <span style="font-weight:600;color:var(--color-stone-900)">{{ format_price(order.total_amount, currency) if format_price else '₦{:,.2f}'.format(order.total_amount) }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.875rem">
+            <span style="color:var(--color-stone-500)">Shipping</span>
+            <span style="font-weight:600;color:var(--color-emerald-600)">Free</span>
+          </div>
+          <div style="border-top:1px solid var(--color-stone-200);padding-top:.75rem;display:flex;justify-content:space-between">
+            <span style="font-size:.875rem;font-weight:700;color:var(--color-stone-900)">Total</span>
+            <span style="font-size:1.125rem;font-weight:700;font-family:monospace;color:var(--color-stone-900)">{{ format_price(order.total_amount, currency) if format_price else '₦{:,.2f}'.format(order.total_amount) }}</span>
           </div>
         </div>
+      </div>
 
-        <div class="card-artisan p-5 sm:p-6 reveal">
-          <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-stone-400 dark:text-stone-500 mb-5">Shipping Address</h2>
-          {% if order.shipping_address %}
-          <div class="text-sm text-stone-600 dark:text-stone-400 space-y-1">
-            <p class="font-semibold text-stone-900 dark:text-stone-100">{{ order.shipping_address.name }}</p>
-            <p>{{ order.shipping_address.address }}</p>
-            <p>{{ order.shipping_address.phone }}</p>
-            <p>{{ order.shipping_address.email }}</p>
-          </div>
-          {% else %}
-          <p class="text-sm text-stone-500 dark:text-stone-400">No shipping address recorded.</p>
-          {% endif %}
+      <div class="acct-card">
+        <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:1.25rem">Shipping Address</p>
+        {% if order.shipping_address %}
+        <div style="font-size:.875rem;color:var(--color-stone-600);display:flex;flex-direction:column;gap:.25rem">
+          <p style="font-weight:600;color:var(--color-stone-900)">{{ order.shipping_address.name }}</p>
+          <p>{{ order.shipping_address.address }}</p>
+          <p>{{ order.shipping_address.phone }}</p>
+          <p>{{ order.shipping_address.email }}</p>
         </div>
+        {% else %}
+        <p style="font-size:.875rem;color:var(--color-stone-500)">No shipping address recorded.</p>
+        {% endif %}
+      </div>
 
-        <div class="card-artisan p-5 sm:p-6 reveal">
-          <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-stone-400 dark:text-stone-500 mb-3">Need Help?</h2>
-          <p class="text-xs text-stone-500 dark:text-stone-400 mb-4">If you have any issues with this order, our support team is here to help.</p>
-          <a href="#" class="btn-ghost text-sm w-full justify-center">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-            Contact Support
-          </a>
-        </div>
+      <div class="acct-card">
+        <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:.75rem">Need Help?</p>
+        <p style="font-size:.75rem;color:var(--color-stone-500);margin-bottom:1rem">If you have any issues with this order, our support team is here to help.</p>
+        <a href="#" class="acct-btn acct-btn--ghost" style="width:100%">
+          <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+          Contact Support
+        </a>
       </div>
     </div>
   </div>

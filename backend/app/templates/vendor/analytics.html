@@ -1,22 +1,342 @@
 {% extends "admin/sidebar.html" %}
 {% block title %}Analytics &mdash; ForgeStore{% endblock %}
 {% block content %}
-<div class="space-y-6">
-    <h1 class="text-2xl font-bold text-stone-900 dark:text-stone-100">Analytics</h1>
-    {% if analytics %}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {% for a in analytics[:4] %}
-        <div class="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-5">
-            <p class="text-xs font-bold uppercase tracking-wider text-stone-400 mb-1">{{ a.period }}</p>
-            <p class="text-2xl font-black text-stone-900 dark:text-stone-100">₦{{ "{:,.2f}".format(a.total_revenue) }}</p>
-            <p class="text-xs text-stone-500 mt-1">{{ a.total_orders }} orders</p>
-        </div>
-        {% endfor %}
+<style>
+  :root {
+    --color-primary: #f59e0b;
+    --color-primary-hover: #d97706;
+    --color-primary-light: #fef3c7;
+    --color-primary-bg: #fffbeb;
+    --color-text: #78716c;
+    --color-text-dark: #1c1917;
+    --color-text-muted: #a8a29e;
+    --color-border: #e7e5e4;
+    --color-border-light: #f5f5f4;
+    --color-bg: #f5f5f4;
+    --color-bg-alt: #ffffff;
+    --color-emerald: #10b981;
+    --color-emerald-light: #d1fae5;
+    --color-emerald-dark: #065f46;
+    --color-blue: #3b82f6;
+    --color-blue-light: #dbeafe;
+    --color-blue-dark: #1e40af;
+    --color-amber: #f59e0b;
+    --color-amber-light: #fef3c7;
+    --color-amber-dark: #92400e;
+    --color-purple: #8b5cf6;
+    --color-purple-light: #ede9fe;
+    --color-purple-dark: #5b21b6;
+    --color-red: #ef4444;
+    --color-red-light: #fee2e2;
+    --color-red-dark: #991b1b;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+    --radius-lg: 1rem;
+    --radius-md: 0.75rem;
+    --radius-sm: 0.5rem;
+  }
+
+  .vendor-page {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+  }
+
+  .vendor-page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    justify-content: space-between;
+  }
+
+  .vendor-page-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text-dark);
+    margin: 0;
+  }
+
+  .vendor-page-header .subtitle {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    margin-top: 0.25rem;
+  }
+
+  .vendor-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .vendor-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (min-width: 1024px) {
+    .vendor-stats-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  .vendor-stat-card {
+    background: var(--color-bg-alt);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    transition: box-shadow 0.2s;
+  }
+
+  .vendor-stat-card:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  .vendor-stat-card .label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+  }
+
+  .vendor-stat-card .value {
+    font-size: 1.875rem;
+    font-weight: 900;
+    color: var(--color-text-dark);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .vendor-stat-card .value.amber { color: var(--color-amber); }
+  .vendor-stat-card .value.emerald { color: var(--color-emerald); }
+  .vendor-stat-card .value.blue { color: var(--color-blue); }
+  .vendor-stat-card .value.purple { color: var(--color-purple); }
+
+  .vendor-stat-card .meta {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-top: 0.125rem;
+  }
+
+  .vendor-stat-card .trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 0.25rem;
+  }
+
+  .vendor-stat-card .trend.up {
+    color: var(--color-emerald);
+  }
+
+  .vendor-stat-card .trend.down {
+    color: var(--color-red);
+  }
+
+  .vendor-card {
+    background: var(--color-bg-alt);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+  }
+
+  .vendor-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--color-border-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .vendor-card-header h2 {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-text-dark);
+    margin: 0;
+  }
+
+  .vendor-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .vendor-table {
+    width: 100%;
+    font-size: 0.875rem;
+    border-collapse: collapse;
+  }
+
+  .vendor-table th {
+    padding: 0.75rem 1.25rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    border-bottom: 1px solid var(--color-border-light);
+    white-space: nowrap;
+    background: var(--color-bg);
+  }
+
+  .vendor-table td {
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid var(--color-border-light);
+    color: var(--color-text);
+    vertical-align: middle;
+  }
+
+  .vendor-table tbody tr:hover {
+    background: var(--color-bg);
+  }
+
+  .vendor-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .vendor-table .cell-period {
+    font-weight: 700;
+    color: var(--color-text-dark);
+  }
+
+  .vendor-table .cell-revenue {
+    font-weight: 700;
+    color: var(--color-text-dark);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .vendor-table .cell-orders {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .vendor-badge {
+    display: inline-block;
+    font-size: 0.625rem;
+    font-weight: 700;
+    padding: 0.1875rem 0.625rem;
+    border-radius: 9999px;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  .vendor-badge.current {
+    background: var(--color-emerald-light);
+    color: var(--color-emerald-dark);
+  }
+
+  .vendor-badge.past {
+    background: var(--color-border-light);
+    color: var(--color-text-muted);
+  }
+
+  .vendor-empty {
+    padding: 3rem 1.25rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+  }
+
+  .vendor-empty svg {
+    width: 2.5rem;
+    height: 2.5rem;
+    margin: 0 auto 0.75rem;
+    color: var(--color-border);
+  }
+
+  .hide-mobile {
+    display: table-cell;
+  }
+
+  @media (max-width: 640px) {
+    .vendor-page { padding: 1rem; }
+    .vendor-page-header h1 { font-size: 1.25rem; }
+    .vendor-stat-card .value { font-size: 1.5rem; }
+    .vendor-table th,
+    .vendor-table td { padding: 0.625rem 0.75rem; }
+    .hide-mobile { display: none; }
+  }
+</style>
+
+<div class="vendor-page">
+  <div class="vendor-page-header">
+    <div>
+      <h1>Analytics</h1>
+      <p class="subtitle">Sales performance and revenue insights</p>
     </div>
-    {% else %}
-    <div class="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 p-12 text-center text-sm text-stone-400">
-        No analytics data available yet. Analytics are generated as sales come in.
+  </div>
+
+  {% if analytics %}
+  <div class="vendor-stats-grid" style="margin-top:1.5rem;">
+    {% set latest = analytics[0] if analytics else None %}
+    {% if latest %}
+    <div class="vendor-stat-card">
+      <span class="label">Latest Period</span>
+      <span class="value">₦{{ "{:,.2f}".format(latest.total_revenue) }}</span>
+      <span class="meta">{{ latest.total_orders }} order{{ 's' if latest.total_orders != 1 else '' }}</span>
     </div>
     {% endif %}
+    {% set all_revenue = analytics|map(attribute='total_revenue')|sum %}
+    {% set all_orders = analytics|map(attribute='total_orders')|sum %}
+    <div class="vendor-stat-card">
+      <span class="label">Total Revenue</span>
+      <span class="value amber">₦{{ "{:,.2f}".format(all_revenue) }}</span>
+      <span class="meta">across {{ analytics|length }} period{{ 's' if analytics|length != 1 else '' }}</span>
+    </div>
+    <div class="vendor-stat-card">
+      <span class="label">Total Orders</span>
+      <span class="value blue">{{ all_orders }}</span>
+      <span class="meta">{{ (all_orders / analytics|length)|round(1) if analytics|length > 0 else 0 }} avg per period</span>
+    </div>
+    <div class="vendor-stat-card">
+      <span class="label">Avg Order Value</span>
+      <span class="value purple">₦{{ "{:,.2f}".format(all_revenue / all_orders) if all_orders > 0 else '0.00' }}</span>
+      <span class="meta">per order</span>
+    </div>
+  </div>
+
+  <div class="vendor-card" style="margin-top:1.5rem;">
+    <div class="vendor-card-header">
+      <h2>Period Breakdown</h2>
+    </div>
+    <div class="vendor-table-container">
+      <table class="vendor-table">
+        <thead>
+          <tr>
+            <th>Period</th>
+            <th>Revenue</th>
+            <th class="hide-mobile">Orders</th>
+            <th class="hide-mobile">Avg / Order</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in analytics %}
+          <tr>
+            <td class="cell-period">{{ a.period }}</td>
+            <td class="cell-revenue">₦{{ "{:,.2f}".format(a.total_revenue) }}</td>
+            <td class="hide-mobile cell-orders">{{ a.total_orders }}</td>
+            <td class="hide-mobile">₦{{ "{:,.2f}".format(a.total_revenue / a.total_orders) if a.total_orders > 0 else '0.00' }}</td>
+            <td>
+              <span class="vendor-badge {% if loop.first %}current{% else %}past{% endif %}">{% if loop.first %}Current{% else %}Past{% endif %}</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="vendor-card" style="margin-top:1.5rem;">
+    <div class="vendor-empty">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      <p>No analytics data available yet.</p>
+      <p style="font-size:0.75rem;margin-top:0.5rem;">Analytics are generated as sales come in.</p>
+    </div>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

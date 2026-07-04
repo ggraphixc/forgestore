@@ -1,114 +1,164 @@
 {% extends "admin/base.html" %}
 {% block title %}Manage Ads — ForgeStore{% endblock %}
 {% block content %}
+<style>
+  :root {
+    --admin-amber-50: #fffbeb; --admin-amber-100: #fef3c7; --admin-amber-200: #fde68a;
+    --admin-amber-300: #fcd34d; --admin-amber-400: #fbbf24; --admin-amber-500: #f59e0b;
+    --admin-amber-600: #d97706; --admin-amber-700: #b45309; --admin-amber-800: #92400e;
+    --admin-stone-50: #fafaf9; --admin-stone-100: #f5f5f4; --admin-stone-200: #e7e5e4;
+    --admin-stone-300: #d6d3d1; --admin-stone-400: #a8a29e; --admin-stone-500: #78716c;
+    --admin-stone-600: #57534e; --admin-stone-700: #44403c; --admin-stone-800: #292524;
+    --admin-stone-900: #1c1917; --admin-stone-950: #0c0a09;
+    --admin-emerald-50: #ecfdf5; --admin-emerald-100: #d1fae5; --admin-emerald-500: #10b981;
+    --admin-emerald-600: #059669; --admin-emerald-700: #047857;
+    --admin-red-50: #fef2f2; --admin-red-100: #fee2e2; --admin-red-200: #fecaca;
+    --admin-red-500: #ef4444; --admin-red-600: #dc2626; --admin-red-700: #b91c1c;
+    --admin-blue-100: #dbeafe; --admin-blue-600: #2563eb; --admin-blue-700: #1d4ed8;
+    --admin-purple-100: #f3e8ff; --admin-purple-600: #9333ea; --admin-purple-700: #7e22ce;
+    --admin-radius: 0.75rem; --admin-radius-lg: 1rem;
+    --admin-shadow: 0 1px 2px rgba(0,0,0,0.04); --admin-shadow-lg: 0 25px 50px -12px rgba(0,0,0,0.25);
+    --admin-touch: 44px;
+  }
+  .admin-mg-page { max-width: 72rem; margin: 0 auto; padding: 1.5rem; }
+  .admin-mg-header { margin-bottom: 2rem; }
+  .admin-mg-header h1 { font-size: 1.5rem; font-weight: 900; color: var(--admin-stone-900); }
+  @media (min-width: 640px) { .admin-mg-header h1 { font-size: 1.875rem; } }
+  .admin-mg-header p { font-size: 0.875rem; color: var(--admin-stone-500); margin-top: 0.25rem; }
+  .admin-mg-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 2rem; }
+  @media (min-width: 640px) { .admin-mg-stats { grid-template-columns: repeat(4, 1fr); } }
+  .admin-mg-stat { background: rgba(255,255,255,0.7); backdrop-filter: blur(12px); border: 1px solid var(--admin-stone-200); border-radius: var(--admin-radius); padding: 1rem; }
+  .admin-mg-stat .num { font-size: 1.5rem; font-weight: 700; }
+  .admin-mg-stat .lbl { font-size: 0.75rem; color: var(--admin-stone-500); margin-top: 0.125rem; }
+  .admin-mg-card { background: rgba(255,255,255,0.7); backdrop-filter: blur(12px); border: 1px solid var(--admin-stone-200); border-radius: var(--admin-radius-lg); overflow: hidden; }
+  .admin-mg-table-wrap { overflow-x: auto; }
+  .admin-mg-table { width: 100%; font-size: 0.875rem; }
+  .admin-mg-table th { text-align: left; padding: 0.75rem 1rem; font-weight: 600; color: var(--admin-stone-500); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; background: var(--admin-stone-50); border-bottom: 1px solid var(--admin-stone-200); }
+  .admin-mg-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--admin-stone-100); }
+  .admin-mg-table tr:hover { background: rgba(250,250,249,0.5); }
+  .admin-mg-badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+  .admin-mg-badge-emerald { background: var(--admin-emerald-100); color: var(--admin-emerald-700); }
+  .admin-mg-badge-amber { background: var(--admin-amber-100); color: var(--admin-amber-700); }
+  .admin-mg-badge-stone { background: var(--admin-stone-100); color: var(--admin-stone-500); }
+  .admin-mg-badge-blue { background: var(--admin-blue-100); color: var(--admin-blue-700); }
+  .admin-mg-badge-purple { background: var(--admin-purple-100); color: var(--admin-purple-700); }
+  .admin-mg-badge-red { background: var(--admin-red-100); color: var(--admin-red-700); }
+  .admin-mg-action-btn { padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 600; border-radius: 0.5rem; border: none; cursor: pointer; min-height: var(--admin-touch); display: inline-flex; align-items: center; transition: all 0.15s; }
+  .admin-mg-action-emerald { background: var(--admin-emerald-100); color: var(--admin-emerald-700); }
+  .admin-mg-action-emerald:hover { background: var(--admin-emerald-200); }
+  .admin-mg-action-red { background: var(--admin-red-100); color: var(--admin-red-700); }
+  .admin-mg-action-red:hover { background: var(--admin-red-200); }
+  .admin-mg-action-amber { background: var(--admin-amber-100); color: var(--admin-amber-700); }
+  .admin-mg-action-amber:hover { background: var(--admin-amber-200); }
+  .admin-mg-empty { text-align: center; padding: 4rem 1rem; }
+  .admin-mg-empty-icon { width: 4rem; height: 4rem; background: var(--admin-stone-100); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+  .admin-mg-empty h3 { font-size: 1.125rem; font-weight: 700; color: var(--admin-stone-900); margin-bottom: 0.5rem; }
+  .admin-mg-empty p { font-size: 0.875rem; color: var(--admin-stone-500); }
+  .admin-mg-modal-overlay { position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+  .admin-mg-modal-overlay.show { display: flex; }
+  .admin-mg-modal { background: #fff; border-radius: var(--admin-radius-lg); padding: 1.5rem; max-width: 28rem; width: 100%; margin: 0 1rem; box-shadow: var(--admin-shadow-lg); }
+  .admin-mg-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .admin-mg-modal-head h3 { font-size: 1.125rem; font-weight: 700; color: var(--admin-stone-900); }
+  .admin-mg-modal-close { padding: 0.375rem; color: var(--admin-stone-400); border: none; background: none; border-radius: 0.5rem; cursor: pointer; min-height: var(--admin-touch); min-width: var(--admin-touch); display: flex; align-items: center; justify-content: center; }
+  .admin-mg-modal-close:hover { color: var(--admin-stone-600); background: var(--admin-stone-100); }
+  .admin-mg-modal-btn { padding: 0.625rem 1rem; font-size: 0.875rem; font-weight: 600; border-radius: var(--admin-radius); border: none; cursor: pointer; min-height: var(--admin-touch); transition: all 0.15s; }
+  .admin-mg-modal-btn-cancel { background: var(--admin-stone-100); color: var(--admin-stone-600); flex: 1; }
+  .admin-mg-modal-btn-cancel:hover { background: var(--admin-stone-200); }
+  .admin-mg-modal-btn-submit { background: var(--admin-amber-500); color: #fff; flex: 1; }
+  .admin-mg-modal-btn-submit:hover { background: var(--admin-amber-600); }
+  .admin-mg-file-input { width: 100%; font-size: 0.875rem; color: var(--admin-stone-500); }
+  .admin-mg-file-input::file-selector-button { margin-right: 1rem; padding: 0.5rem 1rem; border-radius: 0.5rem; border: none; font-size: 0.875rem; font-weight: 600; background: var(--admin-amber-50); color: var(--admin-amber-700); cursor: pointer; }
+  .admin-mg-file-input::file-selector-button:hover { background: var(--admin-amber-100); }
+  .admin-mg-banner-preview { margin-top: 1rem; }
+  .admin-mg-banner-img { width: 100%; height: 8rem; object-fit: cover; border-radius: var(--admin-radius); border: 1px solid var(--admin-stone-200); }
+  @media (max-width: 640px) { .admin-mg-action-btn { min-width: var(--admin-touch); } }
+</style>
 
-<div class="max-w-6xl mx-auto">
-  <!-- Header -->
-  <div class="mb-8">
-    <h1 class="text-2xl sm:text-3xl font-black text-stone-900 dark:text-stone-100 font-display">Ad Campaign Management</h1>
-    <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">Activate PAID campaigns, assign banners, and manage ad inventory.</p>
+<div class="admin-mg-page">
+  <div class="admin-mg-header">
+    <h1>Ad Campaign Management</h1>
+    <p>Activate PAID campaigns, assign banners, and manage ad inventory.</p>
   </div>
 
-  <!-- Stats -->
-  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+  <div class="admin-mg-stats">
     {% set active_count = campaigns|selectattr('status', 'equalto', 'ACTIVE')|list|length %}
     {% set paid_count = campaigns|selectattr('status', 'equalto', 'PAID')|list|length %}
     {% set pending_count = campaigns|selectattr('status', 'equalto', 'PENDING')|list|length %}
     {% set expired_count = campaigns|selectattr('status', 'equalto', 'EXPIRED')|list|length %}
-    <div class="card-glass p-4">
-      <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{ active_count }}</p>
-      <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Active</p>
+    <div class="admin-mg-stat">
+      <div class="num" style="color:var(--admin-emerald-600)">{{ active_count }}</div>
+      <div class="lbl">Active</div>
     </div>
-    <div class="card-glass p-4">
-      <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">{{ paid_count }}</p>
-      <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Paid — Ready</p>
+    <div class="admin-mg-stat">
+      <div class="num" style="color:var(--admin-amber-600)">{{ paid_count }}</div>
+      <div class="lbl">Paid — Ready</div>
     </div>
-    <div class="card-glass p-4">
-      <p class="text-2xl font-bold text-stone-500 dark:text-stone-400">{{ pending_count }}</p>
-      <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Pending</p>
+    <div class="admin-mg-stat">
+      <div class="num" style="color:var(--admin-stone-500)">{{ pending_count }}</div>
+      <div class="lbl">Pending</div>
     </div>
-    <div class="card-glass p-4">
-      <p class="text-2xl font-bold text-stone-400">{{ expired_count }}</p>
-      <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Expired</p>
+    <div class="admin-mg-stat">
+      <div class="num" style="color:var(--admin-stone-400)">{{ expired_count }}</div>
+      <div class="lbl">Expired</div>
     </div>
   </div>
 
-  <!-- Campaigns Table -->
-  <div class="card-glass overflow-hidden">
+  <div class="admin-mg-card">
     {% if campaigns %}
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
+    <div class="admin-mg-table-wrap">
+      <table class="admin-mg-table">
         <thead>
-          <tr class="bg-stone-50 dark:bg-stone-800/50 border-b border-stone-200 dark:border-stone-700">
-            <th class="text-left px-4 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider">Type</th>
-            <th class="text-left px-4 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider">Retailer</th>
-            <th class="text-left px-4 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider hidden sm:table-cell">Product</th>
-            <th class="text-left px-4 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider">Status</th>
-            <th class="text-left px-4 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider hidden md:table-cell">Banner</th>
-            <th class="text-left px-4 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider hidden md:table-cell">Performance</th>
-            <th class="text-left px-4 py-3 font-semibold text-stone-500 dark:text-stone-400 text-xs uppercase tracking-wider">Actions</th>
+          <tr>
+            <th>Type</th>
+            <th>Retailer</th>
+            <th class="sm-cell" style="display:none">Product</th>
+            <th>Status</th>
+            <th class="md-cell" style="display:none">Banner</th>
+            <th class="md-cell" style="display:none">Performance</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {% for c in campaigns %}
           {% set retailer = retailers.get(c.retailer_id) %}
           {% set product = products.get(c.product_id) if c.product_id else None %}
-          <tr class="border-b border-stone-100 dark:border-stone-700/50 hover:bg-stone-50/50 dark:hover:bg-stone-800/30 transition-colors">
-            <td class="px-4 py-3">
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
-                {% if c.ad_type == 'SHOP' %}bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400
-                {% else %}bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400{% endif %}">
+          <tr>
+            <td>
+              <span class="admin-mg-badge {% if c.ad_type == 'SHOP' %}admin-mg-badge-blue{% else %}admin-mg-badge-purple{% endif %}">
                 {{ c.ad_type }}
               </span>
             </td>
-            <td class="px-4 py-3">
-              <span class="font-medium text-stone-900 dark:text-stone-100">{{ retailer.name if retailer else 'Unknown' }}</span>
-            </td>
-            <td class="px-4 py-3 text-stone-600 dark:text-stone-400 text-xs hidden sm:table-cell">
+            <td style="font-weight:500;color:var(--admin-stone-900)">{{ retailer.name if retailer else 'Unknown' }}</td>
+            <td class="sm-cell" style="display:none;color:var(--admin-stone-600);font-size:0.75rem">
               {{ product.name if product else '—' }}
             </td>
-            <td class="px-4 py-3">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold
-                {% if c.status == 'ACTIVE' %}bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400
-                {% elif c.status == 'PAID' %}bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400
-                {% elif c.status == 'EXPIRED' %}bg-stone-100 text-stone-500 dark:bg-stone-800 dark:text-stone-400
-                {% else %}bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400{% endif %}">
+            <td>
+              <span class="admin-mg-badge {% if c.status == 'ACTIVE' %}admin-mg-badge-emerald{% elif c.status == 'PAID' %}admin-mg-badge-amber{% elif c.status == 'EXPIRED' %}admin-mg-badge-stone{% else %}admin-mg-badge-stone{% endif %}">
                 {{ c.status }}
               </span>
             </td>
-            <td class="px-4 py-3 hidden md:table-cell">
+            <td class="md-cell" style="display:none">
               {% if c.banner_url %}
-              <img src="{{ c.banner_url }}" alt="Banner" class="h-10 w-20 object-cover rounded-lg border border-stone-200 dark:border-stone-700">
+              <img src="{{ c.banner_url }}" alt="Banner" style="height:2.5rem;width:5rem;object-fit:cover;border-radius:0.5rem;border:1px solid var(--admin-stone-200)">
               {% else %}
-              <span class="text-xs text-stone-400">None</span>
+              <span style="font-size:0.75rem;color:var(--admin-stone-400)">None</span>
               {% endif %}
             </td>
-            <td class="px-4 py-3 hidden md:table-cell">
-              <div class="text-xs text-stone-600 dark:text-stone-400">
-                <span class="font-mono font-medium">{{ c.clicks }}</span> clicks
-                <span class="mx-1">·</span>
-                <span class="font-mono font-medium">{{ c.impressions }}</span> impressions
-              </div>
+            <td class="md-cell" style="display:none;font-size:0.75rem;color:var(--admin-stone-600)">
+              <span style="font-family:monospace;font-weight:500">{{ c.clicks }}</span> clicks
+              <span style="margin:0 0.25rem">·</span>
+              <span style="font-family:monospace;font-weight:500">{{ c.impressions }}</span> impressions
             </td>
-            <td class="px-4 py-3">
-              <div class="flex items-center gap-2">
+            <td>
+              <div style="display:flex;align-items:center;gap:0.5rem">
                 {% if c.status == 'PAID' %}
-                <button onclick="activateCampaign('{{ c.id }}')"
-                  class="px-3 py-1.5 text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-800/50 transition-colors">
-                  Activate
-                </button>
+                <button onclick="activateCampaign('{{ c.id }}')" class="admin-mg-action-btn admin-mg-action-emerald">Activate</button>
                 {% endif %}
                 {% if c.status == 'ACTIVE' %}
-                <button onclick="expireCampaign('{{ c.id }}')"
-                  class="px-3 py-1.5 text-xs font-semibold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-800/50 transition-colors">
-                  Expire
-                </button>
+                <button onclick="expireCampaign('{{ c.id }}')" class="admin-mg-action-btn admin-mg-action-red">Expire</button>
                 {% endif %}
                 {% if c.status in ('PAID', 'ACTIVE') %}
-                <button onclick="assignBanner('{{ c.id }}')"
-                  class="px-3 py-1.5 text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-800/50 transition-colors">
-                  Banner
-                </button>
+                <button onclick="assignBanner('{{ c.id }}')" class="admin-mg-action-btn admin-mg-action-amber">Banner</button>
                 {% endif %}
               </div>
             </td>
@@ -118,42 +168,34 @@
       </table>
     </div>
     {% else %}
-    <div class="text-center py-16">
-      <div class="w-16 h-16 bg-stone-100 dark:bg-stone-800 rounded-full flex items-center justify-center mx-auto mb-4">
-        <svg class="w-8 h-8 text-stone-300 dark:text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="admin-mg-empty">
+      <div class="admin-mg-empty-icon">
+        <svg class="w-8 h-8" style="color:var(--admin-stone-300)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
         </svg>
       </div>
-      <h3 class="text-lg font-bold text-stone-900 dark:text-stone-100 mb-2">No Campaigns Yet</h3>
-      <p class="text-sm text-stone-500 dark:text-stone-400">Campaigns will appear here once retailers purchase ads.</p>
+      <h3>No Campaigns Yet</h3>
+      <p>Campaigns will appear here once retailers purchase ads.</p>
     </div>
     {% endif %}
   </div>
 </div>
 
-<!-- Banner Upload Modal -->
-<div id="banner-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-  <div class="bg-white dark:bg-stone-800 rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-lg font-bold text-stone-900 dark:text-stone-100">Assign Banner Image</h3>
-      <button onclick="document.getElementById('banner-modal').classList.add('hidden')" class="p-1.5 text-stone-400 hover:text-stone-600 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors">
+<div id="banner-modal" class="admin-mg-modal-overlay">
+  <div class="admin-mg-modal">
+    <div class="admin-mg-modal-head">
+      <h3>Assign Banner Image</h3>
+      <button onclick="document.getElementById('banner-modal').classList.remove('show')" class="admin-mg-modal-close">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
-    <input type="file" id="banner-file-input" accept="image/*"
-      class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 dark:file:bg-amber-900/20 dark:file:text-amber-400 dark:hover:file:bg-amber-900/40 transition-colors">
-    <div id="banner-preview" class="mt-4 hidden">
-      <img id="banner-preview-img" src="" alt="Preview" class="w-full h-32 object-cover rounded-xl border border-stone-200 dark:border-stone-700">
+    <input type="file" id="banner-file-input" accept="image/*" class="admin-mg-file-input">
+    <div id="banner-preview" class="admin-mg-banner-preview" style="display:none">
+      <img id="banner-preview-img" src="" alt="Preview" class="admin-mg-banner-img">
     </div>
-    <div class="flex gap-3 mt-6">
-      <button id="banner-cancel-btn" onclick="document.getElementById('banner-modal').classList.add('hidden')"
-        class="flex-1 px-4 py-2.5 text-sm font-semibold text-stone-600 dark:text-stone-400 bg-stone-100 dark:bg-stone-700 rounded-xl hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors">
-        Cancel
-      </button>
-      <button id="banner-upload-btn"
-        class="flex-1 px-4 py-2.5 text-sm font-semibold bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-colors disabled:opacity-50">
-        Upload Banner
-      </button>
+    <div style="display:flex;gap:0.75rem;margin-top:1.5rem">
+      <button id="banner-cancel-btn" onclick="document.getElementById('banner-modal').classList.remove('show')" class="admin-mg-modal-btn admin-mg-modal-btn-cancel">Cancel</button>
+      <button id="banner-upload-btn" class="admin-mg-modal-btn admin-mg-modal-btn-submit">Upload Banner</button>
     </div>
   </div>
 </div>
@@ -164,20 +206,10 @@ let activeCampaignId = null;
 async function activateCampaign(campaignId) {
   const bannerUrl = prompt('Optional: Paste a banner image URL or leave empty:', '');
   try {
-    const res = await fetch(`/api/admin/ads/${campaignId}/activate`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ banner_url: bannerUrl || null }),
-    });
+    const res = await fetch(`/api/admin/ads/${campaignId}/activate`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ banner_url: bannerUrl || null }) });
     const data = await res.json();
-    if (data.success) {
-      location.reload();
-    } else {
-      alert(data.detail || 'Failed to activate campaign');
-    }
-  } catch (err) {
-    alert('Network error');
-  }
+    if (data.success) { location.reload(); } else { alert(data.detail || 'Failed to activate campaign'); }
+  } catch { alert('Network error'); }
 }
 
 async function expireCampaign(campaignId) {
@@ -185,21 +217,15 @@ async function expireCampaign(campaignId) {
   try {
     const res = await fetch(`/api/admin/ads/${campaignId}/expire`, { method: 'POST' });
     const data = await res.json();
-    if (data.success) {
-      location.reload();
-    } else {
-      alert(data.detail || 'Failed to expire campaign');
-    }
-  } catch (err) {
-    alert('Network error');
-  }
+    if (data.success) { location.reload(); } else { alert(data.detail || 'Failed to expire campaign'); }
+  } catch { alert('Network error'); }
 }
 
 function assignBanner(campaignId) {
   activeCampaignId = campaignId;
   document.getElementById('banner-file-input').value = '';
-  document.getElementById('banner-preview').classList.add('hidden');
-  document.getElementById('banner-modal').classList.remove('hidden');
+  document.getElementById('banner-preview').style.display = 'none';
+  document.getElementById('banner-modal').classList.add('show');
 }
 
 document.getElementById('banner-file-input').addEventListener('change', function(e) {
@@ -208,7 +234,7 @@ document.getElementById('banner-file-input').addEventListener('change', function
     const reader = new FileReader();
     reader.onload = function(ev) {
       document.getElementById('banner-preview-img').src = ev.target.result;
-      document.getElementById('banner-preview').classList.remove('hidden');
+      document.getElementById('banner-preview').style.display = '';
     };
     reader.readAsDataURL(file);
   }
@@ -217,49 +243,22 @@ document.getElementById('banner-file-input').addEventListener('change', function
 document.getElementById('banner-upload-btn').addEventListener('click', async function() {
   const fileInput = document.getElementById('banner-file-input');
   const file = fileInput.files[0];
-  if (!file) {
-    alert('Please select an image file.');
-    return;
-  }
-
+  if (!file) { alert('Please select an image file.'); return; }
   const btn = this;
   btn.disabled = true;
   btn.textContent = 'Uploading...';
-
   try {
     const formData = new FormData();
     formData.append('files', file);
-
-    const uploadRes = await fetch('/api/admin/upload', {
-      method: 'POST',
-      body: formData,
-    });
+    const uploadRes = await fetch('/api/admin/upload', { method: 'POST', body: formData });
     const uploadData = await uploadRes.json();
-    if (!uploadData.urls || uploadData.urls.length === 0) {
-      alert('Upload failed');
-      btn.disabled = false;
-      btn.textContent = 'Upload Banner';
-      return;
-    }
-
+    if (!uploadData.urls || uploadData.urls.length === 0) { alert('Upload failed'); btn.disabled = false; btn.textContent = 'Upload Banner'; return; }
     const bannerUrl = uploadData.urls[0];
-    const res = await fetch(`/api/admin/ads/${activeCampaignId}/activate`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ banner_url: bannerUrl }),
-    });
+    const res = await fetch(`/api/admin/ads/${activeCampaignId}/activate`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ banner_url: bannerUrl }) });
     const data = await res.json();
-    if (data.success) {
-      location.reload();
-    } else {
-      alert(data.detail || 'Failed to assign banner');
-    }
-  } catch (err) {
-    alert('Network error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Upload Banner';
-  }
+    if (data.success) { location.reload(); } else { alert(data.detail || 'Failed to assign banner'); }
+  } catch { alert('Network error'); }
+  finally { btn.disabled = false; btn.textContent = 'Upload Banner'; }
 });
 </script>
 {% endblock %}

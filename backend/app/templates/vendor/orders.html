@@ -1,35 +1,407 @@
 {% extends "admin/sidebar.html" %}
 {% block title %}Vendor Orders &mdash; ForgeStore{% endblock %}
 {% block content %}
-<div class="space-y-6">
-    <h1 class="text-2xl font-bold text-stone-900 dark:text-stone-100">Orders</h1>
-    <div class="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 overflow-hidden">
-        {% if orders %}
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead><tr class="border-b border-stone-100 dark:border-stone-700 text-left text-xs font-bold uppercase tracking-wider text-stone-400">
-                    <th class="px-5 py-3">Order #</th><th class="px-5 py-3">Customer</th><th class="px-5 py-3">Total</th><th class="px-5 py-3 hidden sm:table-cell">Status</th><th class="px-5 py-3 hidden sm:table-cell">Date</th>
-                </tr></thead>
-                <tbody class="divide-y divide-stone-100 dark:divide-stone-700">
-                {% for o in orders %}
-                <tr class="hover:bg-stone-50 dark:hover:bg-stone-700/50">
-                    <td class="px-5 py-3 font-semibold text-stone-900 dark:text-stone-100">#{{ o.order_number }}</td>
-                    <td class="px-5 py-3 text-stone-600">{{ customers.get(o.id, 'Unknown') }}</td>
-                    <td class="px-5 py-3">₦{{ "{:,.2f}".format(o.total_amount) }}</td>
-                    <td class="px-5 py-3 hidden sm:table-cell"><span class="text-xs font-bold px-2 py-0.5 rounded-full
-                        {% if o.status.value == 'DELIVERED' %}bg-emerald-100 text-emerald-700
-                        {% elif o.status.value == 'SHIPPED' %}bg-blue-100 text-blue-700
-                        {% elif o.status.value == 'PROCESSING' %}bg-amber-100 text-amber-700
-                        {% else %}bg-stone-100 text-stone-600{% endif %}">{{ o.status.value }}</span></td>
-                    <td class="px-5 py-3 hidden sm:table-cell text-stone-500 text-xs">{{ o.created_at.strftime('%b %d, %Y') if o.created_at else '' }}</td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="px-5 py-12 text-center text-sm text-stone-400">No orders yet.</div>
-        {% endif %}
+<style>
+  :root {
+    --color-primary: #f59e0b;
+    --color-primary-hover: #d97706;
+    --color-primary-light: #fef3c7;
+    --color-primary-bg: #fffbeb;
+    --color-text: #78716c;
+    --color-text-dark: #1c1917;
+    --color-text-muted: #a8a29e;
+    --color-border: #e7e5e4;
+    --color-border-light: #f5f5f4;
+    --color-bg: #f5f5f4;
+    --color-bg-alt: #ffffff;
+    --color-emerald: #10b981;
+    --color-emerald-light: #d1fae5;
+    --color-emerald-dark: #065f46;
+    --color-blue: #3b82f6;
+    --color-blue-light: #dbeafe;
+    --color-blue-dark: #1e40af;
+    --color-amber: #f59e0b;
+    --color-amber-light: #fef3c7;
+    --color-amber-dark: #92400e;
+    --color-purple: #8b5cf6;
+    --color-purple-light: #ede9fe;
+    --color-purple-dark: #5b21b6;
+    --color-red: #ef4444;
+    --color-red-light: #fee2e2;
+    --color-red-dark: #991b1b;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+    --radius-lg: 1rem;
+    --radius-md: 0.75rem;
+    --radius-sm: 0.5rem;
+  }
+
+  .vendor-page {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+  }
+
+  .vendor-page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    justify-content: space-between;
+  }
+
+  .vendor-page-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text-dark);
+    margin: 0;
+  }
+
+  .vendor-page-header .subtitle {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    margin-top: 0.25rem;
+  }
+
+  .vendor-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .vendor-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (min-width: 1024px) {
+    .vendor-stats-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  .vendor-stat-card {
+    background: var(--color-bg-alt);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .vendor-stat-card .label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+  }
+
+  .vendor-stat-card .value {
+    font-size: 1.875rem;
+    font-weight: 900;
+    color: var(--color-text-dark);
+  }
+
+  .vendor-stat-card .value.amber { color: var(--color-amber); }
+  .vendor-stat-card .value.emerald { color: var(--color-emerald); }
+  .vendor-stat-card .value.blue { color: var(--color-blue); }
+  .vendor-stat-card .value.purple { color: var(--color-purple); }
+
+  .vendor-stat-card .meta {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-top: 0.125rem;
+  }
+
+  .vendor-card {
+    background: var(--color-bg-alt);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+  }
+
+  .vendor-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--color-border-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .vendor-card-header h2 {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-text-dark);
+    margin: 0;
+  }
+
+  .vendor-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .vendor-table {
+    width: 100%;
+    font-size: 0.875rem;
+    border-collapse: collapse;
+  }
+
+  .vendor-table th {
+    padding: 0.75rem 1.25rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    border-bottom: 1px solid var(--color-border-light);
+    white-space: nowrap;
+    background: var(--color-bg);
+  }
+
+  .vendor-table td {
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid var(--color-border-light);
+    color: var(--color-text);
+    vertical-align: middle;
+  }
+
+  .vendor-table tbody tr:hover {
+    background: var(--color-bg);
+  }
+
+  .vendor-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .vendor-table .cell-order {
+    font-weight: 600;
+    color: var(--color-text-dark);
+  }
+
+  .vendor-table .cell-price {
+    font-weight: 700;
+    color: var(--color-text-dark);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .vendor-table .cell-muted {
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+  }
+
+  .vendor-badge {
+    display: inline-block;
+    font-size: 0.625rem;
+    font-weight: 700;
+    padding: 0.1875rem 0.625rem;
+    border-radius: 9999px;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  .vendor-badge.delivered {
+    background: var(--color-emerald-light);
+    color: var(--color-emerald-dark);
+  }
+
+  .vendor-badge.shipped {
+    background: var(--color-blue-light);
+    color: var(--color-blue-dark);
+  }
+
+  .vendor-badge.processing {
+    background: var(--color-amber-light);
+    color: var(--color-amber-dark);
+  }
+
+  .vendor-badge.default {
+    background: var(--color-border-light);
+    color: var(--color-text);
+  }
+
+  .vendor-form-group {
+    position: relative;
+  }
+
+  .vendor-form-input {
+    min-height: 44px;
+    padding: 0.5rem 1rem 0.5rem 2.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    color: var(--color-text-dark);
+    background: var(--color-bg-alt);
+    width: 100%;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .vendor-form-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+  }
+
+  .vendor-form-input::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  .vendor-form-icon {
+    position: absolute;
+    left: 0.625rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1rem;
+    height: 1rem;
+    color: var(--color-text-muted);
+    pointer-events: none;
+  }
+
+  .vendor-btn-outline {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0.5rem 0.75rem;
+    background: transparent;
+    color: var(--color-primary);
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.2s, background 0.2s;
+    border-radius: var(--radius-sm);
+    gap: 0.375rem;
+  }
+
+  .vendor-btn-outline:hover {
+    opacity: 0.7;
+    background: var(--color-primary-light);
+  }
+
+  .vendor-btn-outline svg {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  .vendor-empty {
+    padding: 3rem 1.25rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+  }
+
+  .vendor-empty svg {
+    width: 2.5rem;
+    height: 2.5rem;
+    margin: 0 auto 0.75rem;
+    color: var(--color-border);
+  }
+
+  .hide-mobile {
+    display: table-cell;
+  }
+
+  @media (max-width: 640px) {
+    .vendor-page { padding: 1rem; }
+    .vendor-page-header h1 { font-size: 1.25rem; }
+    .vendor-stat-card .value { font-size: 1.5rem; }
+    .vendor-table th,
+    .vendor-table td { padding: 0.625rem 0.75rem; }
+    .hide-mobile { display: none; }
+    .vendor-form-group { width: 100%; }
+  }
+</style>
+
+<div class="vendor-page">
+  <div class="vendor-page-header">
+    <div>
+      <h1>Orders</h1>
+      <p class="subtitle">Track and manage customer orders</p>
     </div>
+    <div class="vendor-form-group" style="max-width:16rem;">
+      <svg class="vendor-form-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" class="vendor-form-input" id="orderSearch" placeholder="Search orders..." oninput="filterOrders()">
+    </div>
+  </div>
+
+  {% if orders %}
+  <div class="vendor-stats-grid" style="margin-top:1.5rem;">
+    <div class="vendor-stat-card">
+      <span class="label">Total Orders</span>
+      <span class="value">{{ orders|length }}</span>
+    </div>
+    <div class="vendor-stat-card">
+      <span class="label">Delivered</span>
+      <span class="value emerald">{{ orders|selectattr('status.value','equalto','DELIVERED')|list|length }}</span>
+    </div>
+    <div class="vendor-stat-card">
+      <span class="label">Shipped</span>
+      <span class="value blue">{{ orders|selectattr('status.value','equalto','SHIPPED')|list|length }}</span>
+    </div>
+    <div class="vendor-stat-card">
+      <span class="label">Processing</span>
+      <span class="value amber">{{ orders|selectattr('status.value','equalto','PROCESSING')|list|length }}</span>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="vendor-card" style="margin-top:1.5rem;">
+    {% if orders %}
+    <div class="vendor-card-header">
+      <h2>All Orders</h2>
+    </div>
+    <div class="vendor-table-container">
+      <table class="vendor-table" id="ordersTable">
+        <thead>
+          <tr>
+            <th>Order #</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th class="hide-mobile">Status</th>
+            <th class="hide-mobile">Date</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for o in orders %}
+          <tr data-search="{{ o.order_number }} {{ customers.get(o.id, 'Unknown')|lower }} {{ o.status.value|lower }}">
+            <td class="cell-order">#{{ o.order_number }}</td>
+            <td>{{ customers.get(o.id, 'Unknown') }}</td>
+            <td class="cell-price">₦{{ "{:,.2f}".format(o.total_amount) }}</td>
+            <td class="hide-mobile">
+              <span class="vendor-badge {% if o.status.value == 'DELIVERED' %}delivered{% elif o.status.value == 'SHIPPED' %}shipped{% elif o.status.value == 'PROCESSING' %}processing{% else %}default{% endif %}">{{ o.status.value }}</span>
+            </td>
+            <td class="hide-mobile cell-muted">{{ o.created_at.strftime('%b %d, %Y') if o.created_at else '' }}</td>
+            <td>
+              <a href="/vendor/orders/{{ o.id }}" class="vendor-btn-outline">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                View
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="vendor-empty">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      <p>No orders yet.</p>
+    </div>
+    {% endif %}
+  </div>
 </div>
+
+<script>
+function filterOrders() {
+  const query = document.getElementById('orderSearch').value.toLowerCase();
+  const rows = document.querySelectorAll('#ordersTable tbody tr');
+  rows.forEach(row => {
+    const search = row.getAttribute('data-search') || '';
+    row.style.display = search.includes(query) ? '' : 'none';
+  });
+}
+</script>
 {% endblock %}

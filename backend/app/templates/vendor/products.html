@@ -1,37 +1,378 @@
 {% extends "admin/sidebar.html" %}
 {% block title %}My Products &mdash; ForgeStore{% endblock %}
 {% block content %}
-<div class="space-y-6">
-    <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-        <div>
-            <h1 class="text-2xl font-bold text-stone-900 dark:text-stone-100">My Products</h1>
-            <p class="text-sm text-stone-500 mt-1">Manage your product catalog</p>
-        </div>
-        <a href="/admin/catalog/new" class="min-h-[44px] w-full sm:w-auto px-4 py-2 bg-amber-500 hover:bg-amber-400 text-stone-950 text-sm font-bold rounded-xl transition-all">Add Product</a>
+<style>
+  :root {
+    --color-primary: #f59e0b;
+    --color-primary-hover: #d97706;
+    --color-primary-light: #fef3c7;
+    --color-primary-bg: #fffbeb;
+    --color-text: #78716c;
+    --color-text-dark: #1c1917;
+    --color-text-muted: #a8a29e;
+    --color-border: #e7e5e4;
+    --color-border-light: #f5f5f4;
+    --color-bg: #f5f5f4;
+    --color-bg-alt: #ffffff;
+    --color-emerald: #10b981;
+    --color-emerald-light: #d1fae5;
+    --color-emerald-dark: #065f46;
+    --color-red: #ef4444;
+    --color-red-light: #fee2e2;
+    --color-red-dark: #991b1b;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+    --radius-lg: 1rem;
+    --radius-md: 0.75rem;
+    --radius-sm: 0.5rem;
+  }
+
+  .vendor-page {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+  }
+
+  .vendor-page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    justify-content: space-between;
+  }
+
+  .vendor-page-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text-dark);
+    margin: 0;
+  }
+
+  .vendor-page-header .subtitle {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    margin-top: 0.25rem;
+  }
+
+  .vendor-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.5rem 1.25rem;
+    background: var(--color-primary);
+    color: var(--color-text-dark);
+    font-size: 0.875rem;
+    font-weight: 700;
+    border-radius: var(--radius-md);
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, box-shadow 0.2s;
+    gap: 0.5rem;
+  }
+
+  .vendor-btn:hover {
+    background: var(--color-primary-hover);
+    box-shadow: var(--shadow-md);
+  }
+
+  .vendor-btn svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .vendor-card {
+    background: var(--color-bg-alt);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+  }
+
+  .vendor-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--color-border-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .vendor-card-header h2 {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-text-dark);
+    margin: 0;
+  }
+
+  .vendor-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .vendor-table {
+    width: 100%;
+    font-size: 0.875rem;
+    border-collapse: collapse;
+  }
+
+  .vendor-table th {
+    padding: 0.75rem 1.25rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    border-bottom: 1px solid var(--color-border-light);
+    white-space: nowrap;
+    background: var(--color-bg);
+  }
+
+  .vendor-table td {
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid var(--color-border-light);
+    color: var(--color-text);
+    vertical-align: middle;
+  }
+
+  .vendor-table tbody tr:hover {
+    background: var(--color-bg);
+  }
+
+  .vendor-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .vendor-table .cell-name {
+    font-weight: 600;
+    color: var(--color-text-dark);
+  }
+
+  .vendor-table .cell-price {
+    font-weight: 600;
+    color: var(--color-text-dark);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .vendor-table .cell-muted {
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+  }
+
+  .vendor-badge {
+    display: inline-block;
+    font-size: 0.625rem;
+    font-weight: 700;
+    padding: 0.1875rem 0.625rem;
+    border-radius: 9999px;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  .vendor-badge.paid,
+  .vendor-badge.delivered,
+  .vendor-badge.in-stock {
+    background: var(--color-emerald-light);
+    color: var(--color-emerald-dark);
+  }
+
+  .vendor-badge.out-of-stock {
+    background: var(--color-red-light);
+    color: var(--color-red-dark);
+  }
+
+  .vendor-badge.pending {
+    background: var(--color-primary-light);
+    color: #92400e;
+  }
+
+  .vendor-btn-outline {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0.5rem 0.75rem;
+    background: transparent;
+    color: var(--color-primary);
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.2s, background 0.2s;
+    border-radius: var(--radius-sm);
+  }
+
+  .vendor-btn-outline:hover {
+    opacity: 0.7;
+    background: var(--color-primary-light);
+  }
+
+  .vendor-empty {
+    padding: 3rem 1.25rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+  }
+
+  .vendor-empty svg {
+    width: 2.5rem;
+    height: 2.5rem;
+    margin: 0 auto 0.75rem;
+    color: var(--color-border);
+  }
+
+  .vendor-empty a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .vendor-empty a:hover {
+    text-decoration: underline;
+  }
+
+  .vendor-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .vendor-form-group {
+    position: relative;
+  }
+
+  .vendor-form-input {
+    min-height: 44px;
+    padding: 0.5rem 1rem 0.5rem 2.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    color: var(--color-text-dark);
+    background: var(--color-bg-alt);
+    width: 100%;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .vendor-form-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+  }
+
+  .vendor-form-input::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  .vendor-form-icon {
+    position: absolute;
+    left: 0.625rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1rem;
+    height: 1rem;
+    color: var(--color-text-muted);
+    pointer-events: none;
+  }
+
+  .hide-mobile {
+    display: table-cell;
+  }
+
+  .product-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  @media (max-width: 640px) {
+    .vendor-page { padding: 1rem; }
+    .vendor-page-header h1 { font-size: 1.25rem; }
+    .vendor-table th,
+    .vendor-table td { padding: 0.625rem 0.75rem; }
+    .hide-mobile { display: none; }
+    .vendor-search { width: 100%; }
+    .vendor-form-group { flex: 1; }
+  }
+</style>
+
+<div class="vendor-page">
+  <div class="vendor-page-header">
+    <div>
+      <h1>My Products</h1>
+      <p class="subtitle">Manage your product catalog</p>
     </div>
-    <div class="bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 overflow-hidden">
-        {% if products %}
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead><tr class="border-b border-stone-100 dark:border-stone-700 text-left text-xs font-bold uppercase tracking-wider text-stone-400">
-                    <th class="px-5 py-3">Product</th><th class="px-5 py-3">Price</th><th class="px-5 py-3">Inventory</th><th class="px-5 py-3">Status</th><th class="px-5 py-3">Actions</th>
-                </tr></thead>
-                <tbody class="divide-y divide-stone-100 dark:divide-stone-700">
-                {% for p in products %}
-                <tr class="hover:bg-stone-50 dark:hover:bg-stone-700/50">
-                    <td class="px-5 py-3 font-semibold text-stone-900 dark:text-stone-100">{{ p.name }}</td>
-                    <td class="px-5 py-3">₦{{ "{:,.2f}".format(p.price) }}</td>
-                    <td class="px-5 py-3">{{ p.inventory }}</td>
-                    <td class="px-5 py-3"><span class="text-[10px] font-bold px-2 py-0.5 rounded-full {% if p.inventory > 0 %}bg-emerald-100 text-emerald-700{% else %}bg-red-100 text-red-700{% endif %}">{% if p.inventory > 0 %}In Stock{% else %}Out of Stock{% endif %}</span></td>
-                    <td class="px-5 py-3"><a href="/admin/catalog/{{ p.id }}" class="min-h-[44px] inline-flex items-center text-amber-600 hover:underline text-xs font-bold">View</a></td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="px-5 py-12 text-center text-sm text-stone-400">No products yet. <a href="/admin/catalog/new" class="text-amber-600 hover:underline">Add your first product</a></div>
-        {% endif %}
+    <div class="vendor-search">
+      <div class="vendor-form-group">
+        <svg class="vendor-form-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" class="vendor-form-input" id="productSearch" placeholder="Search products..." oninput="filterProducts()">
+      </div>
+      <a href="/admin/catalog/new" class="vendor-btn">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Add Product
+      </a>
     </div>
+  </div>
+
+  <div class="vendor-card" style="margin-top:1.5rem;">
+    {% if products %}
+    <div class="vendor-card-header">
+      <h2>{{ products|length }} product{{ 's' if products|length != 1 else '' }}</h2>
+    </div>
+    <div class="vendor-table-container">
+      <table class="vendor-table" id="productsTable">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Price</th>
+            <th class="hide-mobile">Inventory</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in products %}
+          <tr data-search="{{ p.name|lower }}">
+            <td class="cell-name">{{ p.name }}</td>
+            <td class="cell-price">₦{{ "{:,.2f}".format(p.price) }}</td>
+            <td class="hide-mobile">{{ p.inventory }}</td>
+            <td>
+              <span class="vendor-badge {% if p.inventory > 0 %}in-stock{% else %}out-of-stock{% endif %}">
+                {% if p.inventory > 0 %}In Stock{% else %}Out of Stock{% endif %}
+              </span>
+            </td>
+            <td>
+              <div class="product-actions">
+                <a href="/admin/catalog/{{ p.id }}" class="vendor-btn-outline">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  View
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="vendor-empty">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+      <p>No products yet.</p>
+      <a href="/admin/catalog/new">Add your first product</a>
+    </div>
+    {% endif %}
+  </div>
 </div>
+
+<script>
+function filterProducts() {
+  const query = document.getElementById('productSearch').value.toLowerCase();
+  const rows = document.querySelectorAll('#productsTable tbody tr');
+  rows.forEach(row => {
+    const name = row.getAttribute('data-search') || '';
+    row.style.display = name.includes(query) ? '' : 'none';
+  });
+}
+</script>
 {% endblock %}

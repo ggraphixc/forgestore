@@ -1,47 +1,439 @@
 {% extends "admin/base.html" %}
 {% block title %}Promo Ads{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+<style>
+:root {
+  --amber-50: #fffbeb;
+  --amber-100: #fef3c7;
+  --amber-200: #fde68a;
+  --amber-500: #f59e0b;
+  --amber-600: #d97706;
+  --amber-700: #b45309;
+  --stone-50: #fafaf9;
+  --stone-100: #f5f5f4;
+  --stone-200: #e7e5e4;
+  --stone-300: #d6d3d1;
+  --stone-400: #a8a29e;
+  --stone-500: #78716c;
+  --stone-600: #57534e;
+  --stone-700: #44403c;
+  --stone-800: #292524;
+  --stone-900: #1c1917;
+  --emerald-500: #10b981;
+  --emerald-600: #059669;
+  --emerald-100: #d1fae5;
+  --red-500: #ef4444;
+  --red-600: #dc2626;
+  --red-100: #fee2e2;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+}
+
+.pa-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.pa-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .pa-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.pa-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--stone-900);
+  margin: 0;
+}
+
+.pa-subtitle {
+  font-size: 0.875rem;
+  color: var(--stone-500);
+  margin-top: 4px;
+}
+
+.pa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  min-height: 44px;
+  transition: all var(--transition-base);
+}
+
+.pa-btn-primary {
+  background: var(--amber-600);
+  color: white;
+}
+
+.pa-btn-primary:hover {
+  background: var(--amber-700);
+}
+
+.pa-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .pa-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .pa-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.pa-card {
+  background: #fff;
+  border: 1px solid var(--stone-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: box-shadow var(--transition-base);
+}
+
+.pa-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.pa-card-img {
+  aspect-ratio: 16/9;
+  background: var(--stone-50);
+  overflow: hidden;
+}
+
+.pa-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.pa-card:hover .pa-card-img img {
+  transform: scale(1.05);
+}
+
+.pa-card-body {
+  padding: 16px;
+}
+
+.pa-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.pa-card-title {
+  font-weight: 600;
+  color: var(--stone-900);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+
+.pa-card-meta {
+  font-size: 0.75rem;
+  color: var(--stone-500);
+  margin: 4px 0 0 0;
+}
+
+.pa-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.pa-badge-active {
+  background: var(--emerald-100);
+  color: var(--emerald-600);
+}
+
+.pa-badge-inactive {
+  background: var(--stone-100);
+  color: var(--stone-500);
+}
+
+.pa-badge-expired {
+  background: var(--red-100);
+  color: var(--red-600);
+}
+
+.pa-card-details {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--stone-500);
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.pa-card-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.75rem;
+  color: var(--stone-400);
+  margin-bottom: 8px;
+}
+
+.pa-card-note {
+  font-size: 0.75rem;
+  color: var(--stone-500);
+  font-style: italic;
+  margin: 8px 0;
+}
+
+.pa-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--stone-200);
+}
+
+.pa-btn-sm {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--stone-200);
+  background: transparent;
+  cursor: pointer;
+  min-height: 32px;
+  transition: all var(--transition-fast);
+}
+
+.pa-btn-sm:hover {
+  background: var(--stone-100);
+}
+
+.pa-btn-sm.amber { color: var(--amber-600); border-color: var(--amber-600); }
+.pa-btn-sm.emerald { color: var(--emerald-600); border-color: var(--emerald-600); }
+.pa-btn-sm.red { color: var(--red-600); border-color: var(--red-600); }
+.pa-btn-sm.red:hover { background: var(--red-100); }
+
+.pa-ml-auto { margin-left: auto; }
+
+.pa-empty {
+  text-align: center;
+  padding: 64px 16px;
+  background: #fff;
+  border: 1px solid var(--stone-200);
+  border-radius: var(--radius-lg);
+}
+
+.pa-empty-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  color: var(--stone-300);
+}
+
+.pa-empty-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--stone-900);
+  margin: 0 0 8px 0;
+}
+
+.pa-empty-text {
+  font-size: 0.875rem;
+  color: var(--stone-500);
+  margin-bottom: 24px;
+}
+
+.pa-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.pa-modal-overlay.show {
+  display: flex;
+}
+
+.pa-modal {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  max-width: 512px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.pa-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.pa-modal-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--stone-900);
+  margin: 0;
+}
+
+.pa-modal-close {
+  padding: 8px;
+  background: transparent;
+  border: none;
+  color: var(--stone-400);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  font-size: 1.25rem;
+  line-height: 1;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pa-modal-close:hover {
+  background: var(--stone-100);
+  color: var(--stone-900);
+}
+
+.pa-form-group {
+  margin-bottom: 16px;
+}
+
+.pa-form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-900);
+  margin-bottom: 6px;
+}
+
+.pa-input,
+.pa-select,
+.pa-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  border: 1px solid var(--stone-200);
+  border-radius: var(--radius-md);
+  background: var(--stone-50);
+  color: var(--stone-900);
+  min-height: 44px;
+}
+
+.pa-input:focus,
+.pa-select:focus,
+.pa-textarea:focus {
+  outline: none;
+  border-color: var(--amber-600);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
+}
+
+.pa-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.pa-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.pa-form-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 16px;
+}
+
+.pa-form-actions .pa-btn {
+  flex: 1;
+}
+</style>
+
+<div class="pa-container">
+    <div class="pa-header">
         <div>
-            <h1 class="text-2xl font-display font-bold text-stone-900 dark:text-stone-100">Promo Ads</h1>
-            <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">Manage promotional banners, posters, and flyers</p>
+            <h1 class="pa-title">Promo Ads</h1>
+            <p class="pa-subtitle">Manage promotional banners, posters, and flyers</p>
         </div>
         {% if has_permission(admin, 'ads') %}
-        <button onclick="document.getElementById('create-modal').classList.remove('hidden')" class="btn-forge inline-flex items-center gap-2 px-4 py-2.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <button onclick="openModal()" class="pa-btn pa-btn-primary">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             Create Promo Ad
         </button>
         {% endif %}
     </div>
 
-    <!-- Promo Ads Grid -->
     {% if promo_ads %}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="pa-grid">
         {% for ad in promo_ads %}
-        <div class="card-artisan group relative overflow-hidden">
+        <div class="pa-card">
             {% if ad.banner_url %}
-            <div class="aspect-video bg-stone-100 dark:bg-stone-800 overflow-hidden rounded-t-xl">
-                <img src="{{ ad.banner_url }}" alt="{{ ad.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+            <div class="pa-card-img">
+                <img src="{{ ad.banner_url }}" alt="{{ ad.title }}">
             </div>
             {% endif %}
-            <div class="p-4 space-y-2">
-                <div class="flex items-start justify-between gap-2">
-                    <div class="min-w-0 flex-1">
-                        <h3 class="font-semibold text-stone-900 dark:text-stone-100 truncate">{{ ad.title }}</h3>
-                        <p class="text-xs text-stone-500 dark:text-stone-400">{{ ad.ad_subtype }} · {{ ad.banner_type }}</p>
+            <div class="pa-card-body">
+                <div class="pa-card-header">
+                    <div>
+                        <h3 class="pa-card-title">{{ ad.title }}</h3>
+                        <p class="pa-card-meta">{{ ad.ad_subtype }} · {{ ad.banner_type }}</p>
                     </div>
-                    <span class="badge-glass text-xs shrink-0
-                        {% if ad.status == 'ACTIVE' %}badge-emerald
-                        {% elif ad.status == 'INACTIVE' %}badge-stone
-                        {% elif ad.status == 'EXPIRED' %}badge-red
-                        {% else %}badge-glass{% endif %}">
+                    <span class="pa-badge
+                        {% if ad.status == 'ACTIVE' %}pa-badge-active
+                        {% elif ad.status == 'INACTIVE' %}pa-badge-inactive
+                        {% elif ad.status == 'EXPIRED' %}pa-badge-expired
+                        {% else %}pa-badge-inactive{% endif %}">
                         {{ ad.status }}
                     </span>
                 </div>
 
-                <div class="flex items-center gap-3 text-xs text-stone-500 dark:text-stone-400">
+                <div class="pa-card-details">
                     {% if ad.retailer_id %}
                     <span>Shop: {{ retailers_map.get(ad.retailer_id, 'Unknown') }}</span>
                     {% endif %}
@@ -50,69 +442,67 @@
                     {% endif %}
                 </div>
 
-                <div class="flex items-center gap-4 text-xs text-stone-400 dark:text-stone-500">
+                <div class="pa-card-stats">
                     <span>{{ ad.clicks }} clicks</span>
                     <span>{{ ad.impressions }} impressions</span>
                 </div>
 
                 {% if ad.note %}
-                <p class="text-xs text-stone-500 dark:text-stone-400 italic">{{ ad.note }}</p>
+                <p class="pa-card-note">{{ ad.note }}</p>
                 {% endif %}
 
-                <!-- Actions -->
-                <div class="flex items-center gap-2 pt-2 border-t border-stone-100 dark:border-stone-800">
-                    <button onclick="editPromoAd('{{ ad.id }}')" class="btn-ghost text-xs px-2 py-1">Edit</button>
+                <div class="pa-card-actions">
+                    <button onclick="editPromoAd('{{ ad.id }}')" class="pa-btn-sm">Edit</button>
                     {% if ad.status == 'ACTIVE' %}
-                    <button onclick="togglePromoAdStatus('{{ ad.id }}', 'INACTIVE')" class="btn-ghost text-xs px-2 py-1 text-amber-600">Deactivate</button>
+                    <button onclick="togglePromoAdStatus('{{ ad.id }}', 'INACTIVE')" class="pa-btn-sm amber">Deactivate</button>
                     {% elif ad.status == 'INACTIVE' %}
-                    <button onclick="togglePromoAdStatus('{{ ad.id }}', 'ACTIVE')" class="btn-ghost text-xs px-2 py-1 text-emerald-600">Activate</button>
+                    <button onclick="togglePromoAdStatus('{{ ad.id }}', 'ACTIVE')" class="pa-btn-sm emerald">Activate</button>
                     {% endif %}
-                    <button onclick="deletePromoAd('{{ ad.id }}')" class="btn-ghost text-xs px-2 py-1 text-red-500 ml-auto">Delete</button>
+                    <button onclick="deletePromoAd('{{ ad.id }}')" class="pa-btn-sm red pa-ml-auto">Delete</button>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
     {% else %}
-    <div class="card-artisan text-center py-16">
-        <svg class="w-16 h-16 mx-auto text-stone-300 dark:text-stone-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="pa-empty">
+        <svg class="pa-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
         </svg>
-        <h3 class="text-lg font-semibold text-stone-900 dark:text-stone-100 mb-2">No Promo Ads Yet</h3>
-        <p class="text-sm text-stone-500 dark:text-stone-400 mb-6">Create your first promotion to showcase deals and offers</p>
-        <button onclick="document.getElementById('create-modal').classList.remove('hidden')" class="btn-forge">Create Your First Promo Ad</button>
+        <h3 class="pa-empty-title">No Promo Ads Yet</h3>
+        <p class="pa-empty-text">Create your first promotion to showcase deals and offers</p>
+        <button onclick="openModal()" class="pa-btn pa-btn-primary">Create Your First Promo Ad</button>
     </div>
     {% endif %}
 </div>
 
-<!-- Create/Edit Modal -->
-<div id="create-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="card-artisan max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="text-lg font-bold text-stone-900 dark:text-stone-100" id="modal-title">Create Promo Ad</h2>
-            <button onclick="closeModal()" class="p-1 text-stone-400 hover:text-stone-600 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800">&times;</button>
+<div id="create-modal" class="pa-modal-overlay">
+    <div class="pa-modal">
+        <div class="pa-modal-header">
+            <h2 class="pa-modal-title" id="modal-title">Create Promo Ad</h2>
+            <button onclick="closeModal()" class="pa-modal-close">&times;</button>
         </div>
-        <form id="promo-ad-form" class="space-y-4" onsubmit="return savePromoAd(event)">
+        <form id="promo-ad-form" onsubmit="return savePromoAd(event)">
             <input type="hidden" id="ad-id" value="">
             
-            <div>
-                <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Title *</label>
-                <input type="text" id="title" required class="input-forge w-full" placeholder="e.g. Summer Flash Sale">
+            <div class="pa-form-group">
+                <label class="pa-form-label">Title *</label>
+                <input type="text" id="title" required class="pa-input" placeholder="e.g. Summer Flash Sale">
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Subtype *</label>
-                    <select id="ad_subtype" class="select-forge w-full">
+            <div class="pa-form-row">
+                <div class="pa-form-group">
+                    <label class="pa-form-label">Subtype *</label>
+                    <select id="ad_subtype" class="pa-select">
                         <option value="PROMO">Promo</option>
                         <option value="FLASH_SALE">Flash Sale</option>
                         <option value="SUPER_SALE">Super Sale</option>
                     </select>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Banner Type *</label>
-                    <select id="banner_type" class="select-forge w-full">
+                <div class="pa-form-group">
+                    <label class="pa-form-label">Banner Type *</label>
+                    <select id="banner_type" class="pa-select">
                         <option value="banner">Banner</option>
                         <option value="poster">Poster</option>
                         <option value="flyer">Flyer</option>
@@ -120,35 +510,35 @@
                 </div>
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Banner URL *</label>
-                <input type="url" id="banner_url" required class="input-forge w-full" placeholder="https://example.com/banner.jpg">
+            <div class="pa-form-group">
+                <label class="pa-form-label">Banner URL *</label>
+                <input type="url" id="banner_url" required class="pa-input" placeholder="https://example.com/banner.jpg">
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Target URL</label>
-                <input type="url" id="target_url" class="input-forge w-full" placeholder="https://example.com/promotion">
+            <div class="pa-form-group">
+                <label class="pa-form-label">Target URL</label>
+                <input type="url" id="target_url" class="pa-input" placeholder="https://example.com/promotion">
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Start Date</label>
-                    <input type="date" id="start_date" class="input-forge w-full">
+            <div class="pa-form-row">
+                <div class="pa-form-group">
+                    <label class="pa-form-label">Start Date</label>
+                    <input type="date" id="start_date" class="pa-input">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">End Date</label>
-                    <input type="date" id="end_date" class="input-forge w-full">
+                <div class="pa-form-group">
+                    <label class="pa-form-label">End Date</label>
+                    <input type="date" id="end_date" class="pa-input">
                 </div>
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Note</label>
-                <textarea id="note" rows="2" class="input-forge w-full" placeholder="Internal notes about this promotion"></textarea>
+            <div class="pa-form-group">
+                <label class="pa-form-label">Note</label>
+                <textarea id="note" rows="2" class="pa-textarea" placeholder="Internal notes about this promotion"></textarea>
             </div>
 
-            <div class="flex items-center gap-3 pt-2">
-                <button type="submit" class="btn-forge flex-1">Save Promo Ad</button>
-                <button type="button" onclick="closeModal()" class="btn-ghost flex-1">Cancel</button>
+            <div class="pa-form-actions">
+                <button type="submit" class="pa-btn pa-btn-primary">Save Promo Ad</button>
+                <button type="button" onclick="closeModal()" class="pa-btn" style="border:1px solid var(--stone-200);color:var(--stone-500)">Cancel</button>
             </div>
         </form>
     </div>
@@ -157,8 +547,12 @@
 
 {% block scripts %}
 <script>
+function openModal() {
+    document.getElementById('create-modal').classList.add('show');
+}
+
 function closeModal() {
-    document.getElementById('create-modal').classList.add('hidden');
+    document.getElementById('create-modal').classList.remove('show');
     document.getElementById('promo-ad-form').reset();
     document.getElementById('ad-id').value = '';
     document.getElementById('modal-title').textContent = 'Create Promo Ad';
@@ -204,7 +598,6 @@ function savePromoAd(e) {
 }
 
 function editPromoAd(id) {
-    // Fetch current data
     fetch('/api/admin/promo-ads')
     .then(r => r.json())
     .then(d => {
@@ -222,7 +615,7 @@ function editPromoAd(id) {
         document.getElementById('start_date').value = ad.start_date ? ad.start_date.slice(0, 10) : '';
         document.getElementById('end_date').value = ad.end_date ? ad.end_date.slice(0, 10) : '';
         
-        document.getElementById('create-modal').classList.remove('hidden');
+        openModal();
     })
     .catch(() => showToast('Failed to load promo ad', 'error'));
 }

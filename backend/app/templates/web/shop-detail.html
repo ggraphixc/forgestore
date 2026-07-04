@@ -1,81 +1,158 @@
 {% extends "web/base.html" %}
 {% block title %}{{ retailer.name }} — ForgeStore{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-  <!-- Back link -->
-  <a href="/shop/shops" class="inline-flex items-center gap-1.5 text-sm text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors mb-8">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m0 0l7 7m-7-7l7-7"/></svg>
+<style>
+  :root {
+    --ws-amber-50: #fffbeb; --ws-amber-100: #fef3c7; --ws-amber-200: #fde68a;
+    --ws-amber-400: #fbbf24; --ws-amber-500: #f59e0b; --ws-amber-600: #d97706;
+    --ws-amber-700: #b45309; --ws-stone-50: #fafaf9; --ws-stone-100: #f5f5f4;
+    --ws-stone-200: #e7e5e3; --ws-stone-300: #d6d3d1; --ws-stone-400: #a8a29e;
+    --ws-stone-500: #78716c; --ws-stone-600: #57534e; --ws-stone-700: #44403c;
+    --ws-stone-800: #292524; --ws-stone-900: #1c1917;
+    --ws-radius: 16px; --ws-radius-sm: 12px; --ws-radius-xs: 8px;
+    --ws-shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --ws-shadow-lg: 0 10px 25px -3px rgba(0,0,0,.08), 0 4px 6px rgba(0,0,0,.04);
+    --ws-transition: .25s cubic-bezier(.4,0,.2,1);
+  }
+  .ws-page { max-width: 80rem; margin: 0 auto; padding: 2rem 1rem; }
+  @media (min-width: 640px) { .ws-page { padding: 3rem 1.5rem; } }
+  .ws-back { display: inline-flex; align-items: center; gap: .375rem; font-size: .875rem; color: var(--ws-stone-500); text-decoration: none; margin-bottom: 2rem; min-height: 44px; transition: color var(--ws-transition); }
+  .ws-back:hover { color: var(--ws-amber-600); }
+  .ws-back svg { width: 16px; height: 16px; }
+  .ws-hero { position: relative; overflow: hidden; border-radius: 24px; padding: 2rem; margin-bottom: 3rem; background: linear-gradient(135deg, var(--ws-stone-900), var(--ws-stone-800), #78350f); }
+  @media (min-width: 640px) { .ws-hero { padding: 3rem; } }
+  .ws-hero-glow1 { position: absolute; top: -33%; right: -25%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(245,158,11,.15), transparent 70%); pointer-events: none; }
+  .ws-hero-glow2 { position: absolute; bottom: -33%; left: -25%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(249,115,22,.08), transparent 70%); pointer-events: none; }
+  .ws-hero-grid { position: absolute; inset: 0; opacity: .03; background-image: linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+  .ws-hero-inner { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 1.5rem; }
+  @media (min-width: 640px) { .ws-hero-inner { flex-direction: row; align-items: center; } }
+  .ws-hero-avatar { width: 96px; height: 96px; background: rgba(255,255,255,.1); border-radius: 24px; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 2.25rem; font-weight: 700; color: rgba(255,255,255,.5); border: 2px solid rgba(255,255,255,.1); flex-shrink: 0; backdrop-filter: blur(8px); }
+  @media (min-width: 640px) { .ws-hero-avatar { width: 112px; height: 112px; } }
+  .ws-hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .ws-hero-meta { flex: 1; min-width: 0; }
+  .ws-hero-name-row { display: flex; flex-direction: column; gap: .75rem; margin-bottom: .5rem; }
+  @media (min-width: 640px) { .ws-hero-name-row { flex-direction: row; align-items: center; } }
+  .ws-hero-name { font-size: 1.875rem; font-weight: 900; color: #fff; }
+  @media (min-width: 640px) { .ws-hero-name { font-size: 2.25rem; } }
+  .ws-badge { display: inline-flex; align-items: center; gap: .375rem; padding: .25rem .75rem; background: rgba(245,158,11,.2); color: var(--ws-amber-400); font-size: .75rem; font-weight: 700; border-radius: 999px; }
+  .ws-badge svg { width: 14px; height: 14px; fill: currentColor; }
+  .ws-hero-loc { display: flex; align-items: center; gap: .375rem; font-size: .875rem; color: var(--ws-stone-400); margin-bottom: 1rem; }
+  .ws-hero-loc svg { width: 16px; height: 16px; }
+  .ws-hero-bio { font-size: .875rem; color: var(--ws-stone-300); line-height: 1.6; max-width: 40rem; }
+  .ws-hero-stats { display: flex; align-items: center; gap: 1.25rem; margin-top: 1.25rem; font-size: .875rem; color: var(--ws-stone-400); }
+  .ws-hero-stats strong { color: #fff; font-weight: 600; }
+  .ws-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
+  .ws-section-title { font-size: 1.25rem; font-weight: 700; color: var(--ws-stone-900); }
+  .ws-grid-products { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  @media (min-width: 768px) { .ws-grid-products { grid-template-columns: repeat(3, 1fr); gap: 1.5rem; } }
+  @media (min-width: 1024px) { .ws-grid-products { grid-template-columns: repeat(4, 1fr); } }
+  .ws-product { position: relative; background: #fff; border: 1px solid var(--ws-stone-200); border-radius: var(--ws-radius); overflow: hidden; transition: border-color var(--ws-transition), box-shadow var(--ws-transition); }
+  .ws-product:hover { border-color: var(--ws-amber-300); box-shadow: var(--ws-shadow-lg); }
+  .ws-product a { text-decoration: none; color: inherit; display: block; }
+  .ws-product-img { aspect-ratio: 3/4; overflow: hidden; background: var(--ws-stone-50); position: relative; }
+  .ws-product-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s cubic-bezier(.4,0,.2,1); }
+  .ws-product:hover .ws-product-img img { transform: scale(1.1); }
+  .ws-product-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--ws-stone-300); }
+  .ws-product-placeholder svg { width: 48px; height: 48px; }
+  .ws-sale-badge { position: absolute; top: .75rem; left: .75rem; background: #ef4444; color: #fff; font-size: .75rem; font-weight: 700; padding: .25rem .625rem; border-radius: 999px; }
+  .ws-wishlist-btn { position: absolute; top: .75rem; right: .75rem; z-index: 10; width: 32px; height: 32px; background: rgba(255,255,255,.8); backdrop-filter: blur(4px); border-radius: 50%; box-shadow: var(--ws-shadow-lg); display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: transform var(--ws-transition), opacity var(--ws-transition); }
+  .ws-wishlist-btn:hover { transform: scale(1.1); }
+  @media (min-width: 768px) { .ws-wishlist-btn { opacity: 0; } .ws-product:hover .ws-wishlist-btn { opacity: 1; } }
+  .ws-wishlist-btn svg { width: 16px; height: 16px; color: var(--ws-stone-400); }
+  .ws-product-info { padding: .75rem; }
+  @media (min-width: 640px) { .ws-product-info { padding: 1rem; } }
+  .ws-product-name { font-size: .75rem; font-weight: 600; color: var(--ws-stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color var(--ws-transition); }
+  @media (min-width: 640px) { .ws-product-name { font-size: .875rem; } }
+  .ws-product:hover .ws-product-name { color: var(--ws-amber-700); }
+  .ws-product-price { font-size: .875rem; font-weight: 700; color: var(--ws-amber-600); font-family: monospace; margin-top: .25rem; display: block; }
+  .ws-empty { text-align: center; padding: 4rem 1rem; color: var(--ws-stone-500); }
+  @media (prefers-color-scheme: dark) {
+    .ws-section-title { color: var(--ws-stone-100); }
+    .ws-product { background: var(--ws-stone-800); border-color: var(--ws-stone-700); }
+    .ws-product:hover { border-color: var(--ws-amber-600); }
+    .ws-product-img { background: var(--ws-stone-700); }
+    .ws-product-placeholder { color: var(--ws-stone-500); }
+    .ws-product-name { color: var(--ws-stone-100); }
+    .ws-product:hover .ws-product-name { color: var(--ws-amber-400); }
+    .ws-wishlist-btn { background: rgba(41,37,36,.8); }
+    .ws-wishlist-btn svg { color: var(--ws-stone-400); }
+    .ws-empty { color: var(--ws-stone-400); }
+  }
+</style>
+
+<div class="ws-page">
+  <a href="/shop/shops" class="ws-back">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m0 0l7 7m-7-7l7-7"/></svg>
     Back to Artisans
   </a>
 
-  <!-- Shop Header -->
-  <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-stone-900 via-stone-800 to-amber-950 p-8 sm:p-12 mb-12 reveal">
-    <div class="absolute -top-1/3 -right-1/4 w-[400px] h-[400px] bg-gradient-to-br from-amber-500/15 to-amber-600/5 rounded-full blur-[100px]"></div>
-    <div class="absolute -bottom-1/3 -left-1/4 w-[300px] h-[300px] bg-gradient-to-br from-orange-500/8 to-transparent rounded-full blur-[80px]"></div>
-    <div class="absolute inset-0 opacity-[0.03]" style="background-image: linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px); background-size: 60px 60px;"></div>
-
-    <div class="relative z-10 flex flex-col sm:flex-row items-start gap-6">
-      <div class="w-24 h-24 sm:w-28 sm:h-28 bg-white/10 rounded-3xl overflow-hidden flex items-center justify-center text-4xl font-bold text-white/50 ring-2 ring-white/10 flex-shrink-0 backdrop-blur-sm">
-        {% if retailer.logo_url %}<img src="{{ retailer.logo_url }}" alt="{{ retailer.name }}" class="w-full h-full object-cover">{% else %}{{ retailer.name[0] }}{% endif %}
+  <div class="ws-hero">
+    <div class="ws-hero-glow1"></div>
+    <div class="ws-hero-glow2"></div>
+    <div class="ws-hero-grid"></div>
+    <div class="ws-hero-inner">
+      <div class="ws-hero-avatar">
+        {% if retailer.logo_url %}<img src="{{ retailer.logo_url }}" alt="{{ retailer.name }}">{% else %}{{ retailer.name[0] }}{% endif %}
       </div>
-      <div class="flex-1 min-w-0">
-        <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-2">
-          <h1 class="text-3xl sm:text-4xl font-black text-white font-display">{{ retailer.name }}</h1>
-          <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 text-amber-300 text-xs font-bold rounded-full">
-            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+      <div class="ws-hero-meta">
+        <div class="ws-hero-name-row">
+          <h1 class="ws-hero-name">{{ retailer.name }}</h1>
+          <span class="ws-badge">
+            <svg viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
             {{ "%.1f"|format(retailer.rating) }}
           </span>
         </div>
-        {% if retailer.location %}<p class="text-sm text-stone-400 flex items-center gap-1.5 mb-4">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        {% if retailer.location %}
+        <p class="ws-hero-loc">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
           {{ retailer.location }}
-        </p>{% endif %}
-        {% if retailer.bio %}<p class="text-sm text-stone-300 leading-relaxed max-w-2xl">{{ retailer.bio }}</p>{% endif %}
-        <div class="flex items-center gap-5 mt-5 text-sm">
-          <span class="text-stone-400"><span class="text-white font-semibold">{{ products|length }}</span> pieces</span>
+        </p>
+        {% endif %}
+        {% if retailer.bio %}<p class="ws-hero-bio">{{ retailer.bio }}</p>{% endif %}
+        <div class="ws-hero-stats">
+          <span><strong>{{ products|length }}</strong> pieces</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Products Grid -->
-  <div class="flex items-center justify-between mb-8">
-    <h2 class="text-xl font-bold text-stone-900 dark:text-stone-100 font-display">Collection</h2>
+  <div class="ws-section-header">
+    <h2 class="ws-section-title">Collection</h2>
   </div>
 
   {% if products %}
-  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+  <div class="ws-grid-products">
     {% for p in products %}
-    <div class="card-product group reveal-scale relative" style="animation-delay: {{ (loop.index0 * 60) + 100 }}ms;">
-      <button onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist('{{ p.id }}', this)" class="wishlist-heart absolute top-3 right-3 z-10 w-8 h-8 bg-white/80 dark:bg-stone-800/80 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform duration-200 md:opacity-0 md:group-hover:opacity-100" data-product-id="{{ p.id }}" aria-label="Add to wishlist">
-        <svg class="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="ws-product" style="animation-delay: {{ (loop.index0 * 60) + 100 }}ms;">
+      <button onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist('{{ p.id }}', this)" class="ws-wishlist-btn" data-product-id="{{ p.id }}" aria-label="Add to wishlist">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
         </svg>
       </button>
       <a href="/shop/products/{{ p.slug }}">
-        <div class="aspect-[3/4] overflow-hidden bg-stone-50 dark:bg-stone-700 relative">
+        <div class="ws-product-img">
           {% if p.images and p.images|length > 0 %}
-          <img loading="lazy" src="{{ p.images[0] }}" alt="{{ p.name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
+          <img loading="lazy" src="{{ p.images[0] }}" alt="{{ p.name }}">
           {% else %}
-          <div class="w-full h-full flex items-center justify-center text-stone-300 dark:text-stone-500">
-            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          <div class="ws-product-placeholder">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
           </div>
           {% endif %}
           {% if p.discount_price and p.discount_price < p.price %}
-          <span class="absolute top-3 left-3 badge-red">Sale</span>
+          <span class="ws-sale-badge">Sale</span>
           {% endif %}
         </div>
-        <div class="p-3 sm:p-4">
-          <h3 class="text-xs sm:text-sm font-semibold text-stone-900 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors line-clamp-1">{{ p.name }}</h3>
-          <span class="text-sm font-bold text-amber-600 dark:text-amber-400 font-mono mt-1 block">{{ format_price(p.price, currency) }}</span>
+        <div class="ws-product-info">
+          <h3 class="ws-product-name">{{ p.name }}</h3>
+          <span class="ws-product-price">{{ format_price(p.price, currency) }}</span>
         </div>
       </a>
     </div>
     {% endfor %}
   </div>
   {% else %}
-  <div class="text-center py-16">
-    <p class="text-stone-500 dark:text-stone-400">No pieces available yet. Check back soon!</p>
+  <div class="ws-empty">
+    <p>No pieces available yet. Check back soon!</p>
   </div>
   {% endif %}
 </div>
