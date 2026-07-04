@@ -416,6 +416,101 @@
   overflow-x: hidden;
 }
 
+/* ---- More Menu Panel ---- */
+.admin-more-panel {
+  display: none;
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 180px);
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(231,229,228,0.6);
+  border-radius: 20px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06);
+  z-index: 55;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px;
+  animation: morePanelIn 0.2s ease-out;
+}
+@keyframes morePanelIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(12px) scale(0.96); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+.admin-more-panel.open { display: block; }
+.admin-more-panel::-webkit-scrollbar { width: 4px; }
+.admin-more-panel::-webkit-scrollbar-track { background: transparent; }
+.admin-more-panel::-webkit-scrollbar-thumb { background: #e7e5e4; border-radius: 4px; }
+.admin-more-section {
+  padding: 12px 12px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #a8a29e;
+}
+.admin-more-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #78716c;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  min-height: 44px;
+}
+.admin-more-link:hover { background: #fffbeb; color: #92400e; }
+.admin-more-link.active { background: #fffbeb; color: #92400e; font-weight: 600; }
+.admin-more-link svg { width: 20px; height: 20px; flex-shrink: 0; color: #a8a29e; }
+.admin-more-link:hover svg { color: #d97706; }
+.admin-more-link .more-badge {
+  margin-left: auto;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-weight: 600;
+}
+.admin-more-link .more-badge.badge-muted { color: #a8a29e; background: #f5f5f4; }
+.admin-more-link .more-badge.badge-primary { color: #d97706; background: #fffbeb; font-weight: 700; }
+.admin-more-divider {
+  height: 1px;
+  background: #f5f5f4;
+  margin: 4px 12px;
+}
+.admin-more-signout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #78716c;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  min-height: 44px;
+}
+.admin-more-signout:hover { background: #fef2f2; color: #dc2626; }
+.admin-more-signout svg { width: 20px; height: 20px; flex-shrink: 0; color: #a8a29e; }
+.admin-more-signout:hover svg { color: #ef4444; }
+.admin-more-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 54;
+}
+.admin-more-backdrop.open { display: block; }
+
 /* ---- Desktop: bottom nav visible, header hidden, no sidebar ---- */
 @media (min-width: 1024px) {
   .admin-bottomnav { display: flex; }
@@ -577,6 +672,101 @@
   <!-- Backdrop (mobile) -->
   <div id="sidebar-backdrop" class="admin-sidebar-backdrop"></div>
 
+  <!-- More Panel Backdrop -->
+  <div id="more-backdrop" class="admin-more-backdrop" onclick="closeMoreMenu()"></div>
+
+  <!-- More Panel -->
+  <div id="more-panel" class="admin-more-panel">
+    {% if has_permission(admin, 'categories') %}
+    <a href="/admin/categories" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+      Categories
+    </a>
+    {% endif %}
+
+    {% if has_permission(admin, 'retailers') %}
+    <a href="/admin/retailers" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+      Retailers
+      <span class="more-badge badge-muted">Shops</span>
+    </a>
+    {% endif %}
+
+    {% if has_permission(admin, 'customers') %}
+    <a href="/admin/customers" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      Customers
+    </a>
+    {% endif %}
+
+    {% if has_permission(admin, 'shipments') %}
+    <a href="/admin/shipments" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      Shipments
+      <span class="more-badge badge-muted">Tracking</span>
+    </a>
+    {% endif %}
+
+    {% if has_permission(admin, 'admin_users') %}
+    <a href="/admin/admin-users" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/></svg>
+      Admin Users
+      <span class="more-badge badge-muted">Team</span>
+    </a>
+    {% endif %}
+
+    {% if has_permission(admin, 'ads') %}
+    <div class="admin-more-divider"></div>
+    <div class="admin-more-section">Ad Campaigns</div>
+    <a href="/admin/retailer/ads" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+      Manage Ads
+      <span class="more-badge badge-primary">Promote</span>
+    </a>
+    <a href="/admin/ads/manage" class="admin-more-link" style="padding-left:44px;">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      Settings
+    </a>
+    <a href="/admin/ads/analytics" class="admin-more-link" style="padding-left:44px;">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      Analytics
+    </a>
+    {% endif %}
+
+    {% if admin and admin.role.value == 'DIR_ADMIN' %}
+    <div class="admin-more-divider"></div>
+    <div class="admin-more-section">Newsletter</div>
+    <a href="/admin/newsletter-subscribers" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      Subscribers
+    </a>
+    <a href="/admin/newsletter/broadcast" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+      Send Broadcast
+    </a>
+    <a href="/admin/newsletter/templates" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      Templates
+    </a>
+    <a href="/admin/newsletter/broadcast-analytics" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      Analytics
+    </a>
+    {% endif %}
+
+    <div class="admin-more-divider"></div>
+    <a href="/admin/notifications" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+      Notifications
+    </a>
+
+    <div class="admin-more-divider"></div>
+    <a href="/admin/logout" class="admin-more-signout">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      Sign Out
+    </a>
+  </div>
+
   <!-- Desktop Bottom Nav -->
   <nav class="admin-bottomnav">
     <div class="admin-bottomnav-inner">
@@ -608,24 +798,10 @@
       </a>
       {% endif %}
 
-      {% if admin and admin.role.value == 'DIR_ADMIN' %}
-      <a href="/admin/settings" class="admin-bnav-item {% if '/settings' in request.url.path %}active{% endif %}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-        <span class="bnav-label">Settings</span>
-      </a>
-      {% endif %}
-
-      <a href="/admin/me" class="admin-bnav-item {% if '/me' in request.url.path %}active{% endif %}">
-        <div class="admin-avatar
-          {% if admin and admin.role.value == 'DIR_ADMIN' %}role-dir
-          {% elif admin and admin.role.value == 'MANAGEMENT' %}role-mgmt
-          {% elif admin and admin.role.value == 'TECH_ADMIN' %}role-tech
-          {% elif admin and admin.role.value == 'RETAILER' %}role-retail
-          {% else %}role-other{% endif %}" style="width:24px;height:24px;font-size:11px;">
-          {{ admin.name[0]|upper if admin and admin.name else "A" }}
-        </div>
-        <span class="bnav-label">Profile</span>
-      </a>
+      <button onclick="toggleMoreMenu(event)" class="admin-bnav-item" id="more-toggle-btn" style="cursor:pointer;border:none;background:none;font-family:inherit;">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"/></svg>
+        <span class="bnav-label">More</span>
+      </button>
     </div>
   </nav>
 
@@ -712,6 +888,27 @@ function togglePasswordVisibility(inputId, btn) {
     btn.querySelector('.eye-closed')?.classList.toggle('hidden');
 }
 
+// More menu
+let moreMenuOpen = false;
+function toggleMoreMenu(event) {
+    if (event) event.stopPropagation();
+    moreMenuOpen = !moreMenuOpen;
+    const panel = document.getElementById('more-panel');
+    const backdrop = document.getElementById('more-backdrop');
+    if (moreMenuOpen) {
+        panel.classList.add('open');
+        backdrop.classList.add('open');
+    } else {
+        panel.classList.remove('open');
+        backdrop.classList.remove('open');
+    }
+}
+function closeMoreMenu() {
+    moreMenuOpen = false;
+    document.getElementById('more-panel')?.classList.remove('open');
+    document.getElementById('more-backdrop')?.classList.remove('open');
+}
+
 function openSidebar() {
     const sidebar = document.getElementById('sidebar');
     const backdrop = document.getElementById('sidebar-backdrop');
@@ -746,11 +943,19 @@ function toggleSidebar(event) {
 
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('sidebar-backdrop')?.addEventListener('click', closeSidebar);
-    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeSidebar(); });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeSidebar(); closeMoreMenu(); } });
     document.querySelectorAll('.admin-sidebar-link').forEach(link => {
         link.addEventListener('click', function() {
             if (document.getElementById('sidebar')?.classList.contains('open')) closeSidebar();
         });
+    });
+    // Close More menu when clicking outside
+    document.addEventListener('click', function(e) {
+        const panel = document.getElementById('more-panel');
+        const toggle = document.getElementById('more-toggle-btn');
+        if (moreMenuOpen && panel && !panel.contains(e.target) && toggle && !toggle.contains(e.target)) {
+            closeMoreMenu();
+        }
     });
 
     function syncMobileNotifBadge() {
