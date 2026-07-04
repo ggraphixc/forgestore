@@ -44,61 +44,156 @@
   @media (min-width: 640px) { .container { padding-left: 1.5rem; padding-right: 1.5rem; } }
   @media (min-width: 1024px) { .container { padding-left: 2rem; padding-right: 2rem; } }
 
-  /* ===== HERO ===== */
+  /* ===== HERO — Modern Gradient with Search ===== */
   .home-hero {
     position: relative;
-    background: var(--color-dark);
-    color: #fff;
     overflow: hidden;
-    min-height: 60vh;
+    min-height: 52vh;
     display: flex;
     align-items: center;
+    padding: 3rem 0 4rem;
+    background: linear-gradient(165deg, #fafaf9 0%, #fef3c7 35%, #fff7ed 65%, #fafaf9 100%);
   }
-  @media (min-width: 640px) { .home-hero { min-height: 72vh; } }
+  @media (min-width: 640px) { .home-hero { min-height: 60vh; padding: 4rem 0 5rem; } }
+  @media (min-width: 1024px) { .home-hero { min-height: 68vh; padding: 5rem 0 6rem; } }
 
-  .home-hero::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, #1c1917 0%, #292524 40%, #441a03 100%);
+  @media (prefers-color-scheme: dark) {
+    .home-hero { background: linear-gradient(165deg, #1c1917 0%, #292524 35%, #1c1917 65%, #0c0a09 100%); }
   }
+  .dark .home-hero { background: linear-gradient(165deg, #1c1917 0%, #292524 35%, #1c1917 65%, #0c0a09 100%); }
 
   .home-hero::after {
     content: '';
     position: absolute;
     inset: 0;
-    opacity: 0.035;
+    opacity: 0.03;
     background-image:
-      linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
-    background-size: 60px 60px;
+      radial-gradient(circle at 20% 50%, rgba(245,158,11,0.15), transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(251,191,36,0.1), transparent 50%);
     pointer-events: none;
   }
 
   .home-hero-title {
-    font-size: clamp(2rem, 5vw, 4.5rem);
-    font-weight: 700;
-    line-height: 0.95;
-    margin-bottom: 1.25rem;
-    letter-spacing: -0.02em;
+    font-size: clamp(2rem, 5vw, 3.75rem);
+    font-weight: 800;
+    line-height: 1.05;
+    margin-bottom: 1rem;
+    letter-spacing: -0.03em;
+    color: var(--color-dark);
   }
-  @media (min-width: 640px) { .home-hero-title { margin-bottom: 1.5rem; } }
+  @media (min-width: 640px) { .home-hero-title { margin-bottom: 1.25rem; } }
+  @media (prefers-color-scheme: dark) { .home-hero-title { color: #fff; } }
+  .dark .home-hero-title { color: #fff; }
 
   .home-hero-title .accent {
-    background: linear-gradient(90deg, var(--color-primary-light), var(--color-primary), var(--color-primary-dark));
+    background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary), var(--color-primary-light));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .home-hero-subtitle {
-    font-size: clamp(0.875rem, 1.5vw, 1.125rem);
-    color: #a8a29e;
+    font-size: clamp(0.875rem, 1.5vw, 1.0625rem);
+    color: var(--color-text-light);
     line-height: 1.7;
-    max-width: 36rem;
-    margin-bottom: 1.75rem;
+    max-width: 34rem;
+    margin-bottom: 2rem;
   }
-  @media (min-width: 640px) { .home-hero-subtitle { margin-bottom: 2rem; } }
+  @media (min-width: 640px) { .home-hero-subtitle { margin-bottom: 2.5rem; } }
+
+  /* Hero Search Bar — the main CTA */
+  .hero-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    max-width: 36rem;
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 12px 40px rgba(0,0,0,0.06);
+    overflow: hidden;
+    transition: all 0.25s ease;
+  }
+  @media (min-width: 640px) { .hero-search-bar { max-width: 42rem; border-radius: 20px; } }
+  .hero-search-bar:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 12px 40px rgba(0,0,0,0.06), 0 0 0 3px rgba(245,158,11,0.12);
+  }
+  @media (prefers-color-scheme: dark) {
+    .hero-search-bar { background: rgba(41,37,36,0.9); border-color: rgba(255,255,255,0.08); }
+  }
+  .dark .hero-search-bar { background: rgba(41,37,36,0.9); border-color: rgba(255,255,255,0.08); }
+
+  .hero-search-icon {
+    padding: 0 0 0 1rem;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+    display: flex;
+  }
+  @media (min-width: 640px) { .hero-search-icon { padding: 0 0 0 1.25rem; } }
+  .hero-search-icon svg { width: 20px; height: 20px; }
+
+  .hero-search-input {
+    flex: 1;
+    padding: 1rem 0.75rem;
+    font-size: 0.9375rem;
+    border: none;
+    background: none;
+    color: var(--color-dark);
+    outline: none;
+    min-width: 0;
+  }
+  @media (min-width: 640px) { .hero-search-input { padding: 1.125rem 1rem; font-size: 1rem; } }
+  .hero-search-input::placeholder { color: var(--color-text-muted); }
+  @media (prefers-color-scheme: dark) { .hero-search-input { color: #fff; } }
+  .dark .hero-search-input { color: #fff; }
+
+  .hero-search-btn {
+    padding: 0.75rem 1.5rem;
+    margin: 6px;
+    background: var(--color-dark);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  @media (min-width: 640px) { .hero-search-btn { padding: 0.875rem 2rem; font-size: 0.875rem; border-radius: 14px; } }
+  .hero-search-btn:hover { background: var(--color-primary-dark); transform: translateY(-1px); }
+  .hero-search-btn svg { width: 16px; height: 16px; }
+  @media (prefers-color-scheme: dark) {
+    .hero-search-btn { background: var(--color-primary); color: var(--color-dark); }
+  }
+  .dark .hero-search-btn { background: var(--color-primary); color: var(--color-dark); }
+
+  .hero-trust {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem;
+    margin-top: 2rem;
+  }
+  @media (min-width: 640px) { .hero-trust { gap: 2rem; } }
+
+  .hero-trust-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+  @media (prefers-color-scheme: dark) { .hero-trust-item { color: #78716c; } }
+  .hero-trust-item svg { width: 16px; height: 16px; color: var(--color-primary); flex-shrink: 0; }
+  .hero-trust-item strong { color: var(--color-dark); font-weight: 600; }
+  @media (prefers-color-scheme: dark) { .hero-trust-item strong { color: var(--c-stone-200,#e7e5e3); } }
+  .dark .hero-trust-item strong { color: #e7e5e3; }
 
   .home-hero-cta {
     display: inline-flex;
@@ -120,11 +215,7 @@
     transform: translateY(-1px);
     box-shadow: 0 8px 25px -5px rgba(245,158,11,0.35);
   }
-  .home-hero-cta svg {
-    width: 1rem;
-    height: 1rem;
-    transition: transform var(--transition-fast);
-  }
+  .home-hero-cta svg { width: 1rem; height: 1rem; transition: transform var(--transition-fast); }
   .home-hero-cta:hover svg { transform: translateX(3px); }
 
   .home-hero-cta-secondary {
@@ -132,76 +223,22 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.8125rem 1.75rem;
-    background: rgba(255,255,255,0.04);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.1);
-    color: #fff;
+    background: rgba(0,0,0,0.04);
+    border: 1px solid rgba(0,0,0,0.08);
+    color: var(--color-dark);
     font-weight: 500;
     font-size: 0.875rem;
     border-radius: var(--radius-lg);
     text-decoration: none;
     transition: all var(--transition-fast);
   }
-  .home-hero-cta-secondary:hover {
-    background: rgba(255,255,255,0.08);
-    border-color: rgba(255,255,255,0.2);
+  .home-hero-cta-secondary:hover { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.12); }
+  @media (prefers-color-scheme: dark) {
+    .home-hero-cta-secondary { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); color: #fff; }
+    .home-hero-cta-secondary:hover { background: rgba(255,255,255,0.08); }
   }
-
-  .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.3rem 0.85rem;
-    background: rgba(255,255,255,0.04);
-    backdrop-filter: blur(12px);
-    border-radius: 9999px;
-    font-size: 0.6875rem;
-    font-weight: 500;
-    color: var(--color-primary-light);
-    border: 1px solid rgba(255,255,255,0.08);
-    margin-bottom: 1.25rem;
-  }
-  .hero-badge-dot {
-    width: 6px;
-    height: 6px;
-    background: var(--color-primary);
-    border-radius: 50%;
-    animation: pulse-dot 2s infinite;
-  }
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
-  .hero-stats {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 1.25rem;
-    margin-top: 2.25rem;
-    padding-top: 1.75rem;
-    border-top: 1px solid rgba(255,255,255,0.06);
-  }
-  @media (min-width: 640px) { .hero-stats { gap: 2rem; } }
-
-  .hero-stats-item strong {
-    display: block;
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: #fff;
-  }
-  @media (min-width: 640px) { .hero-stats-item strong { font-size: 1.25rem; } }
-  @media (min-width: 768px) { .hero-stats-item strong { font-size: 1.5rem; } }
-
-  .hero-stats-item span {
-    display: block;
-    font-size: 0.625rem;
-    color: #78716c;
-    margin-top: 2px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-  @media (min-width: 640px) { .hero-stats-item span { font-size: 0.6875rem; } }
+  .dark .home-hero-cta-secondary { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); color: #fff; }
+  .dark .home-hero-cta-secondary:hover { background: rgba(255,255,255,0.08); }
 
   /* ===== SECTIONS ===== */
   .home-section {
@@ -915,44 +952,41 @@
 <section class="home-hero">
   <div class="container" style="position: relative; z-index: 1;">
     <div style="max-width: 48rem;">
-      <div class="hero-badge">
-        <span class="hero-badge-dot"></span>
-        Handcrafted with Purpose
-      </div>
-
       <h1 class="home-hero-title">
-        Where the<br>
-        <span class="accent">Workshop</span><br>
-        <span style="color: var(--color-text-light);">Meets the World</span>
+        Discover<br>
+        <span class="accent">Handcrafted</span><br>
+        Treasures
       </h1>
 
       <p class="home-hero-subtitle">
-        A multi-vendor marketplace powered by AI. Shop from independent sellers, get smart recommendations, and chat with an AI assistant to find exactly what you need.
+        A multi-vendor marketplace powered by AI. Shop from independent sellers, get smart recommendations, and find exactly what you need.
       </p>
 
-      <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
-        <a href="/shop/marketplace" class="home-hero-cta">
-          Explore Marketplace
+      <!-- Hero Search Bar -->
+      <form class="hero-search-bar" onsubmit="event.preventDefault(); const q = this.querySelector('input').value.trim(); if(q) window.location.href='/shop/marketplace?q='+encodeURIComponent(q);">
+        <span class="hero-search-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </span>
+        <input type="text" class="hero-search-input" placeholder="Search for handcrafted goods, vendors, categories..." autocomplete="off"/>
+        <button type="submit" class="hero-search-btn">
+          Search
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-        </a>
-        <a href="/shop/shops" class="home-hero-cta-secondary">
-          Meet Our Vendors
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:1rem;height:1rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-        </a>
-      </div>
+        </button>
+      </form>
 
-      <div class="hero-stats">
-        <div class="hero-stats-item">
-          <strong>AI</strong>
-          <span>Shopping Assistant</span>
+      <!-- Trust Signals -->
+      <div class="hero-trust">
+        <div class="hero-trust-item">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          <span><strong>AI</strong> Shopping Assistant</span>
         </div>
-        <div class="hero-stats-item">
-          <strong>Smart</strong>
-          <span>Product Recommendations</span>
+        <div class="hero-trust-item">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span><strong>Secure</strong> Paystack Payments</span>
         </div>
-        <div class="hero-stats-item">
-          <strong>Multi</strong>
-          <span>Vendor Marketplace</span>
+        <div class="hero-trust-item">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          <span><strong>Multi-Vendor</strong> Marketplace</span>
         </div>
       </div>
     </div>
