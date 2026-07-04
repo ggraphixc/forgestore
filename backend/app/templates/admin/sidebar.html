@@ -4,662 +4,621 @@
 
 {% block body %}
 <style>
-    .sidebar-wrapper { width: 260px; }
-    .sidebar-section-label {
-        font-size: 10px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: #9ca3af;
-        padding: 16px 12px 6px;
-    }
-    .sidebar-link {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 9px 12px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 500;
-        color: #6b7280;
-        transition: all 0.15s ease;
-        text-decoration: none;
-        position: relative;
-    }
-    .sidebar-link:hover {
-        background-color: #fef3c7;
-        color: #92400e;
-    }
-    .sidebar-link.active {
-        background-color: #fef3c7;
-        color: #92400e;
-        font-weight: 600;
-    }
-    .sidebar-link.active::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 3px;
-        height: 16px;
-        background-color: #f59e0b;
-        border-radius: 0 3px 3px 0;
-    }
-    .sidebar-badge {
-        margin-left: auto;
-        font-size: 9px;
-        font-weight: 600;
-        padding: 2px 6px;
-        border-radius: 4px;
-        background-color: #f3f4f6;
-        color: #6b7280;
-    }
-    .sidebar-badge.badge-promote {
-        background-color: #fef3c7;
-        color: #b45309;
-    }
-    .sidebar-badge.badge-ai {
-        background-color: #ede9fe;
-        color: #7c3aed;
-    }
-    .sidebar-badge.badge-tracking {
-        background-color: #dbeafe;
-        color: #1d4ed8;
-    }
-    .sidebar-badge.badge-referrals {
-        background-color: #d1fae5;
-        color: #065f46;
-    }
-    .sidebar-badge.badge-team {
-        background-color: #fce7f3;
-        color: #be185d;
-    }
-    .sidebar-sub-link {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 7px 12px 7px 22px;
-        border-radius: 8px;
-        font-size: 12.5px;
-        font-weight: 400;
-        color: #9ca3af;
-        transition: all 0.15s ease;
-        text-decoration: none;
-    }
-    .sidebar-sub-link:hover {
-        background-color: #fef3c7;
-        color: #92400e;
-    }
-    .sidebar-sub-link.active {
-        background-color: #fef3c7;
-        color: #92400e;
-    }
-    .sidebar-collapse-btn {
-        transition: all 0.2s ease;
-    }
-    .sidebar-collapse-btn:hover {
-        background-color: #f5f5f4;
-    }
-    .sidebar-collapse-btn.collapsed .sidebar-collapse-chevron {
-        transform: rotate(180deg);
-    }
-    .sidebar-collapse-chevron {
-        transition: transform 0.2s ease;
-    }
-    .nav-group-toggle {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 9px 12px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 500;
-        color: #6b7280;
-        transition: all 0.15s ease;
-        cursor: pointer;
-        width: 100%;
-        background: none;
-        border: none;
-        text-align: left;
-    }
-    .nav-group-toggle:hover {
-        background-color: #fef3c7;
-        color: #92400e;
-    }
-    .nav-group-arrow {
-        margin-left: auto;
-        transition: transform 0.2s ease;
-    }
-    .nav-group-arrow.open {
-        transform: rotate(90deg);
-    }
-    .nav-group-items {
-        overflow: hidden;
-        transition: max-height 0.25s ease;
-    }
-    .nav-group-items.collapsed {
-        max-height: 0 !important;
-    }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #fafaf9;
+  overflow-x: clip;
+}
+
+/* ---- Desktop Bottom Nav ---- */
+.admin-bottomnav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-top: 1px solid rgba(231,229,228,0.6);
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.06);
+  padding: 0 16px;
+  height: 72px;
+  align-items: center;
+  justify-content: center;
+}
+.admin-bottomnav-inner {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 560px;
+  width: 100%;
+  justify-content: space-around;
+}
+.admin-bnav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  text-decoration: none;
+  color: #78716c;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  position: relative;
+  min-width: 56px;
+  min-height: 52px;
+  justify-content: center;
+}
+.admin-bnav-item:hover {
+  color: #92400e;
+  background: rgba(255,251,235,0.8);
+}
+.admin-bnav-item.active {
+  color: #92400e;
+  background: rgba(255,251,235,0.9);
+}
+.admin-bnav-item.active::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #f59e0b;
+}
+.admin-bnav-item svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.admin-bnav-item .bnav-label {
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* ---- Sidebar (mobile only) ---- */
+.admin-sidebar {
+  width: 280px;
+  background: #ffffff;
+  border-right: 1px solid #e7e5e4;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 40;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #e7e5e4 transparent;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-out;
+}
+.admin-sidebar.open { transform: translateX(0); }
+.admin-sidebar::-webkit-scrollbar { width: 4px; }
+.admin-sidebar::-webkit-scrollbar-track { background: transparent; }
+.admin-sidebar::-webkit-scrollbar-thumb { background: #e7e5e4; border-radius: 4px; }
+
+.admin-sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+  height: 64px;
+  border-bottom: 1px solid #f5f5f4;
+  flex-shrink: 0;
+}
+.admin-sidebar-logo {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #1c1917, #57534e);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.admin-sidebar-logo span { color: #fff; font-size: 12px; font-weight: 900; font-family: system-ui, sans-serif; }
+.admin-sidebar-brand { display: flex; flex-direction: column; min-width: 0; }
+.admin-sidebar-brand-name { font-size: 14px; font-weight: 900; color: #1c1917; white-space: nowrap; font-family: system-ui, sans-serif; }
+.admin-sidebar-brand-sub { font-size: 10px; font-weight: 600; color: #f59e0b; text-transform: uppercase; letter-spacing: 0.15em; }
+
+.admin-sidebar-profile {
+  display: block;
+  margin: 12px 12px 8px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #f5f5f4;
+  border: 1px solid #e7e5e4;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.admin-sidebar-profile:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); border-color: #fbbf24; }
+.admin-sidebar-profile-inner { display: flex; align-items: center; gap: 12px; }
+.sidebar-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.sidebar-avatar.role-dir { background: #9333ea; }
+.sidebar-avatar.role-mgmt { background: #2563eb; }
+.sidebar-avatar.role-tech { background: #0891b2; }
+.sidebar-avatar.role-retail { background: #d97706; }
+.sidebar-avatar.role-other { background: #059669; }
+.admin-profile-info { min-width: 0; flex: 1; }
+.admin-profile-name { font-size: 14px; font-weight: 600; color: #1c1917; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.admin-profile-email { font-size: 11px; color: #78716c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.admin-role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 2px;
+}
+.admin-role-badge.role-dir { background: #f3e8ff; color: #7e22ce; }
+.admin-role-badge.role-mgmt { background: #dbeafe; color: #1d4ed8; }
+.admin-role-badge.role-tech { background: #cffafe; color: #0e7490; }
+.admin-role-badge.role-retail { background: #fef3c7; color: #b45309; }
+.admin-role-badge.role-other { background: #d1fae5; color: #047857; }
+.admin-profile-chevron { width: 16px; height: 16px; color: #d6d3d1; flex-shrink: 0; }
+.admin-sidebar-profile:hover .admin-profile-chevron { color: #f59e0b; }
+
+.admin-sidebar-nav {
+  flex: 1;
+  padding: 8px 12px 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.admin-sidebar-section {
+  padding: 16px 12px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #a8a29e;
+}
+.admin-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #78716c;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  min-height: 44px;
+  flex-shrink: 0;
+}
+.admin-sidebar-link:hover { background: #fffbeb; color: #92400e; }
+.admin-sidebar-link.active { background: #fffbeb; color: #92400e; font-weight: 600; }
+.admin-sidebar-link .link-icon { width: 20px; height: 20px; flex-shrink: 0; color: #a8a29e; }
+.admin-sidebar-link:hover .link-icon, .admin-sidebar-link.active .link-icon { color: #d97706; }
+.admin-sidebar-link .link-text { white-space: nowrap; }
+.admin-sidebar-badge {
+  margin-left: auto;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-weight: 600;
+}
+.admin-sidebar-badge.badge-muted { color: #a8a29e; background: #f5f5f4; }
+.admin-sidebar-badge.badge-primary { color: #d97706; background: #fffbeb; font-weight: 700; }
+
+.admin-sidebar-signout {
+  padding: 12px;
+  border-top: 1px solid #f5f5f4;
+}
+.admin-sidebar-signout a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #78716c;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  min-height: 44px;
+}
+.admin-sidebar-signout a:hover { background: #fef2f2; color: #dc2626; }
+.admin-sidebar-signout a .link-icon { width: 20px; height: 20px; flex-shrink: 0; color: #a8a29e; }
+.admin-sidebar-signout a:hover .link-icon { color: #ef4444; }
+
+.admin-sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+  z-index: 35;
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+  display: none;
+}
+
+.admin-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-header {
+  position: sticky;
+  top: 0;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid #e7e5e4;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  z-index: 30;
+}
+.admin-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  height: 56px;
+}
+.admin-header-left { display: flex; align-items: center; gap: 8px; }
+.admin-header-toggle {
+  padding: 10px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #78716c;
+  background: none;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.admin-header-toggle:hover { color: #f59e0b; background: #fffbeb; }
+.admin-header-toggle svg { width: 20px; height: 20px; }
+.admin-header-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.admin-header-center {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  justify-content: center;
+}
+.admin-header-logo {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #1c1917, #57534e);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.admin-header-logo span { color: #fff; font-size: 10px; font-weight: 900; }
+.admin-header-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1c1917;
+  white-space: nowrap;
+}
+.admin-header-title .accent { color: #f59e0b; }
+.admin-header-right { display: flex; align-items: center; gap: 6px; }
+.admin-header-avatar { display: block; }
+.admin-header-avatar .sidebar-avatar { width: 40px; height: 40px; transition: transform 0.15s; }
+.admin-header-avatar:hover .sidebar-avatar { transform: scale(1.05); }
+
+.admin-content {
+  flex: 1;
+  padding: 16px;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+@media (min-width: 1024px) {
+  .admin-bottomnav { display: flex; }
+  .admin-header { display: none; }
+  .admin-content { padding: 24px 32px 88px; }
+}
+
+@media (max-width: 1023px) {
+  .admin-sidebar-backdrop.visible { display: block; opacity: 1; }
+  .admin-content { padding: 16px; padding-bottom: 24px; }
+}
 </style>
 
-<script>!function(){var e="sidebar-collapsed",t=localStorage.getItem(e)==="true";if(t&&window.innerWidth>=1024){var n=document.getElementById("sidebar");n&&n.classList.add("sidebar-collapsed")}}()</script>
-<div class="flex h-full min-h-screen bg-stone-50/50 overflow-x-clip">
-    <aside id="sidebar" class="sidebar-wrapper fixed lg:relative inset-y-0 left-0 max-w-[85vw] lg:w-[260px] bg-white dark:bg-stone-900 border-r border-stone-200 dark:border-stone-800 transform -translate-x-full lg:translate-x-0 transition-all duration-300 ease-out flex flex-col shadow-xl lg:shadow-sm overflow-y-auto" style="z-index: var(--z-sidebar);">
-        <!-- Header -->
-        <div class="relative flex items-center gap-3 px-5 h-16 border-b border-stone-100 dark:border-stone-800 flex-shrink-0">
-            <div class="w-9 h-9 bg-gradient-to-br from-stone-900 to-stone-700 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
-                <span class="text-white text-sm font-display font-black">FS</span>
-            </div>
-            <div class="sidebar-header-text min-w-0">
-                <span class="text-sm font-display font-black text-stone-900 dark:text-stone-100 truncate block">ForgeStore</span>
-                <span class="block text-[10px] font-medium text-amber-600 dark:text-amber-400 uppercase tracking-[0.15em] truncate">Admin Panel</span>
-            </div>
-            <button id="sidebar-collapse-toggle" class="sidebar-collapse-btn hidden lg:flex ml-auto p-1.5 text-stone-400 hover:text-stone-600 rounded-lg flex-shrink-0 relative z-10" aria-label="Collapse sidebar" aria-expanded="true">
-                <svg id="sidebar-collapse-icon-open" class="sidebar-collapse-chevron w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
-                </svg>
-            </button>
-            <span class="sidebar-accent-dot absolute top-3 right-5 w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-        </div>
-
-        <!-- Profile Card -->
-        <a href="/admin/me" class="sidebar-profile-card mx-3 mt-3 mb-2 rounded-xl bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 p-3.5 transition-all duration-200 cursor-pointer group block hover:shadow-md hover:border-amber-200 dark:hover:border-amber-700">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ring-2 ring-offset-1 ring-offset-white dark:ring-offset-stone-900 shadow-sm flex-shrink-0
-                    {% if admin and admin.role.value == 'DIR_ADMIN' %}bg-purple-600 ring-purple-400/30
-                    {% elif admin and admin.role.value == 'MANAGEMENT' %}bg-blue-600 ring-blue-400/30
-                    {% elif admin and admin.role.value == 'TECH_ADMIN' %}bg-cyan-600 ring-cyan-400/30
-                    {% elif admin and admin.role.value == 'RETAILER' %}bg-amber-600 ring-amber-400/30
-                    {% else %}bg-emerald-600 ring-emerald-400/30{% endif %}">
-                    {{ admin.name[0]|upper if admin and admin.name else "A" }}
-                </div>
-                <div class="sidebar-profile-text min-w-0 flex-1">
-                    <p class="text-sm font-semibold text-stone-900 dark:text-stone-100 truncate">{{ admin.name if admin and admin.name else "Admin" }}</p>
-                    <p class="text-[11px] text-stone-500 dark:text-stone-400 truncate">{{ admin.email if admin and admin.email else "" }}</p>
-                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider mt-0.5
-                        {% if admin and admin.role.value == 'DIR_ADMIN' %}bg-purple-100 text-purple-700
-                        {% elif admin and admin.role.value == 'MANAGEMENT' %}bg-blue-100 text-blue-700
-                        {% elif admin and admin.role.value == 'TECH_ADMIN' %}bg-cyan-100 text-cyan-700
-                        {% elif admin and admin.role.value == 'RETAILER' %}bg-amber-100 text-amber-700
-                        {% else %}bg-emerald-100 text-emerald-700{% endif %}">
-                        {{ admin.role.value if admin and admin.role else "GUEST" }}
-                    </span>
-                </div>
-                <svg class="w-4 h-4 text-stone-300 group-hover:text-amber-500 transition-colors duration-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-            </div>
-        </a>
-
-        <!-- Mobile close -->
-        <div class="flex justify-between items-center px-3 lg:hidden">
-            <button id="sidebar-close" onclick="closeSidebar()" class="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-500 hover:text-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-all duration-150" aria-label="Close sidebar">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-        </div>
-
-        <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto scrollbar-thin">
-            <!-- NAVIGATION -->
-            <div class="sidebar-section-label">Navigation</div>
-
-            {% if has_permission(admin, 'dashboard') %}
-            {% if admin and (admin.role.value == 'RETAILER' or admin.role == 'RETAILER') %}
-            <a href="/vendor/dashboard" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
-                <span>Vendor Dashboard</span>
-            </a>
-            {% elif admin and (admin.role.value == 'LOGISTICS' or admin.role == 'LOGISTICS') %}
-            <a href="/logistics/dashboard" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
-                <span>Logistics Dashboard</span>
-            </a>
-            {% else %}
-            <a href="/admin/dashboard" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
-                <span>Dashboard</span>
-            </a>
-            {% endif %}
-            {% endif %}
-
-            {% if admin and (admin.role.value == 'RETAILER' or admin.role == 'RETAILER') %}
-            <!-- RETAILER: Vendor Portal -->
-            <div class="sidebar-section-label">Vendor Portal</div>
-            <a href="/vendor/products" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                <span>My Products</span>
-            </a>
-            <a href="/vendor/orders" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                <span>Orders</span>
-            </a>
-            <a href="/vendor/earnings" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span>Earnings</span>
-            </a>
-            <a href="/vendor/analytics" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
-                <span>Analytics</span>
-            </a>
-            {% endif %}
-
-            {% if admin and (admin.role.value == 'LOGISTICS' or admin.role == 'LOGISTICS') %}
-            <!-- LOGISTICS: Logistics Portal -->
-            <div class="sidebar-section-label">Logistics Portal</div>
-            <a href="/logistics/shipments" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.142-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/></svg>
-                <span>Shipments</span>
-            </a>
-            <a href="/logistics/drivers" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.142-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/></svg>
-                <span>Drivers</span>
-            </a>
-            {% endif %}
-
-            {% if admin and admin.role.value in ['DIR_ADMIN', 'MANAGEMENT'] %}
-            <!-- INVENTORY (DIR_ADMIN / MANAGEMENT) -->
-            <div class="sidebar-section-label">Inventory</div>
-            {% if admin and admin.role.value in ['DIR_ADMIN', 'MANAGEMENT'] %}
-            <a href="/admin/catalog" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                <span>Products</span>
-            </a>
-            {% endif %}
-            {% if admin and admin.role.value == 'DIR_ADMIN' %}
-            <a href="/admin/categories" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z"/></svg>
-                <span>Categories</span>
-            </a>
-            <a href="/admin/retailers" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z"/></svg>
-                <span>Retailers</span>
-                <span class="sidebar-badge">Shops</span>
-            </a>
-
-            <!-- Ad Campaigns with sub-nav -->
-            <div class="nav-group">
-                <button class="nav-group-toggle group" onclick="toggleNavGroup(this)">
-                    <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605"/></svg>
-                    <span class="flex-1 text-left">Ad Campaigns</span>
-                    <span class="sidebar-badge badge-promote">Promote</span>
-                    <svg class="nav-group-arrow w-3.5 h-3.5 text-stone-400 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
-                </button>
-                <div class="nav-group-items">
-                    <a href="/admin/retailer/ads" class="sidebar-sub-link">Manage</a>
-                    <a href="/admin/promo-ads" class="sidebar-sub-link">Analytics</a>
-                </div>
-            </div>
-
-            <!-- SALES (DIR_ADMIN only) -->
-            <div class="sidebar-section-label">Sales</div>
-            <a href="/admin/orders" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15a2.25 2.25 0 012.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>
-                <span>Orders</span>
-            </a>
-            <a href="/admin/customers" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
-                <span>Customers</span>
-            </a>
-            <a href="/admin/settings" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                <span>System Settings</span>
-            </a>
-            {% endif %}
-
-            {% if admin and admin.role.value in ['DIR_ADMIN', 'MANAGEMENT'] %}
-            <!-- ENTERPRISE (DIR_ADMIN / MANAGEMENT) -->
-            <div class="sidebar-section-label">Enterprise</div>
-            <a href="/admin/intelligence" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
-                <span>Intelligence</span>
-                <span class="sidebar-badge badge-ai">AI</span>
-            </a>
-            <a href="/admin/shipments" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
-                <span>Shipments</span>
-                <span class="sidebar-badge badge-tracking">Tracking</span>
-            </a>
-            <a href="/admin/affiliates" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.548a4.5 4.5 0 00-6.364 0l-4.5 4.5a4.5 4.5 0 001.242 7.244M12 13.5V21"/></svg>
-                <span>Affiliates</span>
-                <span class="sidebar-badge badge-referrals">Referrals</span>
-            </a>
-            {% endif %}
-
-            <!-- Notifications -->
-            <a href="/admin/notifications" class="sidebar-link group" id="notification-link">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
-                <span>Notifications</span>
-                <span id="sidebar-notif-badge" class="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[9px] font-bold bg-amber-500 text-white hidden"></span>
-            </a>
-
-            <!-- MANAGEMENT (DIR_ADMIN only) -->
-            {% if admin and admin.role.value == 'DIR_ADMIN' %}
-            <div class="sidebar-section-label">Management</div>
-            <a href="/admin/users" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/></svg>
-                <span>Admin Users</span>
-                <span class="sidebar-badge badge-team">Team</span>
-            </a>
-
-            <!-- Newsletter with sub-nav -->
-            <div class="nav-group">
-                <button class="nav-group-toggle group" onclick="toggleNavGroup(this)">
-                    <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
-                    <span class="flex-1 text-left">Newsletter</span>
-                    <svg class="nav-group-arrow w-3.5 h-3.5 text-stone-400 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
-                </button>
-                <div class="nav-group-items">
-                    <a href="/admin/newsletter/subscribers" class="sidebar-sub-link">Subscribers</a>
-                    <a href="/admin/newsletter/send" class="sidebar-sub-link">Send Broadcast</a>
-                    <a href="/admin/newsletter/templates" class="sidebar-sub-link">Templates</a>
-                    <a href="/admin/newsletter/analytics" class="sidebar-sub-link">Analytics</a>
-                </div>
-            </div>
-            {% endif %}
-
-            {% if has_permission(admin, 'settings') %}
-            <a href="/admin/ads/settings" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span>Ads Pricing</span>
-            </a>
-            {% endif %}
-
-            <!-- COMMUNITY -->
-            {% if admin and admin.role.value in ['DIR_ADMIN', 'MANAGEMENT'] %}
-            <div class="sidebar-section-label">Community</div>
-            <a href="/admin/chat-moderation" class="sidebar-link group">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-amber-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg>
-                <span>Chat Moderation</span>
-            </a>
-            {% endif %}
-        </nav>
-
-        <!-- Sign Out -->
-        <div class="px-3 py-4 border-t border-stone-100 dark:border-stone-800 flex-shrink-0 mt-auto">
-            <a href="/admin/logout" class="sidebar-link group hover:bg-red-50 hover:text-red-600">
-                <svg class="w-[18px] h-[18px] text-stone-400 group-hover:text-red-500 transition-colors flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
-                <span>Sign Out</span>
-            </a>
-        </div>
-    </aside>
-
-    <!-- External expand button -->
-    <button id="sidebar-expand-button" class="hidden lg:hidden fixed top-1/2 -translate-y-1/2 z-50 w-7 h-14 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-r-lg shadow-lg hover:shadow-xl hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all duration-200 flex items-center justify-center cursor-pointer group" aria-label="Expand sidebar" title="Expand sidebar" style="left: 72px;">
-        <svg class="w-4 h-4 text-stone-400 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
-        </svg>
-    </button>
-    <div id="sidebar-backdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden lg:hidden opacity-0 transition-opacity duration-300 ease-out" style="z-index: var(--z-sidebar-backdrop);"></div>
-    <div class="flex-1 flex flex-col min-w-0">
-        <header class="sticky top-0 bg-white/90 dark:bg-stone-900/90 backdrop-blur-xl border-b border-stone-200 dark:border-stone-800 shadow-sm lg:hidden safe-top" style="z-index: var(--z-sticky-header);">
-            <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-amber-500/0 via-amber-500/20 to-amber-500/0"></div>
-            <div class="flex items-center justify-between px-3 h-14">
-                <div class="flex items-center gap-2">
-                    <button id="sidebar-toggle" onclick="toggleSidebar(event)" class="p-2.5 min-w-[44px] min-h-[44px] -ml-1 sm:-ml-2 text-stone-500 hover:text-amber-600 transition-all rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center justify-center" aria-label="Toggle sidebar" aria-expanded="false">
-                        <svg id="sidebar-toggle-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                        <svg id="sidebar-toggle-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                    <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse flex-shrink-0"></div>
-                </div>
-                <div class="flex items-center gap-2.5 min-w-0 flex-1 justify-center px-2">
-                    <div class="w-7 h-7 bg-gradient-to-br from-stone-900 to-stone-700 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
-                        <span class="text-white text-[10px] font-display font-black">FS</span>
-                    </div>
-                    <span class="text-sm font-display font-extrabold text-stone-900 dark:text-stone-100 tracking-tight truncate">ForgeStore<span class="text-amber-600"> Admin</span></span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                    <a href="/admin/notifications" class="relative p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-500 hover:text-amber-600 transition-all rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/20" aria-label="Notifications">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
-                        <span id="mobile-notif-badge" class="absolute top-1 right-1 min-w-[16px] h-[16px] px-0.5 rounded-full text-[8px] font-bold bg-amber-500 text-white hidden flex items-center justify-center ring-2 ring-white"></span>
-                    </a>
-                    <a href="/admin/me" class="block">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold ring-2 ring-offset-1 ring-offset-white dark:ring-offset-stone-900 flex-shrink-0 shadow-sm transition-transform hover:scale-105 active:scale-95
-                            {% if admin and admin.role.value == 'DIR_ADMIN' %}bg-purple-600 ring-purple-400/30
-                            {% elif admin and admin.role.value == 'MANAGEMENT' %}bg-blue-600 ring-blue-400/30
-                            {% elif admin and admin.role.value == 'TECH_ADMIN' %}bg-cyan-600 ring-cyan-400/30
-                            {% elif admin and admin.role.value == 'RETAILER' %}bg-amber-600 ring-amber-400/30
-                            {% else %}bg-emerald-600 ring-emerald-400/30{% endif %}">
-                            {{ admin.name[0]|upper if admin and admin.name else "A" }}
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </header>
-        <main class="flex-1 p-3 sm:p-5 md:p-6 lg:p-8 xl:p-10 max-w-full overflow-x-hidden">
-            {% block content %}{% endblock %}
-        </main>
+<div class="admin-layout">
+  <!-- Sidebar (mobile only) -->
+  <aside id="sidebar" class="admin-sidebar">
+    <div class="admin-sidebar-header">
+      <div class="admin-sidebar-logo"><span>FS</span></div>
+      <div class="admin-sidebar-brand">
+        <span class="admin-sidebar-brand-name">ForgeStore</span>
+        <span class="admin-sidebar-brand-sub">Vendor Panel</span>
+      </div>
     </div>
+    <a href="/admin/me" class="admin-sidebar-profile">
+      <div class="admin-sidebar-profile-inner">
+        <div class="sidebar-avatar
+          {% if admin and admin.role.value == 'DIR_ADMIN' %}role-dir
+          {% elif admin and admin.role.value == 'MANAGEMENT' %}role-mgmt
+          {% elif admin and admin.role.value == 'TECH_ADMIN' %}role-tech
+          {% elif admin and admin.role.value == 'RETAILER' %}role-retail
+          {% else %}role-other{% endif %}">
+          {{ admin.name[0]|upper if admin and admin.name else "A" }}
+        </div>
+        <div class="admin-profile-info min-w-0">
+          <p class="admin-profile-name">{{ admin.name if admin and admin.name else "Admin" }}</p>
+          <p class="admin-profile-email">{{ admin.email if admin and admin.email else "" }}</p>
+          <span class="admin-role-badge
+            {% if admin and admin.role.value == 'DIR_ADMIN' %}role-dir
+            {% elif admin and admin.role.value == 'MANAGEMENT' %}role-mgmt
+            {% elif admin and admin.role.value == 'TECH_ADMIN' %}role-tech
+            {% elif admin and admin.role.value == 'RETAILER' %}role-retail
+            {% else %}role-other{% endif %}">
+            {{ admin.role.value if admin and admin.role else "GUEST" }}
+          </span>
+        </div>
+        <svg class="admin-profile-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </div>
+    </a>
+    <div style="padding: 0 12px 12px;">
+      <button onclick="closeSidebar()" style="width:100%;padding:10px;min-height:44px;display:flex;align-items:center;justify-content:center;color:#78716c;background:none;border:none;border-radius:12px;cursor:pointer;font-size:14px;font-weight:500;gap:8px;transition:background 0.15s,color 0.15s;" onmouseover="this.style.background='#fffbeb';this.style.color='#92400e'" onmouseout="this.style.background='';this.style.color='#78716c'">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+        Close Menu
+      </button>
+    </div>
+    <nav class="admin-sidebar-nav">
+      {% if has_permission(admin, 'dashboard') %}
+      {% if admin and (admin.role.value == 'RETAILER' or admin.role == 'RETAILER') %}
+      <a href="/vendor/dashboard" class="admin-sidebar-link">
+        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 001 1h3m1-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span class="link-text">Dashboard</span>
+      </a>
+      {% elif admin and (admin.role.value == 'LOGISTICS' or admin.role == 'LOGISTICS') %}
+      <a href="/logistics/dashboard" class="admin-sidebar-link">
+        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 001 1h3m1-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span class="link-text">Dashboard</span>
+      </a>
+      {% else %}
+      <a href="/admin/dashboard" class="admin-sidebar-link">
+        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 001 1h3m1-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span class="link-text">Dashboard</span>
+      </a>
+      {% endif %}
+      {% endif %}
+
+      {% if admin and (admin.role.value == 'RETAILER' or admin.role == 'RETAILER') %}
+      <div class="admin-sidebar-section">Vendor Portal</div>
+      <a href="/vendor/products" class="admin-sidebar-link">
+        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        <span class="link-text">My Products</span>
+      </a>
+      <a href="/vendor/orders" class="admin-sidebar-link">
+        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        <span class="link-text">Orders</span>
+      </a>
+      <a href="/vendor/earnings" class="admin-sidebar-link">
+        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="link-text">Earnings</span>
+      </a>
+      <a href="/vendor/analytics" class="admin-sidebar-link">
+        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+        <span class="link-text">Analytics</span>
+      </a>
+      {% endif %}
+
+      {% if admin and (admin.role.value == 'LOGISTICS' or admin.role == 'LOGISTICS') %}
+      <div class="admin-sidebar-section">Logistics Portal</div>
+      <a href="/logistics/shipments" class="admin-sidebar-link">
+        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.142-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/></svg>
+        <span class="link-text">Shipments</span>
+      </a>
+      <a href="/logistics/drivers" class="admin-sidebar-link">
+        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.142-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/></svg>
+        <span class="link-text">Drivers</span>
+      </a>
+      {% endif %}
+
+      <a href="/admin/notifications" class="admin-sidebar-link">
+        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
+        <span class="link-text">Notifications</span>
+      </a>
+    </nav>
+    <div class="admin-sidebar-signout">
+      <a href="/admin/logout">
+        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
+        <span class="link-text">Sign Out</span>
+      </a>
+    </div>
+  </aside>
+
+  <div id="sidebar-backdrop" class="admin-sidebar-backdrop"></div>
+
+  <!-- Desktop Bottom Nav -->
+  <nav class="admin-bottomnav">
+    <div class="admin-bottomnav-inner">
+      {% if admin and (admin.role.value == 'RETAILER' or admin.role == 'RETAILER') %}
+      <a href="/vendor/dashboard" class="admin-bnav-item {% if '/vendor/dashboard' in request.url.path %}active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 001 1h3m1-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span class="bnav-label">Dashboard</span>
+      </a>
+      <a href="/vendor/products" class="admin-bnav-item {% if '/vendor/products' in request.url.path %}active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        <span class="bnav-label">Products</span>
+      </a>
+      <a href="/vendor/orders" class="admin-bnav-item {% if '/vendor/orders' in request.url.path %}active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        <span class="bnav-label">Orders</span>
+      </a>
+      <a href="/vendor/earnings" class="admin-bnav-item {% if '/vendor/earnings' in request.url.path %}active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="bnav-label">Earnings</span>
+      </a>
+      <a href="/vendor/analytics" class="admin-bnav-item {% if '/vendor/analytics' in request.url.path %}active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+        <span class="bnav-label">Analytics</span>
+      </a>
+      <a href="/admin/me" class="admin-bnav-item {% if '/me' in request.url.path %}active{% endif %}">
+        <div class="sidebar-avatar
+          {% if admin and admin.role.value == 'DIR_ADMIN' %}role-dir
+          {% elif admin and admin.role.value == 'MANAGEMENT' %}role-mgmt
+          {% elif admin and admin.role.value == 'TECH_ADMIN' %}role-tech
+          {% elif admin and admin.role.value == 'RETAILER' %}role-retail
+          {% else %}role-other{% endif %}" style="width:24px;height:24px;font-size:11px;">
+          {{ admin.name[0]|upper if admin and admin.name else "A" }}
+        </div>
+        <span class="bnav-label">Profile</span>
+      </a>
+
+      {% elif admin and (admin.role.value == 'LOGISTICS' or admin.role == 'LOGISTICS') %}
+      <a href="/logistics/dashboard" class="admin-bnav-item {% if '/logistics/dashboard' in request.url.path %}active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 001 1h3m1-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span class="bnav-label">Dashboard</span>
+      </a>
+      <a href="/logistics/shipments" class="admin-bnav-item {% if '/logistics/shipments' in request.url.path %}active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.142-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/></svg>
+        <span class="bnav-label">Shipments</span>
+      </a>
+      <a href="/logistics/drivers" class="admin-bnav-item {% if '/logistics/drivers' in request.url.path %}active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.142-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/></svg>
+        <span class="bnav-label">Drivers</span>
+      </a>
+      <a href="/admin/notifications" class="admin-bnav-item {% if '/notifications' in request.url.path %}active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
+        <span class="bnav-label">Alerts</span>
+      </a>
+      <a href="/admin/me" class="admin-bnav-item {% if '/me' in request.url.path %}active{% endif %}">
+        <div class="sidebar-avatar
+          {% if admin and admin.role.value == 'DIR_ADMIN' %}role-dir
+          {% elif admin and admin.role.value == 'MANAGEMENT' %}role-mgmt
+          {% elif admin and admin.role.value == 'TECH_ADMIN' %}role-tech
+          {% elif admin and admin.role.value == 'LOGISTICS' %}role-other
+          {% else %}role-retail{% endif %}" style="width:24px;height:24px;font-size:11px;">
+          {{ admin.name[0]|upper if admin and admin.name else "A" }}
+        </div>
+        <span class="bnav-label">Profile</span>
+      </a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <div class="admin-main">
+    <header class="admin-header">
+      <div class="admin-header-inner">
+        <div class="admin-header-left">
+          <button id="sidebar-toggle" onclick="toggleSidebar(event)" class="admin-header-toggle" aria-label="Toggle sidebar" aria-expanded="false">
+            <svg id="sidebar-toggle-open" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            <svg id="sidebar-toggle-close" class="hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+          <div class="admin-header-dot"></div>
+        </div>
+        <div class="admin-header-center">
+          <div class="admin-header-logo"><span>FS</span></div>
+          <span class="admin-header-title">
+            {% if admin and (admin.role.value == 'RETAILER' or admin.role == 'RETAILER') %}
+            ForgeStore<span class="accent"> Vendor</span>
+            {% elif admin and (admin.role.value == 'LOGISTICS' or admin.role == 'LOGISTICS') %}
+            ForgeStore<span class="accent"> Logistics</span>
+            {% else %}
+            ForgeStore<span class="accent"> Admin</span>
+            {% endif %}
+          </span>
+        </div>
+        <div class="admin-header-right">
+          <a href="/admin/me" class="admin-header-avatar">
+            <div class="sidebar-avatar
+              {% if admin and admin.role.value == 'DIR_ADMIN' %}role-dir
+              {% elif admin and admin.role.value == 'MANAGEMENT' %}role-mgmt
+              {% elif admin and admin.role.value == 'TECH_ADMIN' %}role-tech
+              {% elif admin and admin.role.value == 'RETAILER' %}role-retail
+              {% else %}role-other{% endif %}">
+              {{ admin.name[0]|upper if admin and admin.name else "A" }}
+            </div>
+          </a>
+        </div>
+      </div>
+    </header>
+    <main class="admin-content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
 </div>
+
 <script>
-// Nav group toggle
-function toggleNavGroup(btn) {
-    const items = btn.nextElementSibling;
-    const arrow = btn.querySelector('.nav-group-arrow');
-    if (!items) return;
-    const isExpanded = !items.classList.contains('collapsed');
-    items.classList.toggle('collapsed');
-    if (arrow) arrow.classList.toggle('open');
-}
-
-// Real-time notification badge via EventSource (SSE)
-let notifEventSource = null;
-async function fetchUnreadCount() {
-    try {
-        const res = await fetch('/api/admin/notifications/unread-count');
-        const data = await res.json();
-        const badge = document.getElementById('sidebar-notif-badge');
-        if (data.count > 0) {
-            badge.textContent = data.count > 99 ? '99+' : data.count;
-            badge.classList.remove('hidden');
-        } else {
-            badge.classList.add('hidden');
-        }
-    } catch (e) {}
-}
-function connectNotifSSE() {
-    if (notifEventSource) {
-        notifEventSource.close();
-    }
-    notifEventSource = new EventSource('/api/admin/notifications/stream');
-    notifEventSource.addEventListener('connected', function(e) {});
-    notifEventSource.onmessage = function(e) { fetchUnreadCount(); };
-    notifEventSource.onerror = function() {
-        notifEventSource.close();
-        setTimeout(connectNotifSSE, 10000);
-    };
-}
-document.addEventListener('DOMContentLoaded', function() {
-    fetchUnreadCount();
-    connectNotifSSE();
-});
-setInterval(fetchUnreadCount, 120000);
-
-function togglePasswordVisibility(inputId, btn) {
-    const input = document.getElementById(inputId);
-    if (!input || !btn) return;
-    const isPassword = input.type === 'password';
-    input.type = isPassword ? 'text' : 'password';
-    btn.querySelector('.eye-open')?.classList.toggle('hidden');
-    btn.querySelector('.eye-closed')?.classList.toggle('hidden');
-    btn.style.transform = 'scale(0.9)';
-    setTimeout(() => btn.style.transform = '', 150);
-}
-let sidebarCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
-function applyCollapseState() {
-    const sidebar = document.getElementById('sidebar');
-    const toggle = document.getElementById('sidebar-collapse-toggle');
-    const expandBtn = document.getElementById('sidebar-expand-button');
-    const headerTexts = document.querySelectorAll('.sidebar-header-text');
-    const accentDots = document.querySelectorAll('.sidebar-accent-dot');
-    const profileCard = document.querySelector('.sidebar-profile-card');
-    const sectionLabels = document.querySelectorAll('.sidebar-section-label');
-    const badges = document.querySelectorAll('.sidebar-badge');
-    const subLinks = document.querySelectorAll('.sidebar-sub-link');
-    const navGroupToggles = document.querySelectorAll('.nav-group-toggle');
-    if (!sidebar) return;
-    if (window.innerWidth < 1024) {
-        sidebar.classList.remove('sidebar-collapsed');
-        if (expandBtn) expandBtn.classList.add('hidden');
-        document.getElementById('sidebar-collapse-icon-open')?.classList.remove('hidden');
-        headerTexts.forEach(el => { if (el) el.style.display = ''; });
-        accentDots.forEach(el => { if (el) el.style.display = ''; });
-        sectionLabels.forEach(el => { if (el) el.style.display = ''; });
-        badges.forEach(el => { if (el) el.style.display = ''; });
-        subLinks.forEach(el => { if (el) el.style.display = ''; });
-        navGroupToggles.forEach(el => { if (el) el.style.display = ''; });
-        if (profileCard) {
-            const profileText = profileCard.querySelector('.sidebar-profile-text');
-            if (profileText) profileText.style.display = '';
-        }
-        document.querySelectorAll('.sidebar-link span').forEach(el => {
-            el.style.display = '';
-        });
-        document.querySelectorAll('.nav-group-items').forEach(el => {
-            el.style.maxHeight = 'none';
-        });
-        return;
-    }
-    if (sidebarCollapsed) {
-        sidebar.classList.add('sidebar-collapsed');
-        if (toggle) toggle.classList.add('hidden');
-        if (expandBtn) expandBtn.classList.remove('hidden');
-        headerTexts.forEach(el => { if (el) el.style.display = 'none'; });
-        accentDots.forEach(el => { if (el) el.style.display = 'none'; });
-        sectionLabels.forEach(el => { if (el) el.style.display = 'none'; });
-        badges.forEach(el => { if (el) el.style.display = 'none'; });
-        subLinks.forEach(el => { if (el) el.style.display = 'none'; });
-        navGroupToggles.forEach(el => { if (el) el.style.display = 'none'; });
-        if (profileCard) {
-            const profileText = profileCard.querySelector('.sidebar-profile-text');
-            if (profileText) profileText.style.display = 'none';
-        }
-        document.querySelectorAll('.sidebar-link span').forEach(el => {
-            if (el.textContent.trim()) el.style.display = 'none';
-        });
-        document.querySelectorAll('.nav-group-items').forEach(el => {
-            el.style.maxHeight = '0';
-        });
-    } else {
-        sidebar.classList.remove('sidebar-collapsed');
-        if (toggle) toggle.classList.remove('hidden');
-        if (expandBtn) expandBtn.classList.add('hidden');
-        headerTexts.forEach(el => { if (el) el.style.display = ''; });
-        accentDots.forEach(el => { if (el) el.style.display = ''; });
-        sectionLabels.forEach(el => { if (el) el.style.display = ''; });
-        badges.forEach(el => { if (el) el.style.display = ''; });
-        subLinks.forEach(el => { if (el) el.style.display = ''; });
-        navGroupToggles.forEach(el => { if (el) el.style.display = ''; });
-        if (profileCard) {
-            const profileText = profileCard.querySelector('.sidebar-profile-text');
-            if (profileText) profileText.style.display = '';
-        }
-        document.querySelectorAll('.sidebar-link span').forEach(el => {
-            el.style.display = '';
-        });
-        document.querySelectorAll('.nav-group-items').forEach(el => {
-            el.style.maxHeight = 'none';
-        });
-    }
-}
 function openSidebar() {
     const sidebar = document.getElementById('sidebar');
     const backdrop = document.getElementById('sidebar-backdrop');
-    const toggle = document.getElementById('sidebar-toggle');
     if (!sidebar || !backdrop) return;
-    sidebar.classList.remove('-translate-x-full');
-    sidebar.classList.add('translate-x-0');
+    sidebar.classList.add('open');
     backdrop.classList.remove('hidden');
     void backdrop.offsetWidth;
-    backdrop.classList.add('opacity-100');
+    backdrop.classList.add('visible');
     document.body.classList.add('overflow-hidden');
-    if (toggle) {
-        toggle.setAttribute('aria-expanded', 'true');
-        document.getElementById('sidebar-toggle-open')?.classList.add('hidden');
-        document.getElementById('sidebar-toggle-close')?.classList.remove('hidden');
-    }
+    document.getElementById('sidebar-toggle-open')?.classList.add('hidden');
+    document.getElementById('sidebar-toggle-close')?.classList.remove('hidden');
 }
+
 function closeSidebar() {
     const sidebar = document.getElementById('sidebar');
     const backdrop = document.getElementById('sidebar-backdrop');
-    const toggle = document.getElementById('sidebar-toggle');
     if (!sidebar || !backdrop) return;
-    sidebar.classList.add('-translate-x-full');
-    sidebar.classList.remove('translate-x-0');
-    backdrop.classList.remove('opacity-100');
-    setTimeout(() => {
-        backdrop.classList.add('hidden');
-        document.body.classList.remove('overflow-hidden');
-    }, 200);
-    if (toggle) {
-        toggle.setAttribute('aria-expanded', 'false');
-        document.getElementById('sidebar-toggle-open')?.classList.remove('hidden');
-        document.getElementById('sidebar-toggle-close')?.classList.add('hidden');
-    }
+    sidebar.classList.remove('open');
+    backdrop.classList.remove('visible');
+    setTimeout(() => { backdrop.classList.add('hidden'); document.body.classList.remove('overflow-hidden'); }, 300);
+    document.getElementById('sidebar-toggle-open')?.classList.remove('hidden');
+    document.getElementById('sidebar-toggle-close')?.classList.add('hidden');
 }
+
 function toggleSidebar(event) {
     if (event) event.stopPropagation();
     const sidebar = document.getElementById('sidebar');
     if (!sidebar) return;
-    if (sidebar.classList.contains('-translate-x-full')) openSidebar();
-    else closeSidebar();
+    if (sidebar.classList.contains('open')) closeSidebar();
+    else openSidebar();
 }
+
 document.addEventListener('DOMContentLoaded', function() {
-    const sidebarToggle = document.getElementById('sidebar-toggle');
-    const sidebarBackdrop = document.getElementById('sidebar-backdrop');
-    const collapseToggle = document.getElementById('sidebar-collapse-toggle');
-    if (sidebarBackdrop) sidebarBackdrop.addEventListener('click', closeSidebar);
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            const sidebar = document.getElementById('sidebar');
-            if (sidebar && !sidebar.classList.contains('-translate-x-full')) closeSidebar();
-        }
-    });
-    const sidebarLinks = document.querySelectorAll('.sidebar-link');
-    sidebarLinks.forEach(link => {
+    document.getElementById('sidebar-backdrop')?.addEventListener('click', closeSidebar);
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeSidebar(); });
+    document.querySelectorAll('.admin-sidebar-link').forEach(link => {
         link.addEventListener('click', function() {
-            const sidebar = document.getElementById('sidebar');
-            if (sidebar && !sidebar.classList.contains('-translate-x-full')) closeSidebar();
+            if (document.getElementById('sidebar')?.classList.contains('open')) closeSidebar();
         });
     });
-    if (collapseToggle) {
-        collapseToggle.addEventListener('click', function() {
-            sidebarCollapsed = true;
-            localStorage.setItem('sidebar-collapsed', 'true');
-            applyCollapseState();
-        });
-    }
-    const expandBtn = document.getElementById('sidebar-expand-button');
-    if (expandBtn) {
-        expandBtn.addEventListener('click', function() {
-            sidebarCollapsed = false;
-            localStorage.setItem('sidebar-collapsed', 'false');
-            applyCollapseState();
-        });
-    }
-    applyCollapseState();
-    let resizeTimer;
-    window.addEventListener('resize', function() {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(applyCollapseState, 150);
-    });
-    function syncMobileNotifBadge() {
-        const sidebarBadge = document.getElementById('sidebar-notif-badge');
-        const mobileBadge = document.getElementById('mobile-notif-badge');
-        if (sidebarBadge && mobileBadge) {
-            if (!sidebarBadge.classList.contains('hidden')) {
-                mobileBadge.textContent = sidebarBadge.textContent;
-                mobileBadge.classList.remove('hidden');
-            } else {
-                mobileBadge.classList.add('hidden');
-            }
-        }
-    }
-    const origFetch = fetchUnreadCount;
-    fetchUnreadCount = function() {
-        return origFetch.apply(this, arguments).then(function() { setTimeout(syncMobileNotifBadge, 50); }).catch(function() {});
-    };
-    setTimeout(syncMobileNotifBadge, 200);
 });
 </script>
 <script src="/static/js/admin.js"></script>

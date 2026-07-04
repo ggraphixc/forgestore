@@ -22,9 +22,98 @@
   overflow-x: clip;
 }
 
-/* ---- Sidebar ---- */
+/* ---- Desktop Bottom Nav ---- */
+.admin-bottomnav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-top: 1px solid rgba(231,229,228,0.6);
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.06);
+  padding: 0 16px;
+  height: 72px;
+  align-items: center;
+  justify-content: center;
+}
+.admin-bottomnav-inner {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 640px;
+  width: 100%;
+  justify-content: space-around;
+}
+.admin-bnav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  text-decoration: none;
+  color: var(--color-muted);
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  position: relative;
+  min-width: 56px;
+  min-height: 52px;
+  justify-content: center;
+}
+.admin-bnav-item:hover {
+  color: #92400e;
+  background: rgba(255,251,235,0.8);
+}
+.admin-bnav-item.active {
+  color: #92400e;
+  background: rgba(255,251,235,0.9);
+}
+.admin-bnav-item.active::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+.admin-bnav-item svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.admin-bnav-item .bnav-label {
+  white-space: nowrap;
+  line-height: 1;
+}
+.admin-bnav-badge {
+  position: absolute;
+  top: 2px;
+  right: 6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 99px;
+  font-size: 9px;
+  font-weight: 700;
+  background: var(--color-primary);
+  color: #fff;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.admin-bnav-badge.visible { display: flex; }
+
+/* ---- Sidebar (mobile only) ---- */
 .admin-sidebar {
-  width: 256px;
+  width: 280px;
   background: var(--color-surface);
   border-right: 1px solid var(--color-border);
   display: flex;
@@ -34,13 +123,14 @@
   left: 0;
   bottom: 0;
   z-index: 40;
-  transition: transform 0.3s ease-out, width 0.3s ease-out;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: var(--color-border) transparent;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-out;
 }
-
+.admin-sidebar.open { transform: translateX(0); }
 .admin-sidebar::-webkit-scrollbar { width: 4px; }
 .admin-sidebar::-webkit-scrollbar-track { background: transparent; }
 .admin-sidebar::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
@@ -50,7 +140,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 24px;
+  padding: 0 20px;
   height: 64px;
   border-bottom: 1px solid #f5f5f4;
   flex-shrink: 0;
@@ -65,53 +155,10 @@
   justify-content: center;
   flex-shrink: 0;
 }
-.admin-sidebar-logo span {
-  color: #fff;
-  font-size: 12px;
-  font-weight: 900;
-  font-family: system-ui, sans-serif;
-  letter-spacing: 0.02em;
-}
-.admin-sidebar-brand {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.admin-sidebar-brand-name {
-  font-size: 14px;
-  font-weight: 900;
-  color: var(--color-dark);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-family: system-ui, sans-serif;
-}
-.admin-sidebar-brand-sub {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--color-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.sidebar-collapse-toggle {
-  margin-left: auto;
-  background: none;
-  border: none;
-  padding: 6px;
-  color: var(--color-muted);
-  cursor: pointer;
-  border-radius: 8px;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: color 0.15s, background 0.15s;
-}
-.sidebar-collapse-toggle:hover { color: var(--color-dark); background: #f5f5f4; }
-.sidebar-collapse-toggle svg { width: 16px; height: 16px; }
+.admin-sidebar-logo span { color: #fff; font-size: 12px; font-weight: 900; font-family: system-ui, sans-serif; }
+.admin-sidebar-brand { display: flex; flex-direction: column; min-width: 0; }
+.admin-sidebar-brand-name { font-size: 14px; font-weight: 900; color: var(--color-dark); white-space: nowrap; font-family: system-ui, sans-serif; }
+.admin-sidebar-brand-sub { font-size: 10px; font-weight: 600; color: var(--color-primary); text-transform: uppercase; letter-spacing: 0.15em; }
 
 /* ---- Profile Card ---- */
 .admin-sidebar-profile {
@@ -125,15 +172,8 @@
   color: inherit;
   transition: box-shadow 0.2s, border-color 0.2s;
 }
-.admin-sidebar-profile:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  border-color: #fbbf24;
-}
-.admin-sidebar-profile-inner {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+.admin-sidebar-profile:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); border-color: #fbbf24; }
+.admin-sidebar-profile-inner { display: flex; align-items: center; gap: 12px; }
 .admin-avatar {
   width: 40px;
   height: 40px;
@@ -145,29 +185,15 @@
   font-size: 14px;
   font-weight: 700;
   flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
-.admin-avatar.role-dir { background: #9333ea; box-shadow: 0 0 0 2px rgba(147,51,234,0.3); }
-.admin-avatar.role-mgmt { background: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.3); }
-.admin-avatar.role-tech { background: #0891b2; box-shadow: 0 0 0 2px rgba(8,145,178,0.3); }
-.admin-avatar.role-retail { background: #d97706; box-shadow: 0 0 0 2px rgba(217,119,6,0.3); }
-.admin-avatar.role-other { background: #059669; box-shadow: 0 0 0 2px rgba(5,150,105,0.3); }
+.admin-avatar.role-dir { background: #9333ea; }
+.admin-avatar.role-mgmt { background: #2563eb; }
+.admin-avatar.role-tech { background: #0891b2; }
+.admin-avatar.role-retail { background: #d97706; }
+.admin-avatar.role-other { background: #059669; }
 .admin-profile-info { min-width: 0; flex: 1; }
-.admin-profile-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-dark);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.admin-profile-email {
-  font-size: 11px;
-  color: var(--color-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+.admin-profile-name { font-size: 14px; font-weight: 600; color: var(--color-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.admin-profile-email { font-size: 11px; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .admin-role-badge {
   display: inline-flex;
   align-items: center;
@@ -184,80 +210,25 @@
 .admin-role-badge.role-tech { background: #cffafe; color: #0e7490; }
 .admin-role-badge.role-retail { background: #fef3c7; color: #b45309; }
 .admin-role-badge.role-other { background: #d1fae5; color: #047857; }
-.admin-profile-chevron {
-  width: 16px;
-  height: 16px;
-  color: #d6d3d1;
-  flex-shrink: 0;
-  transition: color 0.2s;
-}
+.admin-profile-chevron { width: 16px; height: 16px; color: #d6d3d1; flex-shrink: 0; }
 .admin-sidebar-profile:hover .admin-profile-chevron { color: var(--color-primary); }
 
-/* ---- Mobile Close + Section Label ---- */
-.sidebar-top-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 12px;
-  margin-bottom: 12px;
-}
-.sidebar-close-btn {
-  padding: 8px;
-  min-width: 44px;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-muted);
-  background: none;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: color 0.15s, background 0.15s;
-}
-.sidebar-close-btn:hover { color: var(--color-dark); background: #f5f5f4; }
-.sidebar-close-btn svg { width: 20px; height: 20px; }
-.sidebar-section-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: #a8a29e;
-}
-.sidebar-desktop-spacer {
-  width: 32px;
-}
-
-/* ---- Nav ---- */
+/* ---- Sidebar Nav ---- */
 .admin-sidebar-nav {
   flex: 1;
-  padding: 0 12px 12px;
+  padding: 8px 12px 12px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 .admin-sidebar-section {
-  padding-top: 20px;
-  padding-bottom: 6px;
-  padding-left: 12px;
-  padding-right: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.admin-sidebar-section-line {
-  flex: 1;
-  height: 1px;
-  background: #f5f5f4;
-}
-.admin-sidebar-section-text {
+  padding: 16px 12px 6px;
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.15em;
   color: #a8a29e;
-  white-space: nowrap;
 }
 .admin-sidebar-link {
   display: flex;
@@ -270,28 +241,13 @@
   border-radius: 12px;
   text-decoration: none;
   transition: background 0.15s, color 0.15s;
-  position: relative;
   min-height: 44px;
   flex-shrink: 0;
 }
-.admin-sidebar-link:hover {
-  background: #fffbeb;
-  color: #92400e;
-}
-.admin-sidebar-link.active {
-  background: #fffbeb;
-  color: #92400e;
-  font-weight: 600;
-}
-.admin-sidebar-link .link-icon {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  color: #a8a29e;
-  transition: color 0.15s;
-}
-.admin-sidebar-link:hover .link-icon,
-.admin-sidebar-link.active .link-icon { color: #d97706; }
+.admin-sidebar-link:hover { background: #fffbeb; color: #92400e; }
+.admin-sidebar-link.active { background: #fffbeb; color: #92400e; font-weight: 600; }
+.admin-sidebar-link .link-icon { width: 20px; height: 20px; flex-shrink: 0; color: #a8a29e; }
+.admin-sidebar-link:hover .link-icon, .admin-sidebar-link.active .link-icon { color: #d97706; }
 .admin-sidebar-link .link-text { white-space: nowrap; }
 .admin-sidebar-badge {
   margin-left: auto;
@@ -304,35 +260,10 @@
 }
 .admin-sidebar-badge.badge-muted { color: #a8a29e; background: #f5f5f4; }
 .admin-sidebar-badge.badge-primary { color: #d97706; background: #fffbeb; font-weight: 700; }
-.admin-sidebar-link-nested {
-  padding-left: 40px;
-}
+.admin-sidebar-link-nested { padding-left: 44px; }
 .admin-sidebar-link-nested .link-icon { width: 16px; height: 16px; }
-.admin-sidebar-sublabel {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--color-muted);
-  min-height: 44px;
-}
-.admin-sidebar-sublabel .link-icon {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  color: #a8a29e;
-}
-.admin-sidebar-sublabel-text {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: var(--color-primary);
-}
 
-/* ---- Sign Out ---- */
+/* ---- Sidebar Sign Out ---- */
 .admin-sidebar-signout {
   padding: 12px;
   border-top: 1px solid #f5f5f4;
@@ -350,43 +281,9 @@
   transition: background 0.15s, color 0.15s;
   min-height: 44px;
 }
-.admin-sidebar-signout a:hover {
-  background: #fef2f2;
-  color: #dc2626;
-}
-.admin-sidebar-signout a .link-icon {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  color: #a8a29e;
-  transition: color 0.15s;
-}
+.admin-sidebar-signout a:hover { background: #fef2f2; color: #dc2626; }
+.admin-sidebar-signout a .link-icon { width: 20px; height: 20px; flex-shrink: 0; color: #a8a29e; }
 .admin-sidebar-signout a:hover .link-icon { color: #ef4444; }
-
-/* ---- Expand Button (outside sidebar) ---- */
-.admin-sidebar-expand {
-  display: none;
-  position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 50;
-  width: 28px;
-  height: 56px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 0 8px 8px 0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s, box-shadow 0.2s;
-}
-.admin-sidebar-expand:hover {
-  background: #fffbeb;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-}
-.admin-sidebar-expand svg { width: 16px; height: 16px; color: #a8a29e; }
-.admin-sidebar-expand:hover svg { color: #d97706; }
 
 /* ---- Backdrop ---- */
 .admin-sidebar-backdrop {
@@ -406,9 +303,6 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  margin-left: 256px;
-  transition: margin-left 0.3s ease-out;
-  padding: 24px 32px;
 }
 
 /* ---- Mobile Header ---- */
@@ -420,7 +314,6 @@
   border-bottom: 1px solid var(--color-border);
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
   z-index: 30;
-  display: none;
 }
 .admin-header-inner {
   display: flex;
@@ -429,11 +322,7 @@
   padding: 0 12px;
   height: 56px;
 }
-.admin-header-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+.admin-header-left { display: flex; align-items: center; gap: 8px; }
 .admin-header-toggle {
   padding: 10px;
   min-width: 44px;
@@ -456,17 +345,14 @@
   border-radius: 50%;
   background: var(--color-primary);
   animation: pulse-dot 2s infinite;
-  flex-shrink: 0;
 }
 @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 .admin-header-center {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-width: 0;
   flex: 1;
   justify-content: center;
-  padding: 0 8px;
 }
 .admin-header-logo {
   width: 28px;
@@ -476,24 +362,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
 }
 .admin-header-logo span { color: #fff; font-size: 10px; font-weight: 900; }
 .admin-header-title {
   font-size: 14px;
   font-weight: 800;
   color: var(--color-dark);
-  letter-spacing: -0.01em;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .admin-header-title .accent { color: var(--color-primary); }
-.admin-header-right {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+.admin-header-right { display: flex; align-items: center; gap: 6px; }
 .admin-header-notif {
   position: relative;
   padding: 8px;
@@ -526,81 +404,44 @@
   justify-content: center;
   box-shadow: 0 0 0 2px #fff;
 }
-.admin-header-avatar {
-  display: block;
-}
-.admin-header-avatar .admin-avatar {
-  width: 40px;
-  height: 40px;
-  transition: transform 0.15s;
-}
+.admin-header-avatar { display: block; }
+.admin-header-avatar .admin-avatar { width: 40px; height: 40px; transition: transform 0.15s; }
 .admin-header-avatar:hover .admin-avatar { transform: scale(1.05); }
-.admin-header-avatar:active .admin-avatar { transform: scale(0.95); }
 
-/* ---- Main Content Area ---- */
+/* ---- Content Area ---- */
 .admin-content {
   flex: 1;
-  padding: 12px;
+  padding: 16px;
   max-width: 100%;
   overflow-x: hidden;
 }
 
-/* ---- Collapse State (Desktop) ---- */
+/* ---- Desktop: bottom nav visible, header hidden, no sidebar ---- */
 @media (min-width: 1024px) {
-  .sidebar-collapse-toggle { display: flex; }
-
-  .admin-sidebar.collapsed { width: 72px; }
-  .admin-sidebar.collapsed .admin-sidebar-brand,
-  .admin-sidebar.collapsed .admin-sidebar-section-text,
-  .admin-sidebar.collapsed .sidebar-section-label,
-  .admin-sidebar.collapsed .admin-sidebar-profile .admin-profile-info,
-  .admin-sidebar.collapsed .admin-sidebar-link .link-text,
-  .admin-sidebar.collapsed .admin-sidebar-badge,
-  .admin-sidebar.collapsed .admin-sidebar-sublabel-text,
-  .admin-sidebar.collapsed .admin-sidebar-sublabel { font-size: 0; width: 0; overflow: hidden; padding: 0; margin: 0; min-width: 0; opacity: 0; }
-  .admin-sidebar.collapsed .admin-sidebar-header { padding: 0 18px; justify-content: center; }
-  .admin-sidebar.collapsed .sidebar-collapse-toggle { display: none; }
-  .admin-sidebar.collapsed .admin-sidebar-profile { margin: 12px 8px 8px; padding: 10px; }
-  .admin-sidebar.collapsed .admin-sidebar-profile .admin-sidebar-profile-inner { justify-content: center; }
-  .admin-sidebar.collapsed .admin-sidebar-link { justify-content: center; padding-left: 0; padding-right: 0; }
-  .admin-sidebar.collapsed .admin-sidebar-section { justify-content: center; padding-left: 0; padding-right: 0; }
-  .admin-sidebar.collapsed .admin-sidebar-signout a { justify-content: center; padding-left: 0; padding-right: 0; }
-  .admin-sidebar.collapsed .admin-sidebar-link-nested { padding-left: 0; }
-  .admin-main { margin-left: 72px; padding: 24px 16px; }
-  .admin-sidebar-expand.visible { display: flex; left: 72px; }
+  .admin-bottomnav { display: flex; }
+  .admin-header { display: none; }
+  .admin-content { padding: 24px 32px 88px; }
 }
 
-/* ---- Responsive ---- */
+/* ---- Mobile: sidebar + header ---- */
 @media (max-width: 1023px) {
-  .admin-sidebar {
-    transform: translateX(-100%);
-    box-shadow: 0 16px 48px rgba(0,0,0,0.15);
-  }
-  .admin-sidebar.open { transform: translateX(0); }
   .admin-sidebar-backdrop.visible { display: block; opacity: 1; }
-  .admin-header { display: block; }
-  .admin-main { margin-left: 0; padding: 16px; }
+  .admin-content { padding: 16px; padding-bottom: 24px; }
 }
 </style>
 
 <script>!function(){var e="sidebar-collapsed",t=localStorage.getItem(e)==="true";if(t&&window.innerWidth>=1024){var n=document.getElementById("sidebar");n&&n.classList.add("collapsed")}}()</script>
 
 <div class="admin-layout">
-  <!-- Sidebar -->
+  <!-- Sidebar (mobile only) -->
   <aside id="sidebar" class="admin-sidebar">
-    <!-- Header -->
     <div class="admin-sidebar-header">
       <div class="admin-sidebar-logo"><span>FS</span></div>
-      <div class="admin-sidebar-brand sidebar-header-text">
+      <div class="admin-sidebar-brand">
         <span class="admin-sidebar-brand-name">ForgeStore</span>
         <span class="admin-sidebar-brand-sub">Admin Panel</span>
       </div>
-      <button id="sidebar-collapse-toggle" class="sidebar-collapse-toggle" aria-label="Collapse sidebar" aria-expanded="true">
-        <svg id="sidebar-collapse-icon-open" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
-      </button>
     </div>
-
-    <!-- Profile Card -->
     <a href="/admin/me" class="admin-sidebar-profile">
       <div class="admin-sidebar-profile-inner">
         <div class="admin-avatar
@@ -626,125 +467,69 @@
         <svg class="admin-profile-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
       </div>
     </a>
-
-    <!-- Mobile Close + Section Label -->
-    <div class="sidebar-top-row">
-      <button id="sidebar-close" onclick="closeSidebar()" class="sidebar-close-btn lg:hidden" aria-label="Close sidebar">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+    <div style="padding: 0 12px 12px;">
+      <button onclick="closeSidebar()" style="width:100%;padding:10px;min-height:44px;display:flex;align-items:center;justify-content:center;color:#78716c;background:none;border:none;border-radius:12px;cursor:pointer;font-size:14px;font-weight:500;gap:8px;transition:background 0.15s,color 0.15s;" onmouseover="this.style.background='#fffbeb';this.style.color='#92400e'" onmouseout="this.style.background='';this.style.color='#78716c'">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+        Close Menu
       </button>
-      <span class="sidebar-section-label sidebar-nav-label">Navigation</span>
-      <span class="sidebar-desktop-spacer"></span>
     </div>
-
-    <!-- Navigation -->
     <nav class="admin-sidebar-nav">
       {% if has_permission(admin, 'dashboard') %}
-      <a href="/admin/dashboard" class="admin-sidebar-link sidebar-link">
+      <a href="/admin/dashboard" class="admin-sidebar-link">
         <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 001 1h3m1-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
         <span class="link-text">Dashboard</span>
       </a>
       {% endif %}
 
       {% if has_permission(admin, 'catalog') or has_permission(admin, 'categories') or has_permission(admin, 'retailers') %}
-      <div class="admin-sidebar-section">
-        <div class="admin-sidebar-section-line"></div>
-        <span class="admin-sidebar-section-text">Inventory</span>
-        <div class="admin-sidebar-section-line"></div>
-      </div>
+      <div class="admin-sidebar-section">Inventory</div>
       {% endif %}
 
-      {% if admin and admin.role == 'RETAILER' %}
-      <a href="/admin/catalog" class="admin-sidebar-link sidebar-link">
+      {% if has_permission(admin, 'catalog') %}
+      <a href="/admin/catalog" class="admin-sidebar-link">
         <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-        <span class="link-text">My Products</span>
+        <span class="link-text">Products</span>
       </a>
       {% endif %}
 
       {% if has_permission(admin, 'categories') %}
-      <a href="/admin/categories" class="admin-sidebar-link sidebar-link">
+      <a href="/admin/categories" class="admin-sidebar-link">
         <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
         <span class="link-text">Categories</span>
       </a>
       {% endif %}
 
       {% if has_permission(admin, 'retailers') %}
-      <a href="/admin/retailers" class="admin-sidebar-link sidebar-link">
+      <a href="/admin/retailers" class="admin-sidebar-link">
         <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
         <span class="link-text">Retailers</span>
-        <span class="admin-sidebar-badge badge-muted">Shops</span>
-      </a>
-      {% endif %}
-
-      {% if admin and admin.role == 'RETAILER' %}
-      <a href="/admin/retailer/banking" class="admin-sidebar-link sidebar-link">
-        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-        <span class="link-text">Banking</span>
-        <span class="admin-sidebar-badge badge-muted">Payouts</span>
-      </a>
-      {% endif %}
-
-      {% if has_permission(admin, 'ads') %}
-      <a href="/admin/retailer/ads" class="admin-sidebar-link sidebar-link">
-        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
-        <span class="link-text">Ad Campaigns</span>
-        <span class="admin-sidebar-badge badge-primary">Promote</span>
-      </a>
-      {% endif %}
-
-      {% if has_permission(admin, 'ads') %}
-      <a href="/admin/ads/manage" class="admin-sidebar-link sidebar-link admin-sidebar-link-nested">
-        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-        <span class="link-text">Manage</span>
-      </a>
-      <a href="/admin/ads/analytics" class="admin-sidebar-link sidebar-link admin-sidebar-link-nested">
-        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-        <span class="link-text">Analytics</span>
       </a>
       {% endif %}
 
       {% if has_permission(admin, 'orders') or has_permission(admin, 'customers') %}
-      <div class="admin-sidebar-section">
-        <div class="admin-sidebar-section-line"></div>
-        <span class="admin-sidebar-section-text">Sales</span>
-        <div class="admin-sidebar-section-line"></div>
-      </div>
+      <div class="admin-sidebar-section">Sales</div>
       {% endif %}
 
       {% if has_permission(admin, 'orders') %}
-      <a href="/admin/orders" class="admin-sidebar-link sidebar-link">
+      <a href="/admin/orders" class="admin-sidebar-link">
         <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
         <span class="link-text">Orders</span>
       </a>
       {% endif %}
 
       {% if has_permission(admin, 'customers') %}
-      <a href="/admin/customers" class="admin-sidebar-link sidebar-link">
+      <a href="/admin/customers" class="admin-sidebar-link">
         <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
         <span class="link-text">Customers</span>
       </a>
       {% endif %}
 
-      {% if admin and admin.role == 'DIR_ADMIN' %}
-      <a href="/admin/settings" class="admin-sidebar-link sidebar-link">
-        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-        <span class="link-text">System Settings</span>
-      </a>
-      <a href="/admin/settings/payment-provider" class="admin-sidebar-link sidebar-link">
-        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-        <span class="link-text">Payment Toggles</span>
-      </a>
-      {% endif %}
-
       {% if has_permission(admin, 'performance') or has_permission(admin, 'shipments') or has_permission(admin, 'admin_users') %}
-      <div class="admin-sidebar-section">
-        <div class="admin-sidebar-section-line"></div>
-        <span class="admin-sidebar-section-text">Enterprise</span>
-        <div class="admin-sidebar-section-line"></div>
-      </div>
+      <div class="admin-sidebar-section">Enterprise</div>
       {% endif %}
 
       {% if has_permission(admin, 'performance') %}
-      <a href="/admin/intelligence" class="admin-sidebar-link sidebar-link">
+      <a href="/admin/intelligence" class="admin-sidebar-link">
         <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
         <span class="link-text">Intelligence</span>
         <span class="admin-sidebar-badge badge-primary">AI</span>
@@ -752,69 +537,35 @@
       {% endif %}
 
       {% if has_permission(admin, 'shipments') %}
-      <a href="/admin/shipments" class="admin-sidebar-link sidebar-link">
+      <a href="/admin/shipments" class="admin-sidebar-link">
         <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
         <span class="link-text">Shipments</span>
-        <span class="admin-sidebar-badge badge-muted">Tracking</span>
       </a>
       {% endif %}
 
       {% if has_permission(admin, 'admin_users') %}
-      <a href="/admin/affiliates" class="admin-sidebar-link sidebar-link">
-        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-        <span class="link-text">Affiliates</span>
-        <span class="admin-sidebar-badge badge-muted">Referrals</span>
-      </a>
-      {% endif %}
-
-      <!-- Notifications (visible to all admins) -->
-      <a href="/admin/notifications" class="admin-sidebar-link sidebar-link" id="notification-link">
-        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-        <span class="link-text">Notifications</span>
-        <span id="sidebar-notif-badge" class="admin-sidebar-badge badge-primary hidden"></span>
-      </a>
-
-      {% if has_permission(admin, 'admin_users') or has_permission(admin, 'customers') %}
-      <div class="admin-sidebar-section">
-        <div class="admin-sidebar-section-line"></div>
-        <span class="admin-sidebar-section-text">Management</span>
-        <div class="admin-sidebar-section-line"></div>
-      </div>
-      {% endif %}
-
-      {% if has_permission(admin, 'admin_users') %}
-      <a href="/admin/admin-users" class="admin-sidebar-link sidebar-link">
+      <a href="/admin/admin-users" class="admin-sidebar-link">
         <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/></svg>
         <span class="link-text">Admin Users</span>
-        <span class="admin-sidebar-badge badge-muted">Team</span>
       </a>
       {% endif %}
 
-      {% if has_permission(admin, 'customers') %}
-      <div class="admin-sidebar-sublabel">
-        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-        <span class="admin-sidebar-sublabel-text">Newsletter</span>
-      </div>
-      <a href="/admin/newsletter-subscribers" class="admin-sidebar-link sidebar-link admin-sidebar-link-nested">
-        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-        <span class="link-text">Subscribers</span>
-      </a>
-      <a href="/admin/newsletter/broadcast" class="admin-sidebar-link sidebar-link admin-sidebar-link-nested">
-        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-        <span class="link-text">Send Broadcast</span>
-      </a>
-      <a href="/admin/newsletter/templates" class="admin-sidebar-link sidebar-link admin-sidebar-link-nested">
-        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-        <span class="link-text">Templates</span>
-      </a>
-      <a href="/admin/newsletter/broadcast-analytics" class="admin-sidebar-link sidebar-link admin-sidebar-link-nested">
-        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-        <span class="link-text">Analytics</span>
+      {% if has_permission(admin, 'admin_users') %}
+      <div class="admin-sidebar-section">Management</div>
+      {% endif %}
+
+      {% if admin and admin.role.value == 'DIR_ADMIN' %}
+      <a href="/admin/settings" class="admin-sidebar-link">
+        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span class="link-text">System Settings</span>
       </a>
       {% endif %}
+
+      <a href="/admin/notifications" class="admin-sidebar-link">
+        <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <span class="link-text">Notifications</span>
+      </a>
     </nav>
-
-    <!-- Sign Out -->
     <div class="admin-sidebar-signout">
       <a href="/admin/logout">
         <svg class="link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
@@ -823,13 +574,60 @@
     </div>
   </aside>
 
-  <!-- Expand Button (outside sidebar, visible when collapsed on desktop) -->
-  <button id="sidebar-expand-button" class="admin-sidebar-expand" aria-label="Expand sidebar" title="Expand sidebar">
-    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
-  </button>
-
   <!-- Backdrop (mobile) -->
   <div id="sidebar-backdrop" class="admin-sidebar-backdrop"></div>
+
+  <!-- Desktop Bottom Nav -->
+  <nav class="admin-bottomnav">
+    <div class="admin-bottomnav-inner">
+      {% if has_permission(admin, 'dashboard') %}
+      <a href="/admin/dashboard" class="admin-bnav-item {% if request.url.path == '/admin/dashboard' %}active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 001 1h3m1-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span class="bnav-label">Dashboard</span>
+      </a>
+      {% endif %}
+
+      {% if has_permission(admin, 'catalog') %}
+      <a href="/admin/catalog" class="admin-bnav-item {% if '/catalog' in request.url.path %}active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        <span class="bnav-label">Products</span>
+      </a>
+      {% endif %}
+
+      {% if has_permission(admin, 'orders') %}
+      <a href="/admin/orders" class="admin-bnav-item {% if '/orders' in request.url.path %}active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+        <span class="bnav-label">Orders</span>
+      </a>
+      {% endif %}
+
+      {% if has_permission(admin, 'performance') %}
+      <a href="/admin/intelligence" class="admin-bnav-item {% if '/intelligence' in request.url.path %}active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+        <span class="bnav-label">Intelligence</span>
+      </a>
+      {% endif %}
+
+      {% if admin and admin.role.value == 'DIR_ADMIN' %}
+      <a href="/admin/settings" class="admin-bnav-item {% if '/settings' in request.url.path %}active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span class="bnav-label">Settings</span>
+      </a>
+      {% endif %}
+
+      <a href="/admin/me" class="admin-bnav-item {% if '/me' in request.url.path %}active{% endif %}">
+        <div class="admin-avatar
+          {% if admin and admin.role.value == 'DIR_ADMIN' %}role-dir
+          {% elif admin and admin.role.value == 'MANAGEMENT' %}role-mgmt
+          {% elif admin and admin.role.value == 'TECH_ADMIN' %}role-tech
+          {% elif admin and admin.role.value == 'RETAILER' %}role-retail
+          {% else %}role-other{% endif %}" style="width:24px;height:24px;font-size:11px;">
+          {{ admin.name[0]|upper if admin and admin.name else "A" }}
+        </div>
+        <span class="bnav-label">Profile</span>
+      </a>
+    </div>
+  </nav>
 
   <!-- Main Content -->
   <div class="admin-main">
@@ -874,9 +672,7 @@
 </div>
 
 <script>
-// Real-time notification badge via EventSource (SSE)
 let notifEventSource = null;
-
 async function fetchUnreadCount() {
     try {
         const res = await fetch('/api/admin/notifications/unread-count');
@@ -885,43 +681,28 @@ async function fetchUnreadCount() {
         if (data.count > 0) {
             badge.textContent = data.count > 99 ? '99+' : data.count;
             badge.classList.remove('hidden');
+            badge.classList.add('visible');
         } else {
             badge.classList.add('hidden');
+            badge.classList.remove('visible');
         }
     } catch (e) {}
 }
-
 function connectNotifSSE() {
-    if (notifEventSource) {
-        notifEventSource.close();
-    }
+    if (notifEventSource) notifEventSource.close();
     notifEventSource = new EventSource('/api/admin/notifications/stream');
-    
-    notifEventSource.addEventListener('connected', function(e) {
-        // SSE stream connected
-    });
-    
-    notifEventSource.onmessage = function(e) {
-        // New notification received — update badge immediately
-        fetchUnreadCount();
-    };
-    
+    notifEventSource.onmessage = function(e) { fetchUnreadCount(); };
     notifEventSource.onerror = function() {
         notifEventSource.close();
-        // Reconnect after 10s on error
         setTimeout(connectNotifSSE, 10000);
     };
 }
-
 document.addEventListener('DOMContentLoaded', function() {
     fetchUnreadCount();
     connectNotifSSE();
 });
-// Fallback polling every 2 minutes in case SSE drops
 setInterval(fetchUnreadCount, 120000);
-</script>
-<script>
-// ===== Password visibility toggle =====
+
 function togglePasswordVisibility(inputId, btn) {
     const input = document.getElementById(inputId);
     if (!input || !btn) return;
@@ -929,177 +710,49 @@ function togglePasswordVisibility(inputId, btn) {
     input.type = isPassword ? 'text' : 'password';
     btn.querySelector('.eye-open')?.classList.toggle('hidden');
     btn.querySelector('.eye-closed')?.classList.toggle('hidden');
-    btn.style.transform = 'scale(0.9)';
-    setTimeout(() => btn.style.transform = '', 150);
 }
 
-// Sidebar collapse toggle for desktop view
-let sidebarCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
-
-function applyCollapseState() {
-    const sidebar = document.getElementById('sidebar');
-    const toggle = document.getElementById('sidebar-collapse-toggle');
-    const expandBtn = document.getElementById('sidebar-expand-button');
-    const headerTexts = document.querySelectorAll('.sidebar-header-text');
-    const navLabels = document.querySelectorAll('.sidebar-nav-label');
-    const profileCard = document.querySelector('.admin-sidebar-profile');
-    
-    if (!sidebar) return;
-    
-    // Only apply collapse state on desktop (lg+)
-    if (window.innerWidth < 1024) {
-        sidebar.classList.remove('collapsed');
-        if (expandBtn) expandBtn.classList.add('hidden');
-        document.getElementById('sidebar-collapse-icon-open')?.classList.remove('hidden');
-        headerTexts.forEach(el => { if (el) el.style.display = ''; });
-        navLabels.forEach(el => { if (el) el.style.display = ''; });
-        if (profileCard) profileCard.querySelector('.admin-profile-info')?.classList.remove('hidden');
-        document.querySelectorAll('.admin-sidebar-link .link-text').forEach(el => {
-            el.classList.remove('sidebar-link-text-hidden');
-        });
-        return;
-    }
-    
-    if (sidebarCollapsed) {
-        sidebar.classList.add('collapsed');
-        if (toggle) toggle.classList.add('hidden');
-        if (expandBtn) expandBtn.classList.remove('hidden');
-        headerTexts.forEach(el => { if (el) el.style.display = 'none'; });
-        navLabels.forEach(el => { if (el) el.style.display = 'none'; });
-        if (profileCard) {
-            profileCard.querySelector('.admin-profile-info')?.classList.add('hidden');
-        }
-        document.querySelectorAll('.admin-sidebar-link .link-text').forEach(el => {
-            if (el.textContent.trim()) {
-                el.classList.add('sidebar-link-text-hidden');
-            }
-        });
-    } else {
-        sidebar.classList.remove('collapsed');
-        if (toggle) toggle.classList.remove('hidden');
-        if (expandBtn) expandBtn.classList.add('hidden');
-        headerTexts.forEach(el => { if (el) el.style.display = ''; });
-        navLabels.forEach(el => { if (el) el.style.display = ''; });
-        if (profileCard) {
-            profileCard.querySelector('.admin-profile-info')?.classList.remove('hidden');
-        }
-        document.querySelectorAll('.admin-sidebar-link .link-text').forEach(el => {
-            el.classList.remove('sidebar-link-text-hidden');
-        });
-    }
-}
-
-// Sidebar toggle functionality for mobile view
 function openSidebar() {
     const sidebar = document.getElementById('sidebar');
     const backdrop = document.getElementById('sidebar-backdrop');
-    const toggle = document.getElementById('sidebar-toggle');
     if (!sidebar || !backdrop) return;
-
-    sidebar.classList.remove('-translate-x-full');
     sidebar.classList.add('open');
     backdrop.classList.remove('hidden');
     void backdrop.offsetWidth;
     backdrop.classList.add('visible');
     document.body.classList.add('overflow-hidden');
-    
-    if (toggle) {
-        toggle.setAttribute('aria-expanded', 'true');
-        document.getElementById('sidebar-toggle-open')?.classList.add('hidden');
-        document.getElementById('sidebar-toggle-close')?.classList.remove('hidden');
-    }
+    document.getElementById('sidebar-toggle-open')?.classList.add('hidden');
+    document.getElementById('sidebar-toggle-close')?.classList.remove('hidden');
 }
 
 function closeSidebar() {
     const sidebar = document.getElementById('sidebar');
     const backdrop = document.getElementById('sidebar-backdrop');
-    const toggle = document.getElementById('sidebar-toggle');
     if (!sidebar || !backdrop) return;
-
-    sidebar.classList.add('-translate-x-full');
     sidebar.classList.remove('open');
     backdrop.classList.remove('visible');
-    setTimeout(() => {
-        backdrop.classList.add('hidden');
-        document.body.classList.remove('overflow-hidden');
-    }, 200);
-    
-    if (toggle) {
-        toggle.setAttribute('aria-expanded', 'false');
-        document.getElementById('sidebar-toggle-open')?.classList.remove('hidden');
-        document.getElementById('sidebar-toggle-close')?.classList.add('hidden');
-    }
+    setTimeout(() => { backdrop.classList.add('hidden'); document.body.classList.remove('overflow-hidden'); }, 300);
+    document.getElementById('sidebar-toggle-open')?.classList.remove('hidden');
+    document.getElementById('sidebar-toggle-close')?.classList.add('hidden');
 }
 
 function toggleSidebar(event) {
     if (event) event.stopPropagation();
     const sidebar = document.getElementById('sidebar');
     if (!sidebar) return;
-    if (sidebar.classList.contains('open')) {
-        closeSidebar();
-    } else {
-        openSidebar();
-    }
+    if (sidebar.classList.contains('open')) closeSidebar();
+    else openSidebar();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    const sidebarToggle = document.getElementById('sidebar-toggle');
-    const sidebarBackdrop = document.getElementById('sidebar-backdrop');
-    const collapseToggle = document.getElementById('sidebar-collapse-toggle');
-    
-    if (sidebarBackdrop) {
-        sidebarBackdrop.addEventListener('click', closeSidebar);
-    }
-    
-    // Close sidebar with Escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            const sidebar = document.getElementById('sidebar');
-            if (sidebar && sidebar.classList.contains('open')) {
-                closeSidebar();
-            }
-        }
-    });
-    
-    // Close sidebar on link click (mobile only)
-    const sidebarLinks = document.querySelectorAll('.sidebar-link');
-    sidebarLinks.forEach(link => {
+    document.getElementById('sidebar-backdrop')?.addEventListener('click', closeSidebar);
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeSidebar(); });
+    document.querySelectorAll('.admin-sidebar-link').forEach(link => {
         link.addEventListener('click', function() {
-            const sidebar = document.getElementById('sidebar');
-            if (sidebar && sidebar.classList.contains('open')) {
-                closeSidebar();
-            }
+            if (document.getElementById('sidebar')?.classList.contains('open')) closeSidebar();
         });
     });
-    
-    if (collapseToggle) {
-        collapseToggle.addEventListener('click', function() {
-            sidebarCollapsed = true;
-            localStorage.setItem('sidebar-collapsed', 'true');
-            applyCollapseState();
-        });
-    }
-    
-    const expandBtn = document.getElementById('sidebar-expand-button');
-    if (expandBtn) {
-        expandBtn.addEventListener('click', function() {
-            sidebarCollapsed = false;
-            localStorage.setItem('sidebar-collapsed', 'false');
-            applyCollapseState();
-        });
-    }
-    
-    // Apply saved collapse state on load
-    applyCollapseState();
-    
-    // Re-apply collapse state on window resize (handles mobile ↔ desktop transition)
-    let resizeTimer;
-    window.addEventListener('resize', function() {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(applyCollapseState, 150);
-    });
-    
-    // Sync mobile notification badge after page load
+
     function syncMobileNotifBadge() {
         const sidebarBadge = document.getElementById('sidebar-notif-badge');
         const mobileBadge = document.getElementById('mobile-notif-badge');
@@ -1112,19 +765,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-    
-    // Set initial collapse toggle aria-label
-    if (collapseToggle) {
-        collapseToggle.setAttribute('aria-label', 'Collapse sidebar');
-        collapseToggle.setAttribute('aria-expanded', 'true');
-    }
-    
-    // Override fetchUnreadCount to also update mobile badge
     const origFetch = fetchUnreadCount;
     fetchUnreadCount = function() {
-        return origFetch.apply(this, arguments).then(function() {
-            setTimeout(syncMobileNotifBadge, 50);
-        }).catch(function() {});
+        return origFetch.apply(this, arguments).then(function() { setTimeout(syncMobileNotifBadge, 50); }).catch(function() {});
     };
     setTimeout(syncMobileNotifBadge, 200);
 });
