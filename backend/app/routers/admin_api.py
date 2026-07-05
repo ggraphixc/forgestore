@@ -309,16 +309,18 @@ def delete_product(
         for table_name, col_name in rows:
             try:
                 db.execute(text(f'DELETE FROM "{table_name}" WHERE "{col_name}" = :pid'), {"pid": pid})
+                db.flush()
             except Exception:
-                pass
+                db.rollback()  # rollback to clear aborted transaction, continue with next table
         # Handle ProductChatReply via ProductChatMessage.id
         try:
             db.execute(text(
                 'DELETE FROM product_chat_reply WHERE message_id IN '
                 '(SELECT id FROM product_chat_message WHERE product_id = :pid)'
             ), {"pid": pid})
+            db.flush()
         except Exception:
-            pass
+            db.rollback()
         # Delete the product itself
         db.execute(text('DELETE FROM product WHERE id = :pid'), {"pid": pid})
         db.commit()
