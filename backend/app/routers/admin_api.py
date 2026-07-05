@@ -300,22 +300,35 @@ def delete_product(
             from app.models import (
                 WishlistItem, Review, CartItem, PersistentCartItem,
                 ProductChatMessage, ProductChatReply, ProductAffiliateToken,
-                CartRecommendation, SearchClickAnalytics,
+                CartRecommendation, SearchClickAnalytics, SearchEmbedding,
+                CartActivity, OrderItem, OrderEarning, AdCampaign,
+                AffiliateCommission,
             )
             pid = product_id
-            db.query(ProductChatReply).filter(
-                ProductChatReply.message_id.in_(
-                    db.query(ProductChatMessage.id).filter(ProductChatMessage.product_id == pid)
-                )
-            ).delete(synchronize_session=False)
-            db.query(ProductChatMessage).filter(ProductChatMessage.product_id == pid).delete(synchronize_session=False)
-            db.query(WishlistItem).filter(WishlistItem.product_id == pid).delete(synchronize_session=False)
-            db.query(Review).filter(Review.product_id == pid).delete(synchronize_session=False)
-            db.query(CartItem).filter(CartItem.product_id == pid).delete(synchronize_session=False)
-            db.query(PersistentCartItem).filter(PersistentCartItem.product_id == pid).delete(synchronize_session=False)
-            db.query(ProductAffiliateToken).filter(ProductAffiliateToken.product_id == pid).delete(synchronize_session=False)
-            db.query(CartRecommendation).filter(CartRecommendation.product_id == pid).delete(synchronize_session=False)
-            db.query(SearchClickAnalytics).filter(SearchClickAnalytics.product_id == pid).delete(synchronize_session=False)
+            # Delete child records that might block the product delete
+            for model, col in [
+                (ProductChatReply, "message_id"),
+                (SearchClickAnalytics, "product_id"),
+                (CartRecommendation, "product_id"),
+                (SearchEmbedding, "product_id"),
+                (CartActivity, "product_id"),
+                (ProductChatMessage, "product_id"),
+                (WishlistItem, "product_id"),
+                (Review, "product_id"),
+                (CartItem, "product_id"),
+                (PersistentCartItem, "product_id"),
+                (ProductAffiliateToken, "product_id"),
+                (AffiliateCommission, "product_id"),
+            ]:
+                try:
+                    if col == "message_id":
+                        msg_ids = [r[0] for r in db.query(ProductChatMessage.id).filter(ProductChatMessage.product_id == pid).all()]
+                        if msg_ids:
+                            db.query(ProductChatReply).filter(ProductChatReply.message_id.in_(msg_ids)).delete(synchronize_session=False)
+                    else:
+                        db.query(model).filter(getattr(model, col) == pid).delete(synchronize_session=False)
+                except Exception:
+                    db.rollback()
             db.delete(product)
             db.commit()
         except Exception as e2:
