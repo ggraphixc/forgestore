@@ -774,6 +774,7 @@ async def post_product_chat_message(
             ext = upload_file.filename.rsplit(".", 1)[-1].lower() if "." in upload_file.filename else "jpg"
             if ext not in ("jpg", "jpeg", "png", "gif", "webp"):
                 raise HTTPException(status_code=400, detail="Image must be jpg, png, gif, or webp")
+            raw = await upload_file.read()
             if len(raw) > 5 * 1024 * 1024:
                 raise HTTPException(status_code=400, detail="Image must be under 5MB")
             from app.core.cloudinary_upload import is_cloudinary_configured, upload_to_cloudinary
