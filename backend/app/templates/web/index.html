@@ -1046,12 +1046,12 @@
         {% endif %}
         <div style="padding: 0.75rem 1rem;">
           <span style="display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 9999px; font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #fff7ed; color: #ea580c;">
-            {% if ad.ad_subtype == 'FLASH_SALE' %}&#9889; Flash Sale
-            {% elif ad.ad_subtype == 'SUPER_SALE' %}&#128293; Super Sale
-            {% elif ad.ad_subtype == 'HOT_WEEK' %}&#128293; Hot Week
-            {% elif ad.ad_subtype == 'FESTIVAL' %}&#127873; Festival
-            {% elif ad.ad_subtype == 'SEASONAL_SALE' %}&#128197; Seasonal
-            {% else %}&#128204; Promo{% endif %}
+            {% if ad.ad_subtype == 'FLASH_SALE' %}⚡ Flash Sale
+            {% elif ad.ad_subtype == 'SUPER_SALE' %}🔥 Super Sale
+            {% elif ad.ad_subtype == 'HOT_WEEK' %}🔥 Hot Week
+            {% elif ad.ad_subtype == 'FESTIVAL' %}🎁 Festival
+            {% elif ad.ad_subtype == 'SEASONAL_SALE' %}📅 Seasonal
+            {% else %}🏷️ Promo{% endif %}
           </span>
           <p style="font-size: 0.875rem; font-weight: 700; color: var(--c-stone-800); margin: 0.375rem 0 0;">{{ ad.title }}</p>
           {% if ad.start_date and ad.end_date %}

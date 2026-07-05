@@ -281,12 +281,12 @@
         {% endif %}
         <div class="mp-promo-card-body">
           <span class="mp-promo-badge mp-promo-badge--{{ ad.ad_subtype|lower|replace('_sale','')|replace('_','') }}">
-            {% if ad.ad_subtype == 'FLASH_SALE' %}&#9889; Flash Sale
-            {% elif ad.ad_subtype == 'SUPER_SALE' %}&#128293; Super Sale
-            {% elif ad.ad_subtype == 'HOT_WEEK' %>&#128293; Hot Week
-            {% elif ad.ad_subtype == 'FESTIVAL' %>&#127873; Festival
-            {% elif ad.ad_subtype == 'SEASONAL_SALE' %>&#128197; Seasonal
-            {% else %}&#128204; Promo{% endif %}
+            {% if ad.ad_subtype == 'FLASH_SALE' %}⚡ Flash Sale
+            {% elif ad.ad_subtype == 'SUPER_SALE' %}🔥 Super Sale
+            {% elif ad.ad_subtype == 'HOT_WEEK' %}🔥 Hot Week
+            {% elif ad.ad_subtype == 'FESTIVAL' %}🎁 Festival
+            {% elif ad.ad_subtype == 'SEASONAL_SALE' %}📅 Seasonal
+            {% else %}🏷️ Promo{% endif %}
           </span>
           <p class="mp-promo-title">{{ ad.title }}</p>
           {% if ad.start_date and ad.end_date %}
