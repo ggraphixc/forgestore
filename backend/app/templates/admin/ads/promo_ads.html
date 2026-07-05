@@ -511,8 +511,13 @@
             </div>
 
             <div class="pa-form-group">
-                <label class="pa-form-label">Banner URL *</label>
-                <input type="url" id="banner_url" required class="pa-input" placeholder="https://example.com/banner.jpg">
+                <label class="pa-form-label">Banner Image *</label>
+                <input type="file" id="banner_file" accept="image/*" class="pa-input" style="padding:0.625rem;" onchange="handlePromoBannerUpload(this)">
+                <input type="hidden" id="banner_url" required>
+                <div id="banner-preview" style="display:none;margin-top:8px;">
+                    <img id="banner-preview-img" src="" alt="Preview" style="max-width:200px;max-height:120px;border-radius:8px;border:1px solid #e7e5e4;object-fit:cover;">
+                    <button type="button" onclick="clearPromoBanner()" style="margin-left:8px;padding:4px 8px;font-size:11px;color:#dc2626;background:none;border:1px solid #fecaca;border-radius:6px;cursor:pointer;">Remove</button>
+                </div>
             </div>
 
             <div class="pa-form-group">
@@ -547,6 +552,31 @@
 
 {% block scripts %}
 <script>
+async function handlePromoBannerUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const preview = document.getElementById('banner-preview');
+    const previewImg = document.getElementById('banner-preview-img');
+    const reader = new FileReader();
+    reader.onload = function(ev) { previewImg.src = ev.target.result; preview.style.display = ''; };
+    reader.readAsDataURL(file);
+    try {
+        const fd = new FormData();
+        fd.append('files', file);
+        const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.urls && data.urls.length) {
+            document.getElementById('banner_url').value = data.urls[0];
+        }
+    } catch(e) { alert('Upload failed'); }
+}
+
+function clearPromoBanner() {
+    document.getElementById('banner_url').value = '';
+    document.getElementById('banner_file').value = '';
+    document.getElementById('banner-preview').style.display = 'none';
+}
+
 function openModal() {
     document.getElementById('create-modal').classList.add('show');
 }

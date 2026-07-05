@@ -572,8 +572,13 @@
             </div>
 
             <div class="ra-form-group">
-                <label class="ra-form-label">Banner Image URL *</label>
-                <input type="url" id="promo-banner_url" required class="ra-input" placeholder="https://example.com/banner.jpg">
+                <label class="ra-form-label">Banner Image *</label>
+                <input type="file" id="promo-banner_file" accept="image/*" class="ra-input" style="padding:0.625rem;" onchange="handleRetailerBannerUpload(this)">
+                <input type="hidden" id="promo-banner_url" required>
+                <div id="promo-banner-preview" style="display:none;margin-top:8px;">
+                    <img id="promo-banner-preview-img" src="" alt="Preview" style="max-width:200px;max-height:120px;border-radius:8px;border:1px solid #e7e5e4;object-fit:cover;">
+                    <button type="button" onclick="clearRetailerBanner()" style="margin-left:8px;padding:4px 8px;font-size:11px;color:#dc2626;background:none;border:1px solid #fecaca;border-radius:6px;cursor:pointer;">Remove</button>
+                </div>
             </div>
 
             <div class="ra-form-group">
@@ -606,6 +611,31 @@
 </div>
 
 <script>
+async function handleRetailerBannerUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const preview = document.getElementById('promo-banner-preview');
+    const previewImg = document.getElementById('promo-banner-preview-img');
+    const reader = new FileReader();
+    reader.onload = function(ev) { previewImg.src = ev.target.result; preview.style.display = ''; };
+    reader.readAsDataURL(file);
+    try {
+        const fd = new FormData();
+        fd.append('files', file);
+        const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.urls && data.urls.length) {
+            document.getElementById('promo-banner_url').value = data.urls[0];
+        }
+    } catch(e) { alert('Upload failed'); }
+}
+
+function clearRetailerBanner() {
+    document.getElementById('promo-banner_url').value = '';
+    document.getElementById('promo-banner_file').value = '';
+    document.getElementById('promo-banner-preview').style.display = 'none';
+}
+
 document.querySelectorAll('input[name="ad_type"]').forEach(el => {
   el.addEventListener('change', function() {
     const productSel = document.getElementById('product-selection');

@@ -204,12 +204,7 @@
 let activeCampaignId = null;
 
 async function activateCampaign(campaignId) {
-  const bannerUrl = prompt('Optional: Paste a banner image URL or leave empty:', '');
-  try {
-    const res = await fetch(`/api/admin/ads/${campaignId}/activate`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ banner_url: bannerUrl || null }) });
-    const data = await res.json();
-    if (data.success) { location.reload(); } else { alert(data.detail || 'Failed to activate campaign'); }
-  } catch { alert('Network error'); }
+  assignBanner(campaignId);
 }
 
 async function expireCampaign(campaignId) {
