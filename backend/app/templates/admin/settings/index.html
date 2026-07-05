@@ -642,6 +642,19 @@
                             <textarea id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" rows="2" class="admin-settings-textarea admin-settings-input">{{ s.value }}</textarea>
                             {% elif s.type == 'number' %}
                             <input type="number" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="admin-settings-input mono">
+                            {% elif s.type == 'file' %}
+                            <div style="display:flex;flex-direction:column;gap:8px;width:100%;">
+                                {% if s.value %}
+                                <div id="file-preview-{{ s.key }}" style="display:flex;align-items:center;gap:8px;">
+                                    <img src="{{ s.value }}" alt="{{ s.label }}" style="max-width:80px;max-height:40px;border-radius:6px;border:1px solid #e7e5e4;object-fit:cover;">
+                                    <button type="button" onclick="clearSettingFile('{{ s.key }}')" style="padding:4px 8px;font-size:11px;color:#dc2626;background:none;border:1px solid #fecaca;border-radius:6px;cursor:pointer;">Remove</button>
+                                </div>
+                                {% else %}
+                                <div id="file-preview-{{ s.key }}" style="display:none;"></div>
+                                {% endif %}
+                                <input type="file" id="file-input-{{ s.key }}" accept="image/*" style="font-size:13px;" onchange="handleSettingFileUpload('{{ s.key }}', this)">
+                                <input type="hidden" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}">
+                            </div>
                             {% else %}
                             <input type="text" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="admin-settings-input">
                             {% endif %}
@@ -672,6 +685,35 @@ function togglePasswordVisibility(id, btn) {
     const closedEye = btn.querySelector('.eye-closed');
     if (openEye) openEye.style.display = isOpen ? '' : 'none';
     if (closedEye) closedEye.style.display = isOpen ? 'none' : '';
+}
+
+async function handleSettingFileUpload(key, input) {
+    const file = input.files[0];
+    if (!file) return;
+    const preview = document.getElementById('file-preview-' + key);
+    const hidden = document.getElementById('setting-' + key);
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        preview.innerHTML = '<img src="' + ev.target.result + '" alt="Preview" style="max-width:80px;max-height:40px;border-radius:6px;border:1px solid #e7e5e4;object-fit:cover;"> <button type="button" onclick="clearSettingFile(\'' + key + '\')" style="padding:4px 8px;font-size:11px;color:#dc2626;background:none;border:1px solid #fecaca;border-radius:6px;cursor:pointer;">Remove</button>';
+        preview.style.display = 'flex';
+    };
+    reader.readAsDataURL(file);
+    try {
+        const fd = new FormData();
+        fd.append('files', file);
+        const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.urls && data.urls.length) {
+            hidden.value = data.urls[0];
+        }
+    } catch(e) { alert('Upload failed'); }
+}
+
+function clearSettingFile(key) {
+    document.getElementById('setting-' + key).value = '';
+    document.getElementById('file-input-' + key).value = '';
+    document.getElementById('file-preview-' + key).innerHTML = '';
+    document.getElementById('file-preview-' + key).style.display = 'none';
 }
 
 function getSettingValue(el) {

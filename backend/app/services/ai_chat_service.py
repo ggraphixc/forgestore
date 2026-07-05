@@ -187,14 +187,16 @@ class AIChatService:
             return json.dumps({"user": "anonymous", "preferences": {}, "recent_orders": []})
 
     def _get_admin_context(self) -> str:
-        """Build admin-specific context (revenue, orders, issues)."""
+        """Build admin-specific context with full portal data."""
         from app.utils import utcnow
         from datetime import timedelta
 
         try:
             now = utcnow()
             thirty_days_ago = now - timedelta(days=30)
+            seven_days_ago = now - timedelta(days=7)
 
+            # ── Revenue & Orders ──
             total_revenue = self.db.query(func.coalesce(func.sum(Order.total_amount), 0)).filter(
                 Order.status.in_(["DELIVERED", "PAID"]),
                 Order.created_at >= thirty_days_ago,
@@ -209,25 +211,181 @@ class AIChatService:
             cancelled_orders = self.db.query(func.count(Order.id)).filter(
                 Order.status == "CANCELLED"
             ).scalar()
+            shipped_orders = self.db.query(func.count(Order.id)).filter(
+                Order.status == "SHIPPED"
+            ).scalar()
+            delivered_orders = self.db.query(func.count(Order.id)).filter(
+                Order.status == "DELIVERED"
+            ).scalar()
+            today_orders = self.db.query(func.count(Order.id)).filter(
+                Order.created_at >= now.replace(hour=0, minute=0, second=0, microsecond=0)
+            ).scalar()
 
+            # ── Products ──
+            total_products = self.db.query(func.count(Product.id)).scalar()
+            low_stock = self.db.query(func.count(Product.id)).filter(
+                Product.inventory > 0, Product.inventory < 10
+            ).scalar()
+            out_of_stock = self.db.query(func.count(Product.id)).filter(
+                Product.inventory == 0
+            ).scalar()
+            total_inventory = self.db.query(func.coalesce(func.sum(Product.inventory), 0)).scalar()
+            total_views = self.db.query(func.coalesce(func.sum(Product.views_count), 0)).scalar()
+            total_sold = self.db.query(func.coalesce(func.sum(Product.sold_count), 0)).scalar()
+
+            # ── Vendors / Retailers ──
             total_vendors = self.db.query(func.count(Retailer.id)).scalar()
             active_vendors = self.db.query(func.count(Retailer.id)).filter(
                 Retailer.status == "APPROVED"
             ).scalar()
-
-            low_stock = self.db.query(func.count(Product.id)).filter(
-                Product.inventory > 0, Product.inventory < 10
+            pending_vendors = self.db.query(func.count(Retailer.id)).filter(
+                Retailer.status == "PENDING"
             ).scalar()
 
+            # ── Customers ──
             total_customers = self.db.query(func.count(User.id)).scalar()
+            new_customers_30d = self.db.query(func.count(User.id)).filter(
+                User.created_at >= thirty_days_ago
+            ).scalar()
+            new_customers_today = self.db.query(func.count(User.id)).filter(
+                User.created_at >= now.replace(hour=0, minute=0, second=0, microsecond=0)
+            ).scalar()
+
+            # ── Newsletter Subscribers ──
+            try:
+                from app.models import NewsletterSubscriber
+                total_subscribers = self.db.query(func.count(NewsletterSubscriber.id)).scalar()
+                active_subscribers = self.db.query(func.count(NewsletterSubscriber.id)).filter(
+                    NewsletterSubscriber.status == "ACTIVE"
+                ).scalar()
+                new_subscribers_30d = self.db.query(func.count(NewsletterSubscriber.id)).filter(
+                    NewsletterSubscriber.created_at >= thirty_days_ago
+                ).scalar()
+                new_subscribers_today = self.db.query(func.count(NewsletterSubscriber.id)).filter(
+                    NewsletterSubscriber.created_at >= now.replace(hour=0, minute=0, second=0, microsecond=0)
+                ).scalar()
+            except Exception:
+                total_subscribers = active_subscribers = new_subscribers_30d = new_subscribers_today = 0
+
+            # ── Shipments / Logistics ──
+            try:
+                from app.models import Shipment, DeliveryAgent
+                total_shipments = self.db.query(func.count(Shipment.id)).scalar()
+                pending_shipments = self.db.query(func.count(Shipment.id)).filter(
+                    Shipment.status == "PENDING"
+                ).scalar()
+                in_transit_shipments = self.db.query(func.count(Shipment.id)).filter(
+                    Shipment.status == "IN_TRANSIT"
+                ).scalar()
+                delivered_shipments = self.db.query(func.count(Shipment.id)).filter(
+                    Shipment.status == "DELIVERED"
+                ).scalar()
+                total_drivers = self.db.query(func.count(DeliveryAgent.id)).scalar()
+                active_drivers = self.db.query(func.count(DeliveryAgent.id)).filter(
+                    DeliveryAgent.is_available == True
+                ).scalar()
+            except Exception:
+                total_shipments = pending_shipments = in_transit_shipments = delivered_shipments = 0
+                total_drivers = active_drivers = 0
+
+            # ── Ad Campaigns ──
+            try:
+                from app.models import AdCampaign, PromoAd
+                total_ad_campaigns = self.db.query(func.count(AdCampaign.id)).scalar()
+                active_ad_campaigns = self.db.query(func.count(AdCampaign.id)).filter(
+                    AdCampaign.status == "ACTIVE"
+                ).scalar()
+                total_promo_ads = self.db.query(func.count(PromoAd.id)).scalar()
+            except Exception:
+                total_ad_campaigns = active_ad_campaigns = total_promo_ads = 0
+
+            # ── Support Tickets ──
+            try:
+                from app.models import SupportTicket
+                total_tickets = self.db.query(func.count(SupportTicket.id)).scalar()
+                open_tickets = self.db.query(func.count(SupportTicket.id)).filter(
+                    SupportTicket.status.in_(["OPEN", "IN_PROGRESS"])
+                ).scalar()
+                resolved_tickets = self.db.query(func.count(SupportTicket.id)).filter(
+                    SupportTicket.status == "RESOLVED"
+                ).scalar()
+            except Exception:
+                total_tickets = open_tickets = resolved_tickets = 0
+
+            # ── Reviews ──
+            try:
+                from app.models import Review
+                total_reviews = self.db.query(func.count(Review.id)).scalar()
+                avg_rating = self.db.query(func.avg(Review.rating)).scalar()
+            except Exception:
+                total_reviews = 0
+                avg_rating = 0
+
+            # ── Categories ──
+            try:
+                from app.models import Category
+                total_categories = self.db.query(func.count(Category.id)).scalar()
+            except Exception:
+                total_categories = 0
 
             return json.dumps({
                 "period": "last_30_days",
                 "revenue": {"total": float(total_revenue or 0), "currency": "NGN"},
-                "orders": {"total": total_orders or 0, "pending": pending_orders or 0, "cancelled": cancelled_orders or 0},
-                "vendors": {"total": total_vendors or 0, "active": active_vendors or 0},
-                "customers": {"total": total_customers or 0},
-                "low_stock_products": low_stock or 0,
+                "orders": {
+                    "total_30d": total_orders or 0,
+                    "today": today_orders or 0,
+                    "pending": pending_orders or 0,
+                    "shipped": shipped_orders or 0,
+                    "delivered": delivered_orders or 0,
+                    "cancelled": cancelled_orders or 0,
+                },
+                "products": {
+                    "total": total_products or 0,
+                    "low_stock": low_stock or 0,
+                    "out_of_stock": out_of_stock or 0,
+                    "total_inventory": total_inventory or 0,
+                    "total_views": total_views or 0,
+                    "total_sold": total_sold or 0,
+                },
+                "vendors": {
+                    "total": total_vendors or 0,
+                    "active": active_vendors or 0,
+                    "pending": pending_vendors or 0,
+                },
+                "customers": {
+                    "total": total_customers or 0,
+                    "new_30d": new_customers_30d or 0,
+                    "new_today": new_customers_today or 0,
+                },
+                "newsletter": {
+                    "total_subscribers": total_subscribers or 0,
+                    "active": active_subscribers or 0,
+                    "new_30d": new_subscribers_30d or 0,
+                    "new_today": new_subscribers_today or 0,
+                },
+                "logistics": {
+                    "total_shipments": total_shipments or 0,
+                    "pending": pending_shipments or 0,
+                    "in_transit": in_transit_shipments or 0,
+                    "delivered": delivered_shipments or 0,
+                    "total_drivers": total_drivers or 0,
+                    "active_drivers": active_drivers or 0,
+                },
+                "ads": {
+                    "total_campaigns": total_ad_campaigns or 0,
+                    "active_campaigns": active_ad_campaigns or 0,
+                    "total_promo_ads": total_promo_ads or 0,
+                },
+                "support": {
+                    "total_tickets": total_tickets or 0,
+                    "open": open_tickets or 0,
+                    "resolved": resolved_tickets or 0,
+                },
+                "reviews": {
+                    "total": total_reviews or 0,
+                    "average_rating": round(float(avg_rating or 0), 1),
+                },
+                "categories": total_categories or 0,
             }, default=str)
         except Exception as e:
             logger.error(f"Admin context error: {e}")
@@ -253,10 +411,15 @@ CRITICAL RULES:
 
 Your capabilities:
 - Analyze sales trends, revenue, and order patterns
-- Identify issues (disputes, low stock, pending orders)
+- Identify issues (disputes, low stock, pending orders, open support tickets)
 - Provide business insights and recommendations
 - Answer questions about vendors, customers, and operations
 - Summarize performance metrics
+- Track newsletter subscribers and marketing campaigns
+- Monitor shipments, drivers, and logistics status
+- Report on ad campaigns and promo ads
+- Review support tickets and customer feedback
+- Check product reviews and ratings
 
 Business Data (Last 30 Days):
 {admin_ctx}
