@@ -774,17 +774,20 @@ async def post_product_chat_message(
             ext = upload_file.filename.rsplit(".", 1)[-1].lower() if "." in upload_file.filename else "jpg"
             if ext not in ("jpg", "jpeg", "png", "gif", "webp"):
                 raise HTTPException(status_code=400, detail="Image must be jpg, png, gif, or webp")
-            upload_dir = os.path.join("app", "static", "uploads", "chat")
-            os.makedirs(upload_dir, exist_ok=True)
-            raw = await upload_file.read()
             if len(raw) > 5 * 1024 * 1024:
                 raise HTTPException(status_code=400, detail="Image must be under 5MB")
-            compressed, ext = compress_image(raw)
-            unique_name = f"chat-{int(utcnow().timestamp())}-{uuid.uuid4().hex[:8]}.{ext}"
-            file_path = os.path.join(upload_dir, unique_name)
-            with open(file_path, "wb") as f:
-                f.write(compressed)
-            image_url = f"/static/uploads/chat/{unique_name}"
+            from app.core.cloudinary_upload import is_cloudinary_configured, upload_to_cloudinary
+            if is_cloudinary_configured():
+                image_url = upload_to_cloudinary(raw, folder="forgestore/chat")
+            else:
+                upload_dir = os.path.join("app", "static", "uploads", "chat")
+                os.makedirs(upload_dir, exist_ok=True)
+                compressed, ext = compress_image(raw)
+                unique_name = f"chat-{int(utcnow().timestamp())}-{uuid.uuid4().hex[:8]}.{ext}"
+                file_path = os.path.join(upload_dir, unique_name)
+                with open(file_path, "wb") as f:
+                    f.write(compressed)
+                image_url = f"/static/uploads/chat/{unique_name}"
     else:
         data = await request.json()
         content = (data.get("content") or "").strip()

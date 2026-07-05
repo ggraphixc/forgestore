@@ -29,3 +29,4 @@ aiosmtplib>=3.0.0
 
 # --- Image Processing ---
 Pillow>=10.0.0
+cloudinary>=1.45.0

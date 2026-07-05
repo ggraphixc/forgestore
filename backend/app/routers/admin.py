@@ -171,10 +171,18 @@ async def product_create(
 
     # Handle uploaded files, if any
     if files:
-        upload_dir = os.path.join("app", "static", "uploads", "products")
-        os.makedirs(upload_dir, exist_ok=True)
+        from app.core.cloudinary_upload import is_cloudinary_configured, upload_to_cloudinary
+        use_cloudinary = is_cloudinary_configured()
+        if not use_cloudinary:
+            upload_dir = os.path.join("app", "static", "uploads", "products")
+            os.makedirs(upload_dir, exist_ok=True)
         for file in files:
             raw = await file.read()
+            if use_cloudinary:
+                url = upload_to_cloudinary(raw, folder="forgestore/products")
+                if url:
+                    images.append(url)
+                    continue
             compressed, ext = compress_image(raw)
             unique_name = f"{int(utcnow().timestamp())}-{uuid.uuid4().hex[:8]}.{ext}"
             file_path = os.path.join(upload_dir, unique_name)
