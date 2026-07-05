@@ -212,9 +212,7 @@ class AIChatService:
                 Product.inventory > 0, Product.inventory < 10
             ).scalar()
 
-            total_customers = self.db.query(func.count(User.id)).filter(
-                User.role == "customer"
-            ).scalar()
+            total_customers = self.db.query(func.count(User.id)).scalar()
 
             return json.dumps({
                 "period": "last_30_days",
@@ -383,7 +381,8 @@ Guidelines:
             }
 
         except Exception as e:
-            logger.error(f"AI chat error: {type(e).__name__}: {e}")
+            import traceback
+            logger.error(f"AI chat error: {type(e).__name__}: {e}\n{traceback.format_exc()}")
             conv_id = conversation.id if 'conversation' in dir() and conversation else None
             return {
                 "conversation_id": conv_id,

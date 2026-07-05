@@ -63,7 +63,8 @@ def ai_assistant_chat(
         service = AIChatService(db)
         return service.chat(body.session_id, body.message, user_id, image_url=body.image_url)
     except Exception as e:
-        logger.error(f"AI chat endpoint error: {type(e).__name__}: {e}")
+        import traceback
+        logger.error(f"AI chat endpoint error: {type(e).__name__}: {e}\n{traceback.format_exc()}")
         return {
             "conversation_id": None,
             "response": "I apologize, but I'm having trouble right now. Please try again in a moment.",
