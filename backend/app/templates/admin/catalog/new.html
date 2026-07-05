@@ -336,6 +336,57 @@
     .admin-card { padding: 16px; }
     .admin-page-header h1 { font-size: 20px; }
   }
+
+  /* Product Preview Card */
+  .admin-preview-card {
+    position: relative;
+    background: #fff;
+    border: 1px solid #e7e5e4;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    max-width: 260px;
+  }
+  .admin-preview-img {
+    aspect-ratio: 1;
+    background: #f8f8f8;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .admin-preview-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .admin-preview-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a8a29e;
+  }
+  .admin-preview-placeholder svg { width: 3rem; height: 3rem; }
+  .admin-preview-body { padding: 0.625rem; display: flex; flex-direction: column; gap: 0.1875rem; }
+  .admin-preview-name {
+    font-size: 0.75rem; font-weight: 500; color: #222;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .admin-preview-brand { font-size: 0.6875rem; color: #666; }
+  .admin-preview-prices { display: flex; align-items: baseline; gap: 0.375rem; flex-wrap: wrap; }
+  .admin-preview-price { font-size: 1rem; font-weight: 800; color: #f43f5e; }
+  .admin-preview-original { font-size: 0.75rem; color: #999; text-decoration: line-through; }
+  .admin-preview-discount {
+    display: inline-flex; align-self: flex-start;
+    background: #f43f5e; color: #fff; font-size: 0.5625rem; font-weight: 700;
+    padding: 0.1875rem 0.375rem; border-radius: 0.25rem; margin-top: 0.25rem;
+  }
+  .admin-preview-cart {
+    position: absolute; bottom: 0.625rem; right: 0.625rem;
+    width: 36px; height: 36px; border-radius: 50%; background: #fff;
+    border: 1.5px solid #e5e7eb; display: flex; align-items: center;
+    justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .admin-preview-cart svg { width: 1rem; height: 1rem; color: #333; }
 </style>
 
 <div class="admin-page">
@@ -369,29 +420,29 @@
                 <input type="hidden" id="images-input" name="images" value="[]">
             </div>
 
+            <!-- Live Preview Card -->
             <div class="admin-card">
                 <div class="admin-card-title">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <h2>Basic Information</h2>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    <h2>Card Preview</h2>
                 </div>
-                <div class="admin-stack" style="gap:16px;">
-                    <div class="admin-form-group">
-                        <label class="admin-form-label">Product Name</label>
-                        <input type="text" name="name" required class="admin-form-input" placeholder="e.g. Hand-Carved Oak Bowl">
-                    </div>
-                    <div class="admin-grid-2">
-                        <div class="admin-form-group">
-                            <label class="admin-form-label">Slug</label>
-                            <input type="text" name="slug" required class="admin-form-input" placeholder="hand-carved-oak-bowl">
-                        </div>
-                        <div class="admin-form-group">
-                            <label class="admin-form-label">Brand</label>
-                            <input type="text" name="brand" class="admin-form-input" placeholder="Optional">
+                <div class="admin-preview-card" id="preview-card">
+                    <div class="admin-preview-img" id="preview-img">
+                        <div class="admin-preview-placeholder">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         </div>
                     </div>
-                    <div class="admin-form-group">
-                        <label class="admin-form-label">Description</label>
-                        <textarea name="description" rows="5" class="admin-form-textarea" placeholder="Describe your product..."></textarea>
+                    <div class="admin-preview-body">
+                        <span class="admin-preview-name" id="preview-name">Product Name</span>
+                        <span class="admin-preview-brand" id="preview-brand"></span>
+                        <div class="admin-preview-prices">
+                            <span class="admin-preview-price" id="preview-price">₦0</span>
+                            <span class="admin-preview-original" id="preview-original" style="display:none;"></span>
+                        </div>
+                        <div class="admin-preview-discount" id="preview-discount" style="display:none;">-0%</div>
+                    </div>
+                    <div class="admin-preview-cart">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
                     </div>
                 </div>
             </div>
@@ -402,17 +453,46 @@
         <div class="admin-stack">
             <div class="admin-card">
                 <div class="admin-card-title">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <h2>Basic Information</h2>
+                </div>
+                <div class="admin-stack" style="gap:16px;">
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Product Name</label>
+                        <input type="text" name="name" required class="admin-form-input" placeholder="e.g. Hand-Carved Oak Bowl" id="input-name">
+                    </div>
+                    <div class="admin-grid-2">
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Slug</label>
+                            <input type="text" name="slug" required class="admin-form-input" placeholder="hand-carved-oak-bowl" id="input-slug">
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Brand</label>
+                            <input type="text" name="brand" class="admin-form-input" placeholder="Optional" id="input-brand">
+                        </div>
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Description</label>
+                        <textarea name="description" rows="4" class="admin-form-textarea" placeholder="Describe your product..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <div class="admin-card-title">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <h2>Pricing &amp; Stock</h2>
                 </div>
                 <div class="admin-stack" style="gap:16px;">
-                    <div class="admin-form-group">
-                        <label class="admin-form-label">Price (₦)</label>
-                        <input type="number" name="price" step="0.01" min="0" required class="admin-form-input" placeholder="0.00">
-                    </div>
-                    <div class="admin-form-group">
-                        <label class="admin-form-label">Discount Price (₦)</label>
-                        <input type="number" name="discount_price" step="0.01" min="0" class="admin-form-input" placeholder="Optional">
+                    <div class="admin-grid-2">
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Price (₦)</label>
+                            <input type="number" name="price" step="0.01" min="0" required class="admin-form-input" placeholder="0.00" id="input-price">
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Discount Price (₦)</label>
+                            <input type="number" name="discount_price" step="0.01" min="0" class="admin-form-input" placeholder="Optional" id="input-discount">
+                        </div>
                     </div>
                     <div class="admin-form-group">
                         <label class="admin-form-label">Inventory</label>
@@ -474,6 +554,42 @@
 </div>
 
 <script>
+// Live preview update
+function updatePreview() {
+    const name = document.getElementById('input-name').value || 'Product Name';
+    const brand = document.getElementById('input-brand').value;
+    const price = parseFloat(document.getElementById('input-price').value) || 0;
+    const discount = parseFloat(document.getElementById('input-discount').value) || 0;
+
+    document.getElementById('preview-name').textContent = name;
+    document.getElementById('preview-brand').textContent = brand ? 'Brand: ' + brand : '';
+    document.getElementById('preview-price').textContent = '₦' + price.toLocaleString();
+
+    if (discount && discount < price) {
+        document.getElementById('preview-original').textContent = '₦' + price.toLocaleString();
+        document.getElementById('preview-original').style.display = '';
+        const pct = Math.round((1 - discount / price) * 100);
+        document.getElementById('preview-discount').textContent = '-' + pct + '%';
+        document.getElementById('preview-discount').style.display = '';
+        document.getElementById('preview-price').textContent = '₦' + discount.toLocaleString();
+    } else {
+        document.getElementById('preview-original').style.display = 'none';
+        document.getElementById('preview-discount').style.display = 'none';
+    }
+}
+
+// Auto-slug from name
+document.getElementById('input-name').addEventListener('input', function() {
+    const slug = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    document.getElementById('input-slug').value = slug;
+    updatePreview();
+});
+
+// Live preview bindings
+['input-name', 'input-brand', 'input-price', 'input-discount'].forEach(function(id) {
+    document.getElementById(id).addEventListener('input', updatePreview);
+});
+
 document.getElementById('product-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button[type="submit"]');
@@ -536,6 +652,11 @@ document.getElementById('image-input').addEventListener('change', async (e) => {
             const existing = JSON.parse(hiddenInput.value || '[]');
             existing.push(...data.urls);
             hiddenInput.value = JSON.stringify(existing);
+            // Update preview card image
+            if (existing.length > 0) {
+                const previewImg = document.getElementById('preview-img');
+                previewImg.innerHTML = '<img src="' + existing[0] + '" alt="Preview">';
+            }
         }
     } catch (err) {
         showToast('Upload failed', 'error');

@@ -43,28 +43,34 @@
   .ws-hero-stats strong { color: #fff; font-weight: 600; }
   .ws-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
   .ws-section-title { font-size: 1.25rem; font-weight: 700; color: var(--ws-stone-900); }
-  .ws-grid-products { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-  @media (min-width: 768px) { .ws-grid-products { grid-template-columns: repeat(3, 1fr); gap: 1.5rem; } }
+  .ws-grid-products { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+  @media (min-width: 768px) { .ws-grid-products { grid-template-columns: repeat(3, 1fr); gap: 1rem; } }
   @media (min-width: 1024px) { .ws-grid-products { grid-template-columns: repeat(4, 1fr); } }
-  .ws-product { position: relative; background: #fff; border: 1px solid var(--ws-stone-200); border-radius: var(--ws-radius); overflow: hidden; transition: border-color var(--ws-transition), box-shadow var(--ws-transition); }
+  .ws-product { position: relative; background: #fff; border: 1px solid var(--ws-stone-200); border-radius: 0.75rem; overflow: hidden; transition: border-color var(--ws-transition), box-shadow var(--ws-transition); }
   .ws-product:hover { border-color: var(--ws-amber-300); box-shadow: var(--ws-shadow-lg); }
   .ws-product a { text-decoration: none; color: inherit; display: block; }
-  .ws-product-img { aspect-ratio: 3/4; overflow: hidden; background: var(--ws-stone-50); position: relative; }
+  .ws-product-img { aspect-ratio: 1; overflow: hidden; background: #f8f8f8; position: relative; }
   .ws-product-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s cubic-bezier(.4,0,.2,1); }
-  .ws-product:hover .ws-product-img img { transform: scale(1.1); }
+  .ws-product:hover .ws-product-img img { transform: scale(1.05); }
   .ws-product-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--ws-stone-300); }
   .ws-product-placeholder svg { width: 48px; height: 48px; }
-  .ws-sale-badge { position: absolute; top: .75rem; left: .75rem; background: #ef4444; color: #fff; font-size: .75rem; font-weight: 700; padding: .25rem .625rem; border-radius: 999px; }
-  .ws-wishlist-btn { position: absolute; top: .75rem; right: .75rem; z-index: 10; width: 32px; height: 32px; background: rgba(255,255,255,.8); backdrop-filter: blur(4px); border-radius: 50%; box-shadow: var(--ws-shadow-lg); display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: transform var(--ws-transition), opacity var(--ws-transition); }
+  .ws-sale-badge { position: absolute; top: 0; left: 0; background: #f43f5e; color: #fff; font-size: 0.625rem; font-weight: 700; padding: 0.1875rem 0.5rem; border-radius: 0 0 0.5rem 0; }
+  .ws-wishlist-btn { position: absolute; top: 0.5rem; right: 0.5rem; z-index: 10; width: 28px; height: 28px; background: rgba(255,255,255,.85); backdrop-filter: blur(4px); border-radius: 50%; box-shadow: var(--ws-shadow-lg); display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: transform var(--ws-transition), opacity var(--ws-transition); }
   .ws-wishlist-btn:hover { transform: scale(1.1); }
   @media (min-width: 768px) { .ws-wishlist-btn { opacity: 0; } .ws-product:hover .ws-wishlist-btn { opacity: 1; } }
-  .ws-wishlist-btn svg { width: 16px; height: 16px; color: var(--ws-stone-400); }
-  .ws-product-info { padding: .75rem; }
-  @media (min-width: 640px) { .ws-product-info { padding: 1rem; } }
-  .ws-product-name { font-size: .75rem; font-weight: 600; color: var(--ws-stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color var(--ws-transition); }
-  @media (min-width: 640px) { .ws-product-name { font-size: .875rem; } }
+  .ws-wishlist-btn svg { width: 14px; height: 14px; color: var(--ws-stone-400); }
+  .ws-product-info { padding: 0.625rem; display: flex; flex-direction: column; gap: 0.1875rem; }
+  @media (min-width: 640px) { .ws-product-info { padding: 0.75rem; } }
+  .ws-product-name { font-size: 0.75rem; font-weight: 500; color: #222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color var(--ws-transition); }
+  @media (min-width: 640px) { .ws-product-name { font-size: 0.8125rem; } }
   .ws-product:hover .ws-product-name { color: var(--ws-amber-700); }
-  .ws-product-price { font-size: .875rem; font-weight: 700; color: var(--ws-amber-600); font-family: monospace; margin-top: .25rem; display: block; }
+  .ws-product-price-row { display: flex; align-items: baseline; gap: 0.375rem; flex-wrap: wrap; margin-top: 0.25rem; }
+  .ws-product-price { font-size: 1rem; font-weight: 800; color: #f43f5e; font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
+  .ws-product-price-original { font-size: 0.75rem; color: #999; text-decoration: line-through; }
+  .ws-product-add-btn { position: absolute; bottom: 0.625rem; right: 0.625rem; width: 34px; height: 34px; border-radius: 50%; background: #fff; border: 1.5px solid #e5e7eb; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.2s; }
+  .ws-product-add-btn:hover { background: #f43f5e; border-color: #f43f5e; }
+  .ws-product-add-btn:hover svg { color: #fff; }
+  .ws-product-add-btn svg { width: 1rem; height: 1rem; color: #333; }
   .ws-empty { text-align: center; padding: 4rem 1rem; color: var(--ws-stone-500); }
   .dark {
     .ws-section-title { color: var(--ws-stone-100); }
@@ -77,6 +83,8 @@
     .ws-wishlist-btn { background: rgba(41,37,36,.8); }
     .ws-wishlist-btn svg { color: var(--ws-stone-400); }
     .ws-empty { color: var(--ws-stone-400); }
+    .ws-product-add-btn { background: var(--ws-stone-700); border-color: var(--ws-stone-600); }
+    .ws-product-add-btn svg { color: var(--ws-stone-200); }
   }
 </style>
 
@@ -131,6 +139,9 @@
       </button>
       <a href="/shop/products/{{ p.slug }}">
         <div class="ws-product-img">
+          {% if p.discount_price and p.discount_price < p.price %}
+          <span class="ws-sale-badge">-{{ ((1 - p.discount_price / p.price) * 100)|int }}%</span>
+          {% endif %}
           {% if p.images and p.images|length > 0 %}
           <img loading="lazy" src="{{ p.images[0] }}" alt="{{ p.name }}">
           {% else %}
@@ -138,15 +149,20 @@
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
           </div>
           {% endif %}
-          {% if p.discount_price and p.discount_price < p.price %}
-          <span class="ws-sale-badge">Sale</span>
-          {% endif %}
         </div>
         <div class="ws-product-info">
           <h3 class="ws-product-name">{{ p.name }}</h3>
-          <span class="ws-product-price">{{ format_price(p.price, currency) }}</span>
+          <div class="ws-product-price-row">
+            <span class="ws-product-price">₦{{ "{:,.0f}".format(p.discount_price if p.discount_price and p.discount_price < p.price else p.price) }}</span>
+            {% if p.discount_price and p.discount_price < p.price %}
+            <span class="ws-product-price-original">₦{{ "{:,.0f}".format(p.price) }}</span>
+            {% endif %}
+          </div>
         </div>
       </a>
+      <button onclick="event.preventDefault(); event.stopPropagation(); addToCart('{{ p.id }}', 1)" class="ws-product-add-btn" aria-label="Add to cart">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+      </button>
     </div>
     {% endfor %}
   </div>

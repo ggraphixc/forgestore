@@ -309,6 +309,46 @@
     .admin-card { padding: 16px; }
     .admin-page-header h1 { font-size: 20px; }
   }
+
+  /* Edit Form Grid */
+  .admin-edit-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  @media (min-width: 1024px) {
+    .admin-edit-grid { grid-template-columns: 2fr 1fr; }
+  }
+
+  /* Product Preview Card */
+  .admin-preview-card {
+    position: relative;
+    background: #fff;
+    border: 1px solid #e7e5e4;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    max-width: 260px;
+  }
+  .admin-preview-img {
+    aspect-ratio: 1;
+    background: #f8f8f8;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .admin-preview-img img { width: 100%; height: 100%; object-fit: cover; }
+  .admin-preview-placeholder { display: flex; align-items: center; justify-content: center; color: #a8a29e; }
+  .admin-preview-placeholder svg { width: 3rem; height: 3rem; }
+  .admin-preview-body { padding: 0.625rem; display: flex; flex-direction: column; gap: 0.1875rem; }
+  .admin-preview-name { font-size: 0.75rem; font-weight: 500; color: #222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .admin-preview-brand { font-size: 0.6875rem; color: #666; }
+  .admin-preview-prices { display: flex; align-items: baseline; gap: 0.375rem; flex-wrap: wrap; }
+  .admin-preview-price { font-size: 1rem; font-weight: 800; color: #f43f5e; }
+  .admin-preview-original { font-size: 0.75rem; color: #999; text-decoration: line-through; }
+  .admin-preview-discount { display: inline-flex; align-self: flex-start; background: #f43f5e; color: #fff; font-size: 0.5625rem; font-weight: 700; padding: 0.1875rem 0.375rem; border-radius: 0.25rem; margin-top: 0.25rem; }
+  .admin-preview-cart { position: absolute; bottom: 0.625rem; right: 0.625rem; width: 36px; height: 36px; border-radius: 50%; background: #fff; border: 1.5px solid #e5e7eb; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .admin-preview-cart svg { width: 1rem; height: 1rem; color: #333; }
 </style>
 
 <div class="admin-page">
@@ -326,102 +366,180 @@
     </div>
 
     <div class="admin-card">
-        <form id="edit-product-form" class="admin-stack" onsubmit="event.preventDefault(); submitEditProduct(this)">
-            <input type="hidden" name="id" value="{{ product.id }}">
+        <form id="edit-product-form" class="admin-edit-grid" onsubmit="event.preventDefault(); submitEditProduct(this)">
+            <div class="admin-stack">
+                <input type="hidden" name="id" value="{{ product.id }}">
 
-            <div class="admin-form-group">
-                <label class="admin-form-label" for="name">Product Name</label>
-                <input id="name" name="name" value="{{ product.name }}" required class="admin-form-input">
-            </div>
-
-            <div class="admin-form-group">
-                <label class="admin-form-label" for="description">Description</label>
-                <textarea id="description" name="description" rows="4" class="admin-form-textarea">{{ product.description or '' }}</textarea>
-            </div>
-
-            <div class="admin-grid-3">
                 <div class="admin-form-group">
-                    <label class="admin-form-label" for="price">Price (₦)</label>
-                    <input id="price" name="price" type="number" step="0.01" value="{{ product.price }}" required class="admin-form-input">
+                    <label class="admin-form-label" for="name">Product Name</label>
+                    <input id="name" name="name" value="{{ product.name }}" required class="admin-form-input" oninput="updateEditPreview()">
                 </div>
-                <div class="admin-form-group">
-                    <label class="admin-form-label" for="discount_price">Discount Price (₦)</label>
-                    <input id="discount_price" name="discount_price" type="number" step="0.01" value="{{ product.discount_price or '' }}" class="admin-form-input" placeholder="Optional">
-                </div>
-                <div class="admin-form-group">
-                    <label class="admin-form-label" for="inventory">Stock</label>
-                    <input id="inventory" name="inventory" type="number" value="{{ product.inventory or 0 }}" class="admin-form-input">
-                </div>
-            </div>
 
-            <div class="admin-grid-2">
                 <div class="admin-form-group">
-                    <label class="admin-form-label">Category</label>
-                    <select name="category_id" class="admin-form-select">
-                        <option value="">None</option>
-                        {% for cat in categories %}
-                        <option value="{{ cat.id }}" {% if product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                    <label class="admin-form-label" for="description">Description</label>
+                    <textarea id="description" name="description" rows="3" class="admin-form-textarea">{{ product.description or '' }}</textarea>
+                </div>
+
+                <div class="admin-grid-3">
+                    <div class="admin-form-group">
+                        <label class="admin-form-label" for="price">Price (₦)</label>
+                        <input id="price" name="price" type="number" step="0.01" value="{{ product.price }}" required class="admin-form-input" oninput="updateEditPreview()">
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-form-label" for="discount_price">Discount Price (₦)</label>
+                        <input id="discount_price" name="discount_price" type="number" step="0.01" value="{{ product.discount_price or '' }}" class="admin-form-input" placeholder="Optional" oninput="updateEditPreview()">
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-form-label" for="inventory">Stock</label>
+                        <input id="inventory" name="inventory" type="number" value="{{ product.inventory or 0 }}" class="admin-form-input">
+                    </div>
+                </div>
+
+                <div class="admin-grid-2">
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Category</label>
+                        <select name="category_id" class="admin-form-select">
+                            <option value="">None</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Retailer</label>
+                        <select name="retailer_id" class="admin-form-select">
+                            <option value="">None</option>
+                            {% for r in retailers %}
+                            <option value="{{ r.id }}" {% if product.retailer_id == r.id %}selected{% endif %}>{{ r.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Flags</label>
+                    <div style="display:flex;flex-wrap:wrap;gap:24px;">
+                        {% for flag in [('is_flagship', 'Flagship'), ('is_new_arrival', 'New Arrival')] %}
+                        <label class="admin-checkbox-row">
+                            <input type="checkbox" name="{{ flag[0] }}" value="1" {% if product[flag[0]] %}checked{% endif %}>
+                            <span>{{ flag[1] }}</span>
+                        </label>
                         {% endfor %}
-                    </select>
+                    </div>
                 </div>
+
                 <div class="admin-form-group">
-                    <label class="admin-form-label">Retailer</label>
-                    <select name="retailer_id" class="admin-form-select">
-                        <option value="">None</option>
-                        {% for r in retailers %}
-                        <option value="{{ r.id }}" {% if product.retailer_id == r.id %}selected{% endif %}>{{ r.name }}</option>
-                        {% endfor %}
-                    </select>
+                    <label class="admin-form-label" for="brand">Brand</label>
+                    <input id="brand" name="brand" value="{{ product.brand or '' }}" class="admin-form-input" placeholder="e.g. Artisan Crafts Co." oninput="updateEditPreview()">
+                </div>
+
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="image-input">Product Images</label>
+                    <div class="admin-dropzone" onclick="document.getElementById('image-input').click()">
+                        <input type="file" id="image-input" name="image_files" multiple accept="image/*" class="hidden" style="display:none;">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <p style="font-size:14px;font-weight:500;color:var(--stone-700);margin:0;">Click to upload images</p>
+                        <p style="font-size:12px;color:var(--stone-400);margin:4px 0 0;">PNG, JPG up to 5MB</p>
+                    </div>
+                    <div id="image-preview" class="admin-preview-list">
+                        {% if product.images %}
+                            {% for img in product.images %}
+                            <img src="{{ img }}" alt="{{ product.name }}">
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <input type="hidden" id="images-input" name="images" value="{% if product.images %}{{ product.images|join('\n') }}{% endif %}">
+                </div>
+
+                <div class="admin-btn-group">
+                    <button type="submit" class="admin-btn admin-btn-primary">
+                        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Save Changes
+                    </button>
+                    <a href="/admin/catalog" class="admin-btn admin-btn-ghost">Cancel</a>
                 </div>
             </div>
 
-            <div class="admin-form-group">
-                <label class="admin-form-label">Flags</label>
-                <div style="display:flex;flex-wrap:wrap;gap:24px;">
-                    {% for flag in [('is_flagship', 'Flagship'), ('is_new_arrival', 'New Arrival')] %}
-                    <label class="admin-checkbox-row">
-                        <input type="checkbox" name="{{ flag[0] }}" value="1" {% if product[flag[0]] %}checked{% endif %}>
-                        <span>{{ flag[1] }}</span>
-                    </label>
-                    {% endfor %}
+            <!-- Live Preview -->
+            <div class="admin-stack">
+                <div class="admin-card" style="padding:16px;">
+                    <div class="admin-card-title">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <h2>Card Preview</h2>
+                    </div>
+                    <div class="admin-preview-card">
+                        <div class="admin-preview-img" id="preview-img">
+                            {% if product.images %}
+                            <img src="{{ product.images[0] }}" alt="{{ product.name }}">
+                            {% else %}
+                            <div class="admin-preview-placeholder">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="admin-preview-body">
+                            <span class="admin-preview-name" id="preview-name">{{ product.name }}</span>
+                            <span class="admin-preview-brand" id="preview-brand">{% if product.brand %}Brand: {{ product.brand }}{% endif %}</span>
+                            <div class="admin-preview-prices">
+                                <span class="admin-preview-price" id="preview-price">₦{{ "{:,.0f}".format(product.discount_price if product.discount_price and product.discount_price < product.price else product.price) }}</span>
+                                {% if product.discount_price and product.discount_price < product.price %}
+                                <span class="admin-preview-original" id="preview-original">₦{{ "{:,.0f}".format(product.price) }}</span>
+                                {% else %}
+                                <span class="admin-preview-original" id="preview-original" style="display:none;"></span>
+                                {% endif %}
+                            </div>
+                            {% if product.discount_price and product.discount_price < product.price %}
+                            <div class="admin-preview-discount" id="preview-discount">-{{ ((1 - product.discount_price / product.price) * 100)|int }}%</div>
+                            {% else %}
+                            <div class="admin-preview-discount" id="preview-discount" style="display:none;"></div>
+                            {% endif %}
+                        </div>
+                        <div class="admin-preview-cart">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+                        </div>
+                    </div>
                 </div>
-            </div>
-
-            <div class="admin-form-group">
-                <label class="admin-form-label" for="brand">Brand</label>
-                <input id="brand" name="brand" value="{{ product.brand or '' }}" class="admin-form-input" placeholder="e.g. Artisan Crafts Co.">
-            </div>
-
-            <div class="admin-form-group">
-                <label class="admin-form-label" for="image-input">Product Images</label>
-                <div class="admin-dropzone" onclick="document.getElementById('image-input').click()">
-                    <input type="file" id="image-input" name="image_files" multiple accept="image/*" class="hidden" style="display:none;">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    <p style="font-size:14px;font-weight:500;color:var(--stone-700);margin:0;">Click to upload images</p>
-                    <p style="font-size:12px;color:var(--stone-400);margin:4px 0 0;">PNG, JPG up to 5MB</p>
-                </div>
-                <div id="image-preview" class="admin-preview-list">
-                    {% if product.images %}
-                        {% for img in product.images %}
-                        <img src="{{ img }}" alt="{{ product.name }}">
-                        {% endfor %}
-                    {% endif %}
-                </div>
-                <input type="hidden" id="images-input" name="images" value="{% if product.images %}{{ product.images|join('\n') }}{% endif %}">
-            </div>
-
-            <div class="admin-btn-group">
-                <button type="submit" class="admin-btn admin-btn-primary">
-                    <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    Save Changes
-                </button>
-                <a href="/admin/catalog" class="admin-btn admin-btn-ghost">Cancel</a>
             </div>
         </form>
     </div>
 </div>
 
 <script>
+function updateEditPreview() {
+    const nameEl = document.getElementById('name');
+    const brandEl = document.getElementById('brand');
+    const priceEl = document.getElementById('price');
+    const discountEl = document.getElementById('discount_price');
+    const name = nameEl ? nameEl.value : '';
+    const brand = brandEl ? brandEl.value : '';
+    const price = parseFloat(priceEl.value) || 0;
+    const discount = parseFloat(discountEl.value) || 0;
+    const hasDiscount = discount > 0 && discount < price;
+
+    const prevName = document.getElementById('preview-name');
+    const prevBrand = document.getElementById('preview-brand');
+    const prevPrice = document.getElementById('preview-price');
+    const prevOriginal = document.getElementById('preview-original');
+    const prevDiscount = document.getElementById('preview-discount');
+
+    if (prevName) prevName.textContent = name || 'Product Name';
+    if (prevBrand) prevBrand.textContent = brand ? 'Brand: ' + brand : '';
+    if (prevPrice) prevPrice.textContent = '₦' + (hasDiscount ? discount.toLocaleString('en-NG', {minimumFractionDigits: 0, maximumFractionDigits: 0}) : price.toLocaleString('en-NG', {minimumFractionDigits: 0, maximumFractionDigits: 0}));
+    if (prevOriginal) {
+        prevOriginal.style.display = hasDiscount ? '' : 'none';
+        prevOriginal.textContent = '₦' + price.toLocaleString('en-NG', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+    }
+    if (prevDiscount) {
+        if (hasDiscount) {
+            const pct = Math.round((1 - discount / price) * 100);
+            prevDiscount.textContent = '-' + pct + '%';
+            prevDiscount.style.display = '';
+        } else {
+            prevDiscount.style.display = 'none';
+        }
+    }
+}
+
 async function submitEditProduct(form) {
     const btn = form.querySelector('button[type="submit"]');
     btn.disabled = true;
@@ -480,6 +598,15 @@ document.getElementById('image-input').addEventListener('change', async (e) => {
                 img.alt = 'Uploaded image';
                 preview.appendChild(img);
             });
+            // Update preview card image
+            const previewImg = document.getElementById('preview-img');
+            if (previewImg && !previewImg.querySelector('img')) {
+                const newImg = document.createElement('img');
+                newImg.src = data.urls[0];
+                newImg.alt = 'Product preview';
+                previewImg.innerHTML = '';
+                previewImg.appendChild(newImg);
+            }
         }
     } catch (err) {
         showToast('Upload failed', 'error');
