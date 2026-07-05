@@ -114,28 +114,48 @@
 
 /* Guarantee banner */
 .web-guarantee {
-  background: #1c1917; color: #fff; padding: 0; text-align: center;
+  background: #1c1917; color: #fff;
   font-size: 0.75rem; letter-spacing: 0.02em; position: relative; z-index: 1;
-  overflow: hidden; height: 36px;
+  height: 36px; display: flex; align-items: center; justify-content: center; gap: 0;
 }
-.web-guarantee-track {
-  display: flex; gap: 2.5rem; animation: guaranteeScroll 30s linear infinite;
-  width: max-content; align-items: center; height: 36px;
-}
-.web-guarantee-track:hover { animation-play-state: paused; }
-@keyframes guaranteeScroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-.web-guarantee-item {
+.web-guarantee-side {
   display: flex; align-items: center; gap: 0.375rem; white-space: nowrap;
-  cursor: pointer; transition: color 0.2s; text-decoration: none; color: #fff;
-  padding: 0 0.5rem;
+  text-decoration: none; color: #fff; padding: 0 0.75rem; flex-shrink: 0;
+  cursor: pointer; transition: color 0.2s;
 }
-.web-guarantee-item:hover { color: var(--c-amber-400); }
-.web-guarantee-item svg { width: 14px; height: 14px; color: #f59e0b; flex-shrink: 0; }
-.web-guarantee-item span { font-size: 0.6875rem; font-weight: 500; }
-@media (max-width: 640px) { .web-guarantee-track { gap: 1.5rem; } }
+.web-guarantee-side:hover { color: var(--c-amber-400); }
+.web-guarantee-side svg { width: 14px; height: 14px; color: #f59e0b; flex-shrink: 0; }
+.web-guarantee-side span { font-size: 0.6875rem; font-weight: 500; }
+@media (max-width: 768px) { .web-guarantee-side span { display: none; } }
+.web-guarantee-side:last-child { display: none; }
+@media (min-width: 1280px) { .web-guarantee-side:last-child { display: flex; } }
+
+.web-guarantee-center {
+  flex: 1; overflow: hidden; position: relative; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+}
+.web-guarantee-carousel {
+  display: flex; flex-direction: column; align-items: center;
+  height: 20px; overflow: hidden; position: relative; width: 100%;
+}
+.web-guarantee-slide {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: center; gap: 0.375rem;
+  text-decoration: none; color: #fff; white-space: nowrap;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  opacity: 0; transform: translateY(8px); pointer-events: none;
+}
+.web-guarantee-slide.active {
+  opacity: 1; transform: translateY(0); pointer-events: auto;
+}
+.web-guarantee-slide svg { width: 14px; height: 14px; color: #f59e0b; flex-shrink: 0; }
+.web-guarantee-slide span { font-size: 0.6875rem; font-weight: 500; }
+.web-guarantee-slide:hover { color: var(--c-amber-400); }
+
+.web-guarantee-divider {
+  width: 1px; height: 14px; background: rgba(255,255,255,0.2); flex-shrink: 0;
+}
+@media (max-width: 768px) { .web-guarantee-divider { display: none; } }
 
 /* Desktop search — inside pill */
 .web-desktop-search {
@@ -509,66 +529,55 @@
 
 <!-- Guarantee Banner -->
 <div class="web-guarantee">
-  <div class="web-guarantee-track" id="guarantee-track">
-    <a href="/shop/marketplace?min_price=&max_price=&sort=popular" class="web-guarantee-item">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-      <span>Free Shipping on Orders Over ₦50,000</span>
-    </a>
-    <a href="/shop/contact" class="web-guarantee-item">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-      <span>Buyer Protection Guarantee</span>
-    </a>
-    <a href="/shop/shipping" class="web-guarantee-item">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
-      <span>Fast Delivery Nationwide</span>
-    </a>
-    <a href="/shop/returns" class="web-guarantee-item">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
-      <span>7-Day Easy Returns</span>
-    </a>
-    <a href="/shop/marketplace" class="web-guarantee-item">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      <span>Up to 70% Off — Shop Deals</span>
-    </a>
-    <a href="/shop/support" class="web-guarantee-item">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-      <span>24/7 Customer Support</span>
-    </a>
-    <a href="/shop/faq" class="web-guarantee-item">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      <span>FAQs & Help Center</span>
-    </a>
-    <!-- Duplicate set for seamless loop -->
-    <a href="/shop/marketplace?min_price=&max_price=&sort=popular" class="web-guarantee-item">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-      <span>Free Shipping on Orders Over ₦50,000</span>
-    </a>
-    <a href="/shop/contact" class="web-guarantee-item">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-      <span>Buyer Protection Guarantee</span>
-    </a>
-    <a href="/shop/shipping" class="web-guarantee-item">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
-      <span>Fast Delivery Nationwide</span>
-    </a>
-    <a href="/shop/returns" class="web-guarantee-item">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
-      <span>7-Day Easy Returns</span>
-    </a>
-    <a href="/shop/marketplace" class="web-guarantee-item">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      <span>Up to 70% Off — Shop Deals</span>
-    </a>
-    <a href="/shop/support" class="web-guarantee-item">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-      <span>24/7 Customer Support</span>
-    </a>
-    <a href="/shop/faq" class="web-guarantee-item">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      <span>FAQs & Help Center</span>
-    </a>
+  <a href="/shop/shipping" class="web-guarantee-side">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+    <span>Free Shipping on Orders Over ₦50,000</span>
+  </a>
+  <span class="web-guarantee-divider"></span>
+
+  <div class="web-guarantee-center">
+    <div class="web-guarantee-carousel" id="guarantee-carousel">
+      <a href="/shop/contact" class="web-guarantee-slide active" data-index="0">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        <span>Buyer Protection Guarantee</span>
+      </a>
+      <a href="/shop/shipping" class="web-guarantee-slide" data-index="1">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
+        <span>Fast Delivery Nationwide</span>
+      </a>
+      <a href="/shop/returns" class="web-guarantee-slide" data-index="2">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+        <span>7-Day Easy Returns</span>
+      </a>
+      <a href="/shop/marketplace" class="web-guarantee-slide" data-index="3">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>Up to 70% Off — Shop Deals</span>
+      </a>
+      <a href="/shop/support" class="web-guarantee-slide" data-index="4">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        <span>24/7 Customer Support</span>
+      </a>
+    </div>
   </div>
+
+  <span class="web-guarantee-divider"></span>
+  <a href="/shop/faq" class="web-guarantee-side">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <span>FAQs & Help Center</span>
+  </a>
 </div>
+<script>
+(function(){
+  var slides = document.querySelectorAll('.web-guarantee-slide');
+  var current = 0;
+  var total = slides.length;
+  setInterval(function(){
+    slides[current].classList.remove('active');
+    current = (current + 1) % total;
+    slides[current].classList.add('active');
+  }, 3500);
+})();
+</script>
 
 <!-- Navigation -->
 <header class="web-header">

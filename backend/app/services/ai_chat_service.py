@@ -144,40 +144,47 @@ class AIChatService:
         if not user_id:
             return json.dumps({"user": "anonymous", "preferences": {}, "recent_orders": []})
 
-        user = self.db.query(User).filter(User.id == user_id).first()
-        preferences = {}
-        recent_orders = []
+        try:
+            user = self.db.query(User).filter(User.id == user_id).first()
+            preferences = {}
+            recent_orders = []
 
-        pref_vector = self.db.query(UserPreferenceVector).filter(
-            UserPreferenceVector.user_id == user_id
-        ).first()
-        if pref_vector:
-            preferences = {
-                "category_affinities": pref_vector.category_affinities or {},
-                "price_range_prefs": pref_vector.price_range_prefs or {},
-            }
+            try:
+                pref_vector = self.db.query(UserPreferenceVector).filter(
+                    UserPreferenceVector.user_id == user_id
+                ).first()
+                if pref_vector:
+                    preferences = {
+                        "category_affinities": pref_vector.category_affinities or {},
+                        "price_range_prefs": pref_vector.price_range_prefs or {},
+                    }
+            except Exception as e:
+                logger.warning(f"Preference vector query failed (non-fatal): {e}")
 
-        # Get recent order history for context
-        orders = self.db.query(Order).filter(
-            Order.customer_id == user_id
-        ).order_by(Order.created_at.desc()).limit(5).all()
+            # Get recent order history for context
+            orders = self.db.query(Order).filter(
+                Order.customer_id == user_id
+            ).order_by(Order.created_at.desc()).limit(5).all()
 
-        for o in orders:
-            items = self.db.query(OrderItem).filter(OrderItem.order_id == o.id).all()
-            recent_orders.append({
-                "order_number": o.order_number,
-                "total": o.total_amount,
-                "items": [
-                    {"name": i.product.name if i.product else "Unknown", "quantity": i.quantity}
-                    for i in items
-                ],
-            })
+            for o in orders:
+                items = self.db.query(OrderItem).filter(OrderItem.order_id == o.id).all()
+                recent_orders.append({
+                    "order_number": o.order_number,
+                    "total": o.total_amount,
+                    "items": [
+                        {"name": i.product.name if i.product else "Unknown", "quantity": i.quantity}
+                        for i in items
+                    ],
+                })
 
-        return json.dumps({
-            "user": {"name": user.name, "email": user.email},
-            "preferences": preferences,
-            "recent_orders": recent_orders,
-        }, default=str)
+            return json.dumps({
+                "user": {"name": user.name, "email": user.email} if user else {"user_id": user_id},
+                "preferences": preferences,
+                "recent_orders": recent_orders,
+            }, default=str)
+        except Exception as e:
+            logger.warning(f"User context error (non-fatal): {e}")
+            return json.dumps({"user": "anonymous", "preferences": {}, "recent_orders": []})
 
     def _get_admin_context(self) -> str:
         """Build admin-specific context (revenue, orders, issues)."""
@@ -300,15 +307,21 @@ Guidelines:
     def chat(self, session_id: str, message: str, user_id: Optional[str] = None,
              image_url: Optional[str] = None) -> dict:
         """Process a chat message and return AI response with context."""
+        conversation = None
         try:
-            conversation = self.memory.get_or_create_conversation(session_id, user_id)
-            self.memory.add_message(conversation.id, "user", message)
+            try:
+                conversation = self.memory.get_or_create_conversation(session_id, user_id)
+                self.memory.add_message(conversation.id, "user", message)
+            except Exception as e:
+                logger.error(f"Conversation/message creation failed: {type(e).__name__}: {e}")
+
+            conv_id = conversation.id if conversation else None
 
             # Get conversation history
-            history = self.memory.get_history(conversation.id)
+            history = self.memory.get_history(conv_id) if conv_id else []
 
             # Build context
-            context = self.memory.get_context(conversation.id)
+            context = self.memory.get_context(conv_id) if conv_id else {}
             context.update({
                 "user_id": user_id,
                 "session_id": session_id,
@@ -327,9 +340,10 @@ Guidelines:
 
             if not client:
                 response_text = "AI provider is not configured. Please check the admin settings."
-                self.memory.add_message(conversation.id, "assistant", response_text)
+                if conv_id:
+                    self.memory.add_message(conv_id, "assistant", response_text)
                 return {
-                    "conversation_id": conversation.id,
+                    "conversation_id": conv_id,
                     "response": response_text,
                     "tokens_used": 0,
                     "suggestions": ["Check admin settings"],
@@ -365,16 +379,15 @@ Guidelines:
             tokens = len(response_text.split()) * 2  # rough estimate
 
             # Store the assistant response
-            self.memory.add_message(conversation.id, "assistant", response_text, tokens_used=tokens)
-
-            # Update conversation context
-            self.memory.update_context(conversation.id, {
-                "last_query": message,
-                "last_response": response_text,
-            })
+            if conv_id:
+                self.memory.add_message(conv_id, "assistant", response_text, tokens_used=tokens)
+                self.memory.update_context(conv_id, {
+                    "last_query": message,
+                    "last_response": response_text,
+                })
 
             return {
-                "conversation_id": conversation.id,
+                "conversation_id": conv_id,
                 "response": response_text,
                 "tokens_used": tokens,
                 "suggestions": self._generate_suggestions(response_text, context),
@@ -383,9 +396,12 @@ Guidelines:
         except Exception as e:
             import traceback
             logger.error(f"AI chat error: {type(e).__name__}: {e}\n{traceback.format_exc()}")
-            conv_id = conversation.id if 'conversation' in dir() and conversation else None
+            try:
+                cid = conv_id
+            except NameError:
+                cid = None
             return {
-                "conversation_id": conv_id,
+                "conversation_id": cid,
                 "response": "I apologize, but I'm having trouble processing your request right now. Please try again, or browse our catalog directly.",
                 "tokens_used": 0,
                 "suggestions": ["Browse categories", "View recommendations", "Track my order"],

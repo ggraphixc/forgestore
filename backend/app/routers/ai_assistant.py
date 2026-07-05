@@ -47,20 +47,38 @@ def ai_assistant_chat(
     """
     try:
         # Check if AI assistant is enabled
-        from app.models import Settings
-        setting = db.query(Settings).filter(Settings.key == "ai_assistant_enabled").first()
-        if setting and setting.value == "false":
+        try:
+            from app.models import Settings
+            setting = db.query(Settings).filter(Settings.key == "ai_assistant_enabled").first()
+            if setting and setting.value == "false":
+                return {
+                    "conversation_id": None,
+                    "response": "The AI assistant is currently disabled. Please browse our catalog directly.",
+                    "tokens_used": 0,
+                    "suggestions": ["Browse categories", "View all products"],
+                }
+        except Exception as e:
+            logger.warning(f"Settings check failed (non-fatal): {e}")
+
+        try:
+            customer = get_current_customer_from_cookie(request, db)
+            user_id = customer.id if customer else None
+        except Exception as e:
+            logger.warning(f"Customer lookup failed (non-fatal): {e}")
+            user_id = None
+
+        try:
+            service = AIChatService(db)
+        except Exception as e:
+            import traceback
+            logger.error(f"AIChatService init failed: {type(e).__name__}: {e}\n{traceback.format_exc()}")
             return {
                 "conversation_id": None,
-                "response": "The AI assistant is currently disabled. Please browse our catalog directly.",
+                "response": "AI service initialization failed. Please contact support.",
                 "tokens_used": 0,
-                "suggestions": ["Browse categories", "View all products"],
+                "suggestions": ["Contact support"],
             }
 
-        customer = get_current_customer_from_cookie(request, db)
-        user_id = customer.id if customer else None
-
-        service = AIChatService(db)
         return service.chat(body.session_id, body.message, user_id, image_url=body.image_url)
     except Exception as e:
         import traceback
