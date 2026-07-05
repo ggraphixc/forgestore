@@ -196,7 +196,7 @@ class AIChatService:
             thirty_days_ago = now - timedelta(days=30)
 
             total_revenue = self.db.query(func.coalesce(func.sum(Order.total_amount), 0)).filter(
-                Order.status.in_(["DELIVERED", "COMPLETED"]),
+                Order.status.in_(["DELIVERED", "PAID"]),
                 Order.created_at >= thirty_days_ago,
             ).scalar()
 
@@ -206,8 +206,8 @@ class AIChatService:
             pending_orders = self.db.query(func.count(Order.id)).filter(
                 Order.status.in_(["PENDING", "PROCESSING"])
             ).scalar()
-            disputed_orders = self.db.query(func.count(Order.id)).filter(
-                Order.status.in_(["DISPUTED", "REFUNDED", "CANCELLED"])
+            cancelled_orders = self.db.query(func.count(Order.id)).filter(
+                Order.status == "CANCELLED"
             ).scalar()
 
             total_vendors = self.db.query(func.count(Retailer.id)).scalar()
@@ -224,7 +224,7 @@ class AIChatService:
             return json.dumps({
                 "period": "last_30_days",
                 "revenue": {"total": float(total_revenue or 0), "currency": "NGN"},
-                "orders": {"total": total_orders or 0, "pending": pending_orders or 0, "disputed": disputed_orders or 0},
+                "orders": {"total": total_orders or 0, "pending": pending_orders or 0, "cancelled": cancelled_orders or 0},
                 "vendors": {"total": total_vendors or 0, "active": active_vendors or 0},
                 "customers": {"total": total_customers or 0},
                 "low_stock_products": low_stock or 0,
@@ -373,7 +373,8 @@ Guidelines:
             logger.info(f"AI chat response length: {len(response_text) if response_text else 0}")
 
             if not response_text:
-                response_text = "I apologize, but I'm having trouble processing your request right now. Please try again, or browse our catalog directly."
+                logger.warning("LLM returned empty response, using fallback")
+                response_text = "I apologize, but the AI service is temporarily unavailable. Please try again in a moment, or browse our catalog directly."
 
             # Strip any tool_call XML that the model might output
             response_text = re.sub(r'tool_call.*?/tool_call', '', response_text, flags=re.DOTALL)
