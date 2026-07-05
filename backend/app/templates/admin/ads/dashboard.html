@@ -1,0 +1,683 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}Ads Dashboard — ForgeStore Admin{% endblock %}
+{% block page_title %}Ads Dashboard{% endblock %}
+
+{% block content %}
+<style>
+  :root {
+    --ads-primary: #f59e0b; --ads-primary-dark: #d97706;
+    --ads-bg: #fafaf9; --ads-card: #ffffff;
+    --ads-border: #e7e5e4; --ads-text: #1c1917; --ads-muted: #78716c;
+    --ads-green: #16a34a; --ads-red: #dc2626; --ads-blue: #2563eb;
+    --ads-purple: #7c3aed; --ads-radius: 12px;
+  }
+  .dark { --ads-bg: #1c1917; --ads-card: #292524; --ads-border: #44403c; --ads-text: #fafaf9; --ads-muted: #a8a29e; }
+  .ads-wrap { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+  .ads-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+  .ads-stat { background: var(--ads-card); border: 1px solid var(--ads-border); border-radius: var(--ads-radius); padding: 1rem; }
+  .ads-stat-label { font-size: 0.75rem; color: var(--ads-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .ads-stat-value { font-size: 1.5rem; font-weight: 700; color: var(--ads-text); }
+  .ads-stat-value.green { color: var(--ads-green); }
+  .ads-stat-value.amber { color: var(--ads-primary); }
+  .ads-stat-value.red { color: var(--ads-red); }
+
+  .ads-tabs { display: flex; gap: 4px; background: var(--ads-card); border: 1px solid var(--ads-border); border-radius: var(--ads-radius); padding: 4px; margin-bottom: 1rem; overflow-x: auto; }
+  .ads-tab { padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: none; background: transparent; color: var(--ads-muted); white-space: nowrap; transition: all 0.15s; }
+  .ads-tab.active { background: var(--ads-primary); color: #fff; }
+  .ads-tab:hover:not(.active) { background: var(--ads-border); color: var(--ads-text); }
+  .ads-tab-content { display: none; }
+  .ads-tab-content.active { display: block; }
+
+  .ads-panel { background: var(--ads-card); border: 1px solid var(--ads-border); border-radius: var(--ads-radius); padding: 1rem; }
+  .ads-panel-header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .ads-panel-title { font-size: 1rem; font-weight: 700; color: var(--ads-text); }
+  .ads-btn { padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: 1px solid var(--ads-border); background: var(--ads-card); color: var(--ads-text); min-height: 36px; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
+  .ads-btn-primary { background: var(--ads-primary); color: #fff; border-color: var(--ads-primary); }
+  .ads-btn-primary:hover { background: var(--ads-primary-dark); }
+  .ads-btn-sm { padding: 4px 10px; font-size: 0.75rem; min-height: 28px; }
+  .ads-btn-green { color: var(--ads-green); border-color: var(--ads-green); }
+  .ads-btn-red { color: var(--ads-red); border-color: var(--ads-red); }
+  .ads-btn-red:hover { background: #fef2f2; }
+  .ads-select { padding: 0.4rem 0.75rem; border-radius: 8px; border: 1px solid var(--ads-border); background: var(--ads-card); color: var(--ads-text); font-size: 0.8125rem; min-height: 36px; }
+
+  .ads-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+  .ads-table th { text-align: left; padding: 0.5rem 0.75rem; color: var(--ads-muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; border-bottom: 1px solid var(--ads-border); }
+  .ads-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--ads-border); color: var(--ads-text); vertical-align: middle; }
+  .ads-table tr:last-child td { border-bottom: none; }
+  .ads-badge { padding: 2px 8px; border-radius: 999px; font-size: 0.6875rem; font-weight: 600; }
+  .ads-badge-active { background: #dcfce7; color: #166534; }
+  .ads-badge-pending { background: #fef9c3; color: #854d0e; }
+  .ads-badge-expired { background: #f3f4f6; color: #6b7280; }
+  .ads-badge-inactive { background: #fef2f2; color: #991b1b; }
+  .ads-empty { text-align: center; padding: 2rem; color: var(--ads-muted); }
+  .ads-empty svg { width: 48px; height: 48px; margin: 0 auto 0.75rem; opacity: 0.4; }
+
+  .ads-promo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
+  .ads-promo-card { background: var(--ads-card); border: 1px solid var(--ads-border); border-radius: var(--ads-radius); overflow: hidden; }
+  .ads-promo-img { height: 140px; background: #f5f5f4; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .ads-promo-img img { width: 100%; height: 100%; object-fit: cover; }
+  .ads-promo-img .placeholder { color: var(--ads-muted); font-size: 0.75rem; }
+  .ads-promo-body { padding: 0.75rem; }
+  .ads-promo-title { font-weight: 600; font-size: 0.875rem; color: var(--ads-text); margin-bottom: 4px; }
+  .ads-promo-meta { font-size: 0.75rem; color: var(--ads-muted); display: flex; gap: 8px; flex-wrap: wrap; }
+  .ads-promo-actions { display: flex; gap: 6px; padding: 0.75rem; border-top: 1px solid var(--ads-border); }
+  .ads-platform-badge { background: var(--ads-primary); color: #fff; font-size: 0.625rem; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
+  .ads-vendor-badge { background: var(--ads-blue); color: #fff; font-size: 0.625rem; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
+
+  .ads-modal-overlay { position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+  .ads-modal-overlay.show { display: flex; }
+  .ads-modal { background: var(--ads-card); border-radius: var(--ads-radius); width: 90%; max-width: 520px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+  .ads-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--ads-border); }
+  .ads-modal-title { font-weight: 700; font-size: 1rem; color: var(--ads-text); }
+  .ads-modal-close { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--ads-muted); min-width: 36px; min-height: 36px; display: flex; align-items: center; justify-content: center; }
+  .ads-modal-body { padding: 1rem; }
+  .ads-modal-footer { padding: 1rem; border-top: 1px solid var(--ads-border); display: flex; justify-content: flex-end; gap: 8px; }
+  .ads-form-group { margin-bottom: 0.75rem; }
+  .ads-form-label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--ads-muted); margin-bottom: 4px; }
+  .ads-form-input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--ads-border); border-radius: 8px; font-size: 0.8125rem; background: var(--ads-card); color: var(--ads-text); min-height: 36px; box-sizing: border-box; }
+  .ads-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+  .ads-chart-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 0.75rem; margin-top: 1rem; }
+  .ads-chart-card { background: var(--ads-card); border: 1px solid var(--ads-border); border-radius: var(--ads-radius); padding: 1rem; }
+  .ads-chart-title { font-size: 0.8125rem; font-weight: 600; color: var(--ads-text); margin-bottom: 0.75rem; }
+  .ads-bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 120px; }
+  .ads-bar { flex: 1; background: var(--ads-primary); border-radius: 4px 4px 0 0; min-width: 20px; position: relative; transition: height 0.3s; }
+  .ads-bar:hover { opacity: 0.8; }
+  .ads-bar-label { position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); font-size: 0.625rem; color: var(--ads-muted); white-space: nowrap; }
+  .ads-bar-value { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 0.625rem; color: var(--ads-text); font-weight: 600; white-space: nowrap; }
+
+  @media (max-width: 640px) {
+    .ads-stats { grid-template-columns: repeat(2, 1fr); }
+    .ads-form-row { grid-template-columns: 1fr; }
+    .ads-promo-grid { grid-template-columns: 1fr; }
+    .ads-table { font-size: 0.75rem; }
+    .hide-mobile { display: none !important; }
+  }
+</style>
+
+<div class="ads-wrap">
+  <!-- Stats -->
+  <div class="ads-stats" id="stats-container">
+    <div class="ads-stat"><div class="ads-stat-label">Total Campaigns</div><div class="ads-stat-value" id="stat-total">-</div></div>
+    <div class="ads-stat"><div class="ads-stat-label">Active</div><div class="ads-stat-value green" id="stat-active">-</div></div>
+    <div class="ads-stat"><div class="ads-stat-label">Total Clicks</div><div class="ads-stat-value amber" id="stat-clicks">-</div></div>
+    <div class="ads-stat"><div class="ads-stat-label">Impressions</div><div class="ads-stat-value" id="stat-impressions">-</div></div>
+    <div class="ads-stat"><div class="ads-stat-label">CTR</div><div class="ads-stat-value" id="stat-ctr">-</div></div>
+    <div class="ads-stat"><div class="ads-stat-label">Promo Ads</div><div class="ads-stat-value" id="stat-promos">-</div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="ads-tabs">
+    <button class="ads-tab active" onclick="switchTab('campaigns')">Campaigns</button>
+    <button class="ads-tab" onclick="switchTab('promos')">Promo Ads</button>
+    <button class="ads-tab" onclick="switchTab('analytics')">Analytics</button>
+  </div>
+
+  <!-- CAMPAIGNS TAB -->
+  <div class="ads-tab-content active" id="tab-campaigns">
+    <div class="ads-panel">
+      <div class="ads-panel-header">
+        <span class="ads-panel-title">Ad Campaigns</span>
+        <select class="ads-select" id="campaign-retailer-filter" onchange="filterCampaigns()">
+          <option value="">All Retailers</option>
+        </select>
+      </div>
+      <div id="campaigns-list"></div>
+    </div>
+  </div>
+
+  <!-- PROMO ADS TAB -->
+  <div class="ads-tab-content" id="tab-promos">
+    <div class="ads-panel">
+      <div class="ads-panel-header">
+        <span class="ads-panel-title">Promo Ads</span>
+        <button class="ads-btn ads-btn-primary" onclick="openPromoModal()">+ Create Promo</button>
+      </div>
+      <div id="promo-filter-bar" style="display:flex;gap:8px;margin-bottom:0.75rem;flex-wrap:wrap;">
+        <select class="ads-select" id="promo-type-filter" onchange="filterPromos()">
+          <option value="">All Types</option>
+          <option value="PROMO">General Promo</option>
+          <option value="FLASH_SALE">Flash Sale</option>
+          <option value="SUPER_SALE">Super Sale</option>
+          <option value="HOT_WEEK">Hot Week</option>
+          <option value="FESTIVAL">Festival</option>
+          <option value="SEASONAL_SALE">Seasonal</option>
+        </select>
+        <select class="ads-select" id="promo-scope-filter" onchange="filterPromos()">
+          <option value="">All Scope</option>
+          <option value="platform">Platform Only</option>
+          <option value="vendor">Vendor Only</option>
+        </select>
+      </div>
+      <div class="ads-promo-grid" id="promos-grid"></div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS TAB -->
+  <div class="ads-tab-content" id="tab-analytics">
+    <div id="analytics-loading" style="text-align:center;padding:2rem;color:var(--ads-muted);">Loading analytics...</div>
+    <div id="analytics-content" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- PROMO CREATE/EDIT MODAL -->
+<div class="ads-modal-overlay" id="promo-modal">
+  <div class="ads-modal">
+    <div class="ads-modal-header">
+      <span class="ads-modal-title" id="promo-modal-title">Create Promo Ad</span>
+      <button class="ads-modal-close" onclick="closePromoModal()">&times;</button>
+    </div>
+    <div class="ads-modal-body">
+      <input type="hidden" id="promo-id">
+      <div class="ads-form-group">
+        <label class="ads-form-label">Title *</label>
+        <input type="text" id="promo-title" class="ads-form-input" placeholder="e.g. Summer Flash Sale">
+      </div>
+      <div class="ads-form-row">
+        <div class="ads-form-group">
+          <label class="ads-form-label">Type *</label>
+          <select id="promo-subtype" class="ads-form-input">
+            <option value="PROMO">General Promo</option>
+            <option value="FLASH_SALE">Flash Sale</option>
+            <option value="SUPER_SALE">Super Sale</option>
+            <option value="HOT_WEEK">Hot Week</option>
+            <option value="FESTIVAL">Festival</option>
+            <option value="SEASONAL_SALE">Seasonal Sale</option>
+          </select>
+        </div>
+        <div class="ads-form-group">
+          <label class="ads-form-label">Banner Type *</label>
+          <select id="promo-banner-type" class="ads-form-input">
+            <option value="banner">Banner</option>
+            <option value="poster">Poster</option>
+            <option value="flyer">Flyer</option>
+          </select>
+        </div>
+      </div>
+      <div class="ads-form-group">
+        <label class="ads-form-label">Banner Image *</label>
+        <input type="file" id="promo-banner-file" accept="image/*" class="ads-form-input" style="padding:0.4rem;" onchange="handlePromoUpload(this)">
+        <input type="hidden" id="promo-banner-url">
+        <div id="promo-banner-preview" style="display:none;margin-top:6px;">
+          <img id="promo-banner-preview-img" src="" alt="" style="max-width:200px;max-height:100px;border-radius:8px;border:1px solid var(--ads-border);object-fit:cover;">
+          <button type="button" onclick="clearPromoBanner()" style="margin-left:6px;padding:3px 8px;font-size:11px;color:#dc2626;background:none;border:1px solid #fecaca;border-radius:6px;cursor:pointer;">Remove</button>
+        </div>
+      </div>
+      <div class="ads-form-group">
+        <label class="ads-form-label">Target URL (optional)</label>
+        <select id="promo-target-preset" class="ads-form-input" onchange="handleTargetPreset()">
+          <option value="">No target</option>
+          <option value="homepage">Homepage</option>
+          <option value="marketplace">Marketplace</option>
+          <option value="electronics">Category: Electronics</option>
+          <option value="fashion">Category: Fashion</option>
+          <option value="home-living">Category: Home & Living</option>
+          <option value="sports">Category: Sports</option>
+          <option value="gaming">Category: Gaming</option>
+          <option value="wellness">Category: Wellness</option>
+          <option value="beauty">Category: Beauty</option>
+          <option value="automotive">Category: Automotive</option>
+          <option value="custom">Custom URL...</option>
+        </select>
+        <input type="url" id="promo-target-custom" class="ads-form-input" placeholder="https://example.com/page" style="display:none;margin-top:6px;">
+        <input type="hidden" id="promo-target-url">
+      </div>
+      <div class="ads-form-row">
+        <div class="ads-form-group">
+          <label class="ads-form-label">Start Date</label>
+          <input type="date" id="promo-start-date" class="ads-form-input">
+        </div>
+        <div class="ads-form-group">
+          <label class="ads-form-label">End Date</label>
+          <input type="date" id="promo-end-date" class="ads-form-input">
+        </div>
+      </div>
+      <div class="ads-form-group">
+        <label class="ads-form-label">Assign to Vendor (optional — leave empty for platform promo)</label>
+        <select id="promo-retailer-id" class="ads-form-input">
+          <option value="">Platform Promo (admin)</option>
+        </select>
+      </div>
+      <div class="ads-form-group">
+        <label class="ads-form-label">Notes</label>
+        <input type="text" id="promo-note" class="ads-form-input" placeholder="Internal notes...">
+      </div>
+    </div>
+    <div class="ads-modal-footer">
+      <button class="ads-btn" onclick="closePromoModal()">Cancel</button>
+      <button class="ads-btn ads-btn-primary" id="promo-save-btn" onclick="savePromo()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────
+let allCampaigns = [];
+let allPromos = [];
+let retailersMap = {};
+let allRetailers = [];
+
+const TARGET_URLS = {
+  'homepage': '/',
+  'marketplace': '/marketplace',
+  'electronics': '/shop/category/electronics',
+  'fashion': '/shop/category/fashion',
+  'home-living': '/shop/category/home-living',
+  'sports': '/shop/category/sports',
+  'gaming': '/shop/category/gaming',
+  'wellness': '/shop/category/wellness',
+  'beauty': '/shop/category/beauty',
+  'automotive': '/shop/category/automotive',
+};
+
+// ─── INIT ────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadCampaigns();
+  loadPromos();
+  loadAnalytics();
+});
+
+// ─── TABS ────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.ads-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.ads-tab-content').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'analytics') loadAnalytics();
+}
+
+// ─── CAMPAIGNS ───────────────────────────────────────────────────────
+async function loadCampaigns() {
+  try {
+    const res = await fetch('/api/admin/ads/campaigns');
+    const data = await res.json();
+    allCampaigns = data.campaigns || [];
+    buildRetailerFilter();
+    renderCampaigns();
+  } catch(e) { console.error(e); }
+}
+
+function buildRetailerFilter() {
+  const ids = [...new Set(allCampaigns.map(c => c.retailer_id).filter(Boolean))];
+  const sel = document.getElementById('campaign-retailer-filter');
+  ids.forEach(id => {
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = retailersMap[id] || id;
+    sel.appendChild(opt);
+  });
+  loadRetailersForFilter();
+}
+
+async function loadRetailersForFilter() {
+  try {
+    const res = await fetch('/api/admin/retailers');
+    const data = await res.json();
+    allRetailers = data.retailers || [];
+    allRetailers.forEach(r => { retailersMap[r.id] = r.name; });
+    const sel = document.getElementById('campaign-retailer-filter');
+    Array.from(sel.options).forEach(opt => {
+      if (opt.value && retailersMap[opt.value]) opt.textContent = retailersMap[opt.value];
+    });
+    const vSel = document.getElementById('promo-retailer-id');
+    allRetailers.forEach(r => {
+      const o = document.createElement('option');
+      o.value = r.id; o.textContent = r.name;
+      vSel.appendChild(o);
+    });
+  } catch(e) {}
+}
+
+function filterCampaigns() {
+  renderCampaigns();
+}
+
+function renderCampaigns() {
+  const filter = document.getElementById('campaign-retailer-filter').value;
+  let list = allCampaigns;
+  if (filter) list = list.filter(c => c.retailer_id === filter);
+  const el = document.getElementById('campaigns-list');
+  if (!list.length) {
+    el.innerHTML = '<div class="ads-empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg><p>No campaigns found</p></div>';
+    return;
+  }
+  let html = '<table class="ads-table"><thead><tr><th>Retailer</th><th>Type</th><th>Status</th><th class="hide-mobile">Clicks</th><th class="hide-mobile">Impressions</th><th>Actions</th></tr></thead><tbody>';
+  list.forEach(c => {
+    const badge = c.status === 'ACTIVE' ? 'ads-badge-active' : c.status === 'PENDING' ? 'ads-badge-pending' : 'ads-badge-expired';
+    html += `<tr>
+      <td>${retailersMap[c.retailer_id] || 'Platform'}</td>
+      <td>${c.ad_type}</td>
+      <td><span class="ads-badge ${badge}">${c.status}</span></td>
+      <td class="hide-mobile">${(c.clicks||0).toLocaleString()}</td>
+      <td class="hide-mobile">${(c.impressions||0).toLocaleString()}</td>
+      <td>
+        ${c.status === 'PENDING' ? `<button class="ads-btn ads-btn-sm ads-btn-green" onclick="activateCampaign('${c.id}')">Activate</button>` : ''}
+        ${c.status === 'ACTIVE' ? `<button class="ads-btn ads-btn-sm ads-btn-red" onclick="expireCampaign('${c.id}')">Expire</button>` : ''}
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+async function activateCampaign(id) {
+  const banner = prompt('Banner image URL (or leave empty):');
+  if (banner === null) return;
+  try {
+    const res = await fetch(`/api/admin/ads/${id}/activate`, {
+      method: 'PUT', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ banner_url: banner || undefined })
+    });
+    const d = await res.json();
+    if (d.success) { showToast('Campaign activated', 'success'); loadCampaigns(); }
+    else showToast(d.detail || 'Failed', 'error');
+  } catch(e) { showToast('Error', 'error'); }
+}
+
+async function expireCampaign(id) {
+  if (!await confirmAction('Expire this campaign?')) return;
+  try {
+    const res = await fetch(`/api/admin/ads/${id}/expire`, { method: 'POST' });
+    const d = await res.json();
+    if (d.success) { showToast('Campaign expired', 'success'); loadCampaigns(); }
+    else showToast(d.detail || 'Failed', 'error');
+  } catch(e) { showToast('Error', 'error'); }
+}
+
+// ─── PROMO ADS ───────────────────────────────────────────────────────
+async function loadPromos() {
+  try {
+    const res = await fetch('/api/admin/promo-ads');
+    const data = await res.json();
+    allPromos = data.promo_ads || [];
+    document.getElementById('stat-promos').textContent = allPromos.length;
+    renderPromos();
+  } catch(e) { console.error(e); }
+}
+
+function filterPromos() { renderPromos(); }
+
+function renderPromos() {
+  const typeFilter = document.getElementById('promo-type-filter').value;
+  const scopeFilter = document.getElementById('promo-scope-filter').value;
+  let list = allPromos;
+  if (typeFilter) list = list.filter(p => p.ad_subtype === typeFilter);
+  if (scopeFilter === 'platform') list = list.filter(p => !p.retailer_id);
+  if (scopeFilter === 'vendor') list = list.filter(p => p.retailer_id);
+
+  const el = document.getElementById('promos-grid');
+  if (!list.length) {
+    el.innerHTML = '<div class="ads-empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg><p>No promo ads found</p></div>';
+    return;
+  }
+  el.innerHTML = list.map(p => {
+    const badge = p.status === 'ACTIVE' ? 'ads-badge-active' : p.status === 'INACTIVE' ? 'ads-badge-inactive' : 'ads-badge-expired';
+    const scope = p.retailer_id ? `<span class="ads-vendor-badge">${retailersMap[p.retailer_id] || 'Vendor'}</span>` : '<span class="ads-platform-badge">Platform</span>';
+    const dates = p.start_date ? `${new Date(p.start_date).toLocaleDateString()} - ${p.end_date ? new Date(p.end_date).toLocaleDateString() : '...'}` : '';
+    return `<div class="ads-promo-card">
+      <div class="ads-promo-img">${p.banner_url ? '<img src="'+p.banner_url+'" alt="'+p.title+'">' : '<span class="placeholder">No image</span>'}</div>
+      <div class="ads-promo-body">
+        <div class="ads-promo-title">${p.title}</div>
+        <div class="ads-promo-meta">
+          <span class="ads-badge ${badge}">${p.status}</span>
+          ${scope}
+          <span>${p.ad_subtype}</span>
+          ${dates ? '<span>'+dates+'</span>' : ''}
+        </div>
+      </div>
+      <div class="ads-promo-actions">
+        <button class="ads-btn ads-btn-sm" onclick="editPromo('${p.id}')">Edit</button>
+        ${p.status === 'ACTIVE' ? `<button class="ads-btn ads-btn-sm ads-btn-red" onclick="togglePromoStatus('${p.id}','INACTIVE')">Deactivate</button>` : `<button class="ads-btn ads-btn-sm ads-btn-green" onclick="togglePromoStatus('${p.id}','ACTIVE')">Activate</button>`}
+        <button class="ads-btn ads-btn-sm ads-btn-red" onclick="deletePromo('${p.id}')" style="margin-left:auto;">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function handleTargetPreset() {
+  const sel = document.getElementById('promo-target-preset');
+  const custom = document.getElementById('promo-target-custom');
+  if (sel.value === 'custom') {
+    custom.style.display = '';
+    custom.focus();
+    document.getElementById('promo-target-url').value = '';
+  } else if (sel.value && TARGET_URLS[sel.value]) {
+    custom.style.display = 'none';
+    document.getElementById('promo-target-url').value = TARGET_URLS[sel.value];
+  } else {
+    custom.style.display = 'none';
+    document.getElementById('promo-target-url').value = '';
+  }
+}
+
+document.getElementById('promo-target-custom').addEventListener('input', function() {
+  document.getElementById('promo-target-url').value = this.value;
+});
+
+function handlePromoUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    document.getElementById('promo-banner-preview-img').src = ev.target.result;
+    document.getElementById('promo-banner-preview').style.display = '';
+  };
+  reader.readAsDataURL(file);
+  const fd = new FormData();
+  fd.append('files', file);
+  fetch('/api/admin/upload', { method: 'POST', body: fd })
+    .then(r => { if (!r.ok) throw new Error(r.statusText); return r.json(); })
+    .then(d => { if (d.urls && d.urls.length) document.getElementById('promo-banner-url').value = d.urls[0]; })
+    .catch(e => showToast('Upload failed: ' + e.message, 'error'));
+}
+
+function clearPromoBanner() {
+  document.getElementById('promo-banner-url').value = '';
+  document.getElementById('promo-banner-file').value = '';
+  document.getElementById('promo-banner-preview').style.display = 'none';
+}
+
+function openPromoModal(id) {
+  document.getElementById('promo-modal').classList.add('show');
+  if (!id) {
+    document.getElementById('promo-modal-title').textContent = 'Create Promo Ad';
+    document.getElementById('promo-id').value = '';
+    document.getElementById('promo-title').value = '';
+    document.getElementById('promo-subtype').value = 'PROMO';
+    document.getElementById('promo-banner-type').value = 'banner';
+    document.getElementById('promo-banner-url').value = '';
+    document.getElementById('promo-banner-file').value = '';
+    document.getElementById('promo-banner-preview').style.display = 'none';
+    document.getElementById('promo-target-preset').value = '';
+    document.getElementById('promo-target-custom').style.display = 'none';
+    document.getElementById('promo-target-url').value = '';
+    document.getElementById('promo-start-date').value = '';
+    document.getElementById('promo-end-date').value = '';
+    document.getElementById('promo-retailer-id').value = '';
+    document.getElementById('promo-note').value = '';
+  }
+}
+
+function closePromoModal() {
+  document.getElementById('promo-modal').classList.remove('show');
+}
+
+function editPromo(id) {
+  const p = allPromos.find(a => a.id === id);
+  if (!p) return;
+  document.getElementById('promo-modal-title').textContent = 'Edit Promo Ad';
+  document.getElementById('promo-id').value = p.id;
+  document.getElementById('promo-title').value = p.title;
+  document.getElementById('promo-subtype').value = p.ad_subtype;
+  document.getElementById('promo-banner-type').value = p.banner_type || 'banner';
+  document.getElementById('promo-banner-url').value = p.banner_url || '';
+  if (p.banner_url) {
+    document.getElementById('promo-banner-preview-img').src = p.banner_url;
+    document.getElementById('promo-banner-preview').style.display = '';
+  } else {
+    document.getElementById('promo-banner-preview').style.display = 'none';
+  }
+  // Target URL
+  let matchedPreset = '';
+  for (const [key, url] of Object.entries(TARGET_URLS)) {
+    if (p.target_url === url) { matchedPreset = key; break; }
+  }
+  if (matchedPreset) {
+    document.getElementById('promo-target-preset').value = matchedPreset;
+    document.getElementById('promo-target-custom').style.display = 'none';
+    document.getElementById('promo-target-url').value = p.target_url || '';
+  } else if (p.target_url) {
+    document.getElementById('promo-target-preset').value = 'custom';
+    document.getElementById('promo-target-custom').style.display = '';
+    document.getElementById('promo-target-custom').value = p.target_url;
+    document.getElementById('promo-target-url').value = p.target_url;
+  } else {
+    document.getElementById('promo-target-preset').value = '';
+    document.getElementById('promo-target-custom').style.display = 'none';
+    document.getElementById('promo-target-url').value = '';
+  }
+  document.getElementById('promo-start-date').value = p.start_date ? p.start_date.slice(0,10) : '';
+  document.getElementById('promo-end-date').value = p.end_date ? p.end_date.slice(0,10) : '';
+  document.getElementById('promo-retailer-id').value = p.retailer_id || '';
+  document.getElementById('promo-note').value = p.note || '';
+  document.getElementById('promo-modal').classList.add('show');
+}
+
+async function savePromo() {
+  const id = document.getElementById('promo-id').value;
+  const bannerUrl = document.getElementById('promo-banner-url').value;
+  if (!bannerUrl) { showToast('Please upload a banner image', 'error'); return; }
+  // Resolve target URL from custom field if needed
+  let targetUrl = document.getElementById('promo-target-url').value;
+  if (document.getElementById('promo-target-preset').value === 'custom') {
+    targetUrl = document.getElementById('promo-target-custom').value;
+  }
+  const body = {
+    title: document.getElementById('promo-title').value,
+    ad_subtype: document.getElementById('promo-subtype').value,
+    banner_type: document.getElementById('promo-banner-type').value,
+    banner_url: bannerUrl,
+    target_url: targetUrl || null,
+    start_date: document.getElementById('promo-start-date').value || null,
+    end_date: document.getElementById('promo-end-date').value || null,
+    retailer_id: document.getElementById('promo-retailer-id').value || null,
+    note: document.getElementById('promo-note').value || null,
+  };
+  if (!body.title) { showToast('Title is required', 'error'); return; }
+  try {
+    const url = id ? `/api/admin/promo-ads/${id}` : '/api/admin/promo-ads';
+    const method = id ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await res.json();
+    if (d.success || d.promo_ad) {
+      showToast(id ? 'Promo updated' : 'Promo created', 'success');
+      closePromoModal();
+      loadPromos();
+    } else {
+      showToast(d.detail || 'Failed', 'error');
+    }
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function togglePromoStatus(id, status) {
+  try {
+    const res = await fetch(`/api/admin/promo-ads/${id}`, {
+      method: 'PUT', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ status })
+    });
+    const d = await res.json();
+    if (d.success) { showToast('Status updated', 'success'); loadPromos(); }
+    else showToast(d.detail || 'Failed', 'error');
+  } catch(e) { showToast('Error', 'error'); }
+}
+
+async function deletePromo(id) {
+  if (!await confirmAction('Delete this promo ad?')) return;
+  try {
+    const res = await fetch(`/api/admin/promo-ads/${id}`, { method: 'DELETE' });
+    const d = await res.json();
+    if (d.success) { showToast('Promo deleted', 'success'); loadPromos(); }
+    else showToast(d.detail || 'Failed', 'error');
+  } catch(e) { showToast('Error', 'error'); }
+}
+
+// ─── ANALYTICS ───────────────────────────────────────────────────────
+async function loadAnalytics() {
+  const el = document.getElementById('analytics-content');
+  const loading = document.getElementById('analytics-loading');
+  loading.style.display = '';
+  el.style.display = 'none';
+  try {
+    const res = await fetch('/api/admin/ads/analytics');
+    const d = await res.json();
+    loading.style.display = 'none';
+    el.style.display = '';
+    renderAnalytics(d);
+  } catch(e) {
+    loading.innerHTML = '<p style="color:var(--ads-red);">Failed to load analytics</p>';
+  }
+}
+
+function renderAnalytics(d) {
+  const ov = d.overview || {};
+  document.getElementById('stat-total').textContent = (ov.total_campaigns || 0).toLocaleString();
+  document.getElementById('stat-active').textContent = (ov.active_campaigns || 0).toLocaleString();
+  document.getElementById('stat-clicks').textContent = (ov.total_clicks || 0).toLocaleString();
+  document.getElementById('stat-impressions').textContent = (ov.total_impressions || 0).toLocaleString();
+  document.getElementById('stat-ctr').textContent = (ov.ctr || 0).toFixed(1) + '%';
+
+  let html = '<div class="ads-chart-container">';
+
+  // By Type
+  const byType = d.by_type || [];
+  if (byType.length) {
+    const maxType = Math.max(...byType.map(t => t.count || 0), 1);
+    html += '<div class="ads-chart-card"><div class="ads-chart-title">Campaigns by Type</div><div class="ads-bar-chart">';
+    byType.forEach(t => {
+      const h = Math.max(((t.count||0)/maxType)*100, 4);
+      html += `<div class="ads-bar" style="height:${h}%"><div class="ads-bar-value">${t.count}</div><div class="ads-bar-label">${t.ad_type}</div></div>`;
+    });
+    html += '</div></div>';
+  }
+
+  // By Status
+  const byStatus = d.by_status || [];
+  if (byStatus.length) {
+    const maxSt = Math.max(...byStatus.map(s => s.count || 0), 1);
+    const statusColors = {ACTIVE:'#16a34a',PENDING:'#f59e0b',EXPIRED:'#6b7280',PAID:'#2563eb'};
+    html += '<div class="ads-chart-card"><div class="ads-chart-title">Campaigns by Status</div><div class="ads-bar-chart">';
+    byStatus.forEach(s => {
+      const h = Math.max(((s.count||0)/maxSt)*100, 4);
+      html += `<div class="ads-bar" style="height:${h}%;background:${statusColors[s.status]||'var(--ads-primary)'}"><div class="ads-bar-value">${s.count}</div><div class="ads-bar-label">${s.status}</div></div>`;
+    });
+    html += '</div></div>';
+  }
+
+  // Monthly Trend
+  const monthly = d.monthly_trend || [];
+  if (monthly.length) {
+    const maxM = Math.max(...monthly.map(m => m.impressions || 0), 1);
+    html += '<div class="ads-chart-card" style="grid-column:1/-1;"><div class="ads-chart-title">Monthly Trend (6 months)</div><div class="ads-bar-chart" style="height:140px;">';
+    monthly.forEach(m => {
+      const h = Math.max(((m.impressions||0)/maxM)*100, 4);
+      const label = m.month || '';
+      html += `<div class="ads-bar" style="height:${h}%"><div class="ads-bar-value">${(m.impressions||0).toLocaleString()}</div><div class="ads-bar-label">${label}</div></div>`;
+    });
+    html += '</div></div>';
+  }
+
+  // Top Retailers
+  const topR = d.top_retailers || [];
+  if (topR.length) {
+    html += '<div class="ads-chart-card" style="grid-column:1/-1;"><div class="ads-chart-title">Top Retailers by Campaigns</div><table class="ads-table"><thead><tr><th>Retailer</th><th>Campaigns</th><th>Clicks</th><th>Impressions</th></tr></thead><tbody>';
+    topR.forEach(r => {
+      html += `<tr><td>${r.name || r.retailer_id}</td><td>${r.campaigns||0}</td><td>${(r.clicks||0).toLocaleString()}</td><td>${(r.impressions||0).toLocaleString()}</td></tr>`;
+    });
+    html += '</tbody></table></div>';
+  }
+
+  html += '</div>';
+  document.getElementById('analytics-content').innerHTML = html;
+}
+</script>
+{% endblock %}

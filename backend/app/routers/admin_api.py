@@ -391,6 +391,15 @@ def create_retailer(
     return {"success": True, "id": retailer.id}
 
 
+@router.get("/retailers")
+def list_retailers_api(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("retailers")),
+):
+    retailers = db.query(Retailer).order_by(Retailer.name).all()
+    return {"retailers": [{"id": r.id, "name": r.name} for r in retailers]}
+
+
 @router.put("/retailers/{retailer_id}")
 def update_retailer(
     retailer_id: str,

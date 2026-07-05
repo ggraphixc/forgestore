@@ -861,6 +861,16 @@ def retailer_ads(request: Request, db: Session = Depends(get_db)):
     })
 
 
+@router.get("/ads/dashboard", response_class=HTMLResponse)
+def ads_dashboard(request: Request, db: Session = Depends(get_db)):
+    admin = get_current_user_from_cookie(request, db)
+    if not admin or not has_permission(admin, "ads"):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    return render_template("admin/ads/dashboard.html", {
+        "request": request, "admin": admin, "has_permission": has_permission,
+    })
+
+
 @router.get("/ads/manage", response_class=HTMLResponse)
 def manage_ads(request: Request, db: Session = Depends(get_db)):
     admin = get_current_user_from_cookie(request, db)
