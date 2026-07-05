@@ -282,13 +282,42 @@
     gap: 12px;
     margin-top: 16px;
   }
-  .admin-preview-list img {
+  .admin-preview-item {
+    position: relative;
     width: 80px;
     height: 80px;
-    object-fit: cover;
     border-radius: 8px;
     border: 1px solid var(--stone-200);
+    overflow: hidden;
+    flex-shrink: 0;
   }
+  .admin-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .admin-preview-item .img-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .admin-preview-item:hover .img-remove { opacity: 1; }
 
   .admin-badge {
     display: inline-flex;
@@ -672,24 +701,39 @@ document.getElementById('image-input').addEventListener('change', async (e) => {
         if (data.urls) {
             const preview = document.getElementById('image-preview');
             data.urls.forEach(url => {
-                const img = document.createElement('img');
-                img.src = url;
-                preview.appendChild(img);
+                const item = document.createElement('div');
+                item.className = 'admin-preview-item';
+                item.innerHTML = '<img src="' + url + '" alt="Preview"><button type="button" class="img-remove" title="Remove">&times;</button>';
+                item.querySelector('.img-remove').addEventListener('click', () => {
+                    item.remove();
+                    const hidden = document.getElementById('images-input');
+                    const arr = JSON.parse(hidden.value || '[]');
+                    hidden.value = JSON.stringify(arr.filter(u => u !== url));
+                    updatePreviewFirst();
+                });
+                preview.appendChild(item);
             });
             const hiddenInput = document.getElementById('images-input');
             const existing = JSON.parse(hiddenInput.value || '[]');
             existing.push(...data.urls);
             hiddenInput.value = JSON.stringify(existing);
             // Update preview card image
-            if (existing.length > 0) {
-                const previewImg = document.getElementById('preview-img');
-                previewImg.innerHTML = '<img src="' + existing[0] + '" alt="Preview">';
-            }
+            updatePreviewFirst();
         }
     } catch (err) {
         showToast('Upload failed', 'error');
     }
     e.target.value = '';
 });
+
+function updatePreviewFirst() {
+    const arr = JSON.parse(document.getElementById('images-input').value || '[]');
+    const previewImg = document.getElementById('preview-img');
+    if (arr.length > 0) {
+        previewImg.innerHTML = '<img src="' + arr[0] + '" alt="Preview">';
+    } else {
+        previewImg.innerHTML = '<div class="admin-preview-placeholder"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>';
+    }
+}
 </script>
 {% endblock %}

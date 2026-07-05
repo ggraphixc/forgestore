@@ -203,13 +203,42 @@
     gap: 12px;
     margin-top: 16px;
   }
-  .admin-preview-list img {
+  .admin-preview-item {
+    position: relative;
     width: 80px;
     height: 80px;
-    object-fit: cover;
     border-radius: 12px;
     border: 1px solid var(--stone-200);
+    overflow: hidden;
+    flex-shrink: 0;
   }
+  .admin-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .admin-preview-item .img-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .admin-preview-item:hover .img-remove { opacity: 1; }
 
   .admin-btn-group {
     display: flex;
@@ -467,7 +496,10 @@
                     <div id="image-preview" class="admin-preview-list">
                         {% if product.images %}
                             {% for img in product.images %}
-                            <img src="{{ img }}" alt="{{ product.name }}">
+                            <div class="admin-preview-item">
+                                <img src="{{ img }}" alt="{{ product.name }}">
+                                <button type="button" class="img-remove" title="Remove" onclick="removeEditImage(this, '{{ img }}')">&times;</button>
+                            </div>
                             {% endfor %}
                         {% endif %}
                     </div>
@@ -619,19 +651,15 @@ document.getElementById('image-input').addEventListener('change', async (e) => {
             existing.push(...data.urls);
             hiddenInput.value = existing.join('\n');
             data.urls.forEach(url => {
-                const img = document.createElement('img');
-                img.src = url;
-                img.alt = 'Uploaded image';
-                preview.appendChild(img);
+                const item = document.createElement('div');
+                item.className = 'admin-preview-item';
+                item.innerHTML = '<img src="' + url + '" alt="Uploaded image"><button type="button" class="img-remove" title="Remove" onclick="removeEditImage(this, \'' + url + '\')">&times;</button>';
+                preview.appendChild(item);
             });
             // Update preview card image
             const previewImg = document.getElementById('preview-img');
             if (previewImg && !previewImg.querySelector('img')) {
-                const newImg = document.createElement('img');
-                newImg.src = data.urls[0];
-                newImg.alt = 'Product preview';
-                previewImg.innerHTML = '';
-                previewImg.appendChild(newImg);
+                previewImg.innerHTML = '<img src="' + data.urls[0] + '" alt="Product preview">';
             }
         }
     } catch (err) {
@@ -639,5 +667,20 @@ document.getElementById('image-input').addEventListener('change', async (e) => {
     }
     e.target.value = '';
 });
+
+function removeEditImage(btn, url) {
+    const item = btn.closest('.admin-preview-item');
+    if (item) item.remove();
+    const hiddenInput = document.getElementById('images-input');
+    const arr = hiddenInput.value ? hiddenInput.value.split('\n').filter(l => l.trim()) : [];
+    hiddenInput.value = arr.filter(u => u !== url).join('\n');
+    const previewImg = document.getElementById('preview-img');
+    const remaining = document.querySelectorAll('#image-preview .admin-preview-item img');
+    if (remaining.length > 0) {
+        previewImg.innerHTML = '<img src="' + remaining[0].src + '" alt="Product preview">';
+    } else {
+        previewImg.innerHTML = '<div class="admin-preview-placeholder"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>';
+    }
+}
 </script>
 {% endblock %}
