@@ -291,38 +291,44 @@ def delete_product(
             raise HTTPException(status_code=403, detail="You can only delete your own products")
     
     # Delete ALL child records referencing product.id BEFORE deleting the product
-    # This avoids NOT NULL constraint violations from SQLAlchemy's default SET NULL behavior
     from sqlalchemy import text
     pid = product_id
-    fk_query = text("""
-        SELECT tc.table_name, kcu.column_name
-        FROM information_schema.table_constraints tc
-        JOIN information_schema.key_column_usage kcu
-            ON tc.constraint_name = kcu.constraint_name
-        JOIN information_schema.constraint_column_usage ccu
-            ON tc.constraint_name = ccu.constraint_name
-        WHERE tc.constraint_type = 'FOREIGN KEY'
-            AND ccu.table_name = 'product'
-            AND ccu.column_name = 'id'
-    """)
-    rows = db.execute(fk_query).fetchall()
-    for table_name, col_name in rows:
-        try:
-            db.execute(text(f'DELETE FROM "{table_name}" WHERE "{col_name}" = :pid'), {"pid": pid})
-        except Exception:
-            db.rollback()
-    # Also handle ProductChatReply via ProductChatMessage.id
     try:
-        db.execute(text(
-            'DELETE FROM product_chat_reply WHERE message_id IN '
-            '(SELECT id FROM product_chat_message WHERE product_id = :pid)'
-        ), {"pid": pid})
+        fk_query = text("""
+            SELECT tc.table_name, kcu.column_name
+            FROM information_schema.table_constraints tc
+            JOIN information_schema.key_column_usage kcu
+                ON tc.constraint_name = kcu.constraint_name
+            JOIN information_schema.constraint_column_usage ccu
+                ON tc.constraint_name = ccu.constraint_name
+            WHERE tc.constraint_type = 'FOREIGN KEY'
+                AND ccu.table_name = 'product'
+                AND ccu.column_name = 'id'
+        """)
+        rows = db.execute(fk_query).fetchall()
+        for table_name, col_name in rows:
+            try:
+                db.execute(text(f'DELETE FROM "{table_name}" WHERE "{col_name}" = :pid'), {"pid": pid})
+            except Exception:
+                pass  # skip tables where column doesn't exist or other issues
+        # Also handle ProductChatReply via ProductChatMessage.id
+        try:
+            db.execute(text(
+                'DELETE FROM product_chat_reply WHERE message_id IN '
+                '(SELECT id FROM product_chat_message WHERE product_id = :pid)'
+            ), {"pid": pid})
+        except Exception:
+            pass
+        db.flush()
     except Exception:
         db.rollback()
-    db.flush()
 
-    db.delete(product)
-    db.commit()
+    try:
+        db.delete(product)
+        db.commit()
+    except Exception as e2:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Delete failed: {str(e2)}")
 
     log_admin_action(db, admin, "delete", "product", product_id, f"Deleted product '{product.name}'")
     return {"success": True}
