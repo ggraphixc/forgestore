@@ -439,9 +439,9 @@
                 </div>
 
                 <div class="admin-form-group">
-                    <label class="admin-form-label">Specifications (JSON)</label>
-                    <textarea name="specifications" rows="3" class="admin-form-textarea" placeholder='{"weight": "2kg", "dimensions": "30x20x10cm"}'>{{ product.specifications|tojson if product.specifications else '' }}</textarea>
-                    <p style="font-size:12px;color:#a8a29e;margin-top:4px;">Enter key-value pairs as JSON.</p>
+                    <label class="admin-form-label">Specifications</label>
+                    <input type="text" name="specifications" value="{{ product.specifications|join(', ') if product.specifications and product.specifications is mapping else (product.specifications or '') }}" class="admin-form-input" placeholder="e.g. Weight: 2kg, Dimensions: 30x20x10cm">
+                    <p style="font-size:12px;color:#a8a29e;margin-top:4px;">Comma-separated key-value pairs.</p>
                 </div>
 
                 <div class="admin-form-group">
@@ -584,7 +584,7 @@ async function submitEditProduct(form) {
     if (data.discount_price) data.discount_price = parseFloat(data.discount_price) || null;
     if (data.inventory) data.inventory = parseInt(data.inventory) || 0;
     if (data.specifications) {
-        try { data.specifications = JSON.parse(data.specifications); } catch(e) { data.specifications = null; }
+        try { data.specifications = Object.fromEntries(data.specifications.split(',').map(s => s.split(':').map(x => x.trim()))); } catch(e) { data.specifications = null; }
     }
 
     try {

@@ -547,9 +547,9 @@
                 </div>
                 <div class="admin-stack" style="gap:16px;">
                     <div class="admin-form-group">
-                        <label class="admin-form-label">Product Specifications (JSON)</label>
-                        <textarea name="specifications" rows="4" class="admin-form-textarea" placeholder='{"weight": "2kg", "dimensions": "30x20x10cm", "color": "Natural Wood"}'></textarea>
-                        <p style="font-size:12px;color:#a8a29e;margin-top:4px;">Enter key-value pairs as JSON. Used for product details on the storefront.</p>
+                        <label class="admin-form-label">Product Specifications</label>
+                        <input type="text" name="specifications" class="admin-form-input" placeholder="e.g. Weight: 2kg, Dimensions: 30x20x10cm, Color: Natural Wood">
+                        <p style="font-size:12px;color:#a8a29e;margin-top:4px;">Comma-separated key-value pairs. Used for product details on the storefront.</p>
                     </div>
                 </div>
             </div>
@@ -635,7 +635,7 @@ document.getElementById('product-form').addEventListener('submit', async (e) => 
         sub_category: formData.get('sub_category') || null,
         retailer_id: formData.get('retailer_id') || null,
         vendor_id: formData.get('vendor_id') || null,
-        specifications: formData.get('specifications') ? JSON.parse(formData.get('specifications')) : null,
+        specifications: formData.get('specifications') ? Object.fromEntries(formData.get('specifications').split(',').map(s => s.split(':').map(x => x.trim()))) : null,
         is_new_arrival: !!formData.get('is_new_arrival'),
         is_flagship: !!formData.get('is_flagship'),
     };
