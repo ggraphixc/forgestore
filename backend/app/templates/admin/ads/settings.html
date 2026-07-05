@@ -1,4 +1,4 @@
-{% extends "admin/sidebar.html" %}
+{% extends "admin/base.html" %}
 {% block title %}Ads Pricing & Provider — ForgeStore Admin{% endblock %}
 {% block content %}
 <style>
@@ -43,7 +43,7 @@
   .sp-setting-row + .sp-setting-row { border-top: 1px solid var(--stone-100); }
   .sp-toggle { position: relative; display: inline-flex; align-items: center; cursor: pointer; min-height: 44px; }
   .sp-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
-  .sp-toggle .track { width: 2.75rem; height: 1.5rem; background: var(--stone-200); border-radius: 9999px; transition: all 0.2s; }
+  .sp-toggle .track { position: relative; width: 2.75rem; height: 1.5rem; background: var(--stone-200); border-radius: 9999px; transition: all 0.2s; }
   .sp-toggle input:checked + .track { background: var(--amber-600); }
   .sp-toggle .track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 1.25rem; height: 1.25rem; background: #fff; border: 1px solid var(--stone-300); border-radius: 50%; transition: all 0.2s; }
   .sp-toggle input:checked + .track::after { transform: translateX(100%); border-color: #fff; }

@@ -728,3 +728,35 @@ def vendor_launch_ad_campaign(
         "budget_deducted": budget,
         "remaining_balance": wallet.balance,
     }
+
+
+@router.get("/vendor/ads", response_class=HTMLResponse)
+def vendor_ads_page(request: Request, db: Session = Depends(get_db)):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return redirect
+
+    campaigns = []
+    promos = []
+    products = []
+    if retailer:
+        campaigns = db.query(AdCampaign).filter(
+            AdCampaign.retailer_id == retailer.id
+        ).order_by(desc(AdCampaign.created_at)).all()
+        promos = db.query(PromoAd).filter(
+            PromoAd.retailer_id == retailer.id
+        ).order_by(desc(PromoAd.created_at)).all()
+        products = db.query(Product).filter(
+            Product.retailer_id == retailer.id,
+            Product.is_active == True
+        ).all()
+
+    return render_template("vendor/ads.html", {
+        "request": request,
+        "admin": admin,
+        "retailer": retailer,
+        "campaigns": campaigns,
+        "promos": promos,
+        "products": products,
+        "has_permission": has_permission,
+    })

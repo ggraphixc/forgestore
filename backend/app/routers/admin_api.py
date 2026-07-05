@@ -2201,7 +2201,7 @@ def get_ads_settings(
 def update_ads_settings(
     data: dict,
     db: Session = Depends(get_db),
-    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN)),
+    admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT)),
 ):
     """Update ads-related settings (pricing, provider, toggles)."""
     settings_map = {

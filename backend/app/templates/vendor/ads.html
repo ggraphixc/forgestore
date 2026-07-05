@@ -1,0 +1,471 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}My Ads & Campaigns — ForgeStore{% endblock %}
+{% block content %}
+<style>
+  :root { --va-primary: #f59e0b; --va-primary-dark: #d97706; --va-bg: #fafaf9; --va-card: #fff; --va-border: #e7e5e4; --va-text: #1c1917; --va-muted: #78716c; --va-green: #16a34a; --va-red: #dc2626; --va-blue: #2563eb; --va-radius: 12px; }
+  .dark { --va-bg: #1c1917; --va-card: #292524; --va-border: #44403c; --va-text: #fafaf9; --va-muted: #a8a29e; }
+  .va-wrap { max-width: 1000px; margin: 0 auto; padding: 1rem; }
+  .va-header { margin-bottom: 1rem; }
+  .va-header h1 { font-size: 1.25rem; font-weight: 700; color: var(--va-text); margin: 0 0 4px; }
+  .va-header p { font-size: 0.8125rem; color: var(--va-muted); margin: 0; }
+  .va-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+  .va-stat { background: var(--va-card); border: 1px solid var(--va-border); border-radius: var(--va-radius); padding: 0.75rem; }
+  .va-stat-label { font-size: 0.6875rem; color: var(--va-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+  .va-stat-value { font-size: 1.25rem; font-weight: 700; color: var(--va-text); }
+  .va-stat-value.green { color: var(--va-green); }
+  .va-stat-value.amber { color: var(--va-primary); }
+
+  .va-tabs { display: flex; gap: 4px; background: var(--va-card); border: 1px solid var(--va-border); border-radius: var(--va-radius); padding: 4px; margin-bottom: 1rem; }
+  .va-tab { padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: none; background: transparent; color: var(--va-muted); transition: all 0.15s; }
+  .va-tab.active { background: var(--va-primary); color: #fff; }
+  .va-tab:hover:not(.active) { background: var(--va-border); color: var(--va-text); }
+  .va-tab-content { display: none; }
+  .va-tab-content.active { display: block; }
+
+  .va-panel { background: var(--va-card); border: 1px solid var(--va-border); border-radius: var(--va-radius); padding: 1rem; }
+  .va-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+  .va-panel-title { font-size: 0.9375rem; font-weight: 700; color: var(--va-text); }
+  .va-btn { padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: 1px solid var(--va-border); background: var(--va-card); color: var(--va-text); min-height: 36px; display: inline-flex; align-items: center; gap: 6px; }
+  .va-btn-primary { background: var(--va-primary); color: #fff; border-color: var(--va-primary); }
+  .va-btn-sm { padding: 4px 10px; font-size: 0.75rem; min-height: 28px; }
+  .va-btn-green { color: var(--va-green); border-color: var(--va-green); }
+  .va-btn-red { color: var(--va-red); border-color: var(--va-red); }
+  .va-btn-red:hover { background: #fef2f2; }
+
+  .va-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+  .va-table th { text-align: left; padding: 0.5rem 0.75rem; color: var(--va-muted); font-weight: 600; font-size: 0.6875rem; text-transform: uppercase; border-bottom: 1px solid var(--va-border); }
+  .va-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--va-border); color: var(--va-text); }
+  .va-table tr:last-child td { border-bottom: none; }
+  .va-badge { padding: 2px 8px; border-radius: 999px; font-size: 0.6875rem; font-weight: 600; }
+  .va-badge-active { background: #dcfce7; color: #166534; }
+  .va-badge-pending { background: #fef9c3; color: #854d0e; }
+  .va-badge-expired { background: #f3f4f6; color: #6b7280; }
+  .va-badge-inactive { background: #fef2f2; color: #991b1b; }
+  .va-empty { text-align: center; padding: 2rem; color: var(--va-muted); }
+  .va-empty svg { width: 48px; height: 48px; margin: 0 auto 0.75rem; opacity: 0.4; }
+
+  .va-promo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.75rem; }
+  .va-promo-card { background: var(--va-card); border: 1px solid var(--va-border); border-radius: var(--va-radius); overflow: hidden; }
+  .va-promo-img { height: 120px; background: #f5f5f4; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .va-promo-img img { width: 100%; height: 100%; object-fit: cover; }
+  .va-promo-body { padding: 0.75rem; }
+  .va-promo-title { font-weight: 600; font-size: 0.875rem; color: var(--va-text); margin-bottom: 4px; }
+  .va-promo-meta { font-size: 0.75rem; color: var(--va-muted); display: flex; gap: 8px; flex-wrap: wrap; }
+  .va-promo-actions { display: flex; gap: 6px; padding: 0.75rem; border-top: 1px solid var(--va-border); }
+
+  .va-modal-overlay { position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+  .va-modal-overlay.show { display: flex; }
+  .va-modal { background: var(--va-card); border-radius: var(--va-radius); width: 90%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+  .va-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--va-border); }
+  .va-modal-title { font-weight: 700; font-size: 1rem; color: var(--va-text); }
+  .va-modal-close { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--va-muted); min-width: 36px; min-height: 36px; display: flex; align-items: center; justify-content: center; }
+  .va-modal-body { padding: 1rem; }
+  .va-modal-footer { padding: 1rem; border-top: 1px solid var(--va-border); display: flex; justify-content: flex-end; gap: 8px; }
+  .va-form-group { margin-bottom: 0.75rem; }
+  .va-form-label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--va-muted); margin-bottom: 4px; }
+  .va-form-input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--va-border); border-radius: 8px; font-size: 0.8125rem; background: var(--va-card); color: var(--va-text); min-height: 36px; box-sizing: border-box; }
+  .va-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+  @media (max-width: 640px) {
+    .va-stats { grid-template-columns: repeat(2, 1fr); }
+    .va-form-row { grid-template-columns: 1fr; }
+    .va-promo-grid { grid-template-columns: 1fr; }
+    .hide-mobile { display: none !important; }
+  }
+</style>
+
+<div class="va-wrap">
+  <div class="va-header">
+    <h1>My Ads & Campaigns</h1>
+    <p>Manage your ad campaigns and promotional banners</p>
+  </div>
+
+  <div class="va-stats" id="va-stats">
+    <div class="va-stat"><div class="va-stat-label">Campaigns</div><div class="va-stat-value" id="va-stat-campaigns">-</div></div>
+    <div class="va-stat"><div class="va-stat-label">Active</div><div class="va-stat-value green" id="va-stat-active">-</div></div>
+    <div class="va-stat"><div class="va-stat-label">Clicks</div><div class="va-stat-value amber" id="va-stat-clicks">-</div></div>
+    <div class="va-stat"><div class="va-stat-label">Impressions</div><div class="va-stat-value" id="va-stat-impressions">-</div></div>
+    <div class="va-stat"><div class="va-stat-label">Promos</div><div class="va-stat-value" id="va-stat-promos">-</div></div>
+  </div>
+
+  <div class="va-tabs">
+    <button class="va-tab active" onclick="vaSwitchTab('campaigns')">My Campaigns</button>
+    <button class="va-tab" onclick="vaSwitchTab('promos')">My Promo Ads</button>
+  </div>
+
+  <!-- CAMPAIGNS TAB -->
+  <div class="va-tab-content active" id="va-tab-campaigns">
+    <div class="va-panel">
+      <div class="va-panel-header">
+        <span class="va-panel-title">Ad Campaigns</span>
+        <button class="va-btn va-btn-primary" onclick="vaOpenCampaignModal()">+ New Campaign</button>
+      </div>
+      <div id="va-campaigns-list"></div>
+    </div>
+  </div>
+
+  <!-- PROMO ADS TAB -->
+  <div class="va-tab-content" id="va-tab-promos">
+    <div class="va-panel">
+      <div class="va-panel-header">
+        <span class="va-panel-title">Promo Ads</span>
+        <button class="va-btn va-btn-primary" onclick="vaOpenPromoModal()">+ Create Promo</button>
+      </div>
+      <div class="va-promo-grid" id="va-promos-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CAMPAIGN MODAL -->
+<div class="va-modal-overlay" id="va-campaign-modal">
+  <div class="va-modal">
+    <div class="va-modal-header">
+      <span class="va-modal-title">New Ad Campaign</span>
+      <button class="va-modal-close" onclick="vaCloseCampaignModal()">&times;</button>
+    </div>
+    <div class="va-modal-body">
+      <div class="va-form-group">
+        <label class="va-form-label">Ad Type *</label>
+        <select id="va-camp-type" class="va-form-input" onchange="vaUpdatePrice()">
+          <option value="SHOP">Shop Banner — ₦10,000/mo</option>
+          <option value="PRODUCT">Product Promotion — ₦5,000/mo</option>
+        </select>
+      </div>
+      <div class="va-form-group" id="va-camp-product-group">
+        <label class="va-form-label">Product (for Product Promotion)</label>
+        <select id="va-camp-product" class="va-form-input">
+          <option value="">Select product...</option>
+        </select>
+      </div>
+      <div class="va-form-group">
+        <label class="va-form-label">Duration (months)</label>
+        <select id="va-camp-duration" class="va-form-input" onchange="vaUpdatePrice()">
+          <option value="1">1 month</option>
+          <option value="3">3 months (10% off)</option>
+          <option value="6">6 months (20% off)</option>
+        </select>
+      </div>
+      <div class="va-form-group">
+        <label class="va-form-label">Target URL (optional)</label>
+        <select id="va-camp-target-preset" class="va-form-input" onchange="vaHandleTargetPreset()">
+          <option value="">No target</option>
+          <option value="homepage">Homepage</option>
+          <option value="marketplace">Marketplace</option>
+          <option value="shop">My Shop</option>
+        </select>
+        <input type="url" id="va-camp-target-custom" class="va-form-input" placeholder="https://..." style="display:none;margin-top:6px;">
+        <input type="hidden" id="va-camp-target-url">
+      </div>
+      <div style="background:var(--va-border-light,#f5f5f4);border-radius:8px;padding:0.75rem;text-align:center;">
+        <div style="font-size:0.75rem;color:var(--va-muted);margin-bottom:4px;">Total Cost</div>
+        <div style="font-size:1.5rem;font-weight:700;color:var(--va-primary);" id="va-camp-price">₦10,000</div>
+      </div>
+    </div>
+    <div class="va-modal-footer">
+      <button class="va-btn" onclick="vaCloseCampaignModal()">Cancel</button>
+      <button class="va-btn va-btn-primary" onclick="vaSubmitCampaign()">Proceed to Payment</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROMO MODAL -->
+<div class="va-modal-overlay" id="va-promo-modal">
+  <div class="va-modal">
+    <div class="va-modal-header">
+      <span class="va-modal-title" id="va-promo-modal-title">Create Promo Ad</span>
+      <button class="va-modal-close" onclick="vaClosePromoModal()">&times;</button>
+    </div>
+    <div class="va-modal-body">
+      <input type="hidden" id="va-promo-id">
+      <div class="va-form-group">
+        <label class="va-form-label">Title *</label>
+        <input type="text" id="va-promo-title" class="va-form-input" placeholder="e.g. Summer Flash Sale">
+      </div>
+      <div class="va-form-row">
+        <div class="va-form-group">
+          <label class="va-form-label">Type *</label>
+          <select id="va-promo-subtype" class="va-form-input">
+            <option value="PROMO">General Promo</option>
+            <option value="FLASH_SALE">Flash Sale</option>
+            <option value="SUPER_SALE">Super Sale</option>
+          </select>
+        </div>
+        <div class="va-form-group">
+          <label class="va-form-label">Banner Type</label>
+          <select id="va-promo-banner-type" class="va-form-input">
+            <option value="banner">Banner</option>
+            <option value="poster">Poster</option>
+            <option value="flyer">Flyer</option>
+          </select>
+        </div>
+      </div>
+      <div class="va-form-group">
+        <label class="va-form-label">Banner Image *</label>
+        <input type="file" id="va-promo-file" accept="image/*" class="va-form-input" style="padding:0.4rem;" onchange="vaHandlePromoUpload(this)">
+        <input type="hidden" id="va-promo-banner-url">
+        <div id="va-promo-preview" style="display:none;margin-top:6px;">
+          <img id="va-promo-preview-img" src="" style="max-width:200px;max-height:100px;border-radius:8px;border:1px solid var(--va-border);object-fit:cover;">
+          <button type="button" onclick="vaClearPromoBanner()" style="margin-left:6px;padding:3px 8px;font-size:11px;color:#dc2626;background:none;border:1px solid #fecaca;border-radius:6px;cursor:pointer;">Remove</button>
+        </div>
+      </div>
+      <div class="va-form-group">
+        <label class="va-form-label">Target URL (optional)</label>
+        <input type="url" id="va-promo-target" class="va-form-input" placeholder="https://...">
+      </div>
+      <div class="va-form-row">
+        <div class="va-form-group">
+          <label class="va-form-label">Start Date</label>
+          <input type="date" id="va-promo-start" class="va-form-input">
+        </div>
+        <div class="va-form-group">
+          <label class="va-form-label">End Date</label>
+          <input type="date" id="va-promo-end" class="va-form-input">
+        </div>
+      </div>
+      <div class="va-form-group">
+        <label class="va-form-label">Notes</label>
+        <input type="text" id="va-promo-note" class="va-form-input" placeholder="Internal notes...">
+      </div>
+    </div>
+    <div class="va-modal-footer">
+      <button class="va-btn" onclick="vaClosePromoModal()">Cancel</button>
+      <button class="va-btn va-btn-primary" onclick="vaSavePromo()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const VA_PRICING = { SHOP: 10000, PRODUCT: 5000 };
+let vaCampaigns = {{ campaigns|tojson }};
+let vaPromos = {{ promos|tojson }};
+let vaProducts = {{ products|tojson }};
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Populate product dropdown
+  const sel = document.getElementById('va-camp-product');
+  vaProducts.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p.id; o.textContent = p.name;
+    sel.appendChild(o);
+  });
+  vaRenderCampaigns();
+  vaRenderPromos();
+  // Update stats
+  const active = vaCampaigns.filter(c => c.status === 'ACTIVE').length;
+  const clicks = vaCampaigns.reduce((s, c) => s + (c.clicks || 0), 0);
+  const imps = vaCampaigns.reduce((s, c) => s + (c.impressions || 0), 0);
+  document.getElementById('va-stat-campaigns').textContent = vaCampaigns.length;
+  document.getElementById('va-stat-active').textContent = active;
+  document.getElementById('va-stat-clicks').textContent = clicks.toLocaleString();
+  document.getElementById('va-stat-impressions').textContent = imps.toLocaleString();
+  document.getElementById('va-stat-promos').textContent = vaPromos.length;
+});
+
+function vaSwitchTab(tab) {
+  document.querySelectorAll('.va-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.va-tab-content').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('va-tab-' + tab).classList.add('active');
+}
+
+// ─── CAMPAIGNS ───────────────────────────────────────────────────────
+function vaRenderCampaigns() {
+  const el = document.getElementById('va-campaigns-list');
+  if (!vaCampaigns.length) {
+    el.innerHTML = '<div class="va-empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg><p>No campaigns yet</p><p style="font-size:0.75rem;">Create your first ad campaign to promote your shop or products</p></div>';
+    return;
+  }
+  let html = '<table class="va-table"><thead><tr><th>Type</th><th>Status</th><th class="hide-mobile">Clicks</th><th class="hide-mobile">Impressions</th><th>Dates</th></tr></thead><tbody>';
+  vaCampaigns.forEach(c => {
+    const badge = c.status === 'ACTIVE' ? 'va-badge-active' : c.status === 'PENDING' ? 'va-badge-pending' : 'va-badge-expired';
+    const dates = c.start_date ? new Date(c.start_date).toLocaleDateString() + ' - ' + (c.end_date ? new Date(c.end_date).toLocaleDateString() : '...') : '-';
+    html += `<tr>
+      <td>${c.ad_type}</td>
+      <td><span class="va-badge ${badge}">${c.status}</span></td>
+      <td class="hide-mobile">${(c.clicks||0).toLocaleString()}</td>
+      <td class="hide-mobile">${(c.impressions||0).toLocaleString()}</td>
+      <td style="font-size:0.75rem;">${dates}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+function vaUpdatePrice() {
+  const type = document.getElementById('va-camp-type').value;
+  const dur = parseInt(document.getElementById('va-camp-duration').value);
+  let price = VA_PRICING[type] || 10000;
+  if (dur === 3) price = Math.round(price * dur * 0.9);
+  else if (dur === 6) price = Math.round(price * dur * 0.8);
+  else price = price * dur;
+  document.getElementById('va-camp-price').textContent = '₦' + price.toLocaleString();
+  document.getElementById('va-camp-product-group').style.display = type === 'PRODUCT' ? '' : 'none';
+}
+
+function vaHandleTargetPreset() {
+  const sel = document.getElementById('va-camp-target-preset');
+  const custom = document.getElementById('va-camp-target-custom');
+  const urls = { homepage: '/', marketplace: '/marketplace', shop: '/shop' };
+  if (sel.value === 'custom') { custom.style.display = ''; custom.focus(); document.getElementById('va-camp-target-url').value = ''; }
+  else if (sel.value && urls[sel.value]) { custom.style.display = 'none'; document.getElementById('va-camp-target-url').value = urls[sel.value]; }
+  else { custom.style.display = 'none'; document.getElementById('va-camp-target-url').value = ''; }
+}
+document.getElementById('va-camp-target-custom')?.addEventListener('input', function() { document.getElementById('va-camp-target-url').value = this.value; });
+
+function vaOpenCampaignModal() { document.getElementById('va-campaign-modal').classList.add('show'); vaUpdatePrice(); }
+function vaCloseCampaignModal() { document.getElementById('va-campaign-modal').classList.remove('show'); }
+
+async function vaSubmitCampaign() {
+  const type = document.getElementById('va-camp-type').value;
+  const duration = parseInt(document.getElementById('va-camp-duration').value);
+  const productId = type === 'PRODUCT' ? document.getElementById('va-camp-product').value : null;
+  const targetUrl = document.getElementById('va-camp-target-url').value || null;
+  try {
+    const res = await fetch('/api/admin/ads/initialize', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ ad_type: type, duration_months: duration, product_id: productId, target_url: targetUrl })
+    });
+    const d = await res.json();
+    if (d.authorization_url) { window.location.href = d.authorization_url; }
+    else { showToast(d.detail || 'Failed to initialize', 'error'); }
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+// ─── PROMO ADS ───────────────────────────────────────────────────────
+function showToast(message, type) {
+  const existing = document.querySelector('.va-toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = 'va-toast';
+  const bg = type === 'success' ? '#16a34a' : type === 'error' ? '#dc2626' : '#f59e0b';
+  toast.style.cssText = 'position:fixed;bottom:6rem;left:50%;transform:translateX(-50%);background:'+bg+';color:#fff;padding:0.625rem 1.25rem;border-radius:8px;font-size:0.8125rem;font-weight:600;z-index:999;box-shadow:0 4px 12px rgba(0,0,0,0.15);animation:toastSlideIn 0.3s ease-out;';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+function vaRenderPromos() {
+  const el = document.getElementById('va-promos-grid');
+  if (!vaPromos.length) {
+    el.innerHTML = '<div class="va-empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg><p>No promo ads yet</p></div>';
+    return;
+  }
+  el.innerHTML = vaPromos.map(p => {
+    const badge = p.status === 'ACTIVE' ? 'va-badge-active' : p.status === 'INACTIVE' ? 'va-badge-inactive' : 'va-badge-expired';
+    const dates = p.start_date ? new Date(p.start_date).toLocaleDateString() + ' - ' + (p.end_date ? new Date(p.end_date).toLocaleDateString() : '...') : '';
+    return `<div class="va-promo-card">
+      <div class="va-promo-img">${p.banner_url ? '<img src="'+p.banner_url+'" alt="'+p.title+'">' : '<span style="color:var(--va-muted);font-size:0.75rem;">No image</span>'}</div>
+      <div class="va-promo-body">
+        <div class="va-promo-title">${p.title}</div>
+        <div class="va-promo-meta"><span class="va-badge ${badge}">${p.status}</span><span>${p.ad_subtype}</span>${dates ? '<span>'+dates+'</span>' : ''}</div>
+      </div>
+      <div class="va-promo-actions">
+        <button class="va-btn va-btn-sm" onclick="vaEditPromo('${p.id}')">Edit</button>
+        ${p.status === 'ACTIVE' ? `<button class="va-btn va-btn-sm va-btn-red" onclick="vaTogglePromo('${p.id}','INACTIVE')">Deactivate</button>` : `<button class="va-btn va-btn-sm va-btn-green" onclick="vaTogglePromo('${p.id}','ACTIVE')">Activate</button>`}
+        <button class="va-btn va-btn-sm va-btn-red" onclick="vaDeletePromo('${p.id}')" style="margin-left:auto;">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function vaHandlePromoUpload(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) { document.getElementById('va-promo-preview-img').src = ev.target.result; document.getElementById('va-promo-preview').style.display = ''; };
+  reader.readAsDataURL(file);
+  const fd = new FormData(); fd.append('files', file);
+  fetch('/api/admin/upload', { method: 'POST', body: fd })
+    .then(r => { if (!r.ok) throw new Error(r.statusText); return r.json(); })
+    .then(d => { if (d.urls && d.urls.length) document.getElementById('va-promo-banner-url').value = d.urls[0]; })
+    .catch(e => showToast('Upload failed: ' + e.message, 'error'));
+}
+function vaClearPromoBanner() { document.getElementById('va-promo-banner-url').value = ''; document.getElementById('va-promo-file').value = ''; document.getElementById('va-promo-preview').style.display = 'none'; }
+
+function vaOpenPromoModal(id) {
+  document.getElementById('va-promo-modal').classList.add('show');
+  if (!id) {
+    document.getElementById('va-promo-modal-title').textContent = 'Create Promo Ad';
+    document.getElementById('va-promo-id').value = '';
+    document.getElementById('va-promo-title').value = '';
+    document.getElementById('va-promo-subtype').value = 'PROMO';
+    document.getElementById('va-promo-banner-type').value = 'banner';
+    document.getElementById('va-promo-banner-url').value = '';
+    document.getElementById('va-promo-file').value = '';
+    document.getElementById('va-promo-preview').style.display = 'none';
+    document.getElementById('va-promo-target').value = '';
+    document.getElementById('va-promo-start').value = '';
+    document.getElementById('va-promo-end').value = '';
+    document.getElementById('va-promo-note').value = '';
+  }
+}
+function vaClosePromoModal() { document.getElementById('va-promo-modal').classList.remove('show'); }
+
+function vaEditPromo(id) {
+  const p = vaPromos.find(a => a.id === id); if (!p) return;
+  document.getElementById('va-promo-modal-title').textContent = 'Edit Promo Ad';
+  document.getElementById('va-promo-id').value = p.id;
+  document.getElementById('va-promo-title').value = p.title;
+  document.getElementById('va-promo-subtype').value = p.ad_subtype;
+  document.getElementById('va-promo-banner-type').value = p.banner_type || 'banner';
+  document.getElementById('va-promo-banner-url').value = p.banner_url || '';
+  if (p.banner_url) { document.getElementById('va-promo-preview-img').src = p.banner_url; document.getElementById('va-promo-preview').style.display = ''; }
+  document.getElementById('va-promo-target').value = p.target_url || '';
+  document.getElementById('va-promo-start').value = p.start_date ? p.start_date.slice(0,10) : '';
+  document.getElementById('va-promo-end').value = p.end_date ? p.end_date.slice(0,10) : '';
+  document.getElementById('va-promo-note').value = p.note || '';
+  document.getElementById('va-promo-modal').classList.add('show');
+}
+
+async function vaSavePromo() {
+  const id = document.getElementById('va-promo-id').value;
+  const bannerUrl = document.getElementById('va-promo-banner-url').value;
+  if (!bannerUrl) { showToast('Please upload a banner image', 'error'); return; }
+  const body = {
+    title: document.getElementById('va-promo-title').value,
+    ad_subtype: document.getElementById('va-promo-subtype').value,
+    banner_type: document.getElementById('va-promo-banner-type').value,
+    banner_url: bannerUrl,
+    target_url: document.getElementById('va-promo-target').value || null,
+    start_date: document.getElementById('va-promo-start').value || null,
+    end_date: document.getElementById('va-promo-end').value || null,
+    note: document.getElementById('va-promo-note').value || null,
+  };
+  if (!body.title) { showToast('Title is required', 'error'); return; }
+  try {
+    const url = id ? `/api/admin/promo-ads/${id}` : '/api/admin/promo-ads';
+    const method = id ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await res.json();
+    if (d.success || d.promo_ad) { showToast(id ? 'Updated' : 'Created', 'success'); vaClosePromoModal(); vaReloadPromos(); }
+    else showToast(d.detail || 'Failed', 'error');
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function vaTogglePromo(id, status) {
+  try {
+    const res = await fetch(`/api/admin/promo-ads/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status }) });
+    const d = await res.json();
+    if (d.success) { showToast('Updated', 'success'); vaReloadPromos(); }
+  } catch(e) { showToast('Error', 'error'); }
+}
+
+async function vaDeletePromo(id) {
+  if (!confirm('Delete this promo ad?')) return;
+  try {
+    const res = await fetch(`/api/admin/promo-ads/${id}`, { method: 'DELETE' });
+    const d = await res.json();
+    if (d.success) { showToast('Deleted', 'success'); vaReloadPromos(); }
+  } catch(e) { showToast('Error', 'error'); }
+}
+
+async function vaReloadPromos() {
+  try {
+    const res = await fetch('/api/admin/promo-ads');
+    const data = await res.json();
+    vaPromos = data.promo_ads || [];
+    document.getElementById('va-stat-promos').textContent = vaPromos.length;
+    vaRenderPromos();
+  } catch(e) {}
+}
+</script>
+{% endblock %}

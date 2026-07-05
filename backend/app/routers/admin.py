@@ -908,8 +908,11 @@ def ad_analytics_page(request: Request, db: Session = Depends(get_db)):
 @router.get("/ads/settings", response_class=HTMLResponse)
 def ads_settings_page(request: Request, db: Session = Depends(get_db)):
     admin = get_current_user_from_cookie(request, db)
-    if not admin or not has_permission(admin, "settings"):
+    if not admin:
         return RedirectResponse(url="/admin/login", status_code=302)
+    role_val = admin.role.value if hasattr(admin.role, 'value') else admin.role
+    if role_val not in ("DIR_ADMIN", "MANAGEMENT"):
+        return RedirectResponse(url="/admin/dashboard", status_code=302)
 
     from app.routers.admin_api import AD_PRICING, PROMO_PRICING, AD_PROVIDERS
     from app.models import PromoAd
