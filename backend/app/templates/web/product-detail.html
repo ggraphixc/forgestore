@@ -1252,7 +1252,9 @@
       <h1 class="pd-title">{{ product.name }}</h1>
 
       <div class="pd-sales-vendor">
-        <span>{{ product.review_count|default(0) }}+ sold</span>
+        <span>{{ product.sold_count|default(0) }}+ sold</span>
+        <span>|</span>
+        <span>{{ product.views_count|default(0) }} views</span>
         <span>|</span>
         {% if product.retailer %}
         <span>Sold by <a href="/shop/shops/{{ product.retailer.slug }}" style="color:var(--pd-accent-hover);text-decoration:none;font-weight:500;">{{ product.retailer.name }}</a></span>

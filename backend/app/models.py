@@ -99,6 +99,8 @@ class Product(Base):
     review_count = Column(Integer, nullable=False, default=0)
     is_new_arrival = Column(Boolean, nullable=False, default=False)
     is_flagship = Column(Boolean, nullable=False, default=False)
+    views_count = Column(Integer, nullable=False, default=0)
+    sold_count = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 

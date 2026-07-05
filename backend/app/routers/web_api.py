@@ -1000,6 +1000,7 @@ def checkout(
             prod = product_map.get(item_data["product_id"])
             if prod:
                 prod.inventory = max(0, prod.inventory - item_data["quantity"])
+                prod.sold_count = (prod.sold_count or 0) + item_data["quantity"]
 
     # ── Record point redemption ──
     if points_discount > 0 and points_redeemed > 0:

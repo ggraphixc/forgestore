@@ -321,6 +321,13 @@ def product_detail(request: Request, slug: str, db: Session = Depends(get_db)):
     if not product:
         return _render_page("web/404.html", request, db, status_code=404)
 
+    # Increment views count
+    try:
+        product.views_count = (product.views_count or 0) + 1
+        db.commit()
+    except Exception:
+        db.rollback()
+
     retailer = db.query(Retailer).filter(Retailer.id == product.retailer_id).first() if product.retailer_id else None
     category = db.query(Category).filter(Category.id == product.category_id).first() if product.category_id else None
     reviews = db.query(Review).filter(Review.product_id == product.id).order_by(desc(Review.created_at)).all()

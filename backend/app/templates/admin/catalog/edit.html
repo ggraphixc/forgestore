@@ -375,6 +375,17 @@
                     <input id="name" name="name" value="{{ product.name }}" required class="admin-form-input" oninput="updateEditPreview()">
                 </div>
 
+                <div class="admin-grid-2">
+                    <div class="admin-form-group">
+                        <label class="admin-form-label" for="slug">Slug</label>
+                        <input id="slug" name="slug" value="{{ product.slug }}" required class="admin-form-input">
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-form-label" for="brand">Brand</label>
+                        <input id="brand" name="brand" value="{{ product.brand or '' }}" class="admin-form-input" placeholder="e.g. Artisan Crafts Co." oninput="updateEditPreview()">
+                    </div>
+                </div>
+
                 <div class="admin-form-group">
                     <label class="admin-form-label" for="description">Description</label>
                     <textarea id="description" name="description" rows="3" class="admin-form-textarea">{{ product.description or '' }}</textarea>
@@ -406,6 +417,13 @@
                         </select>
                     </div>
                     <div class="admin-form-group">
+                        <label class="admin-form-label">Sub-Category</label>
+                        <input type="text" name="sub_category" value="{{ product.sub_category or '' }}" class="admin-form-input" placeholder="e.g. Oak Furniture">
+                    </div>
+                </div>
+
+                <div class="admin-grid-2">
+                    <div class="admin-form-group">
                         <label class="admin-form-label">Retailer</label>
                         <select name="retailer_id" class="admin-form-select">
                             <option value="">None</option>
@@ -414,6 +432,16 @@
                             {% endfor %}
                         </select>
                     </div>
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Vendor ID</label>
+                        <input type="text" name="vendor_id" value="{{ product.vendor_id or '' }}" class="admin-form-input" placeholder="Optional vendor reference">
+                    </div>
+                </div>
+
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Specifications (JSON)</label>
+                    <textarea name="specifications" rows="3" class="admin-form-textarea" placeholder='{"weight": "2kg", "dimensions": "30x20x10cm"}'>{{ product.specifications|tojson if product.specifications else '' }}</textarea>
+                    <p style="font-size:12px;color:#a8a29e;margin-top:4px;">Enter key-value pairs as JSON.</p>
                 </div>
 
                 <div class="admin-form-group">
@@ -426,11 +454,6 @@
                         </label>
                         {% endfor %}
                     </div>
-                </div>
-
-                <div class="admin-form-group">
-                    <label class="admin-form-label" for="brand">Brand</label>
-                    <input id="brand" name="brand" value="{{ product.brand or '' }}" class="admin-form-input" placeholder="e.g. Artisan Crafts Co." oninput="updateEditPreview()">
                 </div>
 
                 <div class="admin-form-group">
@@ -560,6 +583,9 @@ async function submitEditProduct(form) {
     if (data.price) data.price = parseFloat(data.price);
     if (data.discount_price) data.discount_price = parseFloat(data.discount_price) || null;
     if (data.inventory) data.inventory = parseInt(data.inventory) || 0;
+    if (data.specifications) {
+        try { data.specifications = JSON.parse(data.specifications); } catch(e) { data.specifications = null; }
+    }
 
     try {
         const res = await fetch(`/api/admin/products/${document.querySelector('[name="id"]').value}`, {
