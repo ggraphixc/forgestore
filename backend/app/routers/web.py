@@ -7,7 +7,7 @@ from sqlalchemy import desc, func
 from urllib.parse import quote
 
 from app.database import get_db
-from app.models import Product, Category, Retailer, Order, OrderItem, Review, User, Settings, WishlistItem, AdCampaign
+from app.models import Product, Category, Retailer, Order, OrderItem, Review, User, Settings, WishlistItem, AdCampaign, PromoAd
 from app.auth import get_current_user_from_cookie, get_current_customer_from_cookie
 from app.templates_shared import render_template
 from app.config import get_site_settings, get_settings
@@ -203,6 +203,12 @@ def homepage(request: Request, background_tasks: BackgroundTasks, db: Session = 
         AdCampaign.end_date > utcnow()
     ).order_by(desc(AdCampaign.impressions), desc(AdCampaign.created_at)).limit(5).all()
 
+    # Active promo ads (admin-created flash sales, holiday deals, etc.)
+    active_promo_ads = db.query(PromoAd).filter(
+        PromoAd.status == "ACTIVE",
+        (PromoAd.end_date == None) | (PromoAd.end_date > utcnow())
+    ).order_by(desc(PromoAd.created_at)).limit(6).all()
+
     # Track impressions asynchronously — avoids blocking page load
     if active_ads:
         background_tasks.add_task(log_ad_impressions_background, [ad.id for ad in active_ads])
@@ -217,6 +223,7 @@ def homepage(request: Request, background_tasks: BackgroundTasks, db: Session = 
         "categories": categories,
         "top_products": top_products,
         "active_ads": active_ads,
+        "active_promo_ads": active_promo_ads,
     })
 
 
@@ -251,6 +258,12 @@ def marketplace(request: Request, background_tasks: BackgroundTasks, db: Session
         AdCampaign.end_date > utcnow()
     ).order_by(desc(AdCampaign.created_at)).limit(4).all()
 
+    # Active promo ads (admin-created flash sales, holiday deals, etc.)
+    active_promo_ads = db.query(PromoAd).filter(
+        PromoAd.status == "ACTIVE",
+        (PromoAd.end_date == None) | (PromoAd.end_date > utcnow())
+    ).order_by(desc(PromoAd.created_at)).limit(6).all()
+
     # Track impressions asynchronously — avoids blocking page load
     if active_ad_campaigns:
         background_tasks.add_task(log_ad_impressions_background, [ad.id for ad in active_ad_campaigns])
@@ -263,6 +276,7 @@ def marketplace(request: Request, background_tasks: BackgroundTasks, db: Session
         "retailers": retailers,
         "cat_counts": cat_counts,
         "active_ad_campaigns": active_ad_campaigns,
+        "active_promo_ads": active_promo_ads,
     })
 
 

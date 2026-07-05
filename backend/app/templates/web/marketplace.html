@@ -228,6 +228,37 @@
 }
 .mp-page-btn--active:hover { background: var(--c-amber-600); border-color: var(--c-amber-600); }
 .mp-page-btn--disabled { opacity: 0.4; pointer-events: none; }
+
+/* Promo Ad Banners */
+.mp-promo-section { margin-bottom: 2rem; }
+.mp-promo-scroll {
+  display: flex; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch; padding-bottom: 0.5rem;
+}
+.mp-promo-scroll::-webkit-scrollbar { height: 4px; }
+.mp-promo-scroll::-webkit-scrollbar-track { background: transparent; }
+.mp-promo-scroll::-webkit-scrollbar-thumb { background: var(--c-stone-200); border-radius: 4px; }
+.mp-promo-card {
+  flex: 0 0 280px; scroll-snap-align: start; border-radius: 1rem; overflow: hidden;
+  border: 1px solid var(--c-stone-200); background: #fff; text-decoration: none;
+  transition: box-shadow 0.2s, transform 0.2s; display: block;
+}
+.mp-promo-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.08); transform: translateY(-2px); }
+.mp-promo-card img { width: 100%; height: 140px; object-fit: cover; display: block; }
+.mp-promo-card-body { padding: 0.75rem 1rem; }
+.mp-promo-badge {
+  display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px;
+  border-radius: 9999px; font-size: 0.625rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.mp-promo-badge--flash { background: #fef2f2; color: #dc2626; }
+.mp-promo-badge--super { background: #fff7ed; color: #ea580c; }
+.mp-promo-badge--hot { background: #fff1f2; color: #e11d48; }
+.mp-promo-badge--festival { background: #faf5ff; color: #9333ea; }
+.mp-promo-badge--seasonal { background: #eff6ff; color: #2563eb; }
+.mp-promo-badge--general { background: var(--c-amber-50); color: var(--c-amber-700); }
+.mp-promo-title { font-size: 0.875rem; font-weight: 700; color: var(--c-stone-800); margin: 0.375rem 0 0; }
+.mp-promo-dates { font-size: 0.6875rem; color: var(--c-stone-400); margin-top: 0.25rem; }
 </style>
 
 <div class="mp-page">
@@ -239,6 +270,34 @@
       <p class="mp-header-count">{{ products|length }} unique piece{% if products|length != 1 %}s{% endif %}</p>
     </div>
   </div>
+
+  {% if active_promo_ads %}
+  <div class="mp-promo-section">
+    <div class="mp-promo-scroll">
+      {% for ad in active_promo_ads %}
+      <a href="{{ ad.target_url or '/shop/marketplace' }}" class="mp-promo-card" style="animation: fadeIn 0.4s ease-out {{ (loop.index0 * 80) }}ms both;">
+        {% if ad.banner_url %}
+        <img loading="lazy" src="{{ ad.banner_url }}" alt="{{ ad.title }}">
+        {% endif %}
+        <div class="mp-promo-card-body">
+          <span class="mp-promo-badge mp-promo-badge--{{ ad.ad_subtype|lower|replace('_sale','')|replace('_','') }}">
+            {% if ad.ad_subtype == 'FLASH_SALE' %}&#9889; Flash Sale
+            {% elif ad.ad_subtype == 'SUPER_SALE' %}&#128293; Super Sale
+            {% elif ad.ad_subtype == 'HOT_WEEK' %>&#128293; Hot Week
+            {% elif ad.ad_subtype == 'FESTIVAL' %>&#127873; Festival
+            {% elif ad.ad_subtype == 'SEASONAL_SALE' %>&#128197; Seasonal
+            {% else %}&#128204; Promo{% endif %}
+          </span>
+          <p class="mp-promo-title">{{ ad.title }}</p>
+          {% if ad.start_date and ad.end_date %}
+          <p class="mp-promo-dates">{{ ad.start_date.strftime('%b %d') }} – {{ ad.end_date.strftime('%b %d') }}</p>
+          {% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
 
   {% if active_ad_campaigns %}
   <div class="mp-ad-grid">
