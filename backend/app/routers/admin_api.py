@@ -290,8 +290,38 @@ def delete_product(
         if product.retailer_id != admin.vendor_id:
             raise HTTPException(status_code=403, detail="You can only delete your own products")
     
-    db.delete(product)
-    db.commit()
+    try:
+        db.delete(product)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        # FK constraint violation — try manual cleanup then retry
+        try:
+            from app.models import (
+                WishlistItem, Review, CartItem, PersistentCartItem,
+                ProductChatMessage, ProductChatReply, ProductAffiliateToken,
+                CartRecommendation, SearchClickAnalytics,
+            )
+            pid = product_id
+            db.query(ProductChatReply).filter(
+                ProductChatReply.message_id.in_(
+                    db.query(ProductChatMessage.id).filter(ProductChatMessage.product_id == pid)
+                )
+            ).delete(synchronize_session=False)
+            db.query(ProductChatMessage).filter(ProductChatMessage.product_id == pid).delete(synchronize_session=False)
+            db.query(WishlistItem).filter(WishlistItem.product_id == pid).delete(synchronize_session=False)
+            db.query(Review).filter(Review.product_id == pid).delete(synchronize_session=False)
+            db.query(CartItem).filter(CartItem.product_id == pid).delete(synchronize_session=False)
+            db.query(PersistentCartItem).filter(PersistentCartItem.product_id == pid).delete(synchronize_session=False)
+            db.query(ProductAffiliateToken).filter(ProductAffiliateToken.product_id == pid).delete(synchronize_session=False)
+            db.query(CartRecommendation).filter(CartRecommendation.product_id == pid).delete(synchronize_session=False)
+            db.query(SearchClickAnalytics).filter(SearchClickAnalytics.product_id == pid).delete(synchronize_session=False)
+            db.delete(product)
+            db.commit()
+        except Exception as e2:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"Failed to delete product: {str(e2)}")
+
     log_admin_action(db, admin, "delete", "product", product_id, f"Deleted product '{product.name}'")
     return {"success": True}
 

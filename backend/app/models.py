@@ -837,7 +837,7 @@ class CartRecommendation(Base):
 
     id = Column(String, primary_key=True, default=_uuid)
     cart_token = Column(String(255), nullable=False, index=True)
-    product_id = Column(String, ForeignKey("product.id", ondelete="SET NULL"), nullable=False)
+    product_id = Column(String, ForeignKey("product.id", ondelete="SET NULL"), nullable=True)
     reason = Column(String(255), nullable=True)  # complementary, popular, frequently_bought
     score = Column(Float, nullable=False, default=0.0)
     shown = Column(Boolean, nullable=False, default=False)
