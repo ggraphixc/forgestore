@@ -188,10 +188,12 @@ async function saveAdsSettings() {
   document.querySelectorAll('input[name^="pricing_"]').forEach(el => { const st = el.name.replace('pricing_', ''); data.promo_pricing[st] = { price_per_day: parseInt(el.value) || 0 }; });
   document.querySelectorAll('input[name^="promo_price_"]').forEach(el => { const st = el.name.replace('promo_price_', ''); if (!data.promo_pricing[st]) data.promo_pricing[st] = {}; data.promo_pricing[st].price_per_day = parseInt(el.value) || 0; });
   try {
-    const res = await fetch('/api/admin/ads/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-    const result = await res.json();
+    const res = await fetch('/api/admin/ads/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(data) });
+    const text = await res.text();
+    let result;
+    try { result = JSON.parse(text); } catch(e) { showToast('Server error: ' + text.substring(0, 100), 'error'); return; }
     if (result.success) { showToast('Ads settings saved successfully!', 'success'); } else { showToast(result.detail || 'Failed to save', 'error'); }
-  } catch { showToast('Network error', 'error'); }
+  } catch(e) { showToast('Network error: ' + e.message, 'error'); }
   finally { btn.disabled = false; btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Save Ads Settings'; }
 }
 function showToast(message, type) {
