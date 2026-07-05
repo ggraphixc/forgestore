@@ -290,6 +290,8 @@ def delete_product(
         if product.retailer_id != admin.vendor_id:
             raise HTTPException(status_code=403, detail="You can only delete your own products")
     
+    product_name = product.name  # save before delete since raw SQL invalidates the ORM object
+    
     # Delete using raw SQL to avoid SQLAlchemy ORM trying to SET NULL on NOT NULL columns
     from sqlalchemy import text
     pid = product_id
@@ -328,7 +330,7 @@ def delete_product(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to delete product: {str(e)}")
 
-    log_admin_action(db, admin, "delete", "product", product_id, f"Deleted product '{product.name}'")
+    log_admin_action(db, admin, "delete", "product", product_id, f"Deleted product '{product_name}'")
     return {"success": True}
 
 
