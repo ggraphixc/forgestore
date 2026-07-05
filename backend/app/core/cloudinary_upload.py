@@ -1,9 +1,8 @@
 """Cloudinary configuration and upload helper.
 
-Requires these env vars:
-  CLOUDINARY_CLOUD_NAME
-  CLOUDINARY_API_KEY
-  CLOUDINARY_API_SECRET
+Requires ONE of:
+  CLOUDINARY_URL=cloudinary://key:secret@cloud  (preferred)
+  CLOUDINARY_CLOUD_NAME + CLOUDINARY_API_KEY + CLOUDINARY_API_SECRET
 
 Get free credentials at https://cloudinary.com (25GB storage free).
 """
@@ -21,9 +20,19 @@ def _ensure_configured():
     global _configured
     if _configured:
         return
-    cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME", "")
-    api_key = os.getenv("CLOUDINARY_API_KEY", "")
-    api_secret = os.getenv("CLOUDINARY_API_SECRET", "")
+
+    # Try CLOUDINARY_URL first (standard format from Cloudinary dashboard)
+    url = os.getenv("CLOUDINARY_URL", "")
+    if url:
+        cloudinary.config(url=url, secure=True)
+        _configured = True
+        logger.info("Cloudinary configured from CLOUDINARY_URL")
+        return
+
+    # Fallback to individual vars
+    cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME", "").strip()
+    api_key = os.getenv("CLOUDINARY_API_KEY", "").strip()
+    api_secret = os.getenv("CLOUDINARY_API_SECRET", "").strip()
     if cloud_name and api_key and api_secret:
         cloudinary.config(
             cloud_name=cloud_name,
@@ -34,7 +43,7 @@ def _ensure_configured():
         _configured = True
         logger.info("Cloudinary configured: cloud=%s", cloud_name)
     else:
-        logger.warning("Cloudinary not configured: missing CLOUDINARY_CLOUD_NAME/KEY/SECRET")
+        logger.warning("Cloudinary not configured: no CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME/KEY/SECRET")
 
 
 def is_cloudinary_configured() -> bool:
