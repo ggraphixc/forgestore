@@ -173,9 +173,8 @@ async def product_create(
     if files:
         from app.core.cloudinary_upload import is_cloudinary_configured, upload_to_cloudinary
         use_cloudinary = is_cloudinary_configured()
-        if not use_cloudinary:
-            upload_dir = os.path.join("app", "static", "uploads", "products")
-            os.makedirs(upload_dir, exist_ok=True)
+        upload_dir = os.path.join("app", "static", "uploads", "products")
+        os.makedirs(upload_dir, exist_ok=True)
         for file in files:
             raw = await file.read()
             if use_cloudinary:

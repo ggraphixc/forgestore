@@ -570,11 +570,14 @@ async function handlePromoBannerUpload(input) {
         const fd = new FormData();
         fd.append('files', file);
         const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+        if (!res.ok) { showToast('Upload failed: ' + res.statusText, 'error'); return; }
         const data = await res.json();
         if (data.urls && data.urls.length) {
             document.getElementById('banner_url').value = data.urls[0];
+        } else {
+            showToast('Upload failed: no URL returned', 'error');
         }
-    } catch(e) { showToast('Upload failed', 'error'); }
+    } catch(e) { showToast('Upload failed: ' + e.message, 'error'); }
 }
 
 function clearPromoBanner() {

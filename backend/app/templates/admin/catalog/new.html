@@ -697,6 +697,7 @@ document.getElementById('image-input').addEventListener('change', async (e) => {
     files.forEach(f => uploadForm.append('files', f));
     try {
         const res = await fetch('/api/admin/upload', { method: 'POST', body: uploadForm });
+        if (!res.ok) { showToast('Upload failed: ' + res.statusText, 'error'); return; }
         const data = await res.json();
         if (data.urls) {
             const preview = document.getElementById('image-preview');

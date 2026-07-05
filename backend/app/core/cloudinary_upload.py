@@ -8,10 +8,12 @@ Requires these env vars:
 Get free credentials at https://cloudinary.com (25GB storage free).
 """
 import os
+import logging
 import cloudinary
 import cloudinary.uploader
 from app.core.image_compressor import compress_image
 
+logger = logging.getLogger("forgestore.cloudinary")
 _configured = False
 
 
@@ -30,6 +32,9 @@ def _ensure_configured():
             secure=True,
         )
         _configured = True
+        logger.info("Cloudinary configured: cloud=%s", cloud_name)
+    else:
+        logger.warning("Cloudinary not configured: missing CLOUDINARY_CLOUD_NAME/KEY/SECRET")
 
 
 def is_cloudinary_configured() -> bool:
@@ -50,6 +55,9 @@ def upload_to_cloudinary(file_bytes: bytes, folder: str = "forgestore") -> str |
             resource_type="image",
             format="jpg",
         )
-        return result.get("secure_url")
-    except Exception:
+        url = result.get("secure_url")
+        logger.info("Cloudinary upload OK: %s", url)
+        return url
+    except Exception as e:
+        logger.error("Cloudinary upload FAILED: %s", e)
         return None

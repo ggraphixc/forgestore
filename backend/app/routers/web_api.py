@@ -780,7 +780,7 @@ async def post_product_chat_message(
             from app.core.cloudinary_upload import is_cloudinary_configured, upload_to_cloudinary
             if is_cloudinary_configured():
                 image_url = upload_to_cloudinary(raw, folder="forgestore/chat")
-            else:
+            if not image_url:
                 upload_dir = os.path.join("app", "static", "uploads", "chat")
                 os.makedirs(upload_dir, exist_ok=True)
                 compressed, ext = compress_image(raw)

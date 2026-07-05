@@ -2745,26 +2745,28 @@ async def upload_file(files: List[UploadFile] = File(...)):
 
     use_cloudinary = is_cloudinary_configured()
     urls = []
-
-    if not use_cloudinary:
-        # Fallback: local filesystem (images will be lost on Render redeploy)
-        upload_dir = os.path.join("app", "static", "uploads", "products")
-        os.makedirs(upload_dir, exist_ok=True)
+    upload_dir = os.path.join("app", "static", "uploads", "products")
+    os.makedirs(upload_dir, exist_ok=True)
 
     for file in files:
-        raw = await file.read()
-        if use_cloudinary:
-            url = upload_to_cloudinary(raw, folder="forgestore/products")
-            if url:
-                urls.append(url)
-                continue
-        # Local fallback
-        compressed, ext = compress_image(raw)
-        unique_name = f"{int(utcnow().timestamp())}-{uuid.uuid4().hex[:8]}.{ext}"
-        file_path = os.path.join(upload_dir, unique_name)
-        with open(file_path, "wb") as f:
-            f.write(compressed)
-        urls.append(f"/static/uploads/products/{unique_name}")
+        try:
+            raw = await file.read()
+            if use_cloudinary:
+                url = upload_to_cloudinary(raw, folder="forgestore/products")
+                if url:
+                    urls.append(url)
+                    continue
+            # Local fallback
+            compressed, ext = compress_image(raw)
+            unique_name = f"{int(utcnow().timestamp())}-{uuid.uuid4().hex[:8]}.{ext}"
+            file_path = os.path.join(upload_dir, unique_name)
+            with open(file_path, "wb") as f:
+                f.write(compressed)
+            urls.append(f"/static/uploads/products/{unique_name}")
+        except Exception as e:
+            import logging
+            logging.getLogger("forgestore.upload").error("Upload failed for %s: %s", file.filename, e)
+            continue
 
     return {"urls": urls}
 
