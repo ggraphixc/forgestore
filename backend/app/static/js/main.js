@@ -76,11 +76,12 @@ async function handleDelete(url, message = 'Are you sure? This action cannot be 
         const text = await res.text();
         let data;
         try { data = JSON.parse(text); } catch(e) { data = { success: false, error: text || 'Server error' }; }
+        const errMsg = data.detail || data.error || (res.ok ? null : 'Failed to delete');
         if (data.success) {
             showToast('Deleted successfully', 'success');
             setTimeout(() => window.location.reload(), 500);
         } else {
-            showToast(data.error || 'Failed to delete', 'error');
+            showToast(errMsg || 'Failed to delete', 'error');
         }
     } catch (err) {
         showToast('Failed to delete. Please try again.', 'error');

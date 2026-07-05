@@ -295,44 +295,43 @@ def delete_product(
         db.commit()
     except Exception as e:
         db.rollback()
-        # FK constraint violation — try manual cleanup then retry
+        # FK constraint — find and delete all referencing rows via raw SQL
         try:
-            from app.models import (
-                WishlistItem, Review, CartItem, PersistentCartItem,
-                ProductChatMessage, ProductChatReply, ProductAffiliateToken,
-                CartRecommendation, SearchClickAnalytics, SearchEmbedding,
-                CartActivity, OrderItem, OrderEarning, AdCampaign,
-                AffiliateCommission,
-            )
+            from sqlalchemy import text
             pid = product_id
-            # Delete child records that might block the product delete
-            for model, col in [
-                (ProductChatReply, "message_id"),
-                (SearchClickAnalytics, "product_id"),
-                (CartRecommendation, "product_id"),
-                (SearchEmbedding, "product_id"),
-                (CartActivity, "product_id"),
-                (ProductChatMessage, "product_id"),
-                (WishlistItem, "product_id"),
-                (Review, "product_id"),
-                (CartItem, "product_id"),
-                (PersistentCartItem, "product_id"),
-                (ProductAffiliateToken, "product_id"),
-                (AffiliateCommission, "product_id"),
-            ]:
+            # Find all tables with FK to product.id and delete referencing rows
+            fk_query = text("""
+                SELECT tc.table_name, kcu.column_name, tc.constraint_name
+                FROM information_schema.table_constraints tc
+                JOIN information_schema.key_column_usage kcu
+                    ON tc.constraint_name = kcu.constraint_name
+                JOIN information_schema.constraint_column_usage ccu
+                    ON tc.constraint_name = ccu.constraint_name
+                WHERE tc.constraint_type = 'FOREIGN KEY'
+                    AND ccu.table_name = 'product'
+                    AND ccu.column_name = 'id'
+            """)
+            rows = db.execute(fk_query).fetchall()
+            for table_name, col_name, constraint_name in rows:
                 try:
-                    if col == "message_id":
-                        msg_ids = [r[0] for r in db.query(ProductChatMessage.id).filter(ProductChatMessage.product_id == pid).all()]
-                        if msg_ids:
-                            db.query(ProductChatReply).filter(ProductChatReply.message_id.in_(msg_ids)).delete(synchronize_session=False)
-                    else:
-                        db.query(model).filter(getattr(model, col) == pid).delete(synchronize_session=False)
+                    db.execute(text(f'DELETE FROM "{table_name}" WHERE "{col_name}" = :pid'), {"pid": pid})
                 except Exception:
                     db.rollback()
+            # Now also handle ProductChatReply via ProductChatMessage.id
+            try:
+                db.execute(text(
+                    'DELETE FROM product_chat_reply WHERE message_id IN '
+                    '(SELECT id FROM product_chat_message WHERE product_id = :pid)'
+                ), {"pid": pid})
+            except Exception:
+                db.rollback()
+            # Retry the delete
             db.delete(product)
             db.commit()
         except Exception as e2:
             db.rollback()
+            import logging
+            logging.getLogger(__name__).error(f"Delete product {product_id} failed: {e2}")
             raise HTTPException(status_code=500, detail=f"Failed to delete product: {str(e2)}")
 
     log_admin_action(db, admin, "delete", "product", product_id, f"Deleted product '{product.name}'")
