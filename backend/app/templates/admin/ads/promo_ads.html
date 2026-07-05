@@ -568,7 +568,7 @@ async function handlePromoBannerUpload(input) {
         if (data.urls && data.urls.length) {
             document.getElementById('banner_url').value = data.urls[0];
         }
-    } catch(e) { alert('Upload failed'); }
+    } catch(e) { showToast('Upload failed', 'error'); }
 }
 
 function clearPromoBanner() {
@@ -669,7 +669,7 @@ function togglePromoAdStatus(id, status) {
 }
 
 function deletePromoAd(id) {
-    if (!confirm('Are you sure you want to delete this promo ad?')) return;
+    if (!await confirmAction('Are you sure you want to delete this promo ad?')) return;
     fetch(`/api/admin/promo-ads/${id}`, { method: 'DELETE' })
     .then(r => r.json())
     .then(d => {

@@ -176,10 +176,10 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
             window.location.href = '/admin/dashboard';
         } else {
             const data = await res.json();
-            alert(data.detail || 'Invalid email or password');
+            showToast(data.detail || 'Invalid email or password', 'error');
         }
     } catch (err) {
-        alert('Connection error. Please try again.');
+        showToast('Connection error. Please try again.', 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = 'Sign In to Dashboard';

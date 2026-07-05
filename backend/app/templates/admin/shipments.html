@@ -199,7 +199,7 @@ document.getElementById('create-shipment-form')?.addEventListener('submit', asyn
             }),
         });
         if (res.ok) { closeCreateModal(); loadShipments(); }
-    } catch(e) { alert('Failed to create shipment'); }
+    } catch(e) { showToast('Failed to create shipment', 'error'); }
 });
 
 document.querySelectorAll('.admin-filter-btn').forEach(btn => {

@@ -600,7 +600,7 @@ async function updateOrderStatus(orderId) {
 }
 
 async function deleteOrder(orderId) {
-    if (!confirm('Are you sure you want to permanently delete this order?')) return;
+    if (!await confirmAction('Are you sure you want to permanently delete this order?')) return;
     const btn = document.querySelector('[onclick="deleteOrder(\'' + orderId + '\')"]');
     btn.disabled = true;
     btn.innerHTML = '<svg class="animate-spin" style="width:16px;height:16px;margin-right:8px;" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Deleting...';

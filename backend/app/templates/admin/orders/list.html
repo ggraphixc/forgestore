@@ -881,7 +881,7 @@
           <button type="submit" name="action" value="processing" class="admin-btn admin-btn--sm admin-btn--outline">Mark Processing</button>
           <button type="submit" name="action" value="shipped" class="admin-btn admin-btn--sm admin-btn--outline">Mark Shipped</button>
           <button type="submit" name="action" value="delivered" class="admin-btn admin-btn--sm admin-btn--outline">Mark Delivered</button>
-          <button type="submit" name="action" value="cancelled" class="admin-btn admin-btn--sm admin-btn--danger" onclick="return confirm('Cancel selected orders?')">Cancel</button>
+          <button type="submit" name="action" value="cancelled" class="admin-btn admin-btn--sm admin-btn--danger" onclick="event.preventDefault();confirmAction('Cancel selected orders?').then(ok=>{if(ok)this.closest('form').submit()})">Cancel</button>
         </div>
       </div>
     </form>

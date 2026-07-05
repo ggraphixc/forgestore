@@ -185,7 +185,7 @@ async function flagMessage(id) { await moderateMessage(id, { action: 'flag' }); 
 async function hideMessage(id) { await moderateMessage(id, { action: 'hide' }); }
 async function unhideMessage(id) { await moderateMessage(id, { action: 'unhide' }); }
 async function deleteMessage(id) {
-    if (!confirm('Permanently delete this message?')) return;
+    if (!await confirmAction('Permanently delete this message?')) return;
     await moderateMessage(id, { action: 'delete' });
 }
 
@@ -194,8 +194,8 @@ async function moderateMessage(id, data) {
         const res = await fetch('/api/admin/chat-moderate/' + id, {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
         });
-        if (res.ok) { location.reload(); } else { const err = await res.json(); alert(err.detail || 'Action failed'); }
-    } catch (e) { alert('Network error'); }
+        if (res.ok) { location.reload(); } else { const err = await res.json(); showToast(err.detail || 'Action failed', 'error'); }
+    } catch (e) { showToast('Network error', 'error'); }
 }
 </script>
 {% endblock %}

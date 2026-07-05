@@ -627,7 +627,7 @@ async function handleRetailerBannerUpload(input) {
         if (data.urls && data.urls.length) {
             document.getElementById('promo-banner_url').value = data.urls[0];
         }
-    } catch(e) { alert('Upload failed'); }
+    } catch(e) { showToast('Upload failed', 'error'); }
 }
 
 function clearRetailerBanner() {

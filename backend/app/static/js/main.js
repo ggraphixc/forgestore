@@ -19,11 +19,44 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
-// Confirm Dialog
+// Confirm Dialog — Custom Modal (cross-browser, no window.confirm)
 function confirmAction(message) {
     return new Promise((resolve) => {
-        const confirmed = window.confirm(message);
-        resolve(confirmed);
+        // Remove any existing modal
+        const existing = document.getElementById('fs-confirm-modal');
+        if (existing) existing.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'fs-confirm-modal';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;';
+
+        overlay.innerHTML = `
+        <div style="background:#fff;border-radius:16px;padding:28px 32px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.2);text-align:center;transform:scale(0.95);transition:transform 0.2s;">
+            <div style="width:48px;height:48px;border-radius:50%;background:#fef3c7;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                <svg width="24" height="24" fill="none" stroke="#d97706" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+            </div>
+            <p style="font-size:15px;font-weight:600;color:#1c1917;margin:0 0 20px;line-height:1.5;">${message}</p>
+            <div style="display:flex;gap:12px;justify-content:center;">
+                <button id="fs-confirm-cancel" style="padding:10px 24px;border-radius:10px;border:1px solid #e7e5e4;background:#fff;color:#57534e;font-size:14px;font-weight:600;cursor:pointer;min-height:44px;transition:all 0.15s;">Cancel</button>
+                <button id="fs-confirm-ok" style="padding:10px 24px;border-radius:10px;border:none;background:#1c1917;color:#fff;font-size:14px;font-weight:600;cursor:pointer;min-height:44px;transition:all 0.15s;">Confirm</button>
+            </div>
+        </div>`;
+
+        document.body.appendChild(overlay);
+        requestAnimationFrame(() => { overlay.style.opacity = '1'; overlay.querySelector('div').style.transform = 'scale(1)'; });
+
+        const cleanup = (result) => {
+            overlay.style.opacity = '0';
+            overlay.querySelector('div').style.transform = 'scale(0.95)';
+            setTimeout(() => { overlay.remove(); resolve(result); }, 200);
+        };
+
+        document.getElementById('fs-confirm-ok').onclick = () => cleanup(true);
+        document.getElementById('fs-confirm-cancel').onclick = () => cleanup(false);
+        overlay.onclick = (e) => { if (e.target === overlay) cleanup(false); };
+        document.addEventListener('keydown', function onKey(e) {
+            if (e.key === 'Escape') { document.removeEventListener('keydown', onKey); cleanup(false); }
+        });
     });
 }
 
@@ -39,11 +72,12 @@ async function handleDelete(url, message = 'Are you sure? This action cannot be 
     if (!await confirmAction(message)) return;
 
     try {
-        const res = await fetch(url, { method: 'DELETE' });
-        const data = await res.json();
+        const res = await fetch(url, { method: 'DELETE', credentials: 'include' });
+        const text = await res.text();
+        let data;
+        try { data = JSON.parse(text); } catch(e) { data = { success: false, error: text || 'Server error' }; }
         if (data.success) {
             showToast('Deleted successfully', 'success');
-            // Reload the page to reflect changes
             setTimeout(() => window.location.reload(), 500);
         } else {
             showToast(data.error || 'Failed to delete', 'error');

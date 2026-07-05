@@ -706,7 +706,7 @@ async function handleSettingFileUpload(key, input) {
         if (data.urls && data.urls.length) {
             hidden.value = data.urls[0];
         }
-    } catch(e) { alert('Upload failed'); }
+    } catch(e) { showToast('Upload failed', 'error'); }
 }
 
 function clearSettingFile(key) {

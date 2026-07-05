@@ -583,7 +583,7 @@
               <div style="display:flex;align-items:center;gap:0.25rem;">
                 <a href="/admin/retailers/{{ r.slug }}" class="admin-action-link">View</a>
                 <a href="/admin/retailers/{{ r.slug }}/edit" class="admin-action-link">Edit</a>
-                <button onclick="if(confirm('Delete this retailer?'))deleteRetailer('{{ r.id }}')" class="admin-action-danger">Delete</button>
+                <button onclick="confirmAction('Delete this retailer?').then(ok=>{if(ok)deleteRetailer('{{ r.id }}')})" class="admin-action-danger">Delete</button>
               </div>
             </td>
           </tr>

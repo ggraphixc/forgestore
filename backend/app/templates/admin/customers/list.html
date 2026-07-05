@@ -539,13 +539,13 @@
           }
           cancelDelete();
         } else {
-          alert(data.message || 'Failed to delete customer.');
+          showToast(data.message || 'Failed to delete customer.', 'error');
           btn.disabled = false;
           btn.textContent = 'Delete';
         }
       })
       .catch(function() {
-        alert('Network error. Please try again.');
+        showToast('Network error. Please try again.', 'error');
         btn.disabled = false;
         btn.textContent = 'Delete';
       });

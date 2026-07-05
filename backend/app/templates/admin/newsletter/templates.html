@@ -199,7 +199,7 @@ async function saveTemplate() {
 }
 
 async function deleteTemplate(id) {
-    if (!confirm('Delete this template? This cannot be undone.')) return;
+    if (!await confirmAction('Delete this template? This cannot be undone.')) return;
     try {
         const res = await fetch('/api/admin/newsletter-templates/' + id, { method: 'DELETE' });
         const data = await res.json();

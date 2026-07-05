@@ -474,7 +474,7 @@ function batchMarkPaid() {
     const ids = Array.from(checked).map(cb => cb.value);
     if (ids.length === 0) return;
 
-    if (!confirm(`Mark ${ids.length} earning(s) as PAID?`)) return;
+    if (!await confirmAction(`Mark ${ids.length} earning(s) as PAID?`)) return;
 
     const btn = document.getElementById('mark-paid-btn');
     btn.disabled = true;
@@ -490,10 +490,10 @@ function batchMarkPaid() {
         if (data.success) {
             loadEarnings();
         } else {
-            alert('Failed: ' + (data.detail || 'Unknown error'));
+            showToast('Failed: ' + (data.detail || 'Unknown error'), 'error');
         }
     })
-    .catch(err => alert('Error: ' + err.message))
+    .catch(err => showToast('Error: ' + err.message, 'error'))
     .finally(() => {
         btn.disabled = false;
         btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Mark Selected as Paid';
@@ -501,7 +501,7 @@ function batchMarkPaid() {
 }
 
 function requestPayout() {
-    if (!confirm('Request payout for all your pending earnings? This will mark them as PAID and cannot be undone.')) return;
+    if (!await confirmAction('Request payout for all your pending earnings? This will mark them as PAID and cannot be undone.')) return;
 
     const btn = document.getElementById('request-payout-btn');
     btn.disabled = true;
@@ -516,13 +516,13 @@ function requestPayout() {
         if (data.success) {
             loadEarnings();
             if (data.marked > 0) {
-                alert(`Requested payout for ${data.marked} earning(s) — ₦${(data.total_net || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}`);
+                showToast(`Requested payout for ${data.marked} earning(s) — ₦${(data.total_net || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}`, 'success');
             }
         } else {
-            alert('Failed: ' + (data.detail || 'Unknown error'));
+            showToast('Failed: ' + (data.detail || 'Unknown error'), 'error');
         }
     })
-    .catch(err => alert('Error: ' + err.message))
+    .catch(err => showToast('Error: ' + err.message, 'error'))
     .finally(() => {
         btn.disabled = false;
         btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4l4-4-4-4m6 0V7a2 2 0 012-2h4a2 2 0 012 2v6a2 2 0 01-2 2h-4"/></svg> Request Payout';
@@ -530,7 +530,7 @@ function requestPayout() {
 }
 
 function markAllPendingPaid() {
-    if (!confirm('Mark ALL pending earnings as PAID? This cannot be undone.')) return;
+    if (!await confirmAction('Mark ALL pending earnings as PAID? This cannot be undone.')) return;
 
     const btn = document.querySelector('button[onclick="markAllPendingPaid()"]');
     btn.disabled = true;
@@ -546,10 +546,10 @@ function markAllPendingPaid() {
         if (data.success) {
             loadEarnings();
         } else {
-            alert('Failed: ' + (data.detail || 'Unknown error'));
+            showToast('Failed: ' + (data.detail || 'Unknown error'), 'error');
         }
     })
-    .catch(err => alert('Error: ' + err.message))
+    .catch(err => showToast('Error: ' + err.message, 'error'))
     .finally(() => {
         btn.disabled = false;
         btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Mark All Pending as Paid';

@@ -208,12 +208,12 @@ async function activateCampaign(campaignId) {
 }
 
 async function expireCampaign(campaignId) {
-  if (!confirm('Expire this campaign? It will no longer be displayed to customers.')) return;
+  if (!await confirmAction('Expire this campaign? It will no longer be displayed to customers.')) return;
   try {
     const res = await fetch(`/api/admin/ads/${campaignId}/expire`, { method: 'POST' });
     const data = await res.json();
-    if (data.success) { location.reload(); } else { alert(data.detail || 'Failed to expire campaign'); }
-  } catch { alert('Network error'); }
+    if (data.success) { location.reload(); } else { showToast(data.detail || 'Failed to expire campaign', 'error'); }
+  } catch { showToast('Network error', 'error'); }
 }
 
 function assignBanner(campaignId) {
@@ -238,7 +238,7 @@ document.getElementById('banner-file-input').addEventListener('change', function
 document.getElementById('banner-upload-btn').addEventListener('click', async function() {
   const fileInput = document.getElementById('banner-file-input');
   const file = fileInput.files[0];
-  if (!file) { alert('Please select an image file.'); return; }
+  if (!file) { showToast('Please select an image file.', 'error'); return; }
   const btn = this;
   btn.disabled = true;
   btn.textContent = 'Uploading...';
@@ -247,12 +247,12 @@ document.getElementById('banner-upload-btn').addEventListener('click', async fun
     formData.append('files', file);
     const uploadRes = await fetch('/api/admin/upload', { method: 'POST', body: formData });
     const uploadData = await uploadRes.json();
-    if (!uploadData.urls || uploadData.urls.length === 0) { alert('Upload failed'); btn.disabled = false; btn.textContent = 'Upload Banner'; return; }
+    if (!uploadData.urls || uploadData.urls.length === 0) { showToast('Upload failed', 'error'); btn.disabled = false; btn.textContent = 'Upload Banner'; return; }
     const bannerUrl = uploadData.urls[0];
     const res = await fetch(`/api/admin/ads/${activeCampaignId}/activate`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ banner_url: bannerUrl }) });
     const data = await res.json();
-    if (data.success) { location.reload(); } else { alert(data.detail || 'Failed to assign banner'); }
-  } catch { alert('Network error'); }
+    if (data.success) { location.reload(); } else { showToast(data.detail || 'Failed to assign banner', 'error'); }
+  } catch { showToast('Network error', 'error'); }
   finally { btn.disabled = false; btn.textContent = 'Upload Banner'; }
 });
 </script>
