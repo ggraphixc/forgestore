@@ -318,10 +318,18 @@ Guidelines:
             conv_id = conversation.id if conversation else None
 
             # Get conversation history
-            history = self.memory.get_history(conv_id) if conv_id else []
+            try:
+                history = self.memory.get_history(conv_id) if conv_id else []
+            except Exception as e:
+                logger.warning(f"History fetch failed (non-fatal): {e}")
+                history = []
 
             # Build context
-            context = self.memory.get_context(conv_id) if conv_id else {}
+            try:
+                context = self.memory.get_context(conv_id) if conv_id else {}
+            except Exception as e:
+                logger.warning(f"Context fetch failed (non-fatal): {e}")
+                context = {}
             context.update({
                 "user_id": user_id,
                 "session_id": session_id,

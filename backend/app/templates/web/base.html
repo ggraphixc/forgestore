@@ -117,26 +117,30 @@
   background: #1c1917; color: #fff;
   font-size: 0.75rem; letter-spacing: 0.02em; position: relative; z-index: 1;
   height: 36px; display: flex; align-items: center; justify-content: center; gap: 0;
+  padding: 0 1rem;
 }
+@media (min-width: 768px) { .web-guarantee { padding: 0 1.5rem; } }
 .web-guarantee-side {
   display: flex; align-items: center; gap: 0.375rem; white-space: nowrap;
-  text-decoration: none; color: #fff; padding: 0 0.75rem; flex-shrink: 0;
+  text-decoration: none; color: #fff; padding: 0 0.5rem; flex-shrink: 0;
   cursor: pointer; transition: color 0.2s;
 }
 .web-guarantee-side:hover { color: var(--c-amber-400); }
 .web-guarantee-side svg { width: 14px; height: 14px; color: #f59e0b; flex-shrink: 0; }
 .web-guarantee-side span { font-size: 0.6875rem; font-weight: 500; }
 @media (max-width: 768px) { .web-guarantee-side span { display: none; } }
-.web-guarantee-side:last-child { display: none; }
-@media (min-width: 1280px) { .web-guarantee-side:last-child { display: flex; } }
+.web-guarantee-side.g-right { display: none; }
+@media (min-width: 1280px) { .web-guarantee-side.g-right { display: flex; } }
 
 .web-guarantee-center {
-  flex: 1; overflow: hidden; position: relative; height: 36px;
+  flex: 0 1 auto; overflow: hidden; position: relative; height: 36px;
   display: flex; align-items: center; justify-content: center;
+  min-width: 0;
 }
 .web-guarantee-carousel {
   display: flex; flex-direction: column; align-items: center;
-  height: 20px; overflow: hidden; position: relative; width: 100%;
+  height: 20px; overflow: hidden; position: relative;
+  min-width: 180px; max-width: 320px;
 }
 .web-guarantee-slide {
   position: absolute; top: 0; left: 0; right: 0;
@@ -154,6 +158,7 @@
 
 .web-guarantee-divider {
   width: 1px; height: 14px; background: rgba(255,255,255,0.2); flex-shrink: 0;
+  margin: 0 0.25rem;
 }
 @media (max-width: 768px) { .web-guarantee-divider { display: none; } }
 
@@ -561,7 +566,7 @@
   </div>
 
   <span class="web-guarantee-divider"></span>
-  <a href="/shop/faq" class="web-guarantee-side">
+  <a href="/shop/faq" class="web-guarantee-side g-right">
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
     <span>FAQs & Help Center</span>
   </a>
