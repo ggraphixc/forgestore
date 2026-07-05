@@ -2204,6 +2204,7 @@ def update_ads_settings(
     admin: AdminUser = Depends(require_admin_role(AdminRole.DIR_ADMIN, AdminRole.MANAGEMENT)),
 ):
     """Update ads-related settings (pricing, provider, toggles)."""
+    from app.models import Settings as SettingsModel
     settings_map = {
         "ads_default_provider": data.get("ads_default_provider", "internal"),
         "ads_auto_approve": str(data.get("ads_auto_approve", "false")).lower(),
@@ -2222,11 +2223,11 @@ def update_ads_settings(
                 PROMO_PRICING[subtype]["price_per_day"] = int(price_data["price_per_day"])
 
     for key, value in settings_map.items():
-        existing = db.query(Settings).filter(Settings.key == key).first()
+        existing = db.query(SettingsModel).filter(SettingsModel.key == key).first()
         if existing:
             existing.value = value
         else:
-            setting = Settings(
+            setting = SettingsModel(
                 key=key,
                 value=value,
                 category="optional",
