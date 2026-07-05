@@ -290,7 +290,7 @@ def delete_product(
         if product.retailer_id != admin.vendor_id:
             raise HTTPException(status_code=403, detail="You can only delete your own products")
     
-    # Delete ALL child records referencing product.id BEFORE deleting the product
+    # Delete using raw SQL to avoid SQLAlchemy ORM trying to SET NULL on NOT NULL columns
     from sqlalchemy import text
     pid = product_id
     try:
@@ -310,8 +310,8 @@ def delete_product(
             try:
                 db.execute(text(f'DELETE FROM "{table_name}" WHERE "{col_name}" = :pid'), {"pid": pid})
             except Exception:
-                pass  # skip tables where column doesn't exist or other issues
-        # Also handle ProductChatReply via ProductChatMessage.id
+                pass
+        # Handle ProductChatReply via ProductChatMessage.id
         try:
             db.execute(text(
                 'DELETE FROM product_chat_reply WHERE message_id IN '
@@ -319,16 +319,12 @@ def delete_product(
             ), {"pid": pid})
         except Exception:
             pass
-        db.flush()
-    except Exception:
-        db.rollback()
-
-    try:
-        db.delete(product)
+        # Delete the product itself
+        db.execute(text('DELETE FROM product WHERE id = :pid'), {"pid": pid})
         db.commit()
-    except Exception as e2:
+    except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Delete failed: {str(e2)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete product: {str(e)}")
 
     log_admin_action(db, admin, "delete", "product", product_id, f"Deleted product '{product.name}'")
     return {"success": True}
