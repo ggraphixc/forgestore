@@ -266,7 +266,15 @@ def update_product(
         if product.retailer_id != admin.vendor_id:
             raise HTTPException(status_code=403, detail="You can only edit your own products")
 
-    for key, value in data.model_dump(exclude_unset=True).items():
+    data_dict = data.model_dump(exclude_unset=True)
+    
+    # Check slug uniqueness if being changed
+    if "slug" in data_dict and data_dict["slug"] != product.slug:
+        existing = db.query(Product).filter(Product.slug == data_dict["slug"], Product.id != product_id).first()
+        if existing:
+            raise HTTPException(status_code=400, detail=f"Slug '{data_dict['slug']}' already exists")
+
+    for key, value in data_dict.items():
         setattr(product, key, value)
     product.updated_at = utcnow()
 

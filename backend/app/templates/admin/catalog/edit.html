@@ -613,10 +613,14 @@ async function submitEditProduct(form) {
     const imagesRaw = document.getElementById('images-input').value;
     data.images = imagesRaw ? imagesRaw.split('\n').filter(l => l.trim()) : [];
     if (data.price) data.price = parseFloat(data.price);
+    else data.price = null;
     if (data.discount_price) data.discount_price = parseFloat(data.discount_price) || null;
+    else data.discount_price = null;
     if (data.inventory) data.inventory = parseInt(data.inventory) || 0;
     if (data.specifications) {
         try { data.specifications = Object.fromEntries(data.specifications.split(',').map(s => s.split(':').map(x => x.trim()))); } catch(e) { data.specifications = null; }
+    } else {
+        data.specifications = null;
     }
 
     try {
@@ -625,11 +629,12 @@ async function submitEditProduct(form) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         });
-        if (!res.ok) throw new Error('Failed to update');
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.detail || 'Failed to update');
         showToast('Product updated successfully', 'success');
         setTimeout(() => { window.location.href = '/admin/catalog'; }, 1000);
     } catch (err) {
-        showToast('Failed to update product', 'error');
+        showToast(err.message || 'Failed to update product', 'error');
     } finally {
         btn.disabled = false;
         btn.innerHTML = '<svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Save Changes';

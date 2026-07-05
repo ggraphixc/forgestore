@@ -144,6 +144,8 @@ class ProductUpdate(BaseModel):
     retailer_id: Optional[str] = None
     sub_category: Optional[str] = None
     inventory: Optional[int] = None
+    vendor_id: Optional[str] = None
+    specifications: Optional[dict] = None
     is_new_arrival: Optional[bool] = None
     is_flagship: Optional[bool] = None
 
