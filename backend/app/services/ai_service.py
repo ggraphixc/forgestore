@@ -219,26 +219,58 @@ def generate_product_description(
     brand: str = "",
     keywords: str = "",
     tone: str = "professional",
+    images: list[str] | None = None,
 ) -> Optional[str]:
     """
-    Generate a rich product description using AI.
+    Generate a rich, marketing-enriched product description using AI.
+    Supports multimodal: if images are provided, the AI analyzes them to write a description
+    that matches the visual attributes of the product.
     Returns None if AI is not configured.
     """
+    tone_descriptions = {
+        "professional": "confident, authoritative, and trustworthy — like a premium brand speaking to discerning buyers",
+        "casual": "warm, friendly, and approachable — like a helpful friend recommending something they love",
+        "luxury": "elegant, aspirational, and indulgent — evoking exclusivity and refined taste",
+        "technical": "precise, detail-rich, and specification-forward — speaking to informed buyers who care about the numbers",
+        "playful": "fun, energetic, and enthusiastic — making shopping feel exciting and delightful",
+        "minimalist": "clean, refined, and intentional — letting the product speak for itself with few powerful words",
+    }
+    tone_desc = tone_descriptions.get(tone, tone_descriptions["professional"])
+
+    image_context = ""
+    if images:
+        image_context = (
+            f"\n\nVISUAL CONTEXT: You have been provided with {len(images)} product image(s). "
+            f"Analyze them carefully and incorporate visual details into the description — "
+            f"color, texture, material, design elements, form factor, packaging, and any "
+            f"visible features. The description must reflect what a customer would see."
+        )
+
     system_prompt = (
-        f"You are a professional e-commerce copywriter. "
-        f"Write a compelling product description in a {tone} tone. "
-        f"Format with short paragraphs. Include features, benefits, "
-        f"and a call to action. Keep it 100-200 words."
+        f"You are an elite e-commerce copywriter who crafts descriptions that convert browsers into buyers. "
+        f"Write in a {tone_desc} tone.\n\n"
+        f"RULES:\n"
+        f"- NO code, NO markdown syntax, NO bullet-point lists with dashes\n"
+        f"- Use rich, evocative language — sensory words, power verbs, benefit-driven phrasing\n"
+        f"- Structure: Hook paragraph → Key features (2-3 benefit-rich sentences) → Emotional appeal → Call to action\n"
+        f"- Each sentence should paint a picture and answer 'why should I care?'\n"
+        f"- 150-300 words, broken into 3-5 natural paragraphs\n"
+        f"- Include the product name naturally in the opening\n"
+        f"- If brand is provided, reference it with authority\n"
+        f"- End with a compelling call to action that creates urgency"
+        f"{image_context}"
     )
 
-    user_prompt = (
-        f"Product: {product_name}\n"
-        f"{'Category: ' + category if category else ''}\n"
-        f"{'Brand: ' + brand if brand else ''}\n"
-        f"{'Keywords: ' + keywords if keywords else ''}"
-    )
+    parts = [f"Product: {product_name}"]
+    if category:
+        parts.append(f"Category: {category}")
+    if brand:
+        parts.append(f"Brand: {brand}")
+    if keywords:
+        parts.append(f"Keywords: {keywords}")
+    user_prompt = "\n".join(parts)
 
-    return _call_llm(system_prompt, user_prompt, temperature=0.7, max_tokens=400)
+    return _call_llm(system_prompt, user_prompt, temperature=0.75, max_tokens=600, images=images)
 
 
 def generate_product_tags(

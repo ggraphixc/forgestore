@@ -713,8 +713,10 @@ def ai_generate_description(
     db: Session = Depends(get_db),
     admin: AdminUser = Depends(require_role("catalog")),
 ):
-    """Generate a product description using AI."""
+    """Generate a product description using AI. Optionally includes product images for visual analysis."""
     from app.services.ai_service import generate_product_description
+
+    images = data.get("images", [])
 
     description = generate_product_description(
         product_name=data.get("name", ""),
@@ -722,6 +724,7 @@ def ai_generate_description(
         brand=data.get("brand", ""),
         keywords=data.get("keywords", ""),
         tone=data.get("tone", "professional"),
+        images=images if images else None,
     )
 
     if description:

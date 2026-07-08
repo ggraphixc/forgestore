@@ -154,6 +154,48 @@
   padding-right: 36px;
 }
 
+/* ─── image preview strip ─── */
+.admin-ai-widget-images {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0;
+}
+
+.admin-ai-widget-images:empty {
+  display: none;
+}
+
+.admin-ai-widget-img-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--admin-ai-radius-sm);
+  object-fit: cover;
+  border: 2px solid var(--admin-ai-amber-200);
+  flex-shrink: 0;
+}
+
+.admin-ai-widget-img-count {
+  font-size: 0.6875rem;
+  color: var(--admin-ai-stone-500);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.admin-ai-widget-img-count svg {
+  width: 14px;
+  height: 14px;
+  color: var(--admin-ai-amber-500);
+}
+
+/* ─── buttons row ─── */
+.admin-ai-widget-btns {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 /* ─── generate button ─── */
 .admin-ai-widget-generate-btn {
   display: inline-flex;
@@ -172,7 +214,6 @@
   transition: all var(--admin-ai-transition-fast);
   box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
   min-height: 44px;
-  align-self: flex-start;
   position: relative;
   overflow: hidden;
 }
@@ -208,6 +249,44 @@
   position: relative;
 }
 
+/* ─── retry button ─── */
+.admin-ai-widget-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 16px;
+  background: #fff;
+  color: var(--admin-ai-stone-600);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border: 1px solid var(--admin-ai-stone-300);
+  border-radius: var(--admin-ai-radius-md);
+  cursor: pointer;
+  transition: all var(--admin-ai-transition-fast);
+  min-height: 44px;
+}
+
+.admin-ai-widget-retry-btn:hover {
+  background: var(--admin-ai-stone-50);
+  border-color: var(--admin-ai-stone-400);
+}
+
+.admin-ai-widget-retry-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.admin-ai-widget-retry-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.admin-ai-widget-retry-info {
+  font-size: 0.6875rem;
+  color: var(--admin-ai-stone-400);
+}
+
 /* ─── result area ─── */
 .admin-ai-widget-result {
   display: none;
@@ -238,10 +317,10 @@
   color: var(--admin-ai-stone-900);
   transition: all var(--admin-ai-transition-fast);
   resize: vertical;
-  min-height: 100px;
+  min-height: 120px;
   box-sizing: border-box;
   font-family: inherit;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .admin-ai-widget-output:focus {
@@ -273,6 +352,26 @@
   box-shadow: var(--admin-ai-shadow-sm);
 }
 
+/* ─── image analysis badge ─── */
+.admin-ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--admin-ai-amber-700);
+  font-size: 0.625rem;
+  font-weight: 700;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.admin-ai-badge svg {
+  width: 10px;
+  height: 10px;
+}
+
 /* ─── responsive ─── */
 @media (max-width: 640px) {
   .admin-ai-widget {
@@ -298,6 +397,11 @@
     width: 14px;
     height: 14px;
   }
+
+  .admin-ai-widget-btns {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 </style>
 
@@ -309,8 +413,13 @@
             </svg>
         </div>
         <h2>AI Description Generator</h2>
+        <span id="ai-badge" class="admin-ai-badge" style="display:none;">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Image Analysis
+        </span>
     </div>
-    <p class="admin-ai-widget-desc">Let AI write a compelling product description for you</p>
+    <p class="admin-ai-widget-desc">Let AI craft a compelling product description — uses your images for visual context</p>
+
     <div class="admin-ai-widget-fields">
         <div class="admin-ai-widget-row">
             <div>
@@ -329,6 +438,8 @@
                     <option value="casual">Casual & Friendly</option>
                     <option value="luxury">Luxury & Premium</option>
                     <option value="technical">Technical & Detailed</option>
+                    <option value="playful">Playful & Fun</option>
+                    <option value="minimalist">Minimalist</option>
                 </select>
             </div>
         </div>
@@ -336,14 +447,33 @@
             <label class="admin-ai-widget-label">Keywords (optional, comma-separated)</label>
             <input type="text" id="ai-keywords" placeholder="e.g. handmade, sustainable, gift" class="admin-ai-widget-input">
         </div>
-        <button type="button" onclick="generateAIDescription()" id="ai-gen-btn" class="admin-ai-widget-generate-btn">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            Generate Description
-        </button>
+
+        <!-- Product images from form -->
+        <div>
+            <label class="admin-ai-widget-label">Product Images</label>
+            <div id="ai-image-strip" class="admin-ai-widget-images"></div>
+            <p id="ai-image-hint" class="admin-ai-widget-img-count" style="margin:4px 0 0;">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span id="ai-image-count-text">No images yet — upload images below first</span>
+            </p>
+        </div>
+
+        <div class="admin-ai-widget-btns">
+            <button type="button" onclick="generateAIDescription()" id="ai-gen-btn" class="admin-ai-widget-generate-btn">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Generate Description
+            </button>
+            <button type="button" onclick="retryAIDescription()" id="ai-retry-btn" class="admin-ai-widget-retry-btn" style="display:none;">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Retry
+            </button>
+            <span id="ai-retry-info" class="admin-ai-widget-retry-info" style="display:none;"></span>
+        </div>
+
         <div id="ai-result" class="admin-ai-widget-result">
             <label class="admin-ai-widget-label">Generated Description</label>
             <div class="admin-ai-widget-output-wrap">
-                <textarea id="ai-description-output" rows="5" class="admin-ai-widget-output" readonly></textarea>
+                <textarea id="ai-description-output" rows="6" class="admin-ai-widget-output" readonly></textarea>
                 <button type="button" onclick="useAIDescription()" class="admin-ai-widget-use-btn">Use This Description</button>
             </div>
         </div>
@@ -351,50 +481,161 @@
 </div>
 
 <script>
-async function generateAIDescription() {
-    const name = document.querySelector('input[name="name"]')?.value;
-    if (!name) {
-        showToast('Please enter a product name first', 'error');
-        return;
-    }
+(function() {
+    const MAX_RETRIES = 3;
+    let retryCount = 0;
+    let lastParams = null;
 
-    const btn = document.getElementById('ai-gen-btn');
-    btn.disabled = true;
-    btn.innerHTML = '<svg class="animate-spin" viewBox="0 0 24 24" width="14" height="14"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Generating...';
+    // Auto-fill image strip from form
+    function refreshImageStrip() {
+        const imagesRaw = document.getElementById('images-input')?.value || '';
+        const urls = imagesRaw.split('\n').filter(l => l.trim());
+        const strip = document.getElementById('ai-image-strip');
+        const hint = document.getElementById('ai-image-hint');
+        const countText = document.getElementById('ai-image-count-text');
+        const badge = document.getElementById('ai-badge');
 
-    try {
-        const res = await fetch('/api/admin/ai/generate-description', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                name: name,
-                category: document.getElementById('ai-category')?.value || '',
-                keywords: document.getElementById('ai-keywords')?.value || '',
-                tone: document.getElementById('ai-tone')?.value || 'professional',
-            }),
-        });
-        const data = await res.json();
-        if (data.success && data.description) {
-            document.getElementById('ai-description-output').value = data.description;
-            document.getElementById('ai-result').classList.add('visible');
+        strip.innerHTML = '';
+        if (urls.length > 0) {
+            urls.slice(0, 6).forEach(url => {
+                const img = document.createElement('img');
+                img.src = url;
+                img.className = 'admin-ai-widget-img-thumb';
+                img.alt = 'Product image';
+                strip.appendChild(img);
+            });
+            countText.textContent = urls.length + ' image' + (urls.length > 1 ? 's' : '') + ' will be analyzed by AI';
+            badge.style.display = 'inline-flex';
         } else {
-            showToast(data.message || 'AI not configured. Set your OpenAI key in Developer Settings.', 'warning');
+            countText.textContent = 'No images yet — upload images below first';
+            badge.style.display = 'none';
         }
-    } catch {
-        showToast('Failed to generate description', 'error');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Generate Description';
     }
-}
 
-function useAIDescription() {
-    const textarea = document.querySelector('textarea[name="description"]');
-    const aiOutput = document.getElementById('ai-description-output');
-    if (textarea && aiOutput) {
-        textarea.value = aiOutput.value;
-        document.getElementById('ai-result').classList.remove('visible');
-        showToast('Description applied!', 'success');
+    // Watch for image changes
+    const observer = new MutationObserver(refreshImageStrip);
+    const imagesInput = document.getElementById('images-input');
+    if (imagesInput) {
+        observer.observe(imagesInput, { childList: true, characterData: true, subtree: true });
+        // Also watch for input event
+        imagesInput.addEventListener('input', refreshImageStrip);
     }
-}
+
+    // Also poll every 500ms for changes (images-input is a textarea updated by JS)
+    setInterval(refreshImageStrip, 500);
+    refreshImageStrip();
+
+    // Auto-fill category from form's category select
+    const formCategory = document.querySelector('select[name="category_id"]');
+    if (formCategory) {
+        formCategory.addEventListener('change', () => {
+            const selected = formCategory.options[formCategory.selectedIndex];
+            if (selected && selected.text) {
+                const aiCategory = document.getElementById('ai-category');
+                // Try to match
+                for (let i = 0; i < aiCategory.options.length; i++) {
+                    if (aiCategory.options[i].value === selected.text) {
+                        aiCategory.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+        });
+    }
+
+    function getProductImages() {
+        const imagesRaw = document.getElementById('images-input')?.value || '';
+        return imagesRaw.split('\n').filter(l => l.trim());
+    }
+
+    window.generateAIDescription = async function() {
+        const name = document.querySelector('input[name="name"]')?.value;
+        if (!name) {
+            showToast('Please enter a product name first', 'error');
+            return;
+        }
+
+        const brand = document.querySelector('input[name="brand"]')?.value || '';
+        const images = getProductImages();
+        lastParams = {
+            name: name,
+            brand: brand,
+            category: document.getElementById('ai-category')?.value || '',
+            keywords: document.getElementById('ai-keywords')?.value || '',
+            tone: document.getElementById('ai-tone')?.value || 'professional',
+            images: images,
+        };
+
+        retryCount = 0;
+        await doGenerate(lastParams);
+    };
+
+    window.retryAIDescription = async function() {
+        if (!lastParams) return;
+        if (retryCount >= MAX_RETRIES) {
+            showToast('Maximum retries reached', 'error');
+            return;
+        }
+        retryCount++;
+        updateRetryUI();
+        await doGenerate(lastParams);
+    };
+
+    async function doGenerate(params) {
+        const btn = document.getElementById('ai-gen-btn');
+        const retryBtn = document.getElementById('ai-retry-btn');
+        btn.disabled = true;
+        retryBtn.disabled = true;
+        btn.innerHTML = '<svg class="animate-spin" viewBox="0 0 24 24" width="14" height="14"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Generating...';
+
+        try {
+            const res = await fetch('/api/admin/ai/generate-description', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(params),
+            });
+            const data = await res.json();
+            if (data.success && data.description) {
+                document.getElementById('ai-description-output').value = data.description;
+                document.getElementById('ai-result').classList.add('visible');
+                retryCount = 0;
+                updateRetryUI();
+            } else {
+                showToast(data.message || 'AI not configured. Set your OpenAI key in Developer Settings.', 'warning');
+            }
+        } catch {
+            showToast('Failed to generate description', 'error');
+        } finally {
+            btn.disabled = false;
+            retryBtn.disabled = false;
+            btn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Generate Description';
+            updateRetryUI();
+        }
+    }
+
+    function updateRetryUI() {
+        const retryBtn = document.getElementById('ai-retry-btn');
+        const retryInfo = document.getElementById('ai-retry-info');
+        const hasResult = document.getElementById('ai-result').classList.contains('visible');
+
+        if (hasResult && retryCount < MAX_RETRIES) {
+            retryBtn.style.display = 'inline-flex';
+            retryInfo.style.display = 'inline';
+            retryInfo.textContent = (MAX_RETRIES - retryCount) + ' of ' + MAX_RETRIES + ' retries left';
+        } else {
+            retryBtn.style.display = 'none';
+            retryInfo.style.display = 'none';
+        }
+    }
+
+    window.useAIDescription = function() {
+        const textarea = document.querySelector('textarea[name="description"]');
+        const aiOutput = document.getElementById('ai-description-output');
+        if (textarea && aiOutput) {
+            textarea.value = aiOutput.value;
+            document.getElementById('ai-result').classList.remove('visible');
+            showToast('Description applied!', 'success');
+        }
+    };
+})();
 </script>
