@@ -477,8 +477,7 @@ def customer_detail_page(
     ) if orders else 0
 
     # Get addresses
-    from app.models import Address
-    addresses = db.query(Address).filter(Address.user_id == customer_id).all()
+    addresses = []
 
     return render_template("admin/customers/detail.html", {
         "request": request,
