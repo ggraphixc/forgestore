@@ -83,6 +83,8 @@ def get_ai_client() -> Any:
         logger.info(f"AI provider '{provider}' has no API key configured")
         return None
 
+    logger.info(f"Creating AI client: provider={provider}, model={get_active_model()}, base_url={config.get('base_url')}, api_key_prefix={api_key[:8]}...")
+
     try:
         if config["sdk"] == "openai":
             import openai
@@ -137,10 +139,22 @@ def _call_llm_sync(
             temperature=temperature,
             max_tokens=max_tokens,
         )
+        logger.info(f"LLM response: choices={len(resp.choices) if resp.choices else 0}, finish_reason={resp.choices[0].finish_reason if resp.choices and resp.choices[0] else 'N/A'}")
         if not resp.choices or not resp.choices[0].message:
             logger.error(f"LLM returned empty response: {resp}")
             return None
-        return resp.choices[0].message.content
+        content = resp.choices[0].message.content
+        # Some providers return content as a list of blocks — extract text
+        if isinstance(content, list):
+            texts = []
+            for block in content:
+                if isinstance(block, dict) and block.get("type") == "text":
+                    texts.append(block.get("text", ""))
+                elif isinstance(block, str):
+                    texts.append(block)
+            content = "\n".join(texts) if texts else None
+        logger.info(f"LLM content type={type(content)}, len={len(content) if content else 0}, preview={repr(content[:200]) if content else 'None'}")
+        return content
 
     def _url_to_data_url(url: str) -> str | None:
         """Fetch an image URL and convert to base64 data URL."""
