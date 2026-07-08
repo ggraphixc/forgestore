@@ -1256,7 +1256,7 @@ def cart_checkout(
         db.flush()
 
     # Calculate total
-    subtotal = sum(ci.quantity * ci.price for ci in cart_items)
+    subtotal = sum(ci.quantity * (ci.product.discount_price or ci.product.price) for ci in cart_items)
 
     # Create order with placeholder shipping (user will fill in on checkout page)
     from app.utils import utcnow as _utcnow
@@ -1275,7 +1275,7 @@ def cart_checkout(
     for ci in cart_items:
         oi = OrderItem(
             quantity=ci.quantity,
-            price=ci.price,
+            price=ci.product.discount_price or ci.product.price,
             product_id=ci.product_id,
             order_id=order.id,
         )
