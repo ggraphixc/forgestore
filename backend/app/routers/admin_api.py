@@ -2846,7 +2846,7 @@ def admin_delete_customer(
         raise HTTPException(status_code=404, detail="Customer not found")
 
     # Delete related records in correct order (items before orders)
-    order_ids = [o.id for o in db.query(Order.id).filter(Order.customer_id == customer_id).subquery()]
+    order_ids = [o.id for o in db.query(Order.id).filter(Order.customer_id == customer_id).all()]
     db.query(OrderItem).filter(OrderItem.order_id.in_(order_ids)).delete(synchronize_session=False)
     db.query(Order).filter(Order.customer_id == customer_id).delete(synchronize_session=False)
     db.query(Review).filter(Review.user_id == customer_id).delete(synchronize_session=False)
