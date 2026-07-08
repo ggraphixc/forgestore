@@ -15,16 +15,18 @@
 
 .admin-ai-btn {
     position: fixed; bottom: 5.5rem; right: 1.5rem;
-    width: 3.5rem; height: 3.5rem; border-radius: 9999px; border: none; cursor: pointer;
+    width: 3.5rem; height: 3.5rem; border-radius: 9999px; border: none; cursor: grab;
     background: linear-gradient(135deg, #1c1917, #44403c); color: #fbbf24;
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 8px 24px rgba(28,25,23,0.35);
-    transition: transform 0.3s, box-shadow 0.3s; z-index: 9998;
+    transition: box-shadow 0.3s; z-index: 9998;
+    touch-action: none; user-select: none;
 }
 @media (max-width: 768px) {
     .admin-ai-btn { bottom: 6.5rem; right: 1rem; width: 3rem; height: 3rem; }
 }
-.admin-ai-btn:hover { transform: scale(1.1); box-shadow: 0 12px 32px rgba(28,25,23,0.45); }
+.admin-ai-btn.dragging { cursor: grabbing; transform: scale(1.1); box-shadow: 0 12px 32px rgba(28,25,23,0.45); transition: none; }
+.admin-ai-btn:hover { box-shadow: 0 12px 32px rgba(28,25,23,0.45); }
 .admin-ai-btn:active { transform: scale(0.95); }
 .admin-ai-btn svg { width: 1.375rem; height: 1.375rem; pointer-events: none; }
 
@@ -363,5 +365,84 @@
     };
 
     window.AdminAI = AI;
+
+    // Drag-to-move for admin AI button
+    (function() {
+        const btn = document.getElementById('admin-ai-toggle');
+        if (!btn) return;
+
+        const STORAGE_KEY = 'admin_ai_widget_pos';
+        let isDragging = false;
+        let hasMoved = false;
+        let startX, startY, startRight, startBottom;
+
+        // Restore saved position
+        try {
+            const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            if (saved && typeof saved.right === 'number' && typeof saved.bottom === 'number') {
+                btn.style.right = saved.right + 'px';
+                btn.style.bottom = saved.bottom + 'px';
+                btn.style.left = 'auto';
+            }
+        } catch {}
+
+        function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+
+        function onStart(e) {
+            isDragging = false;
+            hasMoved = false;
+            const touch = e.touches ? e.touches[0] : e;
+            startX = touch.clientX;
+            startY = touch.clientY;
+            const rect = btn.getBoundingClientRect();
+            startRight = window.innerWidth - rect.right;
+            startBottom = window.innerHeight - rect.bottom;
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onEnd);
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('touchend', onEnd);
+        }
+
+        function onMove(e) {
+            const touch = e.touches ? e.touches[0] : e;
+            const dx = touch.clientX - startX;
+            const dy = touch.clientY - startY;
+            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) isDragging = true;
+            if (!isDragging) return;
+            e.preventDefault();
+            hasMoved = true;
+            btn.classList.add('dragging');
+            const newRight = clamp(startRight - dx, 8, window.innerWidth - 64);
+            const newBottom = clamp(startBottom - dy, 8, window.innerHeight - 64);
+            btn.style.right = newRight + 'px';
+            btn.style.bottom = newBottom + 'px';
+            btn.style.left = 'auto';
+        }
+
+        function onEnd() {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onEnd);
+            document.removeEventListener('touchmove', onMove);
+            document.removeEventListener('touchend', onEnd);
+            btn.classList.remove('dragging');
+            if (hasMoved) {
+                const rect = btn.getBoundingClientRect();
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    right: window.innerWidth - rect.right,
+                    bottom: window.innerHeight - rect.bottom
+                }));
+            }
+        }
+
+        btn.addEventListener('mousedown', onStart);
+        btn.addEventListener('touchstart', onStart, { passive: true });
+
+        // Prevent toggle on drag
+        const origToggle = AI.toggle.bind(AI);
+        AI.toggle = function() {
+            if (hasMoved) { hasMoved = false; return; }
+            origToggle();
+        };
+    })();
 })();
 </script>

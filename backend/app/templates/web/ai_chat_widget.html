@@ -21,20 +21,20 @@
     height: 3.75rem;
     border-radius: 9999px;
     border: none;
-    cursor: pointer;
+    cursor: grab;
     background: linear-gradient(135deg, #f59e0b, #d97706);
     color: #1c1917;
     display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: 0 25px 50px -12px rgba(245, 158, 11, .4);
-    transition: transform .3s ease, box-shadow .3s ease;
+    transition: box-shadow .3s ease;
     z-index: 9998;
+    touch-action: none;
+    user-select: none;
 }
-.ai-chat-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 25px 50px -12px rgba(245, 158, 11, .55);
-}
+.ai-chat-btn.dragging { cursor: grabbing; transform: scale(1.1); box-shadow: 0 30px 60px -12px rgba(245, 158, 11, .55); transition: none; }
+.ai-chat-btn:hover { box-shadow: 0 25px 50px -12px rgba(245, 158, 11, .55); }
 .ai-chat-btn:active { transform: scale(.95); }
 .ai-chat-btn svg { width: 1.5rem; height: 1.5rem; pointer-events: none; }
 
@@ -538,6 +538,88 @@
 
     chat.init();
     window.aiChat = chat;
+
+    // Drag-to-move for chat button
+    (function() {
+        const btn = document.getElementById('ai-chat-toggle');
+        const panel = document.getElementById('ai-chat-panel');
+        if (!btn) return;
+
+        const STORAGE_KEY = 'ai_chat_widget_pos';
+        let isDragging = false;
+        let hasMoved = false;
+        let startX, startY, startLeft, startBottom;
+
+        // Restore saved position
+        try {
+            const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            if (saved && typeof saved.left === 'number' && typeof saved.bottom === 'number') {
+                btn.style.left = saved.left + 'px';
+                btn.style.bottom = saved.bottom + 'px';
+                btn.style.right = 'auto';
+            }
+        } catch {}
+
+        function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+
+        function onStart(e) {
+            isDragging = false;
+            hasMoved = false;
+            const touch = e.touches ? e.touches[0] : e;
+            startX = touch.clientX;
+            startY = touch.clientY;
+            startLeft = btn.getBoundingClientRect().left;
+            startBottom = window.innerHeight - btn.getBoundingClientRect().bottom;
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onEnd);
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('touchend', onEnd);
+        }
+
+        function onMove(e) {
+            const touch = e.touches ? e.touches[0] : e;
+            const dx = touch.clientX - startX;
+            const dy = touch.clientY - startY;
+            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) isDragging = true;
+            if (!isDragging) return;
+            e.preventDefault();
+            hasMoved = true;
+            btn.classList.add('dragging');
+            const newLeft = clamp(startLeft + dx, 8, window.innerWidth - 68);
+            const newBottom = clamp(startBottom - dy, 8, window.innerHeight - 68);
+            btn.style.left = newLeft + 'px';
+            btn.style.bottom = newBottom + 'px';
+            btn.style.right = 'auto';
+        }
+
+        function onEnd() {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onEnd);
+            document.removeEventListener('touchmove', onMove);
+            document.removeEventListener('touchend', onEnd);
+            btn.classList.remove('dragging');
+            if (hasMoved) {
+                // Save position
+                const rect = btn.getBoundingClientRect();
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    left: rect.left,
+                    bottom: window.innerHeight - rect.bottom
+                }));
+                // Prevent toggle on drag end
+                e && e.stopPropagation && e.stopPropagation();
+            }
+        }
+
+        btn.addEventListener('mousedown', onStart);
+        btn.addEventListener('touchstart', onStart, { passive: true });
+
+        // Prevent toggle when dragging
+        const origToggle = chat.toggle.bind(chat);
+        chat.toggle = function() {
+            if (hasMoved) { hasMoved = false; return; }
+            origToggle();
+        };
+    })();
 
     const input = document.getElementById('ai-chat-input');
     if (input) {
