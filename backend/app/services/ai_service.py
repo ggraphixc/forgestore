@@ -118,7 +118,8 @@ def _call_llm_sync(
 ) -> Optional[str]:
     """
     Unified LLM call that works across all providers.
-    Supports multimodal (images) when provider supports it (e.g. MiMo-V2.5).
+    Supports multimodal (images) when provider supports it.
+    Falls back to text-only if multimodal fails.
     Returns the text content of the response, or None on failure.
     """
     client = get_ai_client()
@@ -129,42 +130,61 @@ def _call_llm_sync(
     model = get_active_model()
     config = PROVIDER_CONFIGS.get(provider)
 
-    try:
-        # OpenAI-compatible SDK format (OpenAI, OpenCode Zen)
-        user_content = [{"type": "text", "text": user_prompt}]
-        if images:
-            for img_url in images:
-                user_content.append({
-                    "type": "image_url",
-                    "image_url": {"url": img_url},
-                })
-
-        if images:
-            # Multimodal: use content array
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_content},
-            ]
-        else:
-            # Text-only: simpler format
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ]
-
-        logger.info(f"Calling LLM: provider={provider}, model={model}, base_url={config.get('base_url')}")
+    def _do_call(msgs):
         resp = client.chat.completions.create(
             model=model,
-            messages=messages,
+            messages=msgs,
             temperature=temperature,
             max_tokens=max_tokens,
         )
         if not resp.choices or not resp.choices[0].message:
             logger.error(f"LLM returned empty response: {resp}")
             return None
-        result = resp.choices[0].message.content
+        return resp.choices[0].message.content
+
+    try:
+        logger.info(f"Calling LLM: provider={provider}, model={model}, base_url={config.get('base_url')}, has_images={bool(images)}")
+
+        # Try multimodal if images provided
+        if images:
+            # Limit to first 3 images, skip huge base64 data URLs (>500KB each)
+            safe_images = []
+            for img in images[:3]:
+                if img.startswith("data:"):
+                    # base64 data URL — check size
+                    if len(img) > 600_000:
+                        logger.info(f"Skipping large image ({len(img)} bytes)")
+                        continue
+                safe_images.append(img)
+
+            if safe_images:
+                user_content = [{"type": "text", "text": user_prompt}]
+                for img_url in safe_images:
+                    user_content.append({
+                        "type": "image_url",
+                        "image_url": {"url": img_url},
+                    })
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_content},
+                ]
+                try:
+                    result = _do_call(messages)
+                    if result and result.strip():
+                        logger.info(f"Multimodal LLM response length: {len(result)}")
+                        return result.strip()
+                    logger.warning("Multimodal call returned empty/None, falling back to text-only")
+                except Exception as e:
+                    logger.warning(f"Multimodal call failed ({e}), falling back to text-only")
+
+        # Text-only fallback
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+        result = _do_call(messages)
         if not result:
-            logger.error("LLM returned None content")
+            logger.error("LLM returned None content (text-only)")
             return None
         result = result.strip()
         logger.info(f"LLM response length: {len(result)}")
