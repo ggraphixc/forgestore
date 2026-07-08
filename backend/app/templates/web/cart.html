@@ -499,16 +499,16 @@ async function loadCart() {
             <p class="cart-item-unit">${formatCurrency(price)} each</p>
             <div class="cart-item-controls">
               <div class="cart-item-qty">
-                <button onclick="updateCartItem('${item.id}', ${item.quantity - 1})" class="cart-qty-btn" ${item.quantity <= 1 ? 'disabled' : ''} aria-label="Decrease quantity">
+                <button onclick="updateCartItem('${item.product_id}', ${item.quantity - 1})" class="cart-qty-btn" ${item.quantity <= 1 ? 'disabled' : ''} aria-label="Decrease quantity">
                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
                 </button>
                 <span class="cart-qty-value">${item.quantity}</span>
-                <button onclick="updateCartItem('${item.id}', ${item.quantity + 1})" class="cart-qty-btn" aria-label="Increase quantity">
+                <button onclick="updateCartItem('${item.product_id}', ${item.quantity + 1})" class="cart-qty-btn" aria-label="Increase quantity">
                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 </button>
               </div>
               <span class="cart-item-price">${formatCurrency(itemTotal)}</span>
-              <button onclick="removeCartItem('${item.id}')" class="cart-item-remove" aria-label="Remove item">
+              <button onclick="removeCartItem('${item.product_id}')" class="cart-item-remove" aria-label="Remove item">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
               </button>
             </div>
@@ -555,13 +555,13 @@ async function loadCart() {
   }
 }
 
-async function updateCartItem(itemId, qty) {
-  if (qty < 1) return removeCartItem(itemId);
+async function updateCartItem(productId, qty) {
+  if (qty < 1) return removeCartItem(productId);
   try {
     await fetch('/api/cart/update', {
-      method: 'POST',
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ item_id: itemId, quantity: qty }),
+      body: JSON.stringify({ product_id: productId, quantity: qty }),
     });
     await loadCart();
     updateCartBadge();
@@ -569,12 +569,10 @@ async function updateCartItem(itemId, qty) {
   } catch { showToast('Failed to update cart', 'error'); }
 }
 
-async function removeCartItem(itemId) {
+async function removeCartItem(productId) {
   try {
-    await fetch('/api/cart/remove', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ item_id: itemId }),
+    await fetch(`/api/cart/remove/${productId}`, {
+      method: 'DELETE',
     });
     await loadCart();
     updateCartBadge();

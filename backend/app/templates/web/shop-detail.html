@@ -71,6 +71,8 @@
   .ws-product-add-btn:hover { background: #f43f5e; border-color: #f43f5e; }
   .ws-product-add-btn:hover svg { color: #fff; }
   .ws-product-add-btn svg { width: 1rem; height: 1rem; color: #333; }
+  .ws-product-add-btn.in-cart { background: #f43f5e; border-color: #f43f5e; }
+  .ws-product-add-btn.in-cart svg { color: #fff; }
   .ws-empty { text-align: center; padding: 4rem 1rem; color: var(--ws-stone-500); }
   .dark {
     .ws-section-title { color: var(--ws-stone-100); }
@@ -160,7 +162,7 @@
           </div>
         </div>
       </a>
-      <button onclick="event.preventDefault(); event.stopPropagation(); addToCart('{{ p.id }}', 1)" class="ws-product-add-btn" aria-label="Add to cart">
+      <button onclick="event.preventDefault(); event.stopPropagation(); addToCart('{{ p.id }}', 1)" class="ws-product-add-btn" data-cart-product-id="{{ p.id }}" aria-label="Add to cart">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
       </button>
     </div>
