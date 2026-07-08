@@ -128,3 +128,14 @@ async def logistics_assign_driver(shipment_id: str, request: Request, db: Sessio
         db.commit()
 
     return RedirectResponse(url="/logistics/shipments", status_code=302)
+
+
+@router.get("/logistics/notifications", response_class=HTMLResponse)
+def logistics_notifications(request: Request, db: Session = Depends(get_db)):
+    admin, redirect = _require_logistics(request, db)
+    if redirect:
+        return redirect
+    return render_template("logistics/notifications.html", {
+        "request": request, "admin": admin,
+        "has_permission": has_permission,
+    })

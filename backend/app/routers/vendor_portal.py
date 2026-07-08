@@ -762,3 +762,25 @@ def vendor_ads_page(request: Request, db: Session = Depends(get_db)):
         "products": products,
         "has_permission": has_permission,
     })
+
+
+@router.get("/vendor/support", response_class=HTMLResponse)
+def vendor_support(request: Request, db: Session = Depends(get_db)):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return redirect
+    return render_template("vendor/support.html", {
+        "request": request, "admin": admin, "retailer": retailer,
+        "has_permission": has_permission,
+    })
+
+
+@router.get("/vendor/notifications", response_class=HTMLResponse)
+def vendor_notifications(request: Request, db: Session = Depends(get_db)):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return redirect
+    return render_template("vendor/notifications.html", {
+        "request": request, "admin": admin, "retailer": retailer,
+        "has_permission": has_permission,
+    })
