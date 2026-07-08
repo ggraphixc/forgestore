@@ -607,6 +607,59 @@
   </div>
 </div>
 
+{% if admin and admin.role.value != 'DIR_ADMIN' %}
+{% if admin.role.value == 'RETAILER' %}
+{% set ai_title = "ForgeAI Vendor" %}
+{% set ai_subtitle = "Your business assistant" %}
+{% set ai_session_prefix = "vendor-" ~ admin.vendor_id %}
+{% set ai_greeting = "Hello! I'm your vendor AI assistant. I can help you analyze product performance, track orders, monitor earnings, and optimize your store. What would you like to know?" %}
+{% set ai_placeholder = "Ask about your products, orders, earnings..." %}
+{% set ai_actions = [
+    {"label": "Product Performance", "query": "How are my products performing?"},
+    {"label": "Order Status", "query": "What's my current order status?"},
+    {"label": "Sales Trends", "query": "Show me my sales trends"},
+    {"label": "Stock Check", "query": "Which products are low on stock?"}
+] %}
+{% elif admin.role.value == 'LOGISTICS' %}
+{% set ai_title = "ForgeAI Logistics" %}
+{% set ai_subtitle = "Delivery operations assistant" %}
+{% set ai_session_prefix = "logistics" %}
+{% set ai_greeting = "Hello! I'm your logistics AI assistant. I can help you track shipments, monitor driver availability, and optimize delivery operations. What would you like to know?" %}
+{% set ai_placeholder = "Ask about shipments, drivers, deliveries..." %}
+{% set ai_actions = [
+    {"label": "Shipment Status", "query": "What's the current shipment status?"},
+    {"label": "Driver Availability", "query": "How many drivers are available?"},
+    {"label": "Pending Deliveries", "query": "Show me pending deliveries"},
+    {"label": "Delivery Issues", "query": "Are there any delivery issues?"}
+] %}
+{% elif admin.role.value == 'MANAGEMENT' %}
+{% set ai_title = "ForgeAI Management" %}
+{% set ai_subtitle = "Business intelligence assistant" %}
+{% set ai_session_prefix = "management" %}
+{% set ai_greeting = "Hello! I'm your management AI assistant. I can help you analyze business metrics, vendor performance, customer growth, and strategic insights. What would you like to know?" %}
+{% set ai_placeholder = "Ask about revenue, vendors, customers..." %}
+{% set ai_actions = [
+    {"label": "Revenue Analysis", "query": "Analyze my revenue for the last 30 days"},
+    {"label": "Vendor Performance", "query": "How are vendors performing?"},
+    {"label": "Customer Growth", "query": "Show me customer growth trends"},
+    {"label": "Key Metrics", "query": "Give me a summary of key metrics"}
+] %}
+{% elif admin.role.value == 'TECH_ADMIN' %}
+{% set ai_title = "ForgeAI Tech" %}
+{% set ai_subtitle = "System administration assistant" %}
+{% set ai_session_prefix = "tech" %}
+{% set ai_greeting = "Hello! I'm your tech AI assistant. I can help you monitor system health, check database stats, and verify configurations. What would you like to know?" %}
+{% set ai_placeholder = "Ask about system health, database, config..." %}
+{% set ai_actions = [
+    {"label": "System Health", "query": "What's the current system health?"},
+    {"label": "Database Stats", "query": "Show me database statistics"},
+    {"label": "AI Config", "query": "Is the AI provider configured?"},
+    {"label": "Capacity", "query": "What's the system capacity status?"}
+] %}
+{% endif %}
+{% include "admin/ai_widget_portal.html" %}
+{% endif %}
+
 <script>
 function openSidebar() {
     const sidebar = document.getElementById('sidebar');

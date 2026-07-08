@@ -19,6 +19,7 @@ from sqlalchemy import desc, func
 from app.models import (
     AIConversation, AIMessage, UserPreferenceVector, RecommendationCache,
     Product, Category, User, Review, Order, OrderItem, Retailer,
+    AdminUser,
 )
 from app.config import get_settings
 
@@ -391,14 +392,290 @@ class AIChatService:
             logger.error(f"Admin context error: {e}")
             return json.dumps({"error": "Could not load admin context", "period": "last_30_days"})
 
+    def _get_vendor_context(self, vendor_id: str) -> str:
+        """Build vendor-specific context with their own products, orders, earnings."""
+        from datetime import timedelta
+
+        try:
+            now = utcnow()
+            thirty_days_ago = now - timedelta(days=30)
+
+            retailer = self.db.query(Retailer).filter(Retailer.id == vendor_id).first()
+            retailer_name = retailer.business_name if retailer else "Unknown"
+
+            # My products
+            my_products = self.db.query(Product).filter(Product.vendor_id == vendor_id).all()
+            total_products = len(my_products)
+            active_products = sum(1 for p in my_products if p.inventory > 0)
+            low_stock = sum(1 for p in my_products if 0 < p.inventory < 10)
+            out_of_stock = sum(1 for p in my_products if p.inventory == 0)
+            total_inventory = sum(p.inventory for p in my_products)
+            total_views = sum(p.views_count or 0 for p in my_products)
+            total_sold = sum(p.sold_count or 0 for p in my_products)
+
+            # My orders (orders containing this vendor's products)
+            product_ids = [p.id for p in my_products]
+            if product_ids:
+                my_order_items = self.db.query(OrderItem).filter(
+                    OrderItem.product_id.in_(product_ids)
+                ).all()
+                order_ids = list(set(oi.order_id for oi in my_order_items))
+                my_orders = self.db.query(Order).filter(Order.id.in_(order_ids)).all() if order_ids else []
+            else:
+                my_orders = []
+                my_order_items = []
+
+            total_orders = len(my_orders)
+            pending_orders = sum(1 for o in my_orders if o.status in ["PENDING", "PROCESSING"])
+            delivered_orders = sum(1 for o in my_orders if o.status == "DELIVERED")
+            cancelled_orders = sum(1 for o in my_orders if o.status == "CANCELLED")
+
+            # Revenue
+            revenue_30d = sum(
+                float(o.total_amount or 0) for o in my_orders
+                if o.status in ["DELIVERED", "PAID"] and o.created_at and o.created_at >= thirty_days_ago
+            )
+
+            # Reviews on my products
+            if product_ids:
+                my_reviews = self.db.query(Review).filter(Review.product_id.in_(product_ids)).all()
+            else:
+                my_reviews = []
+            avg_rating = sum(r.rating for r in my_reviews) / len(my_reviews) if my_reviews else 0
+
+            # Ad campaigns
+            try:
+                from app.models import AdCampaign
+                my_ads = self.db.query(AdCampaign).filter(AdCampaign.vendor_id == vendor_id).all()
+                active_ads = sum(1 for a in my_ads if a.status == "ACTIVE")
+            except Exception:
+                my_ads = []
+                active_ads = 0
+
+            return json.dumps({
+                "vendor": {"name": retailer_name, "id": vendor_id},
+                "products": {
+                    "total": total_products,
+                    "active": active_products,
+                    "low_stock": low_stock,
+                    "out_of_stock": out_of_stock,
+                    "total_inventory": total_inventory,
+                    "total_views": total_views,
+                    "total_sold": total_sold,
+                },
+                "orders": {
+                    "total": total_orders,
+                    "pending": pending_orders,
+                    "delivered": delivered_orders,
+                    "cancelled": cancelled_orders,
+                },
+                "revenue_30d": revenue_30d,
+                "reviews": {
+                    "total": len(my_reviews),
+                    "average_rating": round(avg_rating, 1),
+                },
+                "ads": {
+                    "total": len(my_ads),
+                    "active": active_ads,
+                },
+            }, default=str)
+        except Exception as e:
+            logger.error(f"Vendor context error: {e}")
+            return json.dumps({"error": "Could not load vendor context"})
+
+    def _get_logistics_context(self) -> str:
+        """Build logistics-specific context with shipments, drivers, delivery status."""
+        from datetime import timedelta
+
+        try:
+            now = utcnow()
+            thirty_days_ago = now - timedelta(days=7)
+
+            try:
+                from app.models import Shipment, DeliveryAgent
+
+                # Shipments
+                total_shipments = self.db.query(func.count(Shipment.id)).scalar() or 0
+                pending_shipments = self.db.query(func.count(Shipment.id)).filter(
+                    Shipment.status == "PENDING"
+                ).scalar() or 0
+                in_transit = self.db.query(func.count(Shipment.id)).filter(
+                    Shipment.status == "IN_TRANSIT"
+                ).scalar() or 0
+                delivered_shipments = self.db.query(func.count(Shipment.id)).filter(
+                    Shipment.status == "DELIVERED"
+                ).scalar() or 0
+                failed_shipments = self.db.query(func.count(Shipment.id)).filter(
+                    Shipment.status == "FAILED"
+                ).scalar() or 0
+
+                # Drivers
+                total_drivers = self.db.query(func.count(DeliveryAgent.id)).scalar() or 0
+                active_drivers = self.db.query(func.count(DeliveryAgent.id)).filter(
+                    DeliveryAgent.is_available == True
+                ).scalar() or 0
+
+                # Recent shipments (last 7 days)
+                recent_shipments = self.db.query(Shipment).filter(
+                    Shipment.created_at >= thirty_days_ago
+                ).order_by(Shipment.created_at.desc()).limit(10).all()
+                recent_list = [
+                    {"tracking": s.tracking_number, "status": s.status, "order_id": s.order_id}
+                    for s in recent_shipments
+                ]
+            except Exception:
+                total_shipments = pending_shipments = in_transit = delivered_shipments = failed_shipments = 0
+                total_drivers = active_drivers = 0
+                recent_list = []
+
+            return json.dumps({
+                "shipments": {
+                    "total": total_shipments,
+                    "pending": pending_shipments,
+                    "in_transit": in_transit,
+                    "delivered": delivered_shipments,
+                    "failed": failed_shipments,
+                },
+                "drivers": {
+                    "total": total_drivers,
+                    "active": active_drivers,
+                },
+                "recent_shipments": recent_list,
+            }, default=str)
+        except Exception as e:
+            logger.error(f"Logistics context error: {e}")
+            return json.dumps({"error": "Could not load logistics context"})
+
+    def _get_management_context(self) -> str:
+        """Build management context — orders, vendors, customers, ads, products."""
+        from datetime import timedelta
+
+        try:
+            now = utcnow()
+            thirty_days_ago = now - timedelta(days=30)
+
+            # Revenue & Orders
+            total_revenue = self.db.query(func.coalesce(func.sum(Order.total_amount), 0)).filter(
+                Order.status.in_(["DELIVERED", "PAID"]),
+                Order.created_at >= thirty_days_ago,
+            ).scalar()
+            total_orders = self.db.query(func.count(Order.id)).filter(
+                Order.created_at >= thirty_days_ago
+            ).scalar() or 0
+            pending_orders = self.db.query(func.count(Order.id)).filter(
+                Order.status.in_(["PENDING", "PROCESSING"])
+            ).scalar() or 0
+            delivered_orders = self.db.query(func.count(Order.id)).filter(
+                Order.status == "DELIVERED"
+            ).scalar() or 0
+
+            # Products
+            total_products = self.db.query(func.count(Product.id)).scalar() or 0
+            low_stock = self.db.query(func.count(Product.id)).filter(
+                Product.inventory > 0, Product.inventory < 10
+            ).scalar() or 0
+
+            # Vendors
+            total_vendors = self.db.query(func.count(Retailer.id)).scalar() or 0
+            pending_vendors = self.db.query(func.count(Retailer.id)).filter(
+                Retailer.status == "PENDING"
+            ).scalar() or 0
+
+            # Customers
+            total_customers = self.db.query(func.count(User.id)).scalar() or 0
+            new_customers_30d = self.db.query(func.count(User.id)).filter(
+                User.created_at >= thirty_days_ago
+            ).scalar() or 0
+
+            # Ads
+            try:
+                from app.models import AdCampaign, PromoAd
+                active_ads = self.db.query(func.count(AdCampaign.id)).filter(
+                    AdCampaign.status == "ACTIVE"
+                ).scalar() or 0
+                total_promos = self.db.query(func.count(PromoAd.id)).scalar() or 0
+            except Exception:
+                active_ads = total_promos = 0
+
+            return json.dumps({
+                "period": "last_30_days",
+                "revenue": {"total": float(total_revenue or 0), "currency": "NGN"},
+                "orders": {"total_30d": total_orders, "pending": pending_orders, "delivered": delivered_orders},
+                "products": {"total": total_products, "low_stock": low_stock},
+                "vendors": {"total": total_vendors, "pending": pending_vendors},
+                "customers": {"total": total_customers, "new_30d": new_customers_30d},
+                "ads": {"active": active_ads, "promo_ads": total_promos},
+            }, default=str)
+        except Exception as e:
+            logger.error(f"Management context error: {e}")
+            return json.dumps({"error": "Could not load management context"})
+
+    def _get_tech_context(self) -> str:
+        """Build tech admin context — system health, performance, settings."""
+        from datetime import timedelta
+
+        try:
+            now = utcnow()
+
+            # System info
+            try:
+                import psutil
+                cpu_percent = psutil.cpu_percent(interval=0.1)
+                memory = psutil.virtual_memory()
+                disk = psutil.disk_usage("/")
+                system_info = {
+                    "cpu_percent": cpu_percent,
+                    "memory_used_percent": memory.percent,
+                    "memory_total_gb": round(memory.total / (1024**3), 1),
+                    "disk_used_percent": disk.percent,
+                    "disk_total_gb": round(disk.total / (1024**3), 1),
+                }
+            except Exception:
+                system_info = {"note": "System metrics unavailable (psutil not installed)"}
+
+            # Database stats
+            try:
+                total_products = self.db.query(func.count(Product.id)).scalar() or 0
+                total_orders = self.db.query(func.count(Order.id)).scalar() or 0
+                total_users = self.db.query(func.count(User.id)).scalar() or 0
+                total_admins = self.db.query(func.count(AdminUser.id)).scalar() or 0
+            except Exception:
+                total_products = total_orders = total_users = total_admins = 0
+
+            # Settings check
+            try:
+                from app.models import AISettings
+                ai_settings = self.db.query(AISettings).first()
+                ai_configured = bool(ai_settings and ai_settings.api_key)
+            except Exception:
+                ai_configured = False
+
+            return json.dumps({
+                "system": system_info,
+                "database": {
+                    "total_products": total_products,
+                    "total_orders": total_orders,
+                    "total_users": total_users,
+                    "total_admins": total_admins,
+                },
+                "ai_configured": ai_configured,
+            }, default=str)
+        except Exception as e:
+            logger.error(f"Tech context error: {e}")
+            return json.dumps({"error": "Could not load tech context"})
+
     def _build_system_prompt(self, context: dict) -> str:
         """Build the system prompt with shopping context."""
         session_id = context.get("session_id", "")
         is_admin = session_id.startswith("admin-")
+        is_vendor = session_id.startswith("vendor-")
+        is_logistics = session_id.startswith("logistics-")
+        is_management = session_id.startswith("management-")
+        is_tech = session_id.startswith("tech-")
 
         catalog = self._get_catalog_context()
-        user_ctx = self._get_user_context(context.get("user_id"))
 
+        # ── Dir-Admin (full access) ──
         if is_admin:
             admin_ctx = self._get_admin_context()
             return f"""You are ForgeAI Admin Assistant — an AI analytics and operations assistant for the ForgeStore admin team.
@@ -434,6 +711,123 @@ Guidelines:
 - Use plain text formatting — bold key metrics, bullet point lists
 - NEVER output any code, XML, JSON, or tool_call tags"""
 
+        # ── Vendor / Retailer ──
+        if is_vendor:
+            vendor_id = context.get("vendor_id")
+            vendor_ctx = self._get_vendor_context(vendor_id) if vendor_id else "{}"
+            return f"""You are ForgeAI Vendor Assistant — an AI business assistant for vendors on ForgeStore.
+
+CRITICAL RULES:
+- You are a TEXT-ONLY assistant. NEVER output code, XML, JSON, tool_call tags, or any markup.
+- Respond ONLY in plain conversational text with simple formatting (bold, bullet points).
+- You have access to THIS VENDOR'S data only — products, orders, earnings, reviews.
+- Be concise and actionable. Help the vendor grow their business.
+
+Your capabilities:
+- Analyze product performance (views, sales, conversion)
+- Track orders and revenue trends
+- Identify low stock and out-of-stock products
+- Review customer feedback and ratings
+- Monitor ad campaign performance
+- Suggest pricing and inventory optimizations
+
+Vendor Data:
+{vendor_ctx}
+
+Available catalog (for competitor context):
+{catalog}
+
+Guidelines:
+- Focus on THIS vendor's data — never mention other vendors' data
+- Flag urgent issues (low stock, pending orders, negative reviews)
+- Suggest actionable improvements
+- Keep responses under 120 words unless detailed analysis is requested
+- NEVER output any code, XML, JSON, or tool_call tags"""
+
+        # ── Logistics ──
+        if is_logistics:
+            logistics_ctx = self._get_logistics_context()
+            return f"""You are ForgeAI Logistics Assistant — an AI operations assistant for the ForgeStore logistics team.
+
+CRITICAL RULES:
+- You are a TEXT-ONLY assistant. NEVER output code, XML, JSON, tool_call tags, or any markup.
+- Respond ONLY in plain conversational text with simple formatting (bold, bullet points).
+- You have access to shipment and driver data — use it to answer logistics questions.
+- Be concise and operations-focused. Prioritize delivery efficiency.
+
+Your capabilities:
+- Track shipment status and delivery progress
+- Monitor driver availability and assignments
+- Identify delivery bottlenecks and delays
+- Report on fulfillment metrics
+- Help with route planning and scheduling
+
+Logistics Data:
+{logistics_ctx}
+
+Guidelines:
+- Lead with shipment counts and status breakdowns
+- Flag delayed or failed deliveries
+- Keep responses under 120 words unless detailed analysis is requested
+- NEVER output any code, XML, JSON, or tool_call tags"""
+
+        # ── Management ──
+        if is_management:
+            mgmt_ctx = self._get_management_context()
+            return f"""You are ForgeAI Management Assistant — an AI business intelligence assistant for ForgeStore management.
+
+CRITICAL RULES:
+- You are a TEXT-ONLY assistant. NEVER output code, XML, JSON, tool_call tags, or any markup.
+- Respond ONLY in plain conversational text with simple formatting (bold, bullet points).
+- You have access to business metrics — revenue, orders, vendors, customers, ads.
+- Be concise and strategic. Focus on business growth insights.
+
+Your capabilities:
+- Analyze revenue and order trends
+- Monitor vendor performance and onboarding
+- Track customer acquisition and growth
+- Review ad campaign effectiveness
+- Provide strategic business recommendations
+- Summarize key performance indicators
+
+Management Data (Last 30 Days):
+{mgmt_ctx}
+
+Guidelines:
+- Lead with KPIs and trends
+- Flag opportunities and risks
+- Keep responses under 120 words unless detailed analysis is requested
+- NEVER output any code, XML, JSON, or tool_call tags"""
+
+        # ── Tech Admin ──
+        if is_tech:
+            tech_ctx = self._get_tech_context()
+            return f"""You are ForgeAI Tech Assistant — an AI system administration assistant for ForgeStore technical team.
+
+CRITICAL RULES:
+- You are a TEXT-ONLY assistant. NEVER output code, XML, JSON, tool_call tags, or any markup.
+- Respond ONLY in plain conversational text with simple formatting (bold, bullet points).
+- You have access to system health, database stats, and configuration status.
+- Be concise and technical. Focus on system reliability and performance.
+
+Your capabilities:
+- Monitor system health (CPU, memory, disk)
+- Check database statistics and growth
+- Verify AI and service configurations
+- Report on system capacity and scaling needs
+- Help troubleshoot technical issues
+
+Tech Data:
+{tech_ctx}
+
+Guidelines:
+- Lead with system health metrics
+- Flag capacity concerns or configuration issues
+- Keep responses under 120 words unless detailed analysis is requested
+- NEVER output any code, XML, JSON, or tool_call tags"""
+
+        # ── Default: Customer ──
+        user_ctx = self._get_user_context(context.get("user_id"))
         return f"""You are ForgeAI, the intelligent shopping assistant for ForgeStore — a multi-vendor e-commerce marketplace.
 
 CRITICAL RULES:
@@ -498,6 +892,12 @@ Guidelines:
                 "session_id": session_id,
                 "last_query": message,
             })
+
+            # For vendor sessions, extract vendor_id from session (format: "vendor-{vendor_id}-{timestamp}")
+            if session_id.startswith("vendor-"):
+                parts = session_id.split("-")
+                if len(parts) >= 3:
+                    context["vendor_id"] = parts[1]
 
             # Build system prompt
             system_prompt = self._build_system_prompt(context)
