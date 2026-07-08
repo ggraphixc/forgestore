@@ -199,23 +199,26 @@ def _call_llm_sync(
     try:
         logger.info(f"Calling LLM: provider={provider}, model={model}, base_url={config.get('base_url')}, has_images={bool(images)}")
 
-        # Try multimodal if images provided — only for models that support vision
-        vision_models = {"gpt-4o", "gpt-4o-mini", "gpt-4-vision-preview", "claude-3", "gemini"}
-        is_vision_model = any(v in model.lower() for v in vision_models)
-
-        if images and is_vision_model:
+        # Try multimodal if images provided
+        if images:
             data_urls = []
             for img in images[:3]:
                 if img.startswith("data:"):
                     # Already a data URL — check size
                     if len(img) <= 600_000:
                         data_urls.append(img)
+                        logger.info(f"Using inline data URL ({len(img)} bytes)")
                 elif img.startswith("http"):
                     # Fetch and convert to base64
+                    logger.info(f"Fetching image: {img[:80]}...")
                     du = _url_to_data_url(img)
                     if du:
                         data_urls.append(du)
+                        logger.info(f"Converted to data URL ({len(du)} bytes)")
+                    else:
+                        logger.warning(f"Failed to convert image to data URL: {img[:80]}")
 
+            logger.info(f"Prepared {len(data_urls)} images for multimodal call")
             if data_urls:
                 user_content = [{"type": "text", "text": user_prompt}]
                 for du in data_urls:
@@ -235,8 +238,6 @@ def _call_llm_sync(
                     logger.warning("Multimodal call returned empty/None, falling back to text-only")
                 except Exception as e:
                     logger.warning(f"Multimodal call failed ({e}), falling back to text-only")
-        elif images and not is_vision_model:
-            logger.info(f"Skipping images — model '{model}' does not support vision. Use GPT-4o or Claude for image analysis.")
 
         # Text-only fallback
         messages = [
