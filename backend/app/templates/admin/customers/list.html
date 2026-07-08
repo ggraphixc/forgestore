@@ -509,7 +509,7 @@
   }
 
   function cancelDelete(e) {
-    if (e && e.target !== document.getElementById('deleteOverlay')) return;
+    if (e && e.target && e.target.id !== 'deleteOverlay' && e.target !== document.querySelector('.admin-modal-dialog')) return;
     deleteTargetId = null;
     document.getElementById('deleteOverlay').classList.remove('active');
   }
@@ -520,7 +520,7 @@
     btn.disabled = true;
     btn.textContent = 'Deleting...';
 
-    fetch('/api/admin/customers/' + deleteTargetId, { method: 'DELETE' })
+    fetch('/api/admin/customers/' + deleteTargetId, { method: 'DELETE', credentials: 'include' })
       .then(function(res) { return res.json(); })
       .then(function(data) {
         if (data.success) {

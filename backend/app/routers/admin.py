@@ -452,6 +452,46 @@ def customer_list(request: Request, db: Session = Depends(get_db)):
     })
 
 
+@router.get("/customers/{customer_id}", response_class=HTMLResponse)
+def customer_detail_page(
+    request: Request,
+    customer_id: str,
+    db: Session = Depends(get_db),
+):
+    admin = get_current_user_from_cookie(request, db)
+    if not admin or not has_permission(admin, "customers"):
+        return RedirectResponse(url="/admin/login", status_code=302)
+
+    customer = db.query(User).filter(User.id == customer_id).first()
+    if not customer:
+        return RedirectResponse(url="/admin/customers", status_code=302)
+
+    # Get customer orders
+    orders = db.query(Order).filter(Order.customer_id == customer_id).order_by(desc(Order.created_at)).all()
+
+    # Get order count and total spent
+    order_count = len(orders)
+    total_spent = sum(
+        sum(item.subtotal for item in (order.items or []))
+        for order in orders
+    ) if orders else 0
+
+    # Get addresses
+    from app.models import Address
+    addresses = db.query(Address).filter(Address.user_id == customer_id).all()
+
+    return render_template("admin/customers/detail.html", {
+        "request": request,
+        "admin": admin,
+        "customer": customer,
+        "orders": orders,
+        "order_count": order_count,
+        "total_spent": total_spent,
+        "addresses": addresses,
+        "has_permission": has_permission,
+    })
+
+
 # --- Settings ---
 @router.get("/settings", response_class=HTMLResponse)
 def settings_page(request: Request, db: Session = Depends(get_db)):
