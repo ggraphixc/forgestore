@@ -362,15 +362,20 @@ def generate_product_specifications(
     Returns a dict of {spec_name: spec_value} or None on failure.
     """
     system_prompt = (
-        "You are a technical product analyst. "
-        "Generate accurate product specifications for the given product.\n\n"
-        "RULES:\n"
-        "- Return ONLY a JSON object with key-value pairs\n"
-        "- Keys should be concise spec names (e.g. Material, Weight, Color, Size, Model, Warranty)\n"
-        "- Values should be specific and factual\n"
-        "- Include 5-10 relevant specs based on the product type\n"
-        "- Do NOT include markdown, code fences, or any text outside the JSON object\n"
-        "- Example format: {\"Material\": \"100% Cotton\", \"Weight\": \"250g\", \"Care\": \"Machine washable\"}"
+        "You are a technical product analyst for an e-commerce store. "
+        "Your job is to list the key specifications a buyer would want to know.\n\n"
+        "For each product, list 5-10 specifications as key-value pairs. "
+        "Use this exact format for each line:\n"
+        "Key: Value\n\n"
+        "Examples:\n"
+        "Material: 100% Premium Cotton\n"
+        "Weight: 250g\n"
+        "Color: Midnight Black\n"
+        "Care: Machine washable at 30°C\n"
+        "Warranty: 2 years manufacturer warranty\n"
+        "Origin: Made in Portugal\n\n"
+        "Do NOT use JSON format. Do NOT use markdown. "
+        "Just write each spec on its own line as Key: Value."
     )
 
     parts = [f"Product: {product_name}"]
@@ -382,30 +387,35 @@ def generate_product_specifications(
         parts.append(f"Description: {description[:500]}")
     user_prompt = "\n".join(parts)
 
-    result = _call_llm(system_prompt, user_prompt, temperature=0.3, max_tokens=400, images=images)
+    result = _call_llm(system_prompt, user_prompt, temperature=0.3, max_tokens=500, images=images)
 
     if result:
-        import json
         import re
-        # Try to extract JSON from the response
+        specs = {}
+        # Parse "Key: Value" lines
+        for line in result.strip().split("\n"):
+            line = line.strip()
+            if not line:
+                continue
+            # Try splitting on first colon
+            match = re.match(r'^([^:]+):\s*(.+)$', line)
+            if match:
+                key = match.group(1).strip().strip('*').strip('#').strip()
+                val = match.group(2).strip().strip('*').strip()
+                if key and val:
+                    specs[key] = val
+        if specs:
+            return specs
+
+        # Fallback: try JSON parsing if the model returned JSON anyway
+        import json
         try:
-            # Try parsing directly
             specs = json.loads(result)
             if isinstance(specs, dict):
                 return specs
         except json.JSONDecodeError:
             pass
         try:
-            # Try extracting JSON from markdown code fences
-            match = re.search(r'```(?:json)?\s*\n?(.*?)\n?```', result, re.DOTALL)
-            if match:
-                specs = json.loads(match.group(1))
-                if isinstance(specs, dict):
-                    return specs
-        except (json.JSONDecodeError, IndexError):
-            pass
-        try:
-            # Try finding a JSON object in the text
             match = re.search(r'\{[^{}]*\}', result, re.DOTALL)
             if match:
                 specs = json.loads(match.group(0))
