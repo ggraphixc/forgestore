@@ -1227,6 +1227,115 @@ def checkout(
         }
 
 
+# --- CART CHECKOUT (create preliminary order from cart) ---
+
+@router.post("/cart/checkout")
+def cart_checkout(
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """Create a preliminary order from cart items, return order_id for checkout page."""
+    cart_token = get_cart_token(request)
+    cart_items = db.query(CartItem).filter(CartItem.cart_token == cart_token).all()
+
+    if not cart_items:
+        raise HTTPException(status_code=400, detail="Cart is empty")
+
+    # Get or create customer
+    customer = get_current_customer_from_cookie(request, db)
+    if not customer:
+        # Create guest customer with placeholder info
+        guest_email = f"guest_{secrets.token_hex(8)}@forgestore.com"
+        customer = User(
+            email=guest_email,
+            name="Guest",
+            phone="",
+            role="CUSTOMER",
+        )
+        db.add(customer)
+        db.flush()
+
+    # Calculate total
+    subtotal = sum(ci.quantity * ci.price for ci in cart_items)
+
+    # Create order with placeholder shipping (user will fill in on checkout page)
+    from app.utils import utcnow as _utcnow
+    order_number = f"FS-{secrets.token_hex(4).upper()}-{random.randint(1000,9999)}"
+    order = Order(
+        order_number=order_number,
+        total_amount=subtotal,
+        shipping_address={"placeholder": True},
+        customer_id=customer.id,
+        status="PENDING",
+    )
+    db.add(order)
+    db.flush()
+
+    # Create order items
+    for ci in cart_items:
+        oi = OrderItem(
+            quantity=ci.quantity,
+            price=ci.price,
+            product_id=ci.product_id,
+            order_id=order.id,
+        )
+        db.add(oi)
+
+    # Clear cart
+    for ci in cart_items:
+        db.delete(ci)
+
+    db.commit()
+
+    return {"order_id": order.id}
+
+
+# --- PAYMENT INITIALIZATION (for checkout page) ---
+
+@router.post("/payments/initialize")
+async def payments_initialize(
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """Initialize payment for an existing order (called by checkout page)."""
+    body = await request.json()
+    order_id = body.get("order_id")
+    provider_name = body.get("provider", "paystack")
+
+    if not order_id:
+        raise HTTPException(status_code=400, detail="order_id required")
+
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    from app.config import get_settings
+    _settings = get_settings()
+    base_url = _settings.site_base_url.rstrip("/")
+    currency = get_currency(db)
+
+    provider = get_payment_provider(provider_name)
+    payment_result = provider.initialize_payment(
+        email=order.customer.email if order.customer else "guest@forgestore.com",
+        amount=order.total_amount,
+        reference=order.order_number,
+        callback_url=f"{base_url}/shop/checkout?order_id={order.id}&reference={order.order_number}",
+        currency=currency,
+        metadata={
+            "order_id": order.id,
+            "order_number": order.order_number,
+        },
+    )
+
+    if payment_result["success"]:
+        return {
+            "authorization_url": payment_result["authorization_url"],
+            "access_code": payment_result.get("access_code", ""),
+        }
+    else:
+        raise HTTPException(status_code=400, detail=payment_result.get("message", "Payment init failed"))
+
+
 # --- SEARCH ---
 
 @router.get("/search/suggestions")

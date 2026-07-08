@@ -488,7 +488,7 @@ async function loadCart() {
       const price = item.discount_price || item.price;
       const itemTotal = price * item.quantity;
       subtotal += itemTotal;
-      const img = item.images && item.images.length > 0 ? item.images[0] : '/static/img/placeholder.svg';
+      const img = item.image || '/static/img/placeholder.svg';
       html += `
         <div class="cart-item" style="animation-delay: ${idx * 60}ms;">
           <a href="/shop/products/${item.slug}" class="cart-item-img">
