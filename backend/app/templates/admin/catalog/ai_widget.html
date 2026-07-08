@@ -463,6 +463,10 @@
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                 Generate Description
             </button>
+            <button type="button" onclick="generateAISpecs()" id="ai-specs-btn" class="admin-ai-widget-retry-btn">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                Generate Specs
+            </button>
             <button type="button" onclick="retryAIDescription()" id="ai-retry-btn" class="admin-ai-widget-retry-btn" style="display:none;">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 Retry
@@ -475,6 +479,14 @@
             <div class="admin-ai-widget-output-wrap">
                 <textarea id="ai-description-output" rows="6" class="admin-ai-widget-output" readonly></textarea>
                 <button type="button" onclick="useAIDescription()" class="admin-ai-widget-use-btn">Use This Description</button>
+            </div>
+        </div>
+
+        <div id="ai-specs-result" class="admin-ai-widget-result">
+            <label class="admin-ai-widget-label">Generated Specifications</label>
+            <div class="admin-ai-widget-output-wrap">
+                <textarea id="ai-specs-output" rows="5" class="admin-ai-widget-output" readonly></textarea>
+                <button type="button" onclick="useAISpecs()" class="admin-ai-widget-use-btn">Use These Specs</button>
             </div>
         </div>
     </div>
@@ -635,6 +647,66 @@
             textarea.value = aiOutput.value;
             document.getElementById('ai-result').classList.remove('visible');
             showToast('Description applied!', 'success');
+        }
+    };
+
+    // ─── Specifications Generator ───
+    window.generateAISpecs = async function() {
+        const name = document.querySelector('input[name="name"]')?.value;
+        if (!name) {
+            showToast('Please enter a product name first', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('ai-specs-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<svg class="animate-spin" viewBox="0 0 24 24" width="14" height="14"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Generating...';
+
+        const images = getProductImages();
+        const brand = document.querySelector('input[name="brand"]')?.value || '';
+        const desc = document.querySelector('textarea[name="description"]')?.value || '';
+
+        try {
+            const res = await fetch('/api/admin/ai/generate-specifications', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: name,
+                    brand: brand,
+                    category: document.getElementById('ai-category')?.value || '',
+                    description: desc,
+                    images: images,
+                }),
+            });
+            const data = await res.json();
+            if (data.success && data.specifications) {
+                // Format as key: value pairs
+                const formatted = Object.entries(data.specifications)
+                    .map(([k, v]) => k + ': ' + v)
+                    .join('\n');
+                document.getElementById('ai-specs-output').value = formatted;
+                document.getElementById('ai-specs-result').classList.add('visible');
+            } else {
+                showToast(data.message || 'Failed to generate specifications', 'warning');
+            }
+        } catch {
+            showToast('Failed to generate specifications', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg> Generate Specs';
+        }
+    };
+
+    window.useAISpecs = function() {
+        const specsInput = document.querySelector('input[name="specifications"], textarea[name="specifications"]');
+        const aiOutput = document.getElementById('ai-specs-output');
+        if (specsInput && aiOutput) {
+            // Convert from key: value format to comma-separated for the input
+            const lines = aiOutput.value.split('\n').filter(l => l.trim());
+            const commaFormat = lines.map(l => l.replace(/^([^:]+):\s*/, '$1: ')).join(', ');
+            specsInput.value = commaFormat;
+            document.getElementById('ai-specs-result').classList.remove('visible');
+            showToast('Specifications applied!', 'success');
         }
     };
 })();

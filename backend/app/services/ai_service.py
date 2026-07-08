@@ -118,7 +118,7 @@ def _call_llm_sync(
 ) -> Optional[str]:
     """
     Unified LLM call that works across all providers.
-    Supports multimodal (images) when provider supports it.
+    Supports multimodal (images) — fetches URLs and converts to base64 data URLs.
     Falls back to text-only if multimodal fails.
     Returns the text content of the response, or None on failure.
     """
@@ -142,27 +142,69 @@ def _call_llm_sync(
             return None
         return resp.choices[0].message.content
 
+    def _url_to_data_url(url: str) -> str | None:
+        """Fetch an image URL and convert to base64 data URL."""
+        try:
+            import base64
+            import urllib.request
+            # Determine MIME type from URL
+            lower = url.lower()
+            if ".png" in lower:
+                mime = "image/png"
+            elif ".webp" in lower:
+                mime = "image/webp"
+            elif ".gif" in lower:
+                mime = "image/gif"
+            else:
+                mime = "image/jpeg"
+            # Fetch with timeout
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                img_data = resp.read()
+            # Limit to 200KB
+            if len(img_data) > 200_000:
+                # Resize using Pillow
+                try:
+                    from PIL import Image
+                    import io
+                    img = Image.open(io.BytesIO(img_data))
+                    img.thumbnail((800, 800), Image.LANCZOS)
+                    buf = io.BytesIO()
+                    img.convert("RGB").save(buf, format="JPEG", quality=75)
+                    img_data = buf.getvalue()
+                    mime = "image/jpeg"
+                except Exception:
+                    # Truncate if Pillow not available
+                    img_data = img_data[:200_000]
+            b64 = base64.b64encode(img_data).decode("utf-8")
+            return f"data:{mime};base64,{b64}"
+        except Exception as e:
+            logger.warning(f"Failed to fetch image {url[:80]}: {e}")
+            return None
+
     try:
         logger.info(f"Calling LLM: provider={provider}, model={model}, base_url={config.get('base_url')}, has_images={bool(images)}")
 
         # Try multimodal if images provided
         if images:
-            # Limit to first 3 images, skip huge base64 data URLs (>500KB each)
-            safe_images = []
+            data_urls = []
             for img in images[:3]:
                 if img.startswith("data:"):
-                    # base64 data URL — check size
-                    if len(img) > 600_000:
-                        logger.info(f"Skipping large image ({len(img)} bytes)")
-                        continue
-                safe_images.append(img)
+                    # Already a data URL — check size
+                    if len(img) <= 600_000:
+                        data_urls.append(img)
+                elif img.startswith("http"):
+                    # Fetch and convert to base64
+                    du = _url_to_data_url(img)
+                    if du:
+                        data_urls.append(du)
 
-            if safe_images:
+            if data_urls:
                 user_content = [{"type": "text", "text": user_prompt}]
-                for img_url in safe_images:
+                for du in data_urls:
                     user_content.append({
                         "type": "image_url",
-                        "image_url": {"url": img_url},
+                        "image_url": {"url": du},
                     })
                 messages = [
                     {"role": "system", "content": system_prompt},
@@ -291,6 +333,73 @@ def generate_product_description(
     user_prompt = "\n".join(parts)
 
     return _call_llm(system_prompt, user_prompt, temperature=0.75, max_tokens=600, images=images)
+
+
+def generate_product_specifications(
+    product_name: str,
+    category: str = "",
+    brand: str = "",
+    description: str = "",
+    images: list[str] | None = None,
+) -> Optional[dict]:
+    """
+    Generate product specifications (key-value pairs) using AI.
+    Analyzes product name, description, category, and images.
+    Returns a dict of {spec_name: spec_value} or None on failure.
+    """
+    system_prompt = (
+        "You are a technical product analyst. "
+        "Generate accurate product specifications for the given product.\n\n"
+        "RULES:\n"
+        "- Return ONLY a JSON object with key-value pairs\n"
+        "- Keys should be concise spec names (e.g. Material, Weight, Color, Size, Model, Warranty)\n"
+        "- Values should be specific and factual\n"
+        "- Include 5-10 relevant specs based on the product type\n"
+        "- Do NOT include markdown, code fences, or any text outside the JSON object\n"
+        "- Example format: {\"Material\": \"100% Cotton\", \"Weight\": \"250g\", \"Care\": \"Machine washable\"}"
+    )
+
+    parts = [f"Product: {product_name}"]
+    if category:
+        parts.append(f"Category: {category}")
+    if brand:
+        parts.append(f"Brand: {brand}")
+    if description:
+        parts.append(f"Description: {description[:500]}")
+    user_prompt = "\n".join(parts)
+
+    result = _call_llm(system_prompt, user_prompt, temperature=0.3, max_tokens=400, images=images)
+
+    if result:
+        import json
+        import re
+        # Try to extract JSON from the response
+        try:
+            # Try parsing directly
+            specs = json.loads(result)
+            if isinstance(specs, dict):
+                return specs
+        except json.JSONDecodeError:
+            pass
+        try:
+            # Try extracting JSON from markdown code fences
+            match = re.search(r'```(?:json)?\s*\n?(.*?)\n?```', result, re.DOTALL)
+            if match:
+                specs = json.loads(match.group(1))
+                if isinstance(specs, dict):
+                    return specs
+        except (json.JSONDecodeError, IndexError):
+            pass
+        try:
+            # Try finding a JSON object in the text
+            match = re.search(r'\{[^{}]*\}', result, re.DOTALL)
+            if match:
+                specs = json.loads(match.group(0))
+                if isinstance(specs, dict):
+                    return specs
+        except json.JSONDecodeError:
+            pass
+    return None
 
 
 def generate_product_tags(

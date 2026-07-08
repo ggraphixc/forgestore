@@ -755,6 +755,32 @@ def ai_generate_tags(
         return {"success": False, "tags": None, "message": "AI is not configured. Set your API key in Developer Settings."}
 
 
+@router.post("/ai/generate-specifications")
+def ai_generate_specifications(
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """Generate product specifications using AI. Optionally includes product images for visual analysis."""
+    from app.services.ai_service import generate_product_specifications
+
+    images = data.get("images", [])
+
+    specs = generate_product_specifications(
+        product_name=data.get("name", ""),
+        category=data.get("category", ""),
+        brand=data.get("brand", ""),
+        description=data.get("description", ""),
+        images=images if images else None,
+    )
+
+    if specs:
+        log_admin_action(db, admin, "ai_generate", "specifications", "", f"Generated specs for '{data.get('name')}'")
+        return {"success": True, "specifications": specs}
+    else:
+        return {"success": False, "specifications": None, "message": "AI could not generate specifications. Try again."}
+
+
 # --- Notifications API ---
 
 @router.get("/notifications")
