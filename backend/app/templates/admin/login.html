@@ -173,7 +173,15 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
         });
 
         if (res.ok) {
-            window.location.href = '/admin/dashboard';
+            const data = await res.json();
+            const role = data.user?.role;
+            if (role === 'RETAILER') {
+                window.location.href = '/vendor/dashboard';
+            } else if (role === 'LOGISTICS') {
+                window.location.href = '/logistics/dashboard';
+            } else {
+                window.location.href = '/admin/dashboard';
+            }
         } else {
             const data = await res.json();
             showToast(data.detail || 'Invalid email or password', 'error');

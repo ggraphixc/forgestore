@@ -41,7 +41,13 @@ def get_role_badge(role):
 def login_page(request: Request, db: Session = Depends(get_db)):
     admin = get_current_user_from_cookie(request, db)
     if admin:
-        return RedirectResponse(url="/admin/dashboard", status_code=302)
+        role = admin.role.value if hasattr(admin.role, 'value') else admin.role
+        if role == "RETAILER":
+            return RedirectResponse(url="/vendor/dashboard", status_code=302)
+        elif role == "LOGISTICS":
+            return RedirectResponse(url="/logistics/dashboard", status_code=302)
+        else:
+            return RedirectResponse(url="/admin/dashboard", status_code=302)
     return render_template("admin/login.html", {"request": request, "has_permission": has_permission})
 
 
@@ -50,6 +56,12 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
     admin = get_current_user_from_cookie(request, db)
     if not admin:
         return RedirectResponse(url="/admin/login", status_code=302)
+
+    role = admin.role.value if hasattr(admin.role, 'value') else admin.role
+    if role == "RETAILER":
+        return RedirectResponse(url="/vendor/dashboard", status_code=302)
+    elif role == "LOGISTICS":
+        return RedirectResponse(url="/logistics/dashboard", status_code=302)
 
     total_products = db.query(func.count(Product.id)).scalar() or 0
     total_categories = db.query(func.count(Category.id)).scalar() or 0

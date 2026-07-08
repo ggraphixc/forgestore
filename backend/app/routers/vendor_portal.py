@@ -29,6 +29,8 @@ def _require_retailer(request: Request, db: Session):
         return None, None, RedirectResponse(url="/admin/login", status_code=302)
     role_val = admin.role.value if hasattr(admin.role, 'value') else admin.role
     if role_val != "RETAILER" and role_val != AR.RETAILER.value:
+        if role_val == "LOGISTICS":
+            return admin, None, RedirectResponse(url="/logistics/dashboard", status_code=302)
         return admin, None, RedirectResponse(url="/admin/dashboard", status_code=302)
     retailer = None
     if admin.vendor_id:

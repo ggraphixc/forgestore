@@ -23,6 +23,8 @@ def _require_logistics(request: Request, db: Session):
         return None, RedirectResponse(url="/admin/login", status_code=302)
     role_val = admin.role.value if hasattr(admin.role, 'value') else admin.role
     if role_val != "LOGISTICS" and role_val != AR.LOGISTICS.value:
+        if role_val == "RETAILER":
+            return admin, RedirectResponse(url="/vendor/dashboard", status_code=302)
         return admin, RedirectResponse(url="/admin/dashboard", status_code=302)
     return admin, None
 

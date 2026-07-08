@@ -228,10 +228,16 @@ async def websocket_route(websocket, channel: str = ""):
 
 @app.get("/", response_class=HTMLResponse)
 def root(request: Request, db: Session = Depends(get_db)):
-    """Redirect to web storefront or admin based on auth status."""
+    """Redirect to correct portal based on auth status and role."""
     admin = get_current_user_from_cookie(request, db)
     if admin:
-        return RedirectResponse(url="/admin/dashboard", status_code=302)
+        role = admin.role.value if hasattr(admin.role, 'value') else admin.role
+        if role == "RETAILER":
+            return RedirectResponse(url="/vendor/dashboard", status_code=302)
+        elif role == "LOGISTICS":
+            return RedirectResponse(url="/logistics/dashboard", status_code=302)
+        else:
+            return RedirectResponse(url="/admin/dashboard", status_code=302)
     return RedirectResponse(url="/shop", status_code=302)
 
 
