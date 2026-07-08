@@ -199,8 +199,11 @@ def _call_llm_sync(
     try:
         logger.info(f"Calling LLM: provider={provider}, model={model}, base_url={config.get('base_url')}, has_images={bool(images)}")
 
-        # Try multimodal if images provided
-        if images:
+        # Try multimodal if images provided — only for models that support vision
+        vision_models = {"gpt-4o", "gpt-4o-mini", "gpt-4-vision-preview", "claude-3", "gemini"}
+        is_vision_model = any(v in model.lower() for v in vision_models)
+
+        if images and is_vision_model:
             data_urls = []
             for img in images[:3]:
                 if img.startswith("data:"):
@@ -232,6 +235,8 @@ def _call_llm_sync(
                     logger.warning("Multimodal call returned empty/None, falling back to text-only")
                 except Exception as e:
                     logger.warning(f"Multimodal call failed ({e}), falling back to text-only")
+        elif images and not is_vision_model:
+            logger.info(f"Skipping images — model '{model}' does not support vision. Use GPT-4o or Claude for image analysis.")
 
         # Text-only fallback
         messages = [
