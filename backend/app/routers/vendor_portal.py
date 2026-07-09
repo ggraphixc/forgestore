@@ -19,7 +19,7 @@ from app.auth import get_current_user_from_cookie, has_permission, AdminRole as 
 from app.templates_shared import render_template
 from app.utils import utcnow
 import json, os
-from app.services.image_compress import compress_image
+from app.core.image_compressor import compress_image
 
 router = APIRouter(tags=["vendor-portal"])
 
