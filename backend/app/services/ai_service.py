@@ -266,7 +266,7 @@ def _call_llm_sync(
                     model=model,
                     messages=retry_messages,
                     temperature=min(temperature + 0.4, 1.0),
-                    max_tokens=max_tokens,
+                    max_tokens=2000,
                 )
                 if resp2.choices and resp2.choices[0].message:
                     content2 = resp2.choices[0].message.content
@@ -516,7 +516,7 @@ def optimize_product_title(
     if brand:
         parts.append(f"Brand: {brand}")
     user_prompt = "\n".join(parts)
-    result = _call_llm(system_prompt, user_prompt, temperature=0.7, max_tokens=200)
+    result = _call_llm(system_prompt, user_prompt, temperature=0.7, max_tokens=2000)
     if result:
         # Strip quotes and extra whitespace
         result = result.strip().strip('"').strip("'").strip()
@@ -559,7 +559,7 @@ def generate_pricing_advisor(
     if description:
         parts.append(f"Description: {description[:300]}")
     user_prompt = "\n".join(parts)
-    result = _call_llm(system_prompt, user_prompt, temperature=0.7, max_tokens=500)
+    result = _call_llm(system_prompt, user_prompt, temperature=0.7, max_tokens=2000)
     if result:
         # Strip markdown code fences if present
         result = result.strip()
