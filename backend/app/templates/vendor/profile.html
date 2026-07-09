@@ -2,37 +2,69 @@
 {% block title %}My Profile — Vendor Portal{% endblock %}
 {% block content %}
 <style>
-  :root{--amber-500:#f59e0b;--stone-50:#fafaf9;--stone-100:#f5f5f4;--stone-200:#e7e5e4;--stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#57534e;--stone-900:#1c1917;}
-  .dark{--stone-50:#1c1917;--stone-100:#292524;--stone-200:#44403c;--stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#a8a29e;--stone-900:#fafaf9;}
-  .vp-wrap{max-width:600px;margin:0 auto;padding:1rem;}
+  :root{--amber-500:#f59e0b;--amber-600:#d97706;--stone-50:#fafaf9;--stone-100:#f5f5f4;--stone-200:#e7e5e4;--stone-300:#d6d3d1;--stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#57534e;--stone-900:#1c1917;--emerald-500:#10b981;--blue-500:#3b82f6;--purple-500:#8b5cf6;}
+  .dark{--stone-50:#1c1917;--stone-100:#292524;--stone-200:#44403c;--stone-300:#57534e;--stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#a8a29e;--stone-900:#fafaf9;}
+  .vp-wrap{max-width:700px;margin:0 auto;padding:1rem;}
   .vp-breadcrumb{display:flex;align-items:center;gap:6px;font-size:0.8125rem;color:var(--stone-400);margin-bottom:1rem;}
   .vp-breadcrumb a{color:var(--stone-400);text-decoration:none;}
   .vp-breadcrumb a:hover{color:var(--amber-500);}
-  .vp-header h1{font-size:1.25rem;font-weight:700;color:var(--stone-900);margin:0 0 1.5rem;}
+
+  /* Hero Profile Card */
+  .vp-hero{background:linear-gradient(135deg,#1c1917 0%,#292524 100%);border-radius:16px;padding:2rem;margin-bottom:1.5rem;position:relative;overflow:hidden;}
+  .dark .vp-hero{background:linear-gradient(135deg,#292524 0%,#44403c 100%);}
+  .vp-hero::before{content:'';position:absolute;top:-50%;right:-20%;width:300px;height:300px;background:radial-gradient(circle,rgba(245,158,11,0.15) 0%,transparent 70%);pointer-events:none;}
+  .vp-hero::after{content:'';position:absolute;bottom:-30%;left:-10%;width:200px;height:200px;background:radial-gradient(circle,rgba(245,158,11,0.1) 0%,transparent 70%);pointer-events:none;}
+  .vp-hero-inner{display:flex;align-items:center;gap:1.25rem;position:relative;z-index:1;}
+  .vp-avatar{width:72px;height:72px;border-radius:16px;background:linear-gradient(135deg,var(--amber-500),#f97316);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.75rem;font-weight:700;flex-shrink:0;box-shadow:0 4px 20px rgba(245,158,11,0.3);}
+  .vp-hero-info{flex:1;min-width:0;}
+  .vp-hero-name{font-size:1.25rem;font-weight:700;color:#fff;margin-bottom:2px;}
+  .vp-hero-email{font-size:0.8125rem;color:rgba(255,255,255,0.6);margin-bottom:8px;word-break:break-all;}
+  .vp-hero-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:0.6875rem;font-weight:600;background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3);}
+
+  .vp-stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:1.5rem;}
+  .vp-stat-card{background:var(--stone-50);border:1px solid var(--stone-200);border-radius:12px;padding:1rem;text-align:center;}
+  .dark .vp-stat-card{background:var(--stone-100);border-color:var(--stone-200);}
+  .vp-stat-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:0.875rem;}
+  .vp-stat-icon.amber{background:rgba(245,158,11,0.1);color:var(--amber-500);}
+  .vp-stat-icon.green{background:rgba(16,185,129,0.1);color:var(--emerald-500);}
+  .vp-stat-icon.blue{background:rgba(59,130,246,0.1);color:var(--blue-500);}
+  .vp-stat-label{font-size:0.6875rem;color:var(--stone-400);text-transform:uppercase;letter-spacing:0.05em;}
+  .vp-stat-val{font-size:1.125rem;font-weight:700;color:var(--stone-900);margin-top:2px;}
+
   .vp-card{background:var(--stone-50);border:1px solid var(--stone-200);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
   .dark .vp-card{background:var(--stone-100);border-color:var(--stone-200);}
-  .vp-card-title{font-size:0.875rem;font-weight:700;color:var(--stone-900);margin-bottom:0.75rem;}
-  .vp-profile-header{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;}
-  .vp-avatar{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--amber-500),#f97316);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.5rem;font-weight:700;}
-  .vp-profile-name{font-size:1rem;font-weight:700;color:var(--stone-900);}
-  .vp-profile-email{font-size:0.8125rem;color:var(--stone-400);}
-  .vp-stats{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:1rem;}
-  .vp-stat-label{font-size:0.6875rem;color:var(--stone-400);text-transform:uppercase;letter-spacing:0.05em;}
-  .vp-stat-value{font-size:1rem;font-weight:700;color:var(--stone-900);margin-top:2px;}
+  .vp-card-title{font-size:0.875rem;font-weight:700;color:var(--stone-900);margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
+  .vp-card-title .vp-card-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8125rem;}
+  .vp-card-title .vp-card-icon.amber{background:rgba(245,158,11,0.1);color:var(--amber-500);}
+  .vp-card-title .vp-card-icon.purple{background:rgba(139,92,246,0.1);color:var(--purple-500);}
+
   .vp-form-group{margin-bottom:0.75rem;}
   .vp-form-label{display:block;font-size:0.75rem;font-weight:600;color:var(--stone-600);margin-bottom:4px;}
   .dark .vp-form-label{color:var(--stone-400);}
-  .vp-form-input{width:100%;padding:0.5rem 0.75rem;border:1px solid var(--stone-200);border-radius:8px;font-size:0.875rem;color:var(--stone-900);background:var(--stone-50);min-height:40px;box-sizing:border-box;}
+  .vp-form-input{width:100%;padding:0.625rem 0.75rem;border:1px solid var(--stone-200);border-radius:8px;font-size:0.875rem;color:var(--stone-900);background:var(--stone-50);min-height:40px;box-sizing:border-box;}
   .dark .vp-form-input{background:var(--stone-100);color:var(--stone-900);border-color:var(--stone-200);}
-  .vp-form-input:focus{outline:none;border-color:var(--amber-500);box-shadow:0 0 0 2px rgba(245,158,11,0.2);}
-  .vp-msg{padding:0.5rem 0.75rem;border-radius:8px;font-size:0.8125rem;margin-bottom:1rem;}
+  .vp-form-input:focus{outline:none;border-color:var(--amber-500);box-shadow:0 0 0 2px rgba(245,158,11,0.15);}
+  .vp-form-hint{font-size:0.6875rem;color:var(--stone-400);margin-top:2px;}
+  .vp-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
+
+  .vp-msg{padding:0.625rem 1rem;border-radius:10px;font-size:0.8125rem;font-weight:500;margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
   .vp-msg-success{background:#dcfce7;color:#166534;border:1px solid #bbf7d0;}
   .vp-msg-error{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;}
-  .vp-actions{display:flex;gap:0.5rem;margin-top:1rem;}
-  .vp-btn{padding:0.5rem 1.25rem;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;border:none;min-height:40px;}
+
+  .vp-btn{padding:0.625rem 1.5rem;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;border:none;min-height:40px;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;}
   .vp-btn-primary{background:var(--amber-500);color:#fff;}
-  .vp-btn-primary:hover{opacity:0.9;}
-  .vp-section-title{font-size:0.75rem;font-weight:700;color:var(--stone-400);text-transform:uppercase;letter-spacing:0.05em;margin:1rem 0 0.5rem;padding-top:1rem;border-top:1px solid var(--stone-200);}
+  .vp-btn-primary:hover{background:var(--amber-600);}
+  .vp-btn-ghost{background:transparent;color:var(--stone-500);border:1px solid var(--stone-200);}
+  .vp-btn-ghost:hover{border-color:var(--stone-400);}
+  .vp-actions{display:flex;gap:0.5rem;margin-top:1rem;}
+
+  .vp-section-divider{height:1px;background:var(--stone-200);margin:1rem 0;}
+
+  @media(max-width:640px){
+    .vp-stats-row{grid-template-columns:1fr;}
+    .vp-grid{grid-template-columns:1fr;}
+    .vp-hero-inner{flex-direction:column;text-align:center;}
+  }
 </style>
 
 <div class="vp-wrap">
@@ -41,64 +73,94 @@
     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
     <span>Profile</span>
   </nav>
-  <h1>My Profile</h1>
 
   {% if success %}
-  <div class="vp-msg vp-msg-success">{{ success }}</div>
+  <div class="vp-msg vp-msg-success">
+    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+    {{ success }}
+  </div>
   {% endif %}
   {% if error %}
-  <div class="vp-msg vp-msg-error">{{ error }}</div>
+  <div class="vp-msg vp-msg-error">
+    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+    {{ error }}
+  </div>
   {% endif %}
 
-  <div class="vp-card">
-    <div class="vp-profile-header">
+  <!-- Profile Hero -->
+  <div class="vp-hero">
+    <div class="vp-hero-inner">
       <div class="vp-avatar">{{ (admin.name or 'V')[0]|upper }}</div>
-      <div>
-        <div class="vp-profile-name">{{ admin.name or 'Vendor' }}</div>
-        <div class="vp-profile-email">{{ admin.email }}</div>
-        <div style="margin-top:4px;">{{ get_role_badge(admin.role) if get_role_badge else '' }}</div>
-      </div>
-    </div>
-    <div class="vp-stats">
-      <div>
-        <div class="vp-stat-label">Products</div>
-        <div class="vp-stat-value">{{ product_count }}</div>
-      </div>
-      <div>
-        <div class="vp-stat-label">Days Active</div>
-        <div class="vp-stat-value">{{ days_active }}</div>
+      <div class="vp-hero-info">
+        <div class="vp-hero-name">{{ admin.name or 'Vendor' }}</div>
+        <div class="vp-hero-email">{{ admin.email }}</div>
+        <div class="vp-hero-badge">🏪 Vendor</div>
       </div>
     </div>
   </div>
 
+  <!-- Stats -->
+  <div class="vp-stats-row">
+    <div class="vp-stat-card">
+      <div class="vp-stat-icon amber">📦</div>
+      <div class="vp-stat-label">Products</div>
+      <div class="vp-stat-val">{{ product_count }}</div>
+    </div>
+    <div class="vp-stat-card">
+      <div class="vp-stat-icon green">📅</div>
+      <div class="vp-stat-label">Days Active</div>
+      <div class="vp-stat-val">{{ days_active }}</div>
+    </div>
+    <div class="vp-stat-card">
+      <div class="vp-stat-icon blue">⭐</div>
+      <div class="vp-stat-label">Member Since</div>
+      <div class="vp-stat-val">{{ admin.created_at.strftime('%b %Y') if admin.created_at else 'N/A' }}</div>
+    </div>
+  </div>
+
   <form method="POST" action="/vendor/me">
+    <!-- Personal Info -->
     <div class="vp-card">
-      <div class="vp-card-title">Edit Profile</div>
+      <div class="vp-card-title">
+        <span class="vp-card-icon amber">👤</span> Personal Information
+      </div>
       <div class="vp-form-group">
-        <label class="vp-form-label">Name</label>
-        <input type="text" name="name" class="vp-form-input" value="{{ admin.name or '' }}">
+        <label class="vp-form-label">Full Name</label>
+        <input type="text" name="name" class="vp-form-input" value="{{ admin.name or '' }}" placeholder="Your name">
+      </div>
+      <div class="vp-form-group">
+        <label class="vp-form-label">Email Address</label>
+        <input type="email" class="vp-form-input" value="{{ admin.email }}" disabled style="opacity:0.6;cursor:not-allowed;">
+        <div class="vp-form-hint">Contact support to change your email</div>
       </div>
     </div>
 
+    <!-- Security -->
     <div class="vp-card">
-      <div class="vp-card-title">Change Password</div>
-      <div class="vp-section-title">Security</div>
+      <div class="vp-card-title">
+        <span class="vp-card-icon purple">🔒</span> Security
+      </div>
       <div class="vp-form-group">
         <label class="vp-form-label">Current Password</label>
-        <input type="password" name="current_password" class="vp-form-input" placeholder="Enter current password">
+        <input type="password" name="current_password" class="vp-form-input" placeholder="Enter current password to save changes">
       </div>
-      <div class="vp-form-group">
-        <label class="vp-form-label">New Password</label>
-        <input type="password" name="new_password" class="vp-form-input" placeholder="Enter new password">
-      </div>
-      <div class="vp-form-group">
-        <label class="vp-form-label">Confirm New Password</label>
-        <input type="password" name="confirm_password" class="vp-form-input" placeholder="Confirm new password">
+      <div class="vp-section-divider"></div>
+      <div class="vp-grid">
+        <div class="vp-form-group">
+          <label class="vp-form-label">New Password</label>
+          <input type="password" name="new_password" class="vp-form-input" placeholder="Leave blank to keep current">
+        </div>
+        <div class="vp-form-group">
+          <label class="vp-form-label">Confirm New Password</label>
+          <input type="password" name="confirm_password" class="vp-form-input" placeholder="Confirm new password">
+        </div>
       </div>
     </div>
 
+    <!-- Actions -->
     <div class="vp-actions">
       <button type="submit" class="vp-btn vp-btn-primary">Save Changes</button>
+      <a href="/vendor/dashboard" class="vp-btn vp-btn-ghost">Cancel</a>
     </div>
   </form>
 </div>

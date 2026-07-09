@@ -790,7 +790,7 @@ def vendor_ads_page(request: Request, db: Session = Depends(get_db)):
         "retailer": retailer,
         "campaigns": [_campaign_dict(c) for c in campaigns],
         "promos": [_promo_dict(p) for p in promos],
-        "products": products,
+        "products": [{"id": p.id, "name": p.name, "image": (p.images[0] if p.images else "")} for p in products],
         "has_permission": has_permission,
     })
 
