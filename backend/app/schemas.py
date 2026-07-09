@@ -118,7 +118,7 @@ class ProductResponse(BaseModel):
 
 class ProductCreate(BaseModel):
     name: str
-    slug: str
+    slug: Optional[str] = None
     brand: Optional[str] = None
     description: Optional[str] = None
     price: float

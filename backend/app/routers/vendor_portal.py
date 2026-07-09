@@ -841,11 +841,10 @@ async def vendor_product_create(request: Request, db: Session = Depends(get_db),
         return redirect
 
     form = await request.form()
-    slug = form.get("slug", "")
-    if not slug:
-        slug = form.get("name", "unknown-product").lower().replace(" ", "-")
 
     name = form.get("name", "Unnamed Product")
+    from app.core.slug import generate_product_slug
+    slug = generate_product_slug(name, db)
     try:
         price = float(form.get("price", "0").replace(",", ""))
     except ValueError:
@@ -946,8 +945,12 @@ async def vendor_product_update(request: Request, product_id: str,
         return RedirectResponse(url="/vendor/products", status_code=302)
 
     form = await request.form()
-    product.name = form.get("name", product.name)
-    product.slug = form.get("slug", product.slug)
+    new_name = form.get("name", product.name)
+    product.name = new_name
+    # Auto-regenerate slug when name changes
+    if new_name != product.name or not product.slug:
+        from app.core.slug import generate_product_slug
+        product.slug = generate_product_slug(new_name, db, exclude_id=product.id)
     product.brand = form.get("brand", product.brand)
     product.description = form.get("description", product.description)
     try:

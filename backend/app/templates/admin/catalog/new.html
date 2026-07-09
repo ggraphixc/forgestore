@@ -492,8 +492,11 @@
                     </div>
                     <div class="admin-grid-2">
                         <div class="admin-form-group">
-                            <label class="admin-form-label">Slug</label>
-                            <input type="text" name="slug" required class="admin-form-input" placeholder="hand-carved-oak-bowl" id="input-slug">
+                            <label class="admin-form-label">URL Slug</label>
+                            <div id="slug-preview" style="padding:10px 12px;background:var(--bg-secondary,#f3f4f6);border:1px solid var(--border,#e5e7eb);border-radius:6px;font-size:0.85rem;color:var(--text-secondary,#6b7280);min-height:40px;display:flex;align-items:center;">
+                                /products/...
+                            </div>
+                            <p style="margin-top:4px;font-size:0.75rem;color:var(--text-muted,#9ca3af);">Auto-generated from product name</p>
                         </div>
                         <div class="admin-form-group">
                             <label class="admin-form-label">Brand</label>
@@ -633,10 +636,10 @@ function updatePreview() {
     }
 }
 
-// Auto-slug from name
+// Auto-slug preview from name
 document.getElementById('input-name').addEventListener('input', function() {
     const slug = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    document.getElementById('input-slug').value = slug;
+    document.getElementById('slug-preview').textContent = slug ? '/products/' + slug : '/products/...';
     updatePreview();
 });
 
@@ -654,7 +657,6 @@ document.getElementById('product-form').addEventListener('submit', async (e) => 
     const formData = new FormData(e.target);
     const data = {
         name: formData.get('name'),
-        slug: formData.get('slug'),
         brand: formData.get('brand') || null,
         description: formData.get('description') || null,
         price: parseFloat(formData.get('price')) || 0,

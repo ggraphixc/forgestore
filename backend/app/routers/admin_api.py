@@ -242,6 +242,10 @@ def create_product(
     db: Session = Depends(get_db),
     admin: AdminUser = Depends(require_role("catalog")),
 ):
+    # Auto-generate slug from name if not provided
+    if not data.slug:
+        from app.core.slug import generate_product_slug
+        data.slug = generate_product_slug(data.name, db)
     product = Product(**data.model_dump())
     db.add(product)
     db.commit()
@@ -267,9 +271,13 @@ def update_product(
             raise HTTPException(status_code=403, detail="You can only edit your own products")
 
     data_dict = data.model_dump(exclude_unset=True)
-    
-    # Check slug uniqueness if being changed
-    if "slug" in data_dict and data_dict["slug"] != product.slug:
+
+    # Auto-regenerate slug when name changes
+    if "name" in data_dict and data_dict["name"] != product.name:
+        from app.core.slug import generate_product_slug
+        data_dict["slug"] = generate_product_slug(data_dict["name"], db, exclude_id=product.id)
+    elif "slug" in data_dict and data_dict["slug"] != product.slug:
+        # Check slug uniqueness if being manually changed
         existing = db.query(Product).filter(Product.slug == data_dict["slug"], Product.id != product_id).first()
         if existing:
             raise HTTPException(status_code=400, detail=f"Slug '{data_dict['slug']}' already exists")

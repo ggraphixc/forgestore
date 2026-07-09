@@ -150,11 +150,10 @@ async def product_create(
 
     form = await request.form()
 
-    slug = form.get("slug", "")
-    if not slug:
-        slug = form.get("name", "unknown-product").lower().replace(" ", "-")
-
     name = form.get("name", "Unnamed Product")
+    from app.core.slug import generate_product_slug
+    slug = generate_product_slug(name, db)
+
     price_str = form.get("price", "0")
     try:
         price = float(price_str.replace(",", ""))

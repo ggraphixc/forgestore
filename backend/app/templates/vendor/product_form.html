@@ -82,8 +82,13 @@
       </div>
       <div class="vp-grid">
         <div class="vp-form-group">
-          <label class="vp-form-label">Slug *</label>
-          <input type="text" name="slug" required class="vp-form-input" placeholder="product-slug" value="{{ product.slug if product else '' }}">
+          <label class="vp-form-label">URL Slug</label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div id="slug-preview" style="flex:1;padding:10px 12px;background:var(--bg-secondary,#f3f4f6);border:1px solid var(--border,#e5e7eb);border-radius:8px;font-size:0.85rem;color:var(--text-secondary,#6b7280);min-height:44px;display:flex;align-items:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              {% if product and product.slug %}/products/{{ product.slug }}{% else %}/products/...{% endif %}
+            </div>
+          </div>
+          <p style="margin-top:4px;font-size:0.75rem;color:var(--text-muted,#9ca3af);">Auto-generated from product name</p>
         </div>
         <div class="vp-form-group">
           <label class="vp-form-label">Brand</label>
@@ -186,6 +191,21 @@ document.getElementById('image-input').addEventListener('change', async function
   imagesInput.value = JSON.stringify(images); renderPreviews(); this.value = '';
 });
 renderPreviews();
+
+// Auto-preview slug from product name
+const nameInput = document.querySelector('input[name="name"]');
+const slugPreview = document.getElementById('slug-preview');
+if (nameInput && slugPreview) {
+  nameInput.addEventListener('input', function() {
+    let slug = this.value.toLowerCase().trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+      .substring(0, 80);
+    slugPreview.textContent = slug ? '/products/' + slug : '/products/...';
+  });
+}
 
 // AI inline helpers
 function vaiGetFormData() {
