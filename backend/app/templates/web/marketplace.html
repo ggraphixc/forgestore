@@ -198,6 +198,30 @@
 .mp-product-add-btn.in-cart { background: #f43f5e; border-color: #f43f5e; }
 .mp-product-add-btn.in-cart svg { color: #fff; }
 
+/* Inventory count */
+.mp-product-stock {
+  font-size: 0.625rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;
+  margin-top: 2px;
+}
+.mp-product-stock .mp-stock-dot {
+  width: 5px; height: 5px; border-radius: 50%; display: inline-block;
+}
+.mp-product-stock.in-stock { color: #16a34a; }
+.mp-product-stock.in-stock .mp-stock-dot { background: #16a34a; }
+.mp-product-stock.low-stock { color: #ea580c; }
+.mp-product-stock.low-stock .mp-stock-dot { background: #ea580c; animation: mp-stock-pulse 1.5s ease-in-out infinite; }
+.mp-product-stock.out-of-stock { color: #999; }
+.mp-product-stock.out-of-stock .mp-stock-dot { background: #999; }
+@keyframes mp-stock-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* Animated bottom line */
+.mp-product-card::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, transparent, #f43f5e, #f97316, transparent);
+  transform: scaleX(0); transform-origin: center; transition: transform 0.4s ease;
+}
+.mp-product-card:hover::after { transform: scaleX(1); }
+
 /* Empty state */
 .mp-empty { text-align: center; padding: 5rem 1rem; }
 .mp-empty-icon {
@@ -432,6 +456,10 @@
                 {{ "%.1f"|format(p.rating) }}
               </span>
               {% endif %}
+              <span class="mp-product-stock {% if p.inventory > 10 %}in-stock{% elif p.inventory > 0 %}low-stock{% else %}out-of-stock{% endif %}">
+                <span class="mp-stock-dot"></span>
+                {% if p.inventory > 10 %}In Stock{% elif p.inventory > 0 %}Only {{ p.inventory }} left{% else %}Out of Stock{% endif %}
+              </span>
             </div>
           </a>
           <button onclick="event.preventDefault(); event.stopPropagation(); addToCart('{{ p.id }}', 1)" class="mp-product-add-btn" data-cart-product-id="{{ p.id }}" aria-label="Add to cart">
