@@ -198,10 +198,12 @@
 .mp-product-add-btn.in-cart { background: #f43f5e; border-color: #f43f5e; }
 .mp-product-add-btn.in-cart svg { color: #fff; }
 
-/* Inventory count */
+/* Inventory count + animated line */
+.mp-product-stock-wrap {
+  display: flex; flex-direction: column; gap: 3px; margin-top: 2px;
+}
 .mp-product-stock {
   font-size: 0.625rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;
-  margin-top: 2px;
 }
 .mp-product-stock .mp-stock-dot {
   width: 5px; height: 5px; border-radius: 50%; display: inline-block;
@@ -214,13 +216,23 @@
 .mp-product-stock.out-of-stock .mp-stock-dot { background: #999; }
 @keyframes mp-stock-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-/* Animated bottom line */
-.mp-product-card::after {
-  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
-  background: linear-gradient(90deg, transparent, #f43f5e, #f97316, transparent);
-  transform: scaleX(0); transform-origin: center; transition: transform 0.4s ease;
+.mp-stock-line {
+  height: 2px; border-radius: 2px; width: 100%; position: relative; overflow: hidden;
 }
-.mp-product-card:hover::after { transform: scaleX(1); }
+.mp-stock-line::after {
+  content: ''; position: absolute; inset: 0; border-radius: 2px;
+  animation: mp-line-sweep 2s ease-in-out infinite;
+}
+.mp-stock-line.in-stock { background: #dcfce7; }
+.mp-stock-line.in-stock::after { background: linear-gradient(90deg, transparent 0%, #16a34a 50%, transparent 100%); }
+.mp-stock-line.low-stock { background: #fff7ed; }
+.mp-stock-line.low-stock::after { background: linear-gradient(90deg, transparent 0%, #ea580c 50%, transparent 100%); }
+.mp-stock-line.out-of-stock { background: #f5f5f5; }
+.mp-stock-line.out-of-stock::after { background: linear-gradient(90deg, transparent 0%, #999 50%, transparent 100%); }
+@keyframes mp-line-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
 
 /* Empty state */
 .mp-empty { text-align: center; padding: 5rem 1rem; }
@@ -456,10 +468,13 @@
                 {{ "%.1f"|format(p.rating) }}
               </span>
               {% endif %}
-              <span class="mp-product-stock {% if p.inventory > 10 %}in-stock{% elif p.inventory > 0 %}low-stock{% else %}out-of-stock{% endif %}">
-                <span class="mp-stock-dot"></span>
-                {% if p.inventory > 10 %}In Stock{% elif p.inventory > 0 %}Only {{ p.inventory }} left{% else %}Out of Stock{% endif %}
-              </span>
+              <div class="mp-product-stock-wrap">
+                <span class="mp-product-stock {% if p.inventory > 10 %}in-stock{% elif p.inventory > 0 %}low-stock{% else %}out-of-stock{% endif %}">
+                  <span class="mp-stock-dot"></span>
+                  {% if p.inventory > 10 %}In Stock{% elif p.inventory > 0 %}Only {{ p.inventory }} left{% else %}Out of Stock{% endif %}
+                </span>
+                <div class="mp-stock-line {% if p.inventory > 10 %}in-stock{% elif p.inventory > 0 %}low-stock{% else %}out-of-stock{% endif %}"></div>
+              </div>
             </div>
           </a>
           <button onclick="event.preventDefault(); event.stopPropagation(); addToCart('{{ p.id }}', 1)" class="mp-product-add-btn" data-cart-product-id="{{ p.id }}" aria-label="Add to cart">
