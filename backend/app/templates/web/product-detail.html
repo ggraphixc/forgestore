@@ -1494,11 +1494,11 @@
     {% for review in reviews %}
     <div class="pd-review-card">
       <div class="pd-review-header">
-        <div class="pd-review-avatar">{{ (review.user_name|default('A'))[0]|upper }}</div>
+        <div class="pd-review-avatar">{{ (review.author|default('A'))[0]|upper }}</div>
         <div>
           <div class="pd-review-name">
-            {{ review.user_name|default('Anonymous') }}
-            {% if review.user_purchased %}
+            {{ review.author|default('Anonymous') }}
+            {% if review.user_id %}
             <span class="pd-purchased-badge">
               <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
               Verified Purchase
@@ -1506,14 +1506,14 @@
             {% endif %}
           </div>
         </div>
-        <span class="pd-review-date">{{ review.created_at|default('') }}</span>
+        <span class="pd-review-date">{{ review.created_at.strftime('%b %d, %Y') if review.created_at else '' }}</span>
       </div>
       <div class="pd-review-stars">
         {% for i in range(5) %}
-        <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+        <svg fill="{{ 'currentColor' if i < review.rating else 'none' }}" stroke="{{ 'none' if i < review.rating else '#d1d5db' }}" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
         {% endfor %}
       </div>
-      <p class="pd-review-text">{{ review.comment }}</p>
+      <p class="pd-review-text">{{ review.content }}</p>
       {% if review.images %}
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
         {% for img in review.images %}
@@ -1856,7 +1856,7 @@
       var res = await fetch('/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ product_id: PRODUCT_ID, rating: selectedRating, comment: text }),
+        body: JSON.stringify({ product_id: PRODUCT_ID, rating: selectedRating, content: text }),
       });
       if (!res.ok) {
         var errData = await res.json();
