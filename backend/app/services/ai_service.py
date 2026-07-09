@@ -246,6 +246,32 @@ def _call_llm_sync(
         ]
         result = _do_call(messages)
         if not result:
+            # Retry once with higher temperature — some models return empty for low-temp short prompts
+            logger.warning("LLM returned None on first attempt, retrying with higher temperature")
+            import copy
+            retry_messages = copy.deepcopy(messages)
+            try:
+                resp2 = client.chat.completions.create(
+                    model=model,
+                    messages=retry_messages,
+                    temperature=min(temperature + 0.4, 1.0),
+                    max_tokens=max_tokens,
+                )
+                if resp2.choices and resp2.choices[0].message:
+                    content2 = resp2.choices[0].message.content
+                    if isinstance(content2, list):
+                        texts2 = []
+                        for block in content2:
+                            if isinstance(block, dict) and block.get("type") == "text":
+                                texts2.append(block.get("text", ""))
+                            elif isinstance(block, str):
+                                texts2.append(block)
+                        content2 = "\n".join(texts2) if texts2 else None
+                    if content2 and content2.strip():
+                        logger.info(f"Retry succeeded, content length: {len(content2)}")
+                        return content2.strip()
+            except Exception as retry_err:
+                logger.warning(f"Retry also failed: {retry_err}")
             logger.error("LLM returned None content (text-only)")
             return None
         result = result.strip()
@@ -464,14 +490,14 @@ def optimize_product_title(
     Returns a single optimized title string or None.
     """
     system_prompt = (
-        "You are an e-commerce title optimization expert. "
-        "Rewrite the product title to be:\n"
-        "- Clear, concise, and search-friendly\n"
-        "- Follows marketplace best practices: Brand + Key Feature + Product Type + Differentiator\n"
-        "- Max 80 characters\n"
-        "- Include the most important keyword early\n"
-        "- No fluff, no ALL CAPS, no excessive punctuation\n\n"
-        "Return ONLY the optimized title, nothing else."
+        "You are an e-commerce title optimization expert for an African marketplace. "
+        "Your job is to rewrite product titles to be clear, search-friendly, and follow best practices.\n\n"
+        "Title format: Brand + Key Feature + Product Type + Differentiator\n"
+        "Rules: max 80 characters, important keyword first, no ALL CAPS, no excessive punctuation.\n\n"
+        "Examples:\n"
+        "- Input: 'phone case' → Output: 'Premium Shockproof Silicone Phone Case - Universal Fit'\n"
+        "- Input: 'running shoes men' → Output: 'Lightweight Breathable Running Shoes for Men - Sport Jogging Sneakers'\n\n"
+        "Now optimize the following product title. Return ONLY the optimized title text."
     )
     parts = [f"Current title: {product_name}"]
     if category:
@@ -479,7 +505,15 @@ def optimize_product_title(
     if brand:
         parts.append(f"Brand: {brand}")
     user_prompt = "\n".join(parts)
-    return _call_llm(system_prompt, user_prompt, temperature=0.3, max_tokens=100)
+    result = _call_llm(system_prompt, user_prompt, temperature=0.7, max_tokens=200)
+    if result:
+        # Strip quotes and extra whitespace
+        result = result.strip().strip('"').strip("'").strip()
+        # Take first line only (in case model adds explanation)
+        result = result.split("\n")[0].strip()
+        if len(result) > 120:
+            result = result[:120]
+    return result or None
 
 
 def generate_pricing_advisor(
@@ -493,18 +527,18 @@ def generate_pricing_advisor(
     Returns a dict with pricing advice or None.
     """
     system_prompt = (
-        "You are a pricing strategy expert for an African e-commerce marketplace (prices in Nigerian Naira ₦). "
-        "Analyze the product and provide pricing advice.\n\n"
-        "Return a JSON object with exactly these keys:\n"
-        '{'
-        '  "suggested_min": <number>,'
-        '  "suggested_max": <number>,'
-        '  "recommended": <number>,'
-        '  "strategy": "<one of: competitive, premium, value, penetration>",'
-        '  "reasoning": "<1-2 sentences explaining the pricing>",'
-        '  "discount_tip": "<tip on how to use discounts effectively>"'
-        '}\n\n'
-        "Return ONLY valid JSON, no other text."
+        "You are a pricing strategy expert for an African e-commerce marketplace. "
+        "All prices are in Nigerian Naira (₦).\n\n"
+        "Analyze the product details below and provide pricing advice. "
+        "Consider the Nigerian market, typical margins, and competitive positioning.\n\n"
+        "You MUST respond with a valid JSON object containing these exact keys:\n"
+        "- suggested_min: minimum viable price (number)\n"
+        "- suggested_max: premium ceiling price (number)\n"
+        "- recommended: optimal selling price (number)\n"
+        "- strategy: one of 'competitive', 'premium', 'value', or 'penetration'\n"
+        "- reasoning: 1-2 sentences explaining your pricing logic\n"
+        "- discount_tip: one practical tip on using discounts effectively\n\n"
+        "Respond with ONLY the JSON object. No explanation before or after."
     )
     parts = [f"Product: {product_name}"]
     if category:
@@ -514,20 +548,27 @@ def generate_pricing_advisor(
     if description:
         parts.append(f"Description: {description[:300]}")
     user_prompt = "\n".join(parts)
-    result = _call_llm(system_prompt, user_prompt, temperature=0.3, max_tokens=400)
+    result = _call_llm(system_prompt, user_prompt, temperature=0.7, max_tokens=500)
     if result:
-        import json
+        # Strip markdown code fences if present
+        result = result.strip()
+        if result.startswith("```"):
+            result = result.split("\n", 1)[-1]
+        if result.endswith("```"):
+            result = result.rsplit("```", 1)[0]
+        result = result.strip()
+        import json as _json
         try:
-            data = json.loads(result)
+            data = _json.loads(result)
             if isinstance(data, dict):
                 return data
-        except json.JSONDecodeError:
+        except _json.JSONDecodeError:
             import re
             try:
                 match = re.search(r'\{[^{}]*\}', result, re.DOTALL)
                 if match:
-                    return json.loads(match.group(0))
-            except json.JSONDecodeError:
+                    return _json.loads(match.group(0))
+            except _json.JSONDecodeError:
                 pass
     return None
 
