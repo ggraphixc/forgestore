@@ -802,6 +802,15 @@ async def post_product_chat_message(
     customer = get_current_customer_from_cookie(request, db)
     author_name = author_name or (customer.name if customer else "Anonymous")
 
+    # One chat message per user per product
+    if customer:
+        existing = db.query(ProductChatMessage).filter(
+            ProductChatMessage.product_id == product_id,
+            ProductChatMessage.user_id == customer.id,
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="You have already posted a message on this product")
+
     msg = ProductChatMessage(
         product_id=product_id,
         user_id=customer.id if customer else None,
@@ -1439,6 +1448,15 @@ def submit_review(
     # Validate rating
     if data.rating < 1 or data.rating > 5:
         raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
+
+    # One review per user per product
+    if customer:
+        existing = db.query(Review).filter(
+            Review.product_id == data.product_id,
+            Review.user_id == customer.id,
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="You have already reviewed this product")
 
     review = Review(
         product_id=data.product_id,
