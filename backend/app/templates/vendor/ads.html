@@ -121,8 +121,8 @@
   </div>
 
   <div class="va-tabs">
-    <button class="va-tab active" onclick="vaSwitchTab('campaigns')">Campaigns</button>
-    <button class="va-tab" onclick="vaSwitchTab('promos')">Promo Banners</button>
+    <button class="va-tab active" onclick="vaSwitchTab('campaigns', this)">Campaigns</button>
+    <button class="va-tab" onclick="vaSwitchTab('promos', this)">Promo Banners</button>
   </div>
 
   <div class="va-tab-content active" id="va-tab-campaigns">
@@ -318,29 +318,35 @@
 
 <script>
 const VA_PRICING = { SHOP: 10000, PRODUCT: 5000 };
-let vaCampaigns = {{ campaigns|tojson }};
-let vaPromos = {{ promos|tojson }};
-let vaProducts = {{ products|tojson }};
+let vaCampaigns = [];
+let vaPromos = [];
+let vaProducts = [];
+try { vaCampaigns = {{ campaigns|tojson }}; } catch(e) { console.error('campaigns parse error', e); }
+try { vaPromos = {{ promos|tojson }}; } catch(e) { console.error('promos parse error', e); }
+try { vaProducts = {{ products|tojson }}; } catch(e) { console.error('products parse error', e); }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const sel = document.getElementById('va-camp-product');
-  vaProducts.forEach(p => {
-    const o = document.createElement('option');
-    o.value = p.id; o.textContent = p.name;
-    sel.appendChild(o);
-  });
-  vaRenderCampaigns();
-  vaRenderPromos();
-  const active = vaCampaigns.filter(c => c.status === 'ACTIVE').length;
-  document.getElementById('va-stat-campaigns').textContent = vaCampaigns.length;
-  document.getElementById('va-stat-active').textContent = active;
-  document.getElementById('va-stat-wallet').textContent = '₦' + {{ wallet_balance|default(0)|int }}.toLocaleString();
+  try {
+    const sel = document.getElementById('va-camp-product');
+    vaProducts.forEach(p => {
+      const o = document.createElement('option');
+      o.value = p.id; o.textContent = p.name;
+      sel.appendChild(o);
+    });
+    vaRenderCampaigns();
+    vaRenderPromos();
+    const active = vaCampaigns.filter(c => c.status === 'ACTIVE').length;
+    document.getElementById('va-stat-campaigns').textContent = vaCampaigns.length;
+    document.getElementById('va-stat-active').textContent = active;
+    const wb = parseFloat('{{ wallet_balance|default(0) }}') || 0;
+    document.getElementById('va-stat-wallet').textContent = '₦' + wb.toLocaleString();
+  } catch(e) { console.error('ads init error', e); }
 });
 
-function vaSwitchTab(tab) {
+function vaSwitchTab(tab, el) {
   document.querySelectorAll('.va-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.va-tab-content').forEach(t => t.classList.remove('active'));
-  event.target.classList.add('active');
+  if (el) el.classList.add('active');
   document.getElementById('va-tab-' + tab).classList.add('active');
 }
 
