@@ -1,0 +1,104 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}{{ product.name }} — Vendor Portal{% endblock %}
+{% block content %}
+<style>
+  :root{--amber-500:#f59e0b;--stone-50:#fafaf9;--stone-100:#f5f5f4;--stone-200:#e7e5e4;--stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#57534e;--stone-900:#1c1917;--emerald-50:#ecfdf5;--emerald-600:#059669;--red-50:#fef2f2;--red-600:#dc2626;}
+  .dark{--stone-50:#1c1917;--stone-100:#292524;--stone-200:#44403c;--stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#a8a29e;--stone-900:#fafaf9;}
+  .vp-wrap{max-width:900px;margin:0 auto;padding:1rem;}
+  .vp-breadcrumb{display:flex;align-items:center;gap:6px;font-size:0.8125rem;color:var(--stone-400);margin-bottom:1rem;}
+  .vp-breadcrumb a{color:var(--stone-400);text-decoration:none;}
+  .vp-breadcrumb a:hover{color:var(--amber-500);}
+  .vp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.5rem;}
+  .vp-header h1{font-size:1.25rem;font-weight:700;color:var(--stone-900);margin:0;}
+  .vp-card{background:var(--stone-50);border:1px solid var(--stone-200);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
+  .dark .vp-card{background:var(--stone-100);border-color:var(--stone-200);}
+  .vp-card-title{font-size:0.875rem;font-weight:700;color:var(--stone-900);margin-bottom:0.75rem;}
+  .vp-img-grid{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem;}
+  .vp-img-grid img{width:100px;height:100px;border-radius:8px;object-fit:cover;border:1px solid var(--stone-200);}
+  .vp-field{margin-bottom:0.5rem;}
+  .vp-field-label{font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--stone-400);font-weight:600;}
+  .vp-field-value{font-size:0.875rem;color:var(--stone-900);margin-top:2px;}
+  .vp-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
+  .vp-badge{display:inline-flex;padding:3px 10px;border-radius:999px;font-size:0.6875rem;font-weight:600;}
+  .vp-badge-green{background:#dcfce7;color:#166534;}
+  .vp-badge-red{background:#fef2f2;color:#991b1b;}
+  .vp-actions{display:flex;gap:0.5rem;margin-top:1rem;}
+  .vp-btn{padding:0.5rem 1.25rem;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;border:none;min-height:40px;text-decoration:none;display:inline-flex;align-items:center;}
+  .vp-btn-primary{background:var(--amber-500);color:#fff;}
+  .vp-btn-ghost{background:transparent;color:var(--stone-600);border:1px solid var(--stone-200);}
+  @media(max-width:640px){.vp-grid{grid-template-columns:1fr;}.vp-img-grid img{width:80px;height:80px;}}
+</style>
+
+<div class="vp-wrap">
+  <nav class="vp-breadcrumb">
+    <a href="/vendor/products">Products</a>
+    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <span>{{ product.name }}</span>
+  </nav>
+  <div class="vp-header">
+    <h1>{{ product.name }}</h1>
+    <a href="/vendor/products/{{ product.id }}/edit" class="vp-btn vp-btn-primary">Edit</a>
+  </div>
+
+  {% if product.images %}
+  <div class="vp-card">
+    <div class="vp-card-title">Images</div>
+    <div class="vp-img-grid">
+      {% for img in product.images %}
+      <img src="{{ img }}" alt="Product image">
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="vp-card">
+    <div class="vp-card-title">Details</div>
+    <div class="vp-grid">
+      <div class="vp-field">
+        <div class="vp-field-label">Price</div>
+        <div class="vp-field-value">₦{{ "{:,.2f}".format(product.price) }}</div>
+      </div>
+      {% if product.discount_price %}
+      <div class="vp-field">
+        <div class="vp-field-label">Discount Price</div>
+        <div class="vp-field-value" style="color:var(--emerald-600);">₦{{ "{:,.2f}".format(product.discount_price) }}</div>
+      </div>
+      {% endif %}
+      <div class="vp-field">
+        <div class="vp-field-label">Inventory</div>
+        <div class="vp-field-value">
+          <span class="vp-badge {% if product.inventory > 0 %}vp-badge-green{% else %}vp-badge-red{% endif %}">
+            {{ product.inventory }} units
+          </span>
+        </div>
+      </div>
+      {% if product.category %}
+      <div class="vp-field">
+        <div class="vp-field-label">Category</div>
+        <div class="vp-field-value">{{ product.category.name }}</div>
+      </div>
+      {% endif %}
+      {% if product.brand %}
+      <div class="vp-field">
+        <div class="vp-field-label">Brand</div>
+        <div class="vp-field-value">{{ product.brand }}</div>
+      </div>
+      {% endif %}
+      <div class="vp-field">
+        <div class="vp-field-label">Slug</div>
+        <div class="vp-field-value">{{ product.slug }}</div>
+      </div>
+    </div>
+    {% if product.description %}
+    <div class="vp-field" style="margin-top:0.75rem;">
+      <div class="vp-field-label">Description</div>
+      <div class="vp-field-value">{{ product.description }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="vp-actions">
+    <a href="/vendor/products" class="vp-btn vp-btn-ghost">Back to Products</a>
+  </div>
+</div>
+{% endblock %}

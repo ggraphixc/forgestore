@@ -1,0 +1,105 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}My Profile — Vendor Portal{% endblock %}
+{% block content %}
+<style>
+  :root{--amber-500:#f59e0b;--stone-50:#fafaf9;--stone-100:#f5f5f4;--stone-200:#e7e5e4;--stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#57534e;--stone-900:#1c1917;}
+  .dark{--stone-50:#1c1917;--stone-100:#292524;--stone-200:#44403c;--stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#a8a29e;--stone-900:#fafaf9;}
+  .vp-wrap{max-width:600px;margin:0 auto;padding:1rem;}
+  .vp-breadcrumb{display:flex;align-items:center;gap:6px;font-size:0.8125rem;color:var(--stone-400);margin-bottom:1rem;}
+  .vp-breadcrumb a{color:var(--stone-400);text-decoration:none;}
+  .vp-breadcrumb a:hover{color:var(--amber-500);}
+  .vp-header h1{font-size:1.25rem;font-weight:700;color:var(--stone-900);margin:0 0 1.5rem;}
+  .vp-card{background:var(--stone-50);border:1px solid var(--stone-200);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
+  .dark .vp-card{background:var(--stone-100);border-color:var(--stone-200);}
+  .vp-card-title{font-size:0.875rem;font-weight:700;color:var(--stone-900);margin-bottom:0.75rem;}
+  .vp-profile-header{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;}
+  .vp-avatar{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--amber-500),#f97316);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.5rem;font-weight:700;}
+  .vp-profile-name{font-size:1rem;font-weight:700;color:var(--stone-900);}
+  .vp-profile-email{font-size:0.8125rem;color:var(--stone-400);}
+  .vp-stats{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:1rem;}
+  .vp-stat-label{font-size:0.6875rem;color:var(--stone-400);text-transform:uppercase;letter-spacing:0.05em;}
+  .vp-stat-value{font-size:1rem;font-weight:700;color:var(--stone-900);margin-top:2px;}
+  .vp-form-group{margin-bottom:0.75rem;}
+  .vp-form-label{display:block;font-size:0.75rem;font-weight:600;color:var(--stone-600);margin-bottom:4px;}
+  .dark .vp-form-label{color:var(--stone-400);}
+  .vp-form-input{width:100%;padding:0.5rem 0.75rem;border:1px solid var(--stone-200);border-radius:8px;font-size:0.875rem;color:var(--stone-900);background:var(--stone-50);min-height:40px;box-sizing:border-box;}
+  .dark .vp-form-input{background:var(--stone-100);color:var(--stone-900);border-color:var(--stone-200);}
+  .vp-form-input:focus{outline:none;border-color:var(--amber-500);box-shadow:0 0 0 2px rgba(245,158,11,0.2);}
+  .vp-msg{padding:0.5rem 0.75rem;border-radius:8px;font-size:0.8125rem;margin-bottom:1rem;}
+  .vp-msg-success{background:#dcfce7;color:#166534;border:1px solid #bbf7d0;}
+  .vp-msg-error{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;}
+  .vp-actions{display:flex;gap:0.5rem;margin-top:1rem;}
+  .vp-btn{padding:0.5rem 1.25rem;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;border:none;min-height:40px;}
+  .vp-btn-primary{background:var(--amber-500);color:#fff;}
+  .vp-btn-primary:hover{opacity:0.9;}
+  .vp-section-title{font-size:0.75rem;font-weight:700;color:var(--stone-400);text-transform:uppercase;letter-spacing:0.05em;margin:1rem 0 0.5rem;padding-top:1rem;border-top:1px solid var(--stone-200);}
+</style>
+
+<div class="vp-wrap">
+  <nav class="vp-breadcrumb">
+    <a href="/vendor/dashboard">Dashboard</a>
+    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <span>Profile</span>
+  </nav>
+  <h1>My Profile</h1>
+
+  {% if success %}
+  <div class="vp-msg vp-msg-success">{{ success }}</div>
+  {% endif %}
+  {% if error %}
+  <div class="vp-msg vp-msg-error">{{ error }}</div>
+  {% endif %}
+
+  <div class="vp-card">
+    <div class="vp-profile-header">
+      <div class="vp-avatar">{{ (admin.name or 'V')[0]|upper }}</div>
+      <div>
+        <div class="vp-profile-name">{{ admin.name or 'Vendor' }}</div>
+        <div class="vp-profile-email">{{ admin.email }}</div>
+        <div style="margin-top:4px;">{{ get_role_badge(admin.role) if get_role_badge else '' }}</div>
+      </div>
+    </div>
+    <div class="vp-stats">
+      <div>
+        <div class="vp-stat-label">Products</div>
+        <div class="vp-stat-value">{{ product_count }}</div>
+      </div>
+      <div>
+        <div class="vp-stat-label">Days Active</div>
+        <div class="vp-stat-value">{{ days_active }}</div>
+      </div>
+    </div>
+  </div>
+
+  <form method="POST" action="/vendor/me">
+    <div class="vp-card">
+      <div class="vp-card-title">Edit Profile</div>
+      <div class="vp-form-group">
+        <label class="vp-form-label">Name</label>
+        <input type="text" name="name" class="vp-form-input" value="{{ admin.name or '' }}">
+      </div>
+    </div>
+
+    <div class="vp-card">
+      <div class="vp-card-title">Change Password</div>
+      <div class="vp-section-title">Security</div>
+      <div class="vp-form-group">
+        <label class="vp-form-label">Current Password</label>
+        <input type="password" name="current_password" class="vp-form-input" placeholder="Enter current password">
+      </div>
+      <div class="vp-form-group">
+        <label class="vp-form-label">New Password</label>
+        <input type="password" name="new_password" class="vp-form-input" placeholder="Enter new password">
+      </div>
+      <div class="vp-form-group">
+        <label class="vp-form-label">Confirm New Password</label>
+        <input type="password" name="confirm_password" class="vp-form-input" placeholder="Confirm new password">
+      </div>
+    </div>
+
+    <div class="vp-actions">
+      <button type="submit" class="vp-btn vp-btn-primary">Save Changes</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

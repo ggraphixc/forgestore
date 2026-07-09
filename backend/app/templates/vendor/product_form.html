@@ -1,0 +1,154 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}{{ 'Edit' if product else 'New' }} Product — Vendor Portal{% endblock %}
+{% block content %}
+<style>
+  :root{--amber-500:#f59e0b;--stone-50:#fafaf9;--stone-100:#f5f5f4;--stone-200:#e7e5e4;--stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#57534e;--stone-900:#1c1917;--emerald-50:#ecfdf5;--emerald-600:#059669;--red-50:#fef2f2;--red-600:#dc2626;}
+  .dark{--stone-50:#1c1917;--stone-100:#292524;--stone-200:#44403c;--stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#a8a29e;--stone-900:#fafaf9;--amber-500:#f59e0b;--emerald-50:#052e16;--emerald-600:#22c55e;--red-50:#450a0a;--red-600:#ef4444;}
+  .vp-wrap{max-width:900px;margin:0 auto;padding:1rem;}
+  .vp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.5rem;}
+  .vp-header h1{font-size:1.25rem;font-weight:700;color:var(--stone-900);margin:0;}
+  .dark .vp-header h1{color:var(--stone-900);}
+  .vp-breadcrumb{display:flex;align-items:center;gap:6px;font-size:0.8125rem;color:var(--stone-400);margin-bottom:1rem;}
+  .vp-breadcrumb a{color:var(--stone-400);text-decoration:none;}
+  .vp-breadcrumb a:hover{color:var(--amber-500);}
+  .vp-card{background:var(--stone-50);border:1px solid var(--stone-200);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
+  .dark .vp-card{background:var(--stone-100);border-color:var(--stone-200);}
+  .vp-card-title{font-size:0.875rem;font-weight:700;color:var(--stone-900);margin-bottom:0.75rem;display:flex;align-items:center;gap:6px;}
+  .vp-form-group{margin-bottom:0.75rem;}
+  .vp-form-label{display:block;font-size:0.75rem;font-weight:600;color:var(--stone-600);margin-bottom:4px;}
+  .dark .vp-form-label{color:var(--stone-400);}
+  .vp-form-input{width:100%;padding:0.5rem 0.75rem;border:1px solid var(--stone-200);border-radius:8px;font-size:0.875rem;color:var(--stone-900);background:var(--stone-50);min-height:40px;box-sizing:border-box;}
+  .dark .vp-form-input{background:var(--stone-100);color:var(--stone-900);border-color:var(--stone-200);}
+  .vp-form-input:focus{outline:none;border-color:var(--amber-500);box-shadow:0 0 0 2px rgba(245,158,11,0.2);}
+  textarea.vp-form-input{min-height:80px;resize:vertical;}
+  .vp-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
+  .vp-dropzone{border:2px dashed var(--stone-200);border-radius:12px;padding:2rem;text-align:center;cursor:pointer;transition:border-color 0.15s;}
+  .vp-dropzone:hover{border-color:var(--amber-500);}
+  .vp-dropzone p{font-size:0.8125rem;color:var(--stone-400);margin:0;}
+  .vp-preview-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:0.75rem;}
+  .vp-preview-item{position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:1px solid var(--stone-200);}
+  .vp-preview-item img{width:100%;height:100%;object-fit:cover;}
+  .vp-preview-item .remove{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.6);color:#fff;border:none;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;}
+  .vp-actions{display:flex;gap:0.5rem;margin-top:1rem;}
+  .vp-btn{padding:0.5rem 1.25rem;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;border:none;min-height:40px;}
+  .vp-btn-primary{background:var(--amber-500);color:#fff;}
+  .vp-btn-primary:hover{opacity:0.9;}
+  .vp-btn-ghost{background:transparent;color:var(--stone-600);border:1px solid var(--stone-200);}
+  .vp-toggle{display:flex;align-items:center;gap:8px;}
+  .vp-toggle input[type=checkbox]{width:18px;height:18px;accent-color:var(--amber-500);}
+  @media(max-width:640px){.vp-grid{grid-template-columns:1fr;}.vp-wrap{padding:0.75rem;}}
+</style>
+
+<div class="vp-wrap">
+  <nav class="vp-breadcrumb">
+    <a href="/vendor/products">Products</a>
+    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <span>{{ 'Edit' if product else 'New' }}</span>
+  </nav>
+  <div class="vp-header">
+    <h1>{{ 'Edit Product' if product else 'New Product' }}</h1>
+  </div>
+
+  <form id="product-form" method="POST" action="/vendor/products{{ '/' + product.id + '/edit' if product else '/new' }}" enctype="multipart/form-data">
+    <div class="vp-card">
+      <div class="vp-card-title">Product Images</div>
+      <div class="vp-dropzone" onclick="document.getElementById('image-input').click()">
+        <input type="file" id="image-input" multiple accept="image/*" style="display:none;">
+        <p>Click to upload images (PNG, JPG)</p>
+      </div>
+      <div id="image-preview" class="vp-preview-list"></div>
+      <input type="hidden" id="images-input" name="images" value='{{ product.images|tojson if product and product.images else "[]" }}'>
+    </div>
+
+    <div class="vp-card">
+      <div class="vp-card-title">Basic Information</div>
+      <div class="vp-form-group">
+        <label class="vp-form-label">Product Name *</label>
+        <input type="text" name="name" required class="vp-form-input" placeholder="Product name" value="{{ product.name if product else '' }}">
+      </div>
+      <div class="vp-grid">
+        <div class="vp-form-group">
+          <label class="vp-form-label">Slug *</label>
+          <input type="text" name="slug" required class="vp-form-input" placeholder="product-slug" value="{{ product.slug if product else '' }}">
+        </div>
+        <div class="vp-form-group">
+          <label class="vp-form-label">Brand</label>
+          <input type="text" name="brand" class="vp-form-input" placeholder="Brand name" value="{{ product.brand if product and product.brand else '' }}">
+        </div>
+      </div>
+      <div class="vp-form-group">
+        <label class="vp-form-label">Description</label>
+        <textarea name="description" class="vp-form-input" placeholder="Product description">{{ product.description if product and product.description else '' }}</textarea>
+      </div>
+    </div>
+
+    <div class="vp-card">
+      <div class="vp-card-title">Pricing & Inventory</div>
+      <div class="vp-grid">
+        <div class="vp-form-group">
+          <label class="vp-form-label">Price (₦) *</label>
+          <input type="number" name="price" required step="0.01" min="0" class="vp-form-input" placeholder="0.00" value="{{ product.price if product else '' }}">
+        </div>
+        <div class="vp-form-group">
+          <label class="vp-form-label">Discount Price (₦)</label>
+          <input type="number" name="discount_price" step="0.01" min="0" class="vp-form-input" placeholder="Optional" value="{{ product.discount_price if product and product.discount_price else '' }}">
+        </div>
+      </div>
+      <div class="vp-grid">
+        <div class="vp-form-group">
+          <label class="vp-form-label">Inventory *</label>
+          <input type="number" name="inventory" required min="0" class="vp-form-input" placeholder="0" value="{{ product.inventory if product else '0' }}">
+        </div>
+        <div class="vp-form-group">
+          <label class="vp-form-label">Category</label>
+          <select name="category_id" class="vp-form-input">
+            <option value="">Select category</option>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}" {% if product and product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="vp-card">
+      <div class="vp-card-title">Options</div>
+      <div class="vp-toggle">
+        <input type="checkbox" name="is_new_arrival" value="true" id="chk-new" {% if product and product.is_new_arrival %}checked{% endif %}>
+        <label for="chk-new" style="font-size:0.8125rem;color:var(--stone-600);">New Arrival</label>
+      </div>
+      <div class="vp-toggle" style="margin-top:0.5rem;">
+        <input type="checkbox" name="is_flagship" value="true" id="chk-flag" {% if product and product.is_flagship %}checked{% endif %}>
+        <label for="chk-flag" style="font-size:0.8125rem;color:var(--stone-600);">Flagship Product</label>
+      </div>
+    </div>
+
+    <div class="vp-actions">
+      <button type="submit" class="vp-btn vp-btn-primary">{{ 'Update Product' if product else 'Create Product' }}</button>
+      <a href="/vendor/products" class="vp-btn vp-btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+const imagesInput = document.getElementById('images-input');
+let images = JSON.parse(imagesInput.value || '[]');
+function renderPreviews() {
+  const el = document.getElementById('image-preview');
+  el.innerHTML = images.map((url, i) => '<div class="vp-preview-item"><img src="'+url+'" alt="Image '+(i+1)+'"><button type="button" class="remove" onclick="removeImage('+i+')">&times;</button></div>').join('');
+}
+function removeImage(i) { images.splice(i, 1); imagesInput.value = JSON.stringify(images); renderPreviews(); }
+document.getElementById('image-input').addEventListener('change', async function() {
+  for (const file of this.files) {
+    const fd = new FormData(); fd.append('files', file);
+    try {
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+      const d = await res.json();
+      if (d.urls && d.urls.length) { images.push(d.urls[0]); }
+    } catch(e) { console.error('Upload failed', e); }
+  }
+  imagesInput.value = JSON.stringify(images); renderPreviews(); this.value = '';
+});
+renderPreviews();
+</script>
+{% endblock %}

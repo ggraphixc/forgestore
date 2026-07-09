@@ -15,9 +15,11 @@ from app.models import (
     AdCampaign, PromoAd, AdminRole, VendorWallet, VendorWalletTransaction,
     PayoutRequest, Settings, VendorNotification
 )
-from app.auth import get_current_user_from_cookie, has_permission, AdminRole as AR, log_admin_action, hash_password
+from app.auth import get_current_user_from_cookie, has_permission, AdminRole as AR, log_admin_action, hash_password, verify_password
 from app.templates_shared import render_template
 from app.utils import utcnow
+import json, os
+from app.services.image_compress import compress_image
 
 router = APIRouter(tags=["vendor-portal"])
 
@@ -753,12 +755,32 @@ def vendor_ads_page(request: Request, db: Session = Depends(get_db)):
             Product.is_active == True
         ).all()
 
+    def _campaign_dict(c):
+        return {
+            "id": c.id, "ad_type": c.ad_type, "status": c.status,
+            "clicks": c.clicks or 0, "impressions": c.impressions or 0,
+            "banner_url": c.banner_url, "target_url": c.target_url,
+            "ad_subtype": c.ad_subtype, "banner_type": c.banner_type,
+            "created_at": c.created_at.isoformat() if c.created_at else None,
+            "product_id": c.product_id, "retailer_id": c.retailer_id,
+        }
+    def _promo_dict(p):
+        return {
+            "id": p.id, "title": p.title, "ad_subtype": p.ad_subtype,
+            "banner_type": p.banner_type, "banner_url": p.banner_url,
+            "target_url": p.target_url, "status": p.status,
+            "start_date": p.start_date.isoformat() if p.start_date else None,
+            "end_date": p.end_date.isoformat() if p.end_date else None,
+            "note": p.note, "retailer_id": p.retailer_id,
+            "created_at": p.created_at.isoformat() if p.created_at else None,
+        }
+
     return render_template("vendor/ads.html", {
         "request": request,
         "admin": admin,
         "retailer": retailer,
-        "campaigns": campaigns,
-        "promos": promos,
+        "campaigns": [_campaign_dict(c) for c in campaigns],
+        "promos": [_promo_dict(p) for p in promos],
         "products": products,
         "has_permission": has_permission,
     })
@@ -784,3 +806,250 @@ def vendor_notifications(request: Request, db: Session = Depends(get_db)):
         "request": request, "admin": admin, "retailer": retailer,
         "has_permission": has_permission,
     })
+
+
+# ─── Vendor Product Routes ───────────────────────────────────────────────
+
+@router.get("/vendor/products/new", response_class=HTMLResponse)
+def vendor_product_new(request: Request, db: Session = Depends(get_db)):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return redirect
+    categories = db.query(Category).all()
+    return render_template("vendor/product_form.html", {
+        "request": request, "admin": admin, "retailer": retailer,
+        "categories": categories, "product": None,
+        "has_permission": has_permission,
+    })
+
+
+@router.post("/vendor/products/new")
+async def vendor_product_create(request: Request, db: Session = Depends(get_db),
+                                files: list[UploadFile] = File(None)):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return redirect
+
+    form = await request.form()
+    slug = form.get("slug", "")
+    if not slug:
+        slug = form.get("name", "unknown-product").lower().replace(" ", "-")
+
+    name = form.get("name", "Unnamed Product")
+    try:
+        price = float(form.get("price", "0").replace(",", ""))
+    except ValueError:
+        price = 0.0
+    discount_price = None
+    ds = form.get("discount_price", "")
+    if ds:
+        try:
+            discount_price = float(ds.replace(",", ""))
+        except ValueError:
+            pass
+    try:
+        inventory = int(form.get("inventory", "0"))
+    except ValueError:
+        inventory = 0
+
+    images_json = form.get("images", "[]")
+    try:
+        images = json.loads(images_json)
+    except (json.JSONDecodeError, TypeError):
+        images = []
+
+    if files:
+        from app.core.cloudinary_upload import is_cloudinary_configured, upload_to_cloudinary
+        use_cloudinary = is_cloudinary_configured()
+        upload_dir = os.path.join("app", "static", "uploads", "products")
+        os.makedirs(upload_dir, exist_ok=True)
+        for file in files:
+            raw = await file.read()
+            if use_cloudinary:
+                url = upload_to_cloudinary(raw, folder="forgestore/products")
+                if url:
+                    images.append(url)
+                    continue
+            compressed, ext = compress_image(raw)
+            unique_name = f"{int(utcnow().timestamp())}-{uuid.uuid4().hex[:8]}.{ext}"
+            file_path = os.path.join(upload_dir, unique_name)
+            with open(file_path, "wb") as f:
+                f.write(compressed)
+            images.append(f"/static/uploads/products/{unique_name}")
+
+    product = Product(
+        name=name, slug=slug, brand=form.get("brand"),
+        description=form.get("description"), price=price,
+        discount_price=discount_price, images=images,
+        category_id=form.get("category_id"),
+        retailer_id=admin.vendor_id, inventory=inventory,
+        is_new_arrival=form.get("is_new_arrival") == "true",
+        is_flagship=form.get("is_flagship") == "true",
+    )
+    db.add(product)
+    db.commit()
+    db.refresh(product)
+    log_admin_action(db, admin, "create", "product", product.id, f"Created product '{product.name}'")
+    return RedirectResponse(url=f"/vendor/products/{product.id}", status_code=302)
+
+
+@router.get("/vendor/products/{product_id}", response_class=HTMLResponse)
+def vendor_product_detail(request: Request, product_id: str, db: Session = Depends(get_db)):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return redirect
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product or product.retailer_id != admin.vendor_id:
+        return RedirectResponse(url="/vendor/products", status_code=302)
+    return render_template("vendor/product_detail.html", {
+        "request": request, "admin": admin, "retailer": retailer,
+        "product": product, "has_permission": has_permission,
+    })
+
+
+@router.get("/vendor/products/{product_id}/edit", response_class=HTMLResponse)
+def vendor_product_edit(request: Request, product_id: str, db: Session = Depends(get_db)):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return redirect
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product or product.retailer_id != admin.vendor_id:
+        return RedirectResponse(url="/vendor/products", status_code=302)
+    categories = db.query(Category).all()
+    return render_template("vendor/product_form.html", {
+        "request": request, "admin": admin, "retailer": retailer,
+        "categories": categories, "product": product,
+        "has_permission": has_permission,
+    })
+
+
+@router.post("/vendor/products/{product_id}/edit")
+async def vendor_product_update(request: Request, product_id: str,
+                                db: Session = Depends(get_db),
+                                files: list[UploadFile] = File(None)):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return redirect
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product or product.retailer_id != admin.vendor_id:
+        return RedirectResponse(url="/vendor/products", status_code=302)
+
+    form = await request.form()
+    product.name = form.get("name", product.name)
+    product.slug = form.get("slug", product.slug)
+    product.brand = form.get("brand", product.brand)
+    product.description = form.get("description", product.description)
+    try:
+        product.price = float(form.get("price", str(product.price)).replace(",", ""))
+    except ValueError:
+        pass
+    ds = form.get("discount_price", "")
+    if ds:
+        try:
+            product.discount_price = float(ds.replace(",", ""))
+        except ValueError:
+            pass
+    try:
+        product.inventory = int(form.get("inventory", str(product.inventory)))
+    except ValueError:
+        pass
+    product.category_id = form.get("category_id", product.category_id)
+    product.is_new_arrival = form.get("is_new_arrival") == "true"
+    product.is_flagship = form.get("is_flagship") == "true"
+
+    images_json = form.get("images", None)
+    if images_json is not None:
+        try:
+            product.images = json.loads(images_json)
+        except (json.JSONDecodeError, TypeError):
+            pass
+
+    if files:
+        from app.core.cloudinary_upload import is_cloudinary_configured, upload_to_cloudinary
+        use_cloudinary = is_cloudinary_configured()
+        upload_dir = os.path.join("app", "static", "uploads", "products")
+        os.makedirs(upload_dir, exist_ok=True)
+        existing = product.images or []
+        for file in files:
+            raw = await file.read()
+            if use_cloudinary:
+                url = upload_to_cloudinary(raw, folder="forgestore/products")
+                if url:
+                    existing.append(url)
+                    continue
+            compressed, ext = compress_image(raw)
+            unique_name = f"{int(utcnow().timestamp())}-{uuid.uuid4().hex[:8]}.{ext}"
+            file_path = os.path.join(upload_dir, unique_name)
+            with open(file_path, "wb") as f:
+                f.write(compressed)
+            existing.append(f"/static/uploads/products/{unique_name}")
+        product.images = existing
+
+    db.commit()
+    log_admin_action(db, admin, "update", "product", product.id, f"Updated product '{product.name}'")
+    return RedirectResponse(url=f"/vendor/products/{product.id}", status_code=302)
+
+
+# ─── Vendor Profile ──────────────────────────────────────────────────────
+
+@router.get("/vendor/me", response_class=HTMLResponse)
+def vendor_profile(request: Request, db: Session = Depends(get_db)):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return redirect
+    product_count = db.query(func.count(Product.id)).filter(
+        Product.retailer_id == admin.vendor_id
+    ).scalar() if admin.vendor_id else 0
+    days_active = (utcnow() - admin.created_at).days if admin.created_at else 0
+    from app.auth import get_role_badge
+    return render_template("vendor/profile.html", {
+        "request": request, "admin": admin, "retailer": retailer,
+        "product_count": product_count, "days_active": days_active,
+        "get_role_badge": get_role_badge, "has_permission": has_permission,
+        "success": request.query_params.get("success"), "error": None,
+    })
+
+
+@router.post("/vendor/me")
+async def vendor_profile_update(request: Request, db: Session = Depends(get_db)):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return redirect
+    form = await request.form()
+    name = form.get("name", "").strip()
+    current_password = form.get("current_password", "")
+    new_password = form.get("new_password", "")
+    confirm_password = form.get("confirm_password", "")
+
+    product_count = db.query(func.count(Product.id)).filter(
+        Product.retailer_id == admin.vendor_id
+    ).scalar() if admin.vendor_id else 0
+    days_active = (utcnow() - admin.created_at).days if admin.created_at else 0
+    from app.auth import get_role_badge
+
+    ctx = {
+        "request": request, "admin": admin, "retailer": retailer,
+        "product_count": product_count, "days_active": days_active,
+        "get_role_badge": get_role_badge, "has_permission": has_permission,
+        "success": None, "error": None,
+    }
+
+    if name and name != admin.name:
+        admin.name = name
+    if new_password:
+        if not current_password:
+            ctx["error"] = "Please enter your current password to set a new one."
+            return render_template("vendor/profile.html", ctx)
+        if not verify_password(current_password, admin.password):
+            ctx["error"] = "Current password is incorrect."
+            return render_template("vendor/profile.html", ctx)
+        if len(new_password) < 6:
+            ctx["error"] = "New password must be at least 6 characters."
+            return render_template("vendor/profile.html", ctx)
+        if new_password != confirm_password:
+            ctx["error"] = "New passwords do not match."
+            return render_template("vendor/profile.html", ctx)
+        admin.password = hash_password(new_password)
+
+    db.commit()
+    return RedirectResponse(url="/vendor/me?success=Profile+updated+successfully.", status_code=302)

@@ -371,7 +371,13 @@
         <span class="admin-sidebar-brand-sub">Vendor Panel</span>
       </div>
     </div>
+    {% if admin and (admin.role.value == 'RETAILER' or admin.role == 'RETAILER') %}
+    <a href="/vendor/me" class="admin-sidebar-profile">
+    {% elif admin and (admin.role.value == 'LOGISTICS' or admin.role == 'LOGISTICS') %}
+    <a href="/logistics/dashboard" class="admin-sidebar-profile">
+    {% else %}
     <a href="/admin/me" class="admin-sidebar-profile">
+    {% endif %}
       <div class="admin-sidebar-profile-inner">
         <div class="sidebar-avatar
           {% if admin and admin.role.value == 'DIR_ADMIN' %}role-dir
@@ -533,7 +539,7 @@
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
         <span class="bnav-label">My Ads</span>
       </a>
-      <a href="/admin/me" class="admin-bnav-item {% if '/me' in request.url.path %}active{% endif %}">
+      <a href="/vendor/me" class="admin-bnav-item {% if '/vendor/me' in request.url.path %}active{% endif %}">
         <div class="sidebar-avatar
           {% if admin and admin.role.value == 'DIR_ADMIN' %}role-dir
           {% elif admin and admin.role.value == 'MANAGEMENT' %}role-mgmt
@@ -562,7 +568,7 @@
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
         <span class="bnav-label">Alerts</span>
       </a>
-      <a href="/admin/me" class="admin-bnav-item {% if '/me' in request.url.path %}active{% endif %}">
+      <a href="/logistics/dashboard" class="admin-bnav-item {% if '/logistics/dashboard' in request.url.path %}active{% endif %}">
         <div class="sidebar-avatar
           {% if admin and admin.role.value == 'DIR_ADMIN' %}role-dir
           {% elif admin and admin.role.value == 'MANAGEMENT' %}role-mgmt
@@ -600,7 +606,13 @@
           </span>
         </div>
         <div class="admin-header-right">
+          {% if admin and (admin.role.value == 'RETAILER' or admin.role == 'RETAILER') %}
+          <a href="/vendor/me" class="admin-header-avatar">
+          {% elif admin and (admin.role.value == 'LOGISTICS' or admin.role == 'LOGISTICS') %}
+          <a href="/logistics/dashboard" class="admin-header-avatar">
+          {% else %}
           <a href="/admin/me" class="admin-header-avatar">
+          {% endif %}
             <div class="sidebar-avatar
               {% if admin and admin.role.value == 'DIR_ADMIN' %}role-dir
               {% elif admin and admin.role.value == 'MANAGEMENT' %}role-mgmt
