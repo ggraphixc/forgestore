@@ -332,7 +332,6 @@ document.addEventListener('DOMContentLoaded', () => {
   vaRenderCampaigns();
   vaRenderPromos();
   const active = vaCampaigns.filter(c => c.status === 'ACTIVE').length;
-  const active = vaCampaigns.filter(c => c.status === 'ACTIVE').length;
   document.getElementById('va-stat-campaigns').textContent = vaCampaigns.length;
   document.getElementById('va-stat-active').textContent = active;
   document.getElementById('va-stat-wallet').textContent = '₦' + {{ wallet_balance|default(0)|int }}.toLocaleString();
