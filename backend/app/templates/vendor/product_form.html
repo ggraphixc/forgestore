@@ -36,6 +36,15 @@
   .vp-btn-ghost{background:transparent;color:var(--stone-600);border:1px solid var(--stone-200);}
   .vp-toggle{display:flex;align-items:center;gap:8px;}
   .vp-toggle input[type=checkbox]{width:18px;height:18px;accent-color:var(--amber-500);}
+  .vai-inline-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border:1px solid #8b5cf6;border-radius:6px;background:rgba(139,92,246,0.08);color:#8b5cf6;font-size:0.6875rem;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;vertical-align:middle;min-height:28px;}
+  .vai-inline-btn:hover{background:#8b5cf6;color:#fff;}
+  .vai-inline-btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .vai-inline-btn .vai-spin-sm{width:12px;height:12px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:vai-spin 0.6s linear infinite;display:none;}
+  .vai-inline-btn.loading .vai-spin-sm{display:block;}
+  .vai-inline-btn.loading{pointer-events:none;}
+  .vai-field-row{display:flex;align-items:center;gap:8px;}
+  .vai-field-row .vp-form-input{flex:1;}
+  @keyframes vai-spin{to{transform:rotate(360deg);}}
   @media(max-width:640px){.vp-grid{grid-template-columns:1fr;}.vp-wrap{padding:0.75rem;}}
 </style>
 
@@ -64,7 +73,12 @@
       <div class="vp-card-title">Basic Information</div>
       <div class="vp-form-group">
         <label class="vp-form-label">Product Name *</label>
-        <input type="text" name="name" required class="vp-form-input" placeholder="Product name" value="{{ product.name if product else '' }}">
+        <div class="vai-field-row">
+          <input type="text" name="name" required class="vp-form-input" placeholder="Product name" value="{{ product.name if product else '' }}">
+          <button type="button" class="vai-inline-btn" onclick="vaiInlineOptimizeTitle()" id="vai-inline-title">
+            <span class="vai-spin-sm"></span>AI Optimize
+          </button>
+        </div>
       </div>
       <div class="vp-grid">
         <div class="vp-form-group">
@@ -78,7 +92,20 @@
       </div>
       <div class="vp-form-group">
         <label class="vp-form-label">Description</label>
-        <textarea name="description" class="vp-form-input" placeholder="Product description">{{ product.description if product and product.description else '' }}</textarea>
+        <div class="vai-field-row">
+          <textarea name="description" class="vp-form-input" placeholder="Product description" style="flex:1;">{{ product.description if product and product.description else '' }}</textarea>
+        </div>
+        <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;">
+          <button type="button" class="vai-inline-btn" onclick="vaiInlineGenerateDesc()" id="vai-inline-desc">
+            <span class="vai-spin-sm"></span>AI Generate Description
+          </button>
+          <button type="button" class="vai-inline-btn" onclick="vaiInlineGenerateSpecs()" id="vai-inline-specs" style="border-color:#06b6d4;color:#06b6d4;background:rgba(6,182,212,0.08);">
+            <span class="vai-spin-sm"></span>AI Generate Specs
+          </button>
+          <button type="button" class="vai-inline-btn" onclick="vaiInlineGenerateTags()" id="vai-inline-tags" style="border-color:#f59e0b;color:#f59e0b;background:rgba(245,158,11,0.08);">
+            <span class="vai-spin-sm"></span>AI SEO Tags
+          </button>
+        </div>
       </div>
     </div>
 
@@ -87,13 +114,19 @@
       <div class="vp-grid">
         <div class="vp-form-group">
           <label class="vp-form-label">Price (₦) *</label>
-          <input type="number" name="price" required step="0.01" min="0" class="vp-form-input" placeholder="0.00" value="{{ product.price if product else '' }}">
+          <div class="vai-field-row">
+            <input type="number" name="price" required step="0.01" min="0" class="vp-form-input" placeholder="0.00" value="{{ product.price if product else '' }}">
+            <button type="button" class="vai-inline-btn" onclick="vaiInlinePricingAdvisor()" id="vai-inline-price" style="border-color:#ef4444;color:#ef4444;background:rgba(239,68,68,0.08);">
+              <span class="vai-spin-sm"></span>AI Price
+            </button>
+          </div>
         </div>
         <div class="vp-form-group">
           <label class="vp-form-label">Discount Price (₦)</label>
           <input type="number" name="discount_price" step="0.01" min="0" class="vp-form-input" placeholder="Optional" value="{{ product.discount_price if product and product.discount_price else '' }}">
         </div>
       </div>
+      <div id="vai-pricing-result"></div>
       <div class="vp-grid">
         <div class="vp-form-group">
           <label class="vp-form-label">Inventory *</label>
@@ -130,7 +163,10 @@
   </form>
 </div>
 
+{% include "vendor/ai_tools.html" %}
+
 <script>
+// Image handling
 const imagesInput = document.getElementById('images-input');
 let images = JSON.parse(imagesInput.value || '[]');
 function renderPreviews() {
@@ -150,5 +186,116 @@ document.getElementById('image-input').addEventListener('change', async function
   imagesInput.value = JSON.stringify(images); renderPreviews(); this.value = '';
 });
 renderPreviews();
+
+// AI inline helpers
+function vaiGetFormData() {
+  const name = document.querySelector('input[name="name"]')?.value || '';
+  const brand = document.querySelector('input[name="brand"]')?.value || '';
+  const desc = document.querySelector('textarea[name="description"]')?.value || '';
+  const price = document.querySelector('input[name="price"]')?.value || '';
+  const catSel = document.querySelector('select[name="category_id"]');
+  const category = catSel?.options[catSel.selectedIndex]?.text || '';
+  let images = [];
+  try { images = JSON.parse(document.getElementById('images-input')?.value || '[]'); } catch(e) {}
+  return { name, brand, description: desc, price, category, images, keywords: name + ' ' + brand + ' ' + category };
+}
+
+function vaiInlineSetLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  if (loading) { btn.classList.add('loading'); btn.disabled = true; }
+  else { btn.classList.remove('loading'); btn.disabled = false; }
+}
+
+function vaiInlineToast(msg, type) {
+  if (typeof vaiToast === 'function') vaiToast(msg, type);
+  else { alert(msg); }
+}
+
+async function vaiInlineOptimizeTitle() {
+  const data = vaiGetFormData();
+  if (!data.name) { vaiInlineToast('Enter a product name first', 'error'); return; }
+  vaiInlineSetLoading('vai-inline-title', true);
+  try {
+    const res = await fetch('/api/vendor/ai/optimize-title', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+    const d = await res.json();
+    if (d.success && d.title) {
+      document.querySelector('input[name="name"]').value = d.title;
+      vaiInlineToast('Title optimized!', 'success');
+    } else { vaiInlineToast(d.message || 'Failed', 'error'); }
+  } catch(e) { vaiInlineToast('Network error', 'error'); }
+  vaiInlineSetLoading('vai-inline-title', false);
+}
+
+async function vaiInlineGenerateDesc() {
+  const data = vaiGetFormData();
+  if (!data.name) { vaiInlineToast('Enter a product name first', 'error'); return; }
+  vaiInlineSetLoading('vai-inline-desc', true);
+  try {
+    const res = await fetch('/api/vendor/ai/generate-description', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+    const d = await res.json();
+    if (d.success && d.description) {
+      document.querySelector('textarea[name="description"]').value = d.description;
+      vaiInlineToast('Description generated!', 'success');
+    } else { vaiInlineToast(d.message || 'Failed', 'error'); }
+  } catch(e) { vaiInlineToast('Network error', 'error'); }
+  vaiInlineSetLoading('vai-inline-desc', false);
+}
+
+async function vaiInlineGenerateSpecs() {
+  const data = vaiGetFormData();
+  if (!data.name) { vaiInlineToast('Enter a product name first', 'error'); return; }
+  vaiInlineSetLoading('vai-inline-specs', true);
+  try {
+    const res = await fetch('/api/vendor/ai/generate-specifications', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+    const d = await res.json();
+    if (d.success && d.specifications) {
+      let specsInput = document.querySelector('input[name="specifications"]');
+      if (!specsInput) { specsInput = document.createElement('input'); specsInput.type = 'hidden'; specsInput.name = 'specifications'; document.getElementById('product-form').appendChild(specsInput); }
+      specsInput.value = JSON.stringify(d.specifications);
+      if (typeof vaiShowSpecsPreview === 'function') vaiShowSpecsPreview(d.specifications);
+      vaiInlineToast('Specs generated!', 'success');
+    } else { vaiInlineToast(d.message || 'Failed', 'error'); }
+  } catch(e) { vaiInlineToast('Network error', 'error'); }
+  vaiInlineSetLoading('vai-inline-specs', false);
+}
+
+async function vaiInlineGenerateTags() {
+  const data = vaiGetFormData();
+  if (!data.name) { vaiInlineToast('Enter a product name first', 'error'); return; }
+  vaiInlineSetLoading('vai-inline-tags', true);
+  try {
+    const res = await fetch('/api/vendor/ai/generate-tags', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+    const d = await res.json();
+    if (d.success && d.tags) {
+      if (typeof vaiApplyTags === 'function') vaiApplyTags(d.tags);
+      vaiInlineToast('Tags generated!', 'success');
+    } else { vaiInlineToast(d.message || 'Failed', 'error'); }
+  } catch(e) { vaiInlineToast('Network error', 'error'); }
+  vaiInlineSetLoading('vai-inline-tags', false);
+}
+
+async function vaiInlinePricingAdvisor() {
+  const data = vaiGetFormData();
+  if (!data.name) { vaiInlineToast('Enter a product name first', 'error'); return; }
+  vaiInlineSetLoading('vai-inline-price', true);
+  try {
+    const res = await fetch('/api/vendor/ai/pricing-advisor', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+    const d = await res.json();
+    if (d.success && d.advice) {
+      if (typeof vaiShowPricingAdvice === 'function') {
+        vaiShowPricingAdvice(d.advice);
+      } else {
+        const a = d.advice;
+        const el = document.getElementById('vai-pricing-result');
+        if (el) {
+          el.innerHTML = '<div style="margin-top:8px;padding:12px;background:rgba(139,92,246,0.05);border:1px solid rgba(139,92,246,0.2);border-radius:8px;font-size:0.8125rem;"><strong>AI Pricing:</strong> ₦'+Number(a.recommended||0).toLocaleString()+' ('+a.strategy+') — '+a.reasoning+'</div>';
+        }
+      }
+      vaiInlineToast('Pricing advice ready!', 'success');
+    } else { vaiInlineToast(d.message || 'Failed', 'error'); }
+  } catch(e) { vaiInlineToast('Network error', 'error'); }
+  vaiInlineSetLoading('vai-inline-price', false);
+}
 </script>
 {% endblock %}

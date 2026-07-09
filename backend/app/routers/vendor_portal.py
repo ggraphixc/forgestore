@@ -894,6 +894,7 @@ async def vendor_product_create(request: Request, db: Session = Depends(get_db),
         retailer_id=admin.vendor_id, inventory=inventory,
         is_new_arrival=form.get("is_new_arrival") == "true",
         is_flagship=form.get("is_flagship") == "true",
+        specifications=json.loads(form.get("specifications") or "{}"),
     )
     db.add(product)
     db.commit()
@@ -965,6 +966,12 @@ async def vendor_product_update(request: Request, product_id: str,
     product.category_id = form.get("category_id", product.category_id)
     product.is_new_arrival = form.get("is_new_arrival") == "true"
     product.is_flagship = form.get("is_flagship") == "true"
+    specs_raw = form.get("specifications")
+    if specs_raw:
+        try:
+            product.specifications = json.loads(specs_raw)
+        except (json.JSONDecodeError, TypeError):
+            pass
 
     images_json = form.get("images", None)
     if images_json is not None:
@@ -1060,3 +1067,142 @@ async def vendor_profile_update(request: Request, db: Session = Depends(get_db))
 
     db.commit()
     return RedirectResponse(url="/vendor/me?success=Profile+updated+successfully.", status_code=302)
+
+
+# ─── VENDOR AI TOOLS API ──────────────────────────────────────────────
+
+@router.post("/api/vendor/ai/generate-description")
+async def vendor_ai_generate_description(request: Request, db: Session = Depends(get_db)):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return JSONResponse({"success": False, "message": "Unauthorized"}, status_code=401)
+    from app.services.ai_service import generate_product_description
+    data = await request.json()
+    images = data.get("images", [])
+    description = generate_product_description(
+        product_name=data.get("name", ""),
+        category=data.get("category", ""),
+        brand=data.get("brand", ""),
+        keywords=data.get("keywords", ""),
+        tone=data.get("tone", "professional"),
+        images=images if images else None,
+    )
+    if description:
+        log_admin_action(db, admin, "ai_generate", "description", "", f"Generated description for '{data.get('name')}'")
+        return {"success": True, "description": description}
+    return {"success": False, "message": "AI is not configured. Set your API key in Settings."}
+
+
+@router.post("/api/vendor/ai/generate-specifications")
+async def vendor_ai_generate_specs(request: Request, db: Session = Depends(get_db)):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return JSONResponse({"success": False, "message": "Unauthorized"}, status_code=401)
+    from app.services.ai_service import generate_product_specifications
+    data = await request.json()
+    images = data.get("images", [])
+    specs = generate_product_specifications(
+        product_name=data.get("name", ""),
+        category=data.get("category", ""),
+        brand=data.get("brand", ""),
+        description=data.get("description", ""),
+        images=images if images else None,
+    )
+    if specs:
+        log_admin_action(db, admin, "ai_generate", "specifications", "", f"Generated specs for '{data.get('name')}'")
+        return {"success": True, "specifications": specs}
+    return {"success": False, "message": "AI could not generate specifications."}
+
+
+@router.post("/api/vendor/ai/generate-tags")
+async def vendor_ai_generate_tags(request: Request, db: Session = Depends(get_db)):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return JSONResponse({"success": False, "message": "Unauthorized"}, status_code=401)
+    from app.services.ai_service import generate_product_tags
+    data = await request.json()
+    tags = generate_product_tags(
+        product_name=data.get("name", ""),
+        description=data.get("description", ""),
+    )
+    if tags:
+        log_admin_action(db, admin, "ai_generate", "tags", "", f"Generated tags for '{data.get('name')}'")
+        return {"success": True, "tags": tags}
+    return {"success": False, "message": "AI is not configured."}
+
+
+@router.post("/api/vendor/ai/optimize-title")
+async def vendor_ai_optimize_title(request: Request, db: Session = Depends(get_db)):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return JSONResponse({"success": False, "message": "Unauthorized"}, status_code=401)
+    from app.services.ai_service import optimize_product_title
+    data = await request.json()
+    title = optimize_product_title(
+        product_name=data.get("name", ""),
+        category=data.get("category", ""),
+        brand=data.get("brand", ""),
+    )
+    if title:
+        log_admin_action(db, admin, "ai_generate", "title", "", f"Optimized title for '{data.get('name')}'")
+        return {"success": True, "title": title}
+    return {"success": False, "message": "AI could not optimize the title."}
+
+
+@router.post("/api/vendor/ai/pricing-advisor")
+async def vendor_ai_pricing_advisor(request: Request, db: Session = Depends(get_db)):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return JSONResponse({"success": False, "message": "Unauthorized"}, status_code=401)
+    from app.services.ai_service import generate_pricing_advisor
+    data = await request.json()
+    advice = generate_pricing_advisor(
+        product_name=data.get("name", ""),
+        category=data.get("category", ""),
+        current_price=float(data.get("price", 0) or 0),
+        description=data.get("description", ""),
+    )
+    if advice:
+        log_admin_action(db, admin, "ai_generate", "pricing", "", f"Pricing advice for '{data.get('name')}'")
+        return {"success": True, "advice": advice}
+    return {"success": False, "message": "AI could not generate pricing advice."}
+
+
+@router.post("/api/vendor/ai/batch-generate")
+async def vendor_ai_batch_generate(request: Request, db: Session = Depends(get_db)):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return JSONResponse({"success": False, "message": "Unauthorized"}, status_code=401)
+    from app.services.ai_service import (
+        generate_product_description,
+        generate_product_specifications,
+        generate_product_tags,
+        optimize_product_title,
+    )
+    data = await request.json()
+    name = data.get("name", "")
+    category = data.get("category", "")
+    brand = data.get("brand", "")
+    images = data.get("images", [])
+    results = {}
+    desc = generate_product_description(
+        product_name=name, category=category, brand=brand,
+        keywords=data.get("keywords", ""), tone=data.get("tone", "professional"),
+        images=images if images else None,
+    )
+    if desc:
+        results["description"] = desc
+    specs = generate_product_specifications(
+        product_name=name, category=category, brand=brand,
+        description=desc or "", images=images if images else None,
+    )
+    if specs:
+        results["specifications"] = specs
+    tags = generate_product_tags(product_name=name, description=desc or "")
+    if tags:
+        results["tags"] = tags
+    title = optimize_product_title(product_name=name, category=category, brand=brand)
+    if title:
+        results["title"] = title
+    log_admin_action(db, admin, "ai_generate", "batch", "", f"Batch generate for '{name}'")
+    return {"success": True, "results": results}

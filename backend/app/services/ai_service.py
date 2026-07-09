@@ -454,6 +454,121 @@ def generate_product_tags(
     return None
 
 
+def optimize_product_title(
+    product_name: str,
+    category: str = "",
+    brand: str = "",
+) -> Optional[str]:
+    """
+    Optimize a product title for search discoverability and marketplace best practices.
+    Returns a single optimized title string or None.
+    """
+    system_prompt = (
+        "You are an e-commerce title optimization expert. "
+        "Rewrite the product title to be:\n"
+        "- Clear, concise, and search-friendly\n"
+        "- Follows marketplace best practices: Brand + Key Feature + Product Type + Differentiator\n"
+        "- Max 80 characters\n"
+        "- Include the most important keyword early\n"
+        "- No fluff, no ALL CAPS, no excessive punctuation\n\n"
+        "Return ONLY the optimized title, nothing else."
+    )
+    parts = [f"Current title: {product_name}"]
+    if category:
+        parts.append(f"Category: {category}")
+    if brand:
+        parts.append(f"Brand: {brand}")
+    user_prompt = "\n".join(parts)
+    return _call_llm(system_prompt, user_prompt, temperature=0.3, max_tokens=100)
+
+
+def generate_pricing_advisor(
+    product_name: str,
+    category: str = "",
+    current_price: float = 0,
+    description: str = "",
+) -> Optional[Dict[str, Any]]:
+    """
+    Analyze a product and suggest competitive pricing strategies.
+    Returns a dict with pricing advice or None.
+    """
+    system_prompt = (
+        "You are a pricing strategy expert for an African e-commerce marketplace (prices in Nigerian Naira ₦). "
+        "Analyze the product and provide pricing advice.\n\n"
+        "Return a JSON object with exactly these keys:\n"
+        '{'
+        '  "suggested_min": <number>,'
+        '  "suggested_max": <number>,'
+        '  "recommended": <number>,'
+        '  "strategy": "<one of: competitive, premium, value, penetration>",'
+        '  "reasoning": "<1-2 sentences explaining the pricing>",'
+        '  "discount_tip": "<tip on how to use discounts effectively>"'
+        '}\n\n'
+        "Return ONLY valid JSON, no other text."
+    )
+    parts = [f"Product: {product_name}"]
+    if category:
+        parts.append(f"Category: {category}")
+    if current_price:
+        parts.append(f"Current price: ₦{current_price:,.0f}")
+    if description:
+        parts.append(f"Description: {description[:300]}")
+    user_prompt = "\n".join(parts)
+    result = _call_llm(system_prompt, user_prompt, temperature=0.3, max_tokens=400)
+    if result:
+        import json
+        try:
+            data = json.loads(result)
+            if isinstance(data, dict):
+                return data
+        except json.JSONDecodeError:
+            import re
+            try:
+                match = re.search(r'\{[^{}]*\}', result, re.DOTALL)
+                if match:
+                    return json.loads(match.group(0))
+            except json.JSONDecodeError:
+                pass
+    return None
+
+
+def generate_product_bundle_suggestions(
+    product_name: str,
+    category: str = "",
+    all_products: list[str] | None = None,
+) -> Optional[List[Dict[str, str]]]:
+    """
+    Suggest complementary products to bundle with the given product.
+    Returns a list of bundle suggestions or None.
+    """
+    system_prompt = (
+        "You are a cross-selling expert for an e-commerce store. "
+        "Given a product, suggest 3-5 complementary products that customers often buy together.\n\n"
+        "Return a JSON array of objects, each with:\n"
+        '{'
+        '  "name": "<product name>",'
+        '  "reason": "<1 sentence why this pairs well>"'
+        '}\n\n'
+        "Return ONLY valid JSON, no other text."
+    )
+    parts = [f"Product: {product_name}"]
+    if category:
+        parts.append(f"Category: {category}")
+    if all_products:
+        parts.append(f"Also available: {', '.join(all_products[:20])}")
+    user_prompt = "\n".join(parts)
+    result = _call_llm(system_prompt, user_prompt, temperature=0.5, max_tokens=400)
+    if result:
+        import json
+        try:
+            data = json.loads(result)
+            if isinstance(data, list):
+                return data
+        except json.JSONDecodeError:
+            pass
+    return None
+
+
 # ─── WEB: AI Product Recommendations ────────────────────────────────
 
 
