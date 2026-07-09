@@ -802,15 +802,6 @@ async def post_product_chat_message(
     customer = get_current_customer_from_cookie(request, db)
     author_name = author_name or (customer.name if customer else "Anonymous")
 
-    # One chat message per user per product
-    if customer:
-        existing = db.query(ProductChatMessage).filter(
-            ProductChatMessage.product_id == product_id,
-            ProductChatMessage.user_id == customer.id,
-        ).first()
-        if existing:
-            raise HTTPException(status_code=400, detail="You have already posted a message on this product")
-
     msg = ProductChatMessage(
         product_id=product_id,
         user_id=customer.id if customer else None,
@@ -1488,6 +1479,23 @@ def submit_review(
         db.commit()
         from app.services.notification_bus import push as bus_push
         bus_push("new_review", notif.title, notif.message, notif.link)
+    except Exception:
+        pass
+
+    # Auto-post review as first chat message to link review ↔ chat
+    try:
+        from app.models import ProductChatMessage
+        stars = '⭐' * review.rating
+        chat_content = f'[review:{review.rating}]' + (f' {review.content}' if review.content else '')
+        chat_msg = ProductChatMessage(
+            product_id=review.product_id,
+            user_id=review.user_id,
+            author_name=review.author,
+            content=chat_content,
+            is_admin=False,
+        )
+        db.add(chat_msg)
+        db.commit()
     except Exception:
         pass
 
