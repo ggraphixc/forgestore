@@ -685,28 +685,12 @@ def vendor_launch_ad_campaign(
         if not product:
             raise HTTPException(status_code=404, detail="Product not found or not owned by you")
 
-    # Check wallet balance
+    # Auto-create wallet if missing
     wallet = db.query(VendorWallet).filter(VendorWallet.retailer_id == admin.vendor_id).first()
     if not wallet:
-        raise HTTPException(status_code=400, detail="Vendor wallet not found")
-    if wallet.balance < budget:
-        raise HTTPException(status_code=400, detail=f"Insufficient wallet balance. Required: ₦{budget:.2f}, Available: ₦{wallet.balance:.2f}")
-
-    # Deduct budget from wallet
-    balance_before = wallet.balance
-    wallet.balance -= budget
-
-    tx = VendorWalletTransaction(
-        wallet_id=wallet.id,
-        transaction_type="fee",
-        amount=-budget,
-        balance_before=balance_before,
-        balance_after=wallet.balance,
-        reference=f"AD-{uuid.uuid4().hex[:12].upper()}",
-        description=f"Ad campaign budget for {ad_type} ad",
-        status="COMPLETED",
-    )
-    db.add(tx)
+        wallet = VendorWallet(retailer_id=admin.vendor_id, balance=0)
+        db.add(wallet)
+        db.flush()
 
     # Parse dates
     from datetime import datetime as _dt
@@ -750,8 +734,7 @@ def vendor_launch_ad_campaign(
         "success": True,
         "campaign_id": campaign.id,
         "status": "PENDING",
-        "budget_deducted": budget,
-        "remaining_balance": wallet.balance,
+        "budget": budget,
     }
 
 
