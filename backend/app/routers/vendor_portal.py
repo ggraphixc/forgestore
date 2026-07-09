@@ -631,6 +631,11 @@ def vendor_request_payout(
 
 # ── Vendor Self-Service Ad Campaign Launch ──
 
+AD_PRICING = {
+    "SHOP": 10000,
+    "PRODUCT": 5000,
+}
+
 @router.post("/api/vendor/ads/launch")
 def vendor_launch_ad_campaign(
     data: dict,
@@ -652,19 +657,24 @@ def vendor_launch_ad_campaign(
         raise HTTPException(status_code=400, detail="No vendor profile linked")
 
     product_id = data.get("product_id")
-    ad_type = data.get("ad_type", "PRODUCT")
+    ad_type = data.get("ad_type", "PRODUCT").upper()
     banner_url = data.get("banner_url", "")
     start_date_str = data.get("start_date")
     end_date_str = data.get("end_date")
-    budget = float(data.get("budget", 0))
+    duration_months = int(data.get("duration_months", 1))
+    target_url = data.get("target_url", "")
     ad_subtype = data.get("ad_subtype")
     banner_type = data.get("banner_type", "banner")
     note = data.get("note", "")
 
+    # Calculate budget from pricing table
+    if ad_type not in AD_PRICING:
+        raise HTTPException(status_code=400, detail=f"Invalid ad_type '{ad_type}'")
+    budget = AD_PRICING[ad_type] * duration_months
+
+    # Use default banner URL if not provided
     if not banner_url:
-        raise HTTPException(status_code=400, detail="banner_url is required")
-    if budget <= 0:
-        raise HTTPException(status_code=400, detail="Budget must be positive")
+        banner_url = "/static/uploads/products/default-ad-banner.jpg"
 
     # Validate product ownership if PRODUCT ad
     if ad_type == "PRODUCT" and product_id:

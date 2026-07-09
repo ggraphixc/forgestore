@@ -383,13 +383,18 @@ async function vaSubmitCampaign() {
   const productId = type === 'PRODUCT' ? document.getElementById('va-camp-product').value : null;
   const targetUrl = document.getElementById('va-camp-target-url').value || null;
   try {
-    const res = await fetch('/api/admin/ads/initialize', {
+    const res = await fetch('/api/vendor/ads/launch', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ ad_type: type, duration_months: duration, product_id: productId, target_url: targetUrl })
     });
     const d = await res.json();
-    if (d.authorization_url) { window.location.href = d.authorization_url; }
-    else { vaShowToast(d.detail || 'Failed to initialize', 'error'); }
+    if (d.success) {
+      vaShowToast('Campaign created! Status: ' + d.status, 'success');
+      vaCloseCampaignModal();
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      vaShowToast(d.detail || d.message || 'Failed to create campaign', 'error');
+    }
   } catch(e) { vaShowToast('Error: ' + e.message, 'error'); }
 }
 
