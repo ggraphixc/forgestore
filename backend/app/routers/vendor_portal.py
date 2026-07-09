@@ -24,6 +24,17 @@ from app.core.image_compressor import compress_image
 router = APIRouter(tags=["vendor-portal"])
 
 
+def get_role_badge(role):
+    badges = {
+        "DIR_ADMIN": "bg-purple-100 text-purple-800 border-purple-200",
+        "MANAGEMENT": "bg-blue-100 text-blue-800 border-blue-200",
+        "TECH_ADMIN": "bg-cyan-100 text-cyan-800 border-cyan-200",
+        "RETAILER": "bg-amber-100 text-amber-800 border-amber-200",
+        "LOGISTICS": "bg-emerald-100 text-emerald-800 border-emerald-200",
+    }
+    return badges.get(role, "bg-stone-100 text-stone-800 border-stone-200")
+
+
 def _require_retailer(request: Request, db: Session):
     """Verify the current user has RETAILER role and return admin + retailer."""
     admin = get_current_user_from_cookie(request, db)
@@ -473,7 +484,6 @@ def vendor_low_stock_alerts(
     low_stock_items = db.query(Product).filter(
         Product.retailer_id == admin.vendor_id,
         Product.inventory <= threshold_value,
-        Product.is_active == True if hasattr(Product, 'is_active') else True,
     ).all()
 
     return {
@@ -752,7 +762,6 @@ def vendor_ads_page(request: Request, db: Session = Depends(get_db)):
         ).order_by(desc(PromoAd.created_at)).all()
         products = db.query(Product).filter(
             Product.retailer_id == retailer.id,
-            Product.is_active == True
         ).all()
 
     def _campaign_dict(c):
@@ -1001,7 +1010,6 @@ def vendor_profile(request: Request, db: Session = Depends(get_db)):
         Product.retailer_id == admin.vendor_id
     ).scalar() if admin.vendor_id else 0
     days_active = (utcnow() - admin.created_at).days if admin.created_at else 0
-    from app.auth import get_role_badge
     return render_template("vendor/profile.html", {
         "request": request, "admin": admin, "retailer": retailer,
         "product_count": product_count, "days_active": days_active,
@@ -1025,7 +1033,6 @@ async def vendor_profile_update(request: Request, db: Session = Depends(get_db))
         Product.retailer_id == admin.vendor_id
     ).scalar() if admin.vendor_id else 0
     days_active = (utcnow() - admin.created_at).days if admin.created_at else 0
-    from app.auth import get_role_badge
 
     ctx = {
         "request": request, "admin": admin, "retailer": retailer,
