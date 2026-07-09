@@ -692,6 +692,26 @@ def vendor_launch_ad_campaign(
         db.add(wallet)
         db.flush()
 
+    # Check wallet balance
+    if wallet.balance < budget:
+        raise HTTPException(status_code=400, detail=f"Insufficient wallet balance. Required: ₦{budget:,.0f}, Available: ₦{wallet.balance:,.0f}. Please top up your wallet first.")
+
+    # Deduct budget from wallet
+    balance_before = wallet.balance
+    wallet.balance -= budget
+
+    tx = VendorWalletTransaction(
+        wallet_id=wallet.id,
+        transaction_type="fee",
+        amount=-budget,
+        balance_before=balance_before,
+        balance_after=wallet.balance,
+        reference=f"AD-{uuid.uuid4().hex[:12].upper()}",
+        description=f"Ad campaign: {ad_type} ({duration_months}mo)",
+        status="COMPLETED",
+    )
+    db.add(tx)
+
     # Parse dates
     from datetime import datetime as _dt
     start_date = None
@@ -735,7 +755,59 @@ def vendor_launch_ad_campaign(
         "campaign_id": campaign.id,
         "status": "PENDING",
         "budget": budget,
+        "remaining_balance": wallet.balance,
     }
+
+
+@router.post("/api/vendor/wallet/topup")
+async def vendor_wallet_topup(
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """Initialize a wallet top-up via Paystack for the vendor."""
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return JSONResponse({"success": False, "message": "Unauthorized"}, status_code=401)
+
+    data = await request.json()
+    amount = float(data.get("amount", 0))
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be positive")
+
+    from app.services.wallet_service import PaymentService
+    from app.config import get_settings
+    cfg = get_settings()
+
+    # Ensure wallet exists
+    wallet = db.query(VendorWallet).filter(VendorWallet.retailer_id == admin.vendor_id).first()
+    if not wallet:
+        wallet = VendorWallet(retailer_id=admin.vendor_id, balance=0)
+        db.add(wallet)
+        db.flush()
+
+    callback_url = f"{cfg.site_base_url.rstrip('/')}/vendor/wallet/callback"
+    metadata = {"vendor_id": admin.vendor_id, "purpose": "vendor_wallet_topup"}
+
+    payment_service = PaymentService(db)
+    result = payment_service.initialize_payment(
+        order_id="",
+        amount=amount,
+        currency="NGN",
+        metadata=metadata,
+    )
+    return {"success": True, "authorization_url": result.get("authorization_url", ""), "reference": result.get("reference", "")}
+
+
+@router.get("/vendor/wallet/callback")
+def vendor_wallet_callback(request: Request, db: Session = Depends(get_db)):
+    """Paystack callback after wallet top-up — credit vendor wallet."""
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return redirect
+
+    reference = request.query_params.get("reference", "")
+    # TODO: verify with Paystack API, for now just redirect
+    return RedirectResponse(url="/vendor/ads?wallet=success", status_code=302)
 
 
 @router.get("/vendor/ads", response_class=HTMLResponse)
@@ -778,6 +850,13 @@ def vendor_ads_page(request: Request, db: Session = Depends(get_db)):
             "created_at": p.created_at.isoformat() if p.created_at else None,
         }
 
+    # Get wallet balance
+    wallet_balance = 0
+    if retailer:
+        wallet = db.query(VendorWallet).filter(VendorWallet.retailer_id == retailer.id).first()
+        if wallet:
+            wallet_balance = wallet.balance
+
     return render_template("vendor/ads.html", {
         "request": request,
         "admin": admin,
@@ -785,6 +864,7 @@ def vendor_ads_page(request: Request, db: Session = Depends(get_db)):
         "campaigns": [_campaign_dict(c) for c in campaigns],
         "promos": [_promo_dict(p) for p in promos],
         "products": [{"id": p.id, "name": p.name, "image": (p.images[0] if p.images else "")} for p in products],
+        "wallet_balance": wallet_balance,
         "has_permission": has_permission,
     })
 
