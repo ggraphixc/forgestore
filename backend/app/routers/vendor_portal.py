@@ -774,7 +774,7 @@ async def vendor_wallet_topup(
     if amount <= 0:
         raise HTTPException(status_code=400, detail="Amount must be positive")
 
-    from app.services.wallet_service import PaymentService
+    from app.services.payment_provider import get_payment_provider
     from app.config import get_settings
     cfg = get_settings()
 
@@ -785,29 +785,68 @@ async def vendor_wallet_topup(
         db.add(wallet)
         db.flush()
 
+    import uuid
+    reference = f"VW-{uuid.uuid4().hex[:12].upper()}"
     callback_url = f"{cfg.site_base_url.rstrip('/')}/vendor/wallet/callback"
-    metadata = {"vendor_id": admin.vendor_id, "purpose": "vendor_wallet_topup"}
+    metadata = {"vendor_id": admin.vendor_id, "purpose": "vendor_wallet_topup", "wallet_id": wallet.id}
 
-    payment_service = PaymentService(db)
-    result = payment_service.initialize_payment(
-        order_id="",
+    provider = get_payment_provider()
+    result = provider.initialize_payment(
+        email=admin.email or "vendor@forgestore.com",
         amount=amount,
+        reference=reference,
+        callback_url=callback_url,
         currency="NGN",
         metadata=metadata,
     )
-    return {"success": True, "authorization_url": result.get("authorization_url", ""), "reference": result.get("reference", "")}
+
+    if result.get("success"):
+        return {"success": True, "authorization_url": result.get("authorization_url", ""), "reference": reference}
+    else:
+        return JSONResponse({"success": False, "detail": result.get("message", "Payment initialization failed")}, status_code=400)
 
 
 @router.get("/vendor/wallet/callback")
 def vendor_wallet_callback(request: Request, db: Session = Depends(get_db)):
-    """Paystack callback after wallet top-up — credit vendor wallet."""
+    """Paystack callback after wallet top-up — verify payment and credit vendor wallet."""
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return redirect
 
     reference = request.query_params.get("reference", "")
-    # TODO: verify with Paystack API, for now just redirect
-    return RedirectResponse(url="/vendor/ads?wallet=success", status_code=302)
+    if not reference:
+        return RedirectResponse(url="/vendor/ads?wallet=error", status_code=302)
+
+    try:
+        from app.services.payment_provider import get_payment_provider
+        provider = get_payment_provider()
+        result = provider.verify_payment(reference)
+
+        if result.get("success") and result.get("status") == "success":
+            amount = result.get("amount", 0) / 100  # Convert kobo to naira
+
+            wallet = db.query(VendorWallet).filter(VendorWallet.retailer_id == admin.vendor_id).first()
+            if wallet:
+                balance_before = wallet.balance
+                wallet.balance += amount
+
+                txn = VendorWalletTransaction(
+                    wallet_id=wallet.id,
+                    transaction_type="topup",
+                    amount=amount,
+                    balance_before=balance_before,
+                    balance_after=wallet.balance,
+                    reference=reference,
+                    description=f"Wallet top-up of ₦{amount:,.2f}",
+                )
+                db.add(txn)
+                db.commit()
+                return RedirectResponse(url="/vendor/ads?wallet=success", status_code=302)
+
+        return RedirectResponse(url="/vendor/ads?wallet=failed", status_code=302)
+    except Exception as e:
+        logger.error("Wallet callback error: %s", e)
+        return RedirectResponse(url="/vendor/ads?wallet=error", status_code=302)
 
 
 @router.get("/vendor/ads", response_class=HTMLResponse)
