@@ -88,7 +88,7 @@ def get_ai_client() -> Any:
     try:
         if config["sdk"] == "openai":
             import openai
-            kwargs = {"api_key": api_key}
+            kwargs = {"api_key": api_key, "timeout": 25.0}
             if config["base_url"]:
                 kwargs["base_url"] = config["base_url"]
             return openai.OpenAI(**kwargs)  # type: ignore[arg-type]
@@ -173,7 +173,7 @@ def _call_llm_sync(
                 mime = "image/jpeg"
             # Fetch with timeout
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-            with urllib.request.urlopen(req, timeout=10) as resp:
+            with urllib.request.urlopen(req, timeout=5) as resp:
                 img_data = resp.read()
             # Limit to 200KB
             if len(img_data) > 200_000:

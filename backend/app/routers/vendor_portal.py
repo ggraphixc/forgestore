@@ -7,6 +7,7 @@ from datetime import timedelta
 import uuid
 import csv
 import io
+import asyncio
 
 from app.database import get_db
 from app.models import (
@@ -1079,7 +1080,8 @@ async def vendor_ai_generate_description(request: Request, db: Session = Depends
     from app.services.ai_service import generate_product_description
     data = await request.json()
     images = data.get("images", [])
-    description = generate_product_description(
+    description = await asyncio.to_thread(
+        generate_product_description,
         product_name=data.get("name", ""),
         category=data.get("category", ""),
         brand=data.get("brand", ""),
@@ -1101,7 +1103,8 @@ async def vendor_ai_generate_specs(request: Request, db: Session = Depends(get_d
     from app.services.ai_service import generate_product_specifications
     data = await request.json()
     images = data.get("images", [])
-    specs = generate_product_specifications(
+    specs = await asyncio.to_thread(
+        generate_product_specifications,
         product_name=data.get("name", ""),
         category=data.get("category", ""),
         brand=data.get("brand", ""),
@@ -1121,7 +1124,8 @@ async def vendor_ai_generate_tags(request: Request, db: Session = Depends(get_db
         return JSONResponse({"success": False, "message": "Unauthorized"}, status_code=401)
     from app.services.ai_service import generate_product_tags
     data = await request.json()
-    tags = generate_product_tags(
+    tags = await asyncio.to_thread(
+        generate_product_tags,
         product_name=data.get("name", ""),
         description=data.get("description", ""),
     )
@@ -1138,7 +1142,8 @@ async def vendor_ai_optimize_title(request: Request, db: Session = Depends(get_d
         return JSONResponse({"success": False, "message": "Unauthorized"}, status_code=401)
     from app.services.ai_service import optimize_product_title
     data = await request.json()
-    title = optimize_product_title(
+    title = await asyncio.to_thread(
+        optimize_product_title,
         product_name=data.get("name", ""),
         category=data.get("category", ""),
         brand=data.get("brand", ""),
@@ -1156,7 +1161,8 @@ async def vendor_ai_pricing_advisor(request: Request, db: Session = Depends(get_
         return JSONResponse({"success": False, "message": "Unauthorized"}, status_code=401)
     from app.services.ai_service import generate_pricing_advisor
     data = await request.json()
-    advice = generate_pricing_advisor(
+    advice = await asyncio.to_thread(
+        generate_pricing_advisor,
         product_name=data.get("name", ""),
         category=data.get("category", ""),
         current_price=float(data.get("price", 0) or 0),
@@ -1185,24 +1191,30 @@ async def vendor_ai_batch_generate(request: Request, db: Session = Depends(get_d
     brand = data.get("brand", "")
     images = data.get("images", [])
     results = {}
-    desc = generate_product_description(
-        product_name=name, category=category, brand=brand,
-        keywords=data.get("keywords", ""), tone=data.get("tone", "professional"),
-        images=images if images else None,
-    )
-    if desc:
-        results["description"] = desc
-    specs = generate_product_specifications(
-        product_name=name, category=category, brand=brand,
-        description=desc or "", images=images if images else None,
-    )
-    if specs:
-        results["specifications"] = specs
-    tags = generate_product_tags(product_name=name, description=desc or "")
-    if tags:
-        results["tags"] = tags
-    title = optimize_product_title(product_name=name, category=category, brand=brand)
-    if title:
-        results["title"] = title
+
+    def _do_batch():
+        r = {}
+        d = generate_product_description(
+            product_name=name, category=category, brand=brand,
+            keywords=data.get("keywords", ""), tone=data.get("tone", "professional"),
+            images=images if images else None,
+        )
+        if d:
+            r["description"] = d
+        s = generate_product_specifications(
+            product_name=name, category=category, brand=brand,
+            description=d or "", images=images if images else None,
+        )
+        if s:
+            r["specifications"] = s
+        t = generate_product_tags(product_name=name, description=d or "")
+        if t:
+            r["tags"] = t
+        ti = optimize_product_title(product_name=name, category=category, brand=brand)
+        if ti:
+            r["title"] = ti
+        return r
+
+    results = await asyncio.to_thread(_do_batch)
     log_admin_action(db, admin, "ai_generate", "batch", "", f"Batch generate for '{name}'")
     return {"success": True, "results": results}
