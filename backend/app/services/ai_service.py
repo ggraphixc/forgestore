@@ -153,6 +153,17 @@ def _call_llm_sync(
                 elif isinstance(block, str):
                     texts.append(block)
             content = "\n".join(texts) if texts else None
+        # Log full response details when content is None to diagnose provider issues
+        if content is None:
+            msg = resp.choices[0].message
+            logger.error(f"LLM returned None content. Full message dump: role={getattr(msg, 'role', '?')}, content={repr(msg.content)}, tool_calls={getattr(msg, 'tool_calls', None)}, function_call={getattr(msg, 'function_call', None)}, finish_reason={resp.choices[0].finish_reason}")
+            # Try extracting from alternate fields some providers use
+            if hasattr(msg, 'tool_calls') and msg.tool_calls:
+                for tc in msg.tool_calls:
+                    if hasattr(tc, 'function') and tc.function and tc.function.arguments:
+                        content = tc.function.arguments
+                        logger.info(f"Extracted content from tool_calls[0].function.arguments: {repr(content[:200])}")
+                        break
         logger.info(f"LLM content type={type(content)}, len={len(content) if content else 0}, preview={repr(content[:200]) if content else 'None'}")
         return content
 
