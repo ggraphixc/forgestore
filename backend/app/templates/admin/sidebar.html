@@ -586,7 +586,7 @@
 
       {% elif admin and (admin.role.value == 'LOGISTICS' or admin.role == 'LOGISTICS') %}
       <a href="/logistics/dashboard" class="admin-bnav-item {% if '/logistics/dashboard' in request.url.path %}active{% endif %}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 001 1h3m1-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 001 1h3m-1 6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
         <span class="bnav-label">Home</span>
       </a>
       <a href="/logistics/shipments" class="admin-bnav-item {% if '/logistics/shipments' in request.url.path %}active{% endif %}">
@@ -605,19 +605,53 @@
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/></svg>
         <span class="bnav-label">Map</span>
       </a>
-        <div class="sidebar-avatar
-          {% if admin and admin.role.value == 'DIR_ADMIN' %}role-dir
-          {% elif admin and admin.role.value == 'MANAGEMENT' %}role-mgmt
-          {% elif admin and admin.role.value == 'TECH_ADMIN' %}role-tech
-          {% elif admin and admin.role.value == 'LOGISTICS' %}role-other
-          {% else %}role-retail{% endif %}" style="width:24px;height:24px;font-size:11px;">
-          {{ admin.name[0]|upper if admin and admin.name else "A" }}
-        </div>
-        <span class="bnav-label">Profile</span>
-      </a>
+      <button onclick="toggleMoreMenu(event)" class="admin-bnav-item" id="more-toggle-btn" style="cursor:pointer;border:none;background:none;font-family:inherit;">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"/></svg>
+        <span class="bnav-label">More</span>
+      </button>
       {% endif %}
     </div>
   </nav>
+
+  <!-- Logistics More Panel -->
+  {% if admin and (admin.role.value == 'LOGISTICS' or admin.role == 'LOGISTICS') %}
+  <div id="more-backdrop" class="admin-more-backdrop" onclick="closeMoreMenu()"></div>
+  <div id="more-panel" class="admin-more-panel">
+    <a href="/logistics/tools/route-optimizer" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/></svg>
+      Route Optimizer
+    </a>
+    <a href="/logistics/tools/performance" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+      Performance
+    </a>
+    <a href="/logistics/pickup-points" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+      Pickup Points
+    </a>
+    <a href="/logistics/tools/batch-assign" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.142-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/></svg>
+      Batch Assign
+    </a>
+    <a href="/logistics/pricing" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      Pricing
+    </a>
+    <a href="/logistics/3pl" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      3PL Settings
+    </a>
+    <div class="admin-more-divider"></div>
+    <a href="/logistics/notifications" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+      Notifications
+    </a>
+    <a href="/logistics/logout" class="admin-more-signout">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      Sign Out
+    </a>
+  </div>
+  {% endif %}
 
   <div class="admin-main">
     <header class="admin-header">
@@ -721,6 +755,27 @@
 {% endif %}
 
 <script>
+let moreMenuOpen = false;
+function toggleMoreMenu(event) {
+    if (event) event.stopPropagation();
+    moreMenuOpen = !moreMenuOpen;
+    const panel = document.getElementById('more-panel');
+    const backdrop = document.getElementById('more-backdrop');
+    if (!panel || !backdrop) return;
+    if (moreMenuOpen) {
+        panel.classList.add('open');
+        backdrop.classList.add('open');
+    } else {
+        panel.classList.remove('open');
+        backdrop.classList.remove('open');
+    }
+}
+function closeMoreMenu() {
+    moreMenuOpen = false;
+    document.getElementById('more-panel')?.classList.remove('open');
+    document.getElementById('more-backdrop')?.classList.remove('open');
+}
+
 function openSidebar() {
     const sidebar = document.getElementById('sidebar');
     const backdrop = document.getElementById('sidebar-backdrop');
@@ -755,11 +810,20 @@ function toggleSidebar(event) {
 
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('sidebar-backdrop')?.addEventListener('click', closeSidebar);
-    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeSidebar(); });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') { closeSidebar(); closeMoreMenu(); }
+    });
     document.querySelectorAll('.admin-sidebar-link').forEach(link => {
         link.addEventListener('click', function() {
             if (document.getElementById('sidebar')?.classList.contains('open')) closeSidebar();
         });
+    });
+    document.addEventListener('click', function(e) {
+        const panel = document.getElementById('more-panel');
+        const toggle = document.getElementById('more-toggle-btn');
+        if (moreMenuOpen && panel && !panel.contains(e.target) && toggle && !toggle.contains(e.target)) {
+            closeMoreMenu();
+        }
     });
 });
 </script>
