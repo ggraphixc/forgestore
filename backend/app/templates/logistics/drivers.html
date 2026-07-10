@@ -26,13 +26,48 @@
                     <input name="name" required placeholder="Full Name" class="lg-form-input">
                     <input name="phone" placeholder="Phone Number" class="lg-form-input">
                     <input name="email" placeholder="Email (optional)" class="lg-form-input">
-                    <input name="vehicle_type" placeholder="Vehicle Type (e.g. Motorcycle)" class="lg-form-input">
-                    <input name="vehicle_number" placeholder="Vehicle Number" class="lg-form-input">
+                    <input type="hidden" name="vehicle_type" id="vehicle_type_input" value="">
+                    <label style="font-size:.8rem;font-weight:600;color:var(--lg-text-muted);margin-bottom:.25rem;display:block;">Vehicle Type</label>
+                    <div class="vehicle-grid">
+                        <button type="button" class="vehicle-card" data-value="Motorcycle" onclick="selectVehicle(this)">
+                            <span class="vehicle-icon">🏍️</span>
+                            <span class="vehicle-label">Motorcycle</span>
+                        </button>
+                        <button type="button" class="vehicle-card" data-value="Tricycle" onclick="selectVehicle(this)">
+                            <span class="vehicle-icon">🛺</span>
+                            <span class="vehicle-label">Tricycle</span>
+                        </button>
+                        <button type="button" class="vehicle-card" data-value="Car" onclick="selectVehicle(this)">
+                            <span class="vehicle-icon">🚗</span>
+                            <span class="vehicle-label">Car</span>
+                        </button>
+                        <button type="button" class="vehicle-card" data-value="Van" onclick="selectVehicle(this)">
+                            <span class="vehicle-icon">🚐</span>
+                            <span class="vehicle-label">Van</span>
+                        </button>
+                        <button type="button" class="vehicle-card" data-value="Truck" onclick="selectVehicle(this)">
+                            <span class="vehicle-icon">🚛</span>
+                            <span class="vehicle-label">Truck</span>
+                        </button>
+                        <button type="button" class="vehicle-card" data-value="Bicycle" onclick="selectVehicle(this)">
+                            <span class="vehicle-icon">🚲</span>
+                            <span class="vehicle-label">Bicycle</span>
+                        </button>
+                        <button type="button" class="vehicle-card" data-value="Bike" onclick="selectVehicle(this)">
+                            <span class="vehicle-icon">🛵</span>
+                            <span class="vehicle-label">Bike</span>
+                        </button>
+                        <button type="button" class="vehicle-card" data-value="Walk" onclick="selectVehicle(this)">
+                            <span class="vehicle-icon">🚶</span>
+                            <span class="vehicle-label">On Foot</span>
+                        </button>
+                    </div>
+                    <input name="vehicle_number" placeholder="Vehicle Number" class="lg-form-input" style="margin-top:.5rem;">
                 </form>
             </div>
             <div class="lg-modal-footer">
                 <button type="button" onclick="closeModal('new-driver-modal')" class="lg-btn lg-btn-ghost">Cancel</button>
-                <button type="submit" formaction="/logistics/drivers/new" class="lg-btn lg-btn-primary">Create</button>
+                <button type="submit" formaction="/logistics/drivers/new" onclick="return validateDriverForm()" class="lg-btn lg-btn-primary">Create</button>
             </div>
         </div>
     </div>
@@ -99,6 +134,74 @@
 </div>
 
 <script>
+.vehicle-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.vehicle-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 4px;
+  border: 2px solid #e7e5e4;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  min-height: 72px;
+}
+.vehicle-card:hover {
+  border-color: #d97706;
+  background: #fffbeb;
+}
+.vehicle-card.selected {
+  border-color: #d97706;
+  background: #fffbeb;
+  box-shadow: 0 0 0 3px rgba(217,119,6,0.15);
+}
+.vehicle-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.vehicle-label {
+  font-size: .65rem;
+  font-weight: 600;
+  color: #57534e;
+  text-align: center;
+}
+.vehicle-card.selected .vehicle-label {
+  color: #92400e;
+}
+@media (max-width: 400px) {
+  .vehicle-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .vehicle-card { padding: 10px 2px; min-height: 64px; }
+  .vehicle-icon { font-size: 1.25rem; }
+  .vehicle-label { font-size: .6rem; }
+}
+
+function selectVehicle(el) {
+  document.querySelectorAll('.vehicle-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('vehicle_type_input').value = el.dataset.value;
+}
+
+function validateDriverForm() {
+  const v = document.getElementById('vehicle_type_input').value;
+  if (!v) {
+    const grid = document.querySelector('.vehicle-grid');
+    grid.style.outline = '2px solid #dc2626';
+    grid.style.outlineOffset = '2px';
+    grid.style.borderRadius = '12px';
+    setTimeout(() => { grid.style.outline = 'none'; }, 2000);
+    return false;
+  }
+  return true;
+}
+
 function openModal(id) {
     document.getElementById(id).classList.add('open');
 }
