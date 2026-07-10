@@ -1,92 +1,88 @@
 {% extends "admin/sidebar.html" %}
 {% block title %}3PL Integration — ForgeStore Logistics{% endblock %}
 {% block content %}
+<link rel="stylesheet" href="/static/css/logistics.css">
 <style>
-    :root{--log-primary:#d97706;--log-primary-hover:#f59e0b;--log-text:#1c1917;--log-text-secondary:#78716c;--log-text-muted:#a8a29e;--log-bg:#fafaf9;--log-surface:#ffffff;--log-border:#e7e5e4;--log-radius:12px;--log-radius-sm:8px;--log-shadow:0 1px 3px rgba(0,0,0,.06);--log-transition:0.2s cubic-bezier(.4,0,.2,1)}
-    .log-page{display:flex;flex-direction:column;gap:20px;padding:0}
-    .log-page-header h1{font-size:1.5rem;font-weight:800;color:var(--log-text);margin:0}
-    .log-page-header p{font-size:0.875rem;color:var(--log-text-secondary);margin:0}
-    .log-grid{display:grid;grid-template-columns:1fr;gap:20px}
-    @media(min-width:768px){.log-grid{grid-template-columns:1fr 1fr;}}
-    .log-card{background:var(--log-surface);border:1px solid var(--log-border);border-radius:16px;overflow:hidden;box-shadow:var(--log-shadow)}
-    .log-card-header{padding:16px 20px;border-bottom:1px solid var(--log-border);font-weight:700;font-size:0.9375rem;color:var(--log-text)}
-    .log-card-body{padding:20px}
-    .log-form-group{margin-bottom:16px}
-    .log-form-group label{display:block;font-size:0.8125rem;font-weight:700;color:var(--log-text-secondary);margin-bottom:6px}
-    .log-form-input{width:100%;min-height:44px;padding:10px 14px;border:1px solid var(--log-border);border-radius:var(--log-radius-sm);font-size:0.875rem;color:var(--log-text);background:var(--log-surface);box-sizing:border-box}
-    .log-form-select{width:100%;min-height:44px;padding:10px 14px;border:1px solid var(--log-border);border-radius:var(--log-radius-sm);font-size:0.875rem;color:var(--log-text);background:var(--log-surface);box-sizing:border-box}
-    .log-btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 20px;border:none;border-radius:var(--log-radius-sm);background:var(--log-primary);color:#1c1917;font-size:0.875rem;font-weight:700;cursor:pointer;transition:background var(--log-transition)}
-    .log-btn:hover{background:var(--log-primary-hover)}
-    .log-btn-outline{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 20px;border:1px solid var(--log-border);border-radius:var(--log-radius-sm);background:var(--log-surface);color:var(--log-text-secondary);font-size:0.875rem;font-weight:700;cursor:pointer}
-    .log-btn-outline:hover{background:var(--log-bg)}
-    .log-btn-green{background:#d1fae5;color:#047857}
-    .log-btn-green:hover{background:#a7f3d0}
-    .log-status{padding:12px 16px;border-radius:var(--log-radius-sm);font-size:0.875rem;font-weight:600;margin-top:12px;display:none}
-    .log-status.show{display:block}
-    .log-status.ok{background:#d1fae5;color:#047857}
-    .log-status.error{background:#fee2e2;color:#991b1b}
-    .log-provider-card{border:1px solid var(--log-border);border-radius:var(--log-radius);padding:16px;margin-bottom:12px;cursor:pointer;transition:all var(--log-transition)}
-    .log-provider-card:hover{border-color:var(--log-primary)}
-    .log-provider-card.active{border-color:var(--log-primary);background:#fffbeb}
-    .log-provider-name{font-weight:700;font-size:0.9375rem;color:var(--log-text)}
-    .log-provider-desc{font-size:0.8125rem;color:var(--log-text-secondary);margin-top:4px}
+    .tpl-status-msg {
+        padding: .75rem 1rem; border-radius: var(--lg-radius-sm);
+        font-size: .875rem; font-weight: 600; margin-top: .75rem; display: none;
+    }
+    .tpl-status-msg.show { display: block; }
+    .tpl-status-msg.ok { background: var(--lg-green-light); color: var(--lg-green-dark); }
+    .tpl-status-msg.error { background: var(--lg-red-light); color: var(--lg-red-dark); }
+    .tpl-provider-card {
+        border: 1px solid var(--lg-border); border-radius: var(--lg-radius-sm);
+        padding: 1rem; margin-bottom: .75rem; cursor: pointer;
+        transition: all var(--lg-transition);
+    }
+    .tpl-provider-card:hover { border-color: var(--lg-primary); background: var(--lg-primary-light); }
+    .tpl-provider-card.active { border-color: var(--lg-primary); background: var(--lg-primary-light); }
+    .tpl-provider-name { font-weight: 700; font-size: .9375rem; color: var(--lg-text); }
+    .tpl-provider-desc { font-size: .8125rem; color: var(--lg-text-secondary); margin-top: .25rem; }
+    .tpl-checkbox-label {
+        display: flex; align-items: center; gap: .5rem; cursor: pointer;
+        font-size: .875rem; color: var(--lg-text);
+    }
+    .tpl-checkbox-label input { width: 18px; height: 18px; accent-color: var(--lg-primary); }
 </style>
 
-<div class="log-page">
-    <div class="log-page-header">
-        <h1>3PL Integration</h1>
-        <p>Connect third-party logistics providers (GIG, Kwik, ShapShap)</p>
+<div class="lg-page">
+    <div class="lg-header">
+        <div>
+            <h1>3PL Integration</h1>
+            <p class="lg-subtitle">Connect third-party logistics providers (GIG, Kwik, ShapShap)</p>
+        </div>
     </div>
 
-    <div class="log-grid">
-        <div class="log-card">
-            <div class="log-card-header">Provider Configuration</div>
-            <div class="log-card-body">
-                <div class="log-form-group">
-                    <label>Active Provider</label>
-                    <select id="tpl-provider" class="log-form-select">
+    <div class="lg-grid-equal">
+        <div class="lg-card lg-animate">
+            <div class="lg-card-header"><h2>Provider Configuration</h2></div>
+            <div class="lg-card-body" style="display:flex;flex-direction:column;gap:1rem;">
+                <div class="lg-form-group">
+                    <label class="lg-form-label">Active Provider</label>
+                    <select id="tpl-provider" class="lg-form-select">
                         <option value="mock" {% if settings.get('3pl_provider','mock')=='mock' %}selected{% endif %}>Mock (Development)</option>
                         {% for p in providers %}
                         <option value="{{ p.id }}" {% if settings.get('3pl_provider')==p.id %}selected{% endif %}>{{ p.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="log-form-group">
-                    <label>API Key</label>
-                    <input type="password" id="tpl-apikey" class="log-form-input" value="{{ settings.get('3pl_api_key', '') }}" placeholder="Enter API key...">
+                <div class="lg-form-group">
+                    <label class="lg-form-label">API Key</label>
+                    <input type="password" id="tpl-apikey" class="lg-form-input" value="{{ settings.get('3pl_api_key', '') }}" placeholder="Enter API key...">
                 </div>
-                <div class="log-form-group">
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                        <input type="checkbox" id="tpl-sandbox" {% if settings.get('3pl_sandbox', 'true')=='true' %}checked{% endif %} style="width:18px;height:18px;">
+                <div class="lg-form-group">
+                    <label class="tpl-checkbox-label">
+                        <input type="checkbox" id="tpl-sandbox" {% if settings.get('3pl_sandbox', 'true')=='true' %}checked{% endif %}>
                         Sandbox Mode (test API, no real shipments)
                     </label>
                 </div>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <button onclick="testConnection()" class="log-btn-outline" id="tpl-test-btn">Test Connection</button>
-                    <button onclick="saveConfig()" class="log-btn" id="tpl-save-btn">Save Configuration</button>
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                    <button onclick="testConnection()" class="lg-btn lg-btn-secondary" id="tpl-test-btn">Test Connection</button>
+                    <button onclick="saveConfig()" class="lg-btn lg-btn-primary" id="tpl-save-btn">Save Configuration</button>
                 </div>
-                <div class="log-status" id="tpl-status"></div>
+                <div class="tpl-status-msg" id="tpl-status"></div>
             </div>
         </div>
 
-        <div class="log-card">
-            <div class="log-card-header">Available Providers</div>
-            <div class="log-card-body">
-                <div class="log-provider-card {% if settings.get('3pl_provider','mock')=='gig' %}active{% endif %}" onclick="selectProvider('gig')">
-                    <div class="log-provider-name">GIG Logistics</div>
-                    <div class="log-provider-desc">Nigeria's leading logistics company. Express & standard delivery nationwide.</div>
+        <div class="lg-card lg-animate lg-animate-delay-1">
+            <div class="lg-card-header"><h2>Available Providers</h2></div>
+            <div class="lg-card-body">
+                <div class="tpl-provider-card {% if settings.get('3pl_provider','mock')=='gig' %}active{% endif %}" onclick="selectProvider('gig')">
+                    <div class="tpl-provider-name">GIG Logistics</div>
+                    <div class="tpl-provider-desc">Nigeria's leading logistics company. Express & standard delivery nationwide.</div>
                 </div>
-                <div class="log-provider-card {% if settings.get('3pl_provider')=='kwik' %}active{% endif %}" onclick="selectProvider('kwik')">
-                    <div class="log-provider-name">Kwik Delivery</div>
-                    <div class="log-provider-desc">On-demand and same-day delivery. Real-time tracking & instant quotes.</div>
+                <div class="tpl-provider-card {% if settings.get('3pl_provider')=='kwik' %}active{% endif %}" onclick="selectProvider('kwik')">
+                    <div class="tpl-provider-name">Kwik Delivery</div>
+                    <div class="tpl-provider-desc">On-demand and same-day delivery. Real-time tracking & instant quotes.</div>
                 </div>
-                <div class="log-provider-card {% if settings.get('3pl_provider')=='shapshap' %}active{% endif %}" onclick="selectProvider('shapshap')">
-                    <div class="log-provider-name">ShapShap</div>
-                    <div class="log-provider-desc">Multi-modal logistics platform. Bike, van, and truck delivery options.</div>
+                <div class="tpl-provider-card {% if settings.get('3pl_provider')=='shapshap' %}active{% endif %}" onclick="selectProvider('shapshap')">
+                    <div class="tpl-provider-name">ShapShap</div>
+                    <div class="tpl-provider-desc">Multi-modal logistics platform. Bike, van, and truck delivery options.</div>
                 </div>
-                <div class="log-provider-card {% if settings.get('3pl_provider','mock')=='mock' %}active{% endif %}" onclick="selectProvider('mock')">
-                    <div class="log-provider-name">Mock Provider</div>
-                    <div class="log-provider-desc">Development/testing mode. Returns fake data — no real API calls.</div>
+                <div class="tpl-provider-card {% if settings.get('3pl_provider','mock')=='mock' %}active{% endif %}" onclick="selectProvider('mock')">
+                    <div class="tpl-provider-name">Mock Provider</div>
+                    <div class="tpl-provider-desc">Development/testing mode. Returns fake data — no real API calls.</div>
                 </div>
             </div>
         </div>
@@ -99,14 +95,14 @@ var currentProvider = '{{ settings.get("3pl_provider", "mock") }}';
 function selectProvider(name) {
     currentProvider = name;
     document.getElementById('tpl-provider').value = name;
-    document.querySelectorAll('.log-provider-card').forEach(function(c){ c.classList.remove('active'); });
+    document.querySelectorAll('.tpl-provider-card').forEach(function(c){ c.classList.remove('active'); });
     event.currentTarget.classList.add('active');
 }
 
 function showStatus(msg, ok) {
     var el = document.getElementById('tpl-status');
     el.textContent = msg;
-    el.className = 'log-status show ' + (ok ? 'ok' : 'error');
+    el.className = 'tpl-status-msg show ' + (ok ? 'ok' : 'error');
     setTimeout(function(){ el.classList.remove('show'); }, 5000);
 }
 

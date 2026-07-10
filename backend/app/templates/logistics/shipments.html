@@ -1,209 +1,26 @@
 {% extends "admin/sidebar.html" %}
 {% block title %}Shipments — ForgeStore{% endblock %}
 {% block content %}
-<style>
-    :root {
-        --log-primary: #d97706;
-        --log-primary-hover: #f59e0b;
-        --log-primary-light: #fef3c7;
-        --log-primary-ring: rgba(217, 119, 6, 0.25);
-        --log-text: #1c1917;
-        --log-text-secondary: #78716c;
-        --log-text-muted: #a8a29e;
-        --log-bg: #fafaf9;
-        --log-surface: #ffffff;
-        --log-border: #e7e5e4;
-        --log-border-hover: #d6d3d1;
-        --log-radius: 12px;
-        --log-radius-sm: 8px;
-        --log-shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
-        --log-shadow-lg: 0 10px 25px -5px rgba(0,0,0,.08), 0 4px 10px -3px rgba(0,0,0,.04);
-        --log-transition: 0.2s cubic-bezier(.4,0,.2,1);
-        --log-blue-bg: #dbeafe;
-        --log-blue-text: #1d4ed8;
-        --log-green-bg: #d1fae5;
-        --log-green-text: #047857;
-    }
-    .log-page {
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
-        padding: 0;
-    }
-    .log-page-header {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-    .log-page-header h1 {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: var(--log-text);
-        margin: 0;
-        letter-spacing: -0.025em;
-    }
-    .log-page-header p {
-        font-size: 0.875rem;
-        color: var(--log-text-secondary);
-        margin: 0;
-    }
-    .log-card {
-        background: var(--log-surface);
-        border: 1px solid var(--log-border);
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: var(--log-shadow);
-    }
-    .log-table-container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-    .log-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.875rem;
-        min-width: 600px;
-    }
-    .log-table th {
-        padding: 12px 20px;
-        text-align: left;
-        font-size: 0.6875rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--log-text-secondary);
-        border-bottom: 1px solid var(--log-border);
-        background: var(--log-bg);
-        white-space: nowrap;
-    }
-    .log-table td {
-        padding: 14px 20px;
-        border-bottom: 1px solid var(--log-border);
-        color: var(--log-text);
-        vertical-align: middle;
-    }
-    .log-table tbody tr:last-child td { border-bottom: none; }
-    .log-table tbody tr {
-        transition: background var(--log-transition);
-    }
-    .log-table tbody tr:hover { background: var(--log-bg); }
-    .log-table .cell-mono {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--log-text);
-    }
-    .log-table .cell-secondary {
-        color: var(--log-text-secondary);
-    }
-    .log-table .cell-xs {
-        font-size: 0.75rem;
-        color: var(--log-text-secondary);
-    }
-    .log-table .cell-hidden-sm { display: table-cell; }
-    @media (max-width: 640px) {
-        .log-table .cell-hidden-sm { display: none; }
-    }
-    .log-badge {
-        display: inline-flex;
-        align-items: center;
-        font-size: 0.625rem;
-        font-weight: 700;
-        padding: 4px 10px;
-        border-radius: 9999px;
-        white-space: nowrap;
-        min-height: 24px;
-        letter-spacing: 0.02em;
-    }
-    .log-badge.pending { background: var(--log-primary-light); color: #b45309; }
-    .log-badge.in-transit { background: var(--log-blue-bg); color: var(--log-blue-text); }
-    .log-badge.delivered { background: var(--log-green-bg); color: var(--log-green-text); }
-    .log-badge.assigned {
-        font-size: 0.625rem;
-        color: var(--log-text-muted);
-        background: var(--log-bg);
-    }
-    .log-form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-    @media (min-width: 640px) {
-        .log-form-group {
-            flex-direction: row;
-            align-items: center;
-        }
-    }
-    .log-form-input {
-        min-height: 44px;
-        padding: 8px 12px;
-        border: 1px solid var(--log-border);
-        border-radius: var(--log-radius-sm);
-        background: var(--log-surface);
-        font-size: 0.75rem;
-        color: var(--log-text);
-        width: 100%;
-        cursor: pointer;
-        transition: border-color var(--log-transition), box-shadow var(--log-transition);
-    }
-    .log-form-input:focus {
-        outline: none;
-        border-color: var(--log-primary);
-        box-shadow: 0 0 0 3px var(--log-primary-ring);
-    }
-    @media (min-width: 640px) {
-        .log-form-input { width: auto; }
-    }
-    .log-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 44px;
-        padding: 8px 16px;
-        border: none;
-        border-radius: var(--log-radius-sm);
-        background: var(--log-primary);
-        color: #1c1917;
-        font-size: 0.6875rem;
-        font-weight: 700;
-        cursor: pointer;
-        text-decoration: none;
-        transition: background var(--log-transition), transform var(--log-transition);
-        letter-spacing: 0.02em;
-    }
-    .log-btn:hover {
-        background: var(--log-primary-hover);
-        transform: translateY(-1px);
-    }
-    .log-btn:active { transform: translateY(0); }
-    .log-empty {
-        padding: 48px 20px;
-        text-align: center;
-        font-size: 0.875rem;
-        color: var(--log-text-muted);
-    }
-    @media (max-width: 640px) {
-        .log-table { min-width: 500px; }
-        .log-table th,
-        .log-table td { padding: 10px 12px; }
-    }
-</style>
+<link rel="stylesheet" href="/static/css/logistics.css">
 
-<div class="log-page">
-    <div class="log-page-header">
-        <h1>Shipments</h1>
+<div class="lg-page">
+    <div class="lg-header">
+        <div>
+            <h1>Shipments</h1>
+        </div>
     </div>
-    <div class="log-card">
+
+    <div class="lg-card">
         {% if shipments %}
-        <div class="log-table-container">
-            <table class="log-table">
+        <div class="lg-table-wrap">
+            <table class="lg-table">
                 <thead>
                     <tr>
                         <th>Tracking #</th>
-                        <th class="cell-hidden-sm">Origin</th>
+                        <th class="lg-hide-mobile">Origin</th>
                         <th>Destination</th>
                         <th>Status</th>
-                        <th class="cell-hidden-sm">Agent</th>
+                        <th class="lg-hide-mobile">Agent</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -211,27 +28,27 @@
                 {% for s in shipments %}
                 <tr>
                     <td class="cell-mono">{{ s.tracking_number }}</td>
-                    <td class="cell-secondary cell-hidden-sm">{{ s.origin or '---' }}</td>
-                    <td class="cell-secondary">{{ s.destination or '---' }}</td>
+                    <td class="lg-hide-mobile">{{ s.origin or '---' }}</td>
+                    <td>{{ s.destination or '---' }}</td>
                     <td>
-                        <span class="log-badge
-                            {% if s.status == 'DELIVERED' %}delivered
-                            {% elif s.status == 'IN_TRANSIT' %}in-transit
-                            {% elif s.status == 'PENDING' %}pending
-                            {% endif %}">{{ s.status }}</span>
+                        <span class="lg-badge
+                            {% if s.status == 'DELIVERED' %}green
+                            {% elif s.status == 'IN_TRANSIT' %}blue
+                            {% elif s.status == 'PENDING' %}amber
+                            {% else %}neutral{% endif %}">{{ s.status }}</span>
                     </td>
-                    <td class="cell-xs cell-hidden-sm">{{ agents.get(s.delivery_agent_id, 'Unassigned') }}</td>
+                    <td class="lg-hide-mobile" style="font-size:.75rem;">{{ agents.get(s.delivery_agent_id, 'Unassigned') }}</td>
                     <td>
                         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-                            <a href="/logistics/shipments/{{ s.id }}" class="log-btn" style="text-decoration:none;padding:6px 12px;font-size:0.6875rem;">View</a>
+                            <a href="/logistics/shipments/{{ s.id }}" class="lg-btn lg-btn-sm lg-btn-primary" style="text-decoration:none;">View</a>
                             {% if not s.delivery_agent_id %}
-                            <form method="post" action="/logistics/shipments/{{ s.id }}/assign" class="log-form-group">
-                                <select name="agent_id" class="log-form-input">
+                            <form method="post" action="/logistics/shipments/{{ s.id }}/assign" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                                <select name="agent_id" class="lg-form-select" style="min-height:40px;">
                                     {% for aid, aname in agents.items() %}
                                     <option value="{{ aid }}">{{ aname }}</option>
                                     {% endfor %}
                                 </select>
-                                <button type="submit" class="log-btn">Assign</button>
+                                <button type="submit" class="lg-btn lg-btn-sm lg-btn-secondary">Assign</button>
                             </form>
                             {% endif %}
                         </div>
@@ -242,7 +59,12 @@
             </table>
         </div>
         {% else %}
-        <div class="log-empty">No shipments yet.</div>
+        <div class="lg-empty">
+            <div class="lg-empty-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+            </div>
+            <p>No shipments yet.</p>
+        </div>
         {% endif %}
     </div>
 </div>

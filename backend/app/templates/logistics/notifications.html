@@ -1,38 +1,47 @@
 {% extends "admin/sidebar.html" %}
 {% block title %}Notifications — Logistics Portal{% endblock %}
 {% block content %}
+<link rel="stylesheet" href="/static/css/logistics.css">
 <style>
-  :root{--amber-50:#fffbeb;--amber-100:#fef3c7;--amber-400:#fbbf24;--amber-500:#f59e0b;--amber-600:#d97706;--stone-50:#fafaf9;--stone-100:#f5f5f4;--stone-200:#e7e5e4;--stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#57534e;--stone-700:#44403c;--stone-900:#1c1917;--blue-500:#3b82f6;--radius-md:10px;--radius-lg:14px}
-  .ln-page{max-width:800px;margin:0 auto;padding:0}
-  .ln-header{margin-bottom:1.5rem}
-  .ln-title{font-size:1.5rem;font-weight:800;color:var(--stone-900)}
-  .ln-subtitle{font-size:.8125rem;color:var(--stone-500);margin-top:.25rem}
-  .ln-card{background:#fff;border:1px solid var(--stone-200);border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-  .ln-item{display:flex;gap:.75rem;padding:1rem 1.25rem;border-bottom:1px solid var(--stone-100);transition:background .15s;cursor:default}
-  .ln-item:last-child{border-bottom:none}
-  .ln-item:hover{background:var(--stone-50)}
-  .ln-item.unread{background:#fffbeb}
-  .ln-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.875rem}
-  .ln-icon.shipment{background:#dbeafe;color:#2563eb}
-  .ln-icon.delivery{background:#d1fae5;color:#059669}
-  .ln-icon.alert{background:#fee2e2;color:#ef4444}
-  .ln-icon.general{background:#f3e8ff;color:#9333ea}
-  .ln-body{flex:1;min-width:0}
-  .ln-text{font-size:.8125rem;color:var(--stone-700);line-height:1.5}
-  .ln-text strong{color:var(--stone-900)}
-  .ln-time{font-size:.6875rem;color:var(--stone-400);margin-top:.25rem}
-  .ln-empty{text-align:center;padding:3rem 1rem;color:var(--stone-400)}
-  .ln-empty svg{width:48px;height:48px;margin:0 auto 1rem;opacity:.4}
+    .ln-list-card { max-width: 50rem; }
+    .ln-item {
+        display: flex; gap: .75rem; padding: .875rem 1.25rem;
+        border-bottom: 1px solid var(--lg-border-light);
+        transition: background var(--lg-transition); cursor: default;
+    }
+    .ln-item:last-child { border-bottom: none; }
+    .ln-item:hover { background: var(--lg-bg); }
+    .ln-item.unread { background: var(--lg-amber-light); }
+    .ln-icon {
+        width: 2.25rem; height: 2.25rem; border-radius: var(--lg-radius-sm);
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0; font-size: .875rem;
+    }
+    .ln-icon.shipment { background: var(--lg-blue-light); color: var(--lg-blue); }
+    .ln-icon.delivery { background: var(--lg-green-light); color: var(--lg-green); }
+    .ln-icon.alert { background: var(--lg-red-light); color: var(--lg-red); }
+    .ln-icon.general { background: var(--lg-purple-light); color: var(--lg-purple); }
+    .ln-body { flex: 1; min-width: 0; }
+    .ln-text { font-size: .8125rem; color: var(--lg-text); line-height: 1.5; }
+    .ln-text strong { color: var(--lg-text); font-weight: 700; }
+    .ln-time { font-size: .6875rem; color: var(--lg-text-muted); margin-top: .25rem; }
 </style>
 
-<div class="ln-page">
-  <div class="ln-header">
-    <div class="ln-title">Notifications</div>
-    <div class="ln-subtitle">Stay updated on shipments and deliveries</div>
-  </div>
-  <div class="ln-card" id="ln-list">
-    <div class="ln-empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg><p>Loading notifications...</p></div>
-  </div>
+<div class="lg-page" style="max-width:50rem;margin:0 auto;">
+    <div class="lg-header">
+        <div>
+            <h1>Notifications</h1>
+            <p class="lg-subtitle">Stay updated on shipments and deliveries</p>
+        </div>
+    </div>
+    <div class="lg-card ln-list-card lg-animate" id="ln-list">
+        <div class="lg-empty">
+            <div class="lg-empty-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            </div>
+            <p>Loading notifications...</p>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -43,7 +52,7 @@ async function lnLoad() {
     const notifications = data.notifications || data || [];
     const el = document.getElementById('ln-list');
     if (!notifications.length) {
-      el.innerHTML = '<div class="ln-empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg><p>No notifications yet</p></div>';
+      el.innerHTML = '<div class="lg-empty"><div class="lg-empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div><p>No notifications yet</p></div>';
       return;
     }
     el.innerHTML = notifications.map(n => {
@@ -60,7 +69,7 @@ async function lnLoad() {
       '</div>';
     }).join('');
   } catch(e) {
-    document.getElementById('ln-list').innerHTML = '<div class="ln-empty"><p>Failed to load notifications</p></div>';
+    document.getElementById('ln-list').innerHTML = '<div class="lg-empty"><p>Failed to load notifications</p></div>';
   }
 }
 lnLoad();

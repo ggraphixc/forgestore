@@ -1,290 +1,118 @@
 {% extends "admin/sidebar.html" %}
 {% block title %}Logistics Dashboard — ForgeStore{% endblock %}
 {% block content %}
-<style>
-    :root {
-        --log-primary: #d97706;
-        --log-primary-hover: #f59e0b;
-        --log-primary-light: #fef3c7;
-        --log-primary-ring: rgba(217, 119, 6, 0.25);
-        --log-text: #1c1917;
-        --log-text-secondary: #78716c;
-        --log-text-muted: #a8a29e;
-        --log-bg: #fafaf9;
-        --log-surface: #ffffff;
-        --log-border: #e7e5e4;
-        --log-border-hover: #d6d3d1;
-        --log-radius: 12px;
-        --log-radius-sm: 8px;
-        --log-shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
-        --log-shadow-lg: 0 10px 25px -5px rgba(0,0,0,.08), 0 4px 10px -3px rgba(0,0,0,.04);
-        --log-transition: 0.2s cubic-bezier(.4,0,.2,1);
-        --log-blue-bg: #dbeafe;
-        --log-blue-text: #1d4ed8;
-        --log-green-bg: #d1fae5;
-        --log-green-text: #047857;
-    }
-    .log-page {
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
-        padding: 0;
-    }
-    .log-page-header {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-    .log-page-header h1 {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: var(--log-text);
-        margin: 0;
-        letter-spacing: -0.025em;
-    }
-    .log-page-header p {
-        font-size: 0.875rem;
-        color: var(--log-text-secondary);
-        margin: 0;
-    }
-    .log-stats-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-    }
-    @media (min-width: 640px) {
-        .log-stats-grid { grid-template-columns: repeat(3, 1fr); }
-    }
-    @media (min-width: 1024px) {
-        .log-stats-grid { grid-template-columns: repeat(6, 1fr); }
-    }
-    .log-stat-card {
-        background: var(--log-surface);
-        border: 1px solid var(--log-border);
-        border-radius: var(--log-radius);
-        padding: 16px;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-        min-height: 44px;
-        box-shadow: var(--log-shadow);
-        transition: box-shadow var(--log-transition), border-color var(--log-transition);
-    }
-    .log-stat-card:hover {
-        border-color: var(--log-border-hover);
-        box-shadow: var(--log-shadow-lg);
-    }
-    .log-stat-card .stat-value {
-        font-size: 1.5rem;
-        font-weight: 900;
-        line-height: 1;
-        color: var(--log-text);
-    }
-    .log-stat-card .stat-value.amber { color: var(--log-primary); }
-    .log-stat-card .stat-value.blue { color: var(--log-blue-text); }
-    .log-stat-card .stat-value.emerald { color: var(--log-green-text); }
-    .log-stat-card .stat-label {
-        font-size: 0.625rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--log-text-secondary);
-    }
-    .log-card {
-        background: var(--log-surface);
-        border: 1px solid var(--log-border);
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: var(--log-shadow);
-    }
-    .log-card-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 16px 20px;
-        border-bottom: 1px solid var(--log-border);
-    }
-    .log-card-header h2 {
-        font-size: 0.875rem;
-        font-weight: 700;
-        color: var(--log-text);
-        margin: 0;
-    }
-    .log-card-header a {
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: var(--log-primary);
-        text-decoration: none;
-        min-height: 44px;
-        display: inline-flex;
-        align-items: center;
-        transition: color var(--log-transition);
-    }
-    .log-card-header a:hover {
-        color: var(--log-primary-hover);
-        text-decoration: underline;
-    }
-    .log-shipment-list {
-        display: flex;
-        flex-direction: column;
-    }
-    .log-shipment-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 14px 20px;
-        border-top: 1px solid var(--log-border);
-        transition: background var(--log-transition);
-    }
-    .log-shipment-item:first-child { border-top: none; }
-    .log-shipment-item:hover { background: var(--log-bg); }
-    .log-shipment-info {
-        overflow: hidden;
-        min-width: 0;
-    }
-    .log-shipment-info p:first-child {
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: var(--log-text);
-        margin: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .log-shipment-info p:last-child {
-        font-size: 0.75rem;
-        color: var(--log-text-secondary);
-        margin: 0;
-        margin-top: 2px;
-    }
-    .log-badge {
-        display: inline-flex;
-        align-items: center;
-        font-size: 0.625rem;
-        font-weight: 700;
-        padding: 4px 10px;
-        border-radius: 9999px;
-        white-space: nowrap;
-        min-height: 24px;
-        letter-spacing: 0.02em;
-    }
-    .log-badge.pending { background: var(--log-primary-light); color: #b45309; }
-    .log-badge.in-transit { background: var(--log-blue-bg); color: var(--log-blue-text); }
-    .log-badge.delivered { background: var(--log-green-bg); color: var(--log-green-text); }
-    .log-empty {
-        padding: 40px 20px;
-        text-align: center;
-        font-size: 0.875rem;
-        color: var(--log-text-muted);
-    }
-    @media (max-width: 640px) {
-        .log-stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-        }
-        .log-stat-card { padding: 12px 8px; }
-        .log-stat-card .stat-value { font-size: 1.25rem; }
-        .log-shipment-item { padding: 12px 16px; }
-    }
-</style>
+<link rel="stylesheet" href="/static/css/logistics.css">
 
-<div class="log-page">
-    <div class="log-page-header">
-        <h1>Logistics Dashboard</h1>
-        <p>Shipment management and delivery operations</p>
+<div class="lg-page">
+    <div class="lg-header">
+        <div>
+            <h1>Logistics Dashboard</h1>
+            <p class="lg-subtitle">Shipment management and delivery operations</p>
+        </div>
     </div>
 
-    <div class="log-stats-grid">
-        <div class="log-stat-card">
-            <p class="stat-value">{{ total_shipments }}</p>
-            <p class="stat-label">Total</p>
+    <div class="lg-stats">
+        <div class="lg-stat lg-animate lg-animate-delay-1">
+            <p class="lg-stat-value">{{ total_shipments }}</p>
+            <p class="lg-stat-label">Total</p>
         </div>
-        <div class="log-stat-card">
-            <p class="stat-value amber">{{ pending_shipments }}</p>
-            <p class="stat-label">Pending</p>
+        <div class="lg-stat lg-animate lg-animate-delay-2">
+            <p class="lg-stat-value" style="color:var(--lg-amber-dark);">{{ pending_shipments }}</p>
+            <p class="lg-stat-label">Pending</p>
         </div>
-        <div class="log-stat-card">
-            <p class="stat-value blue">{{ in_transit }}</p>
-            <p class="stat-label">In Transit</p>
+        <div class="lg-stat lg-animate lg-animate-delay-3">
+            <p class="lg-stat-value" style="color:var(--lg-blue-dark);">{{ in_transit }}</p>
+            <p class="lg-stat-label">In Transit</p>
         </div>
-        <div class="log-stat-card">
-            <p class="stat-value emerald">{{ delivered }}</p>
-            <p class="stat-label">Delivered</p>
+        <div class="lg-stat lg-animate lg-animate-delay-4">
+            <p class="lg-stat-value" style="color:var(--lg-green-dark);">{{ delivered }}</p>
+            <p class="lg-stat-label">Delivered</p>
         </div>
-        <div class="log-stat-card">
-            <p class="stat-value">{{ total_agents }}</p>
-            <p class="stat-label">Drivers</p>
+        <div class="lg-stat lg-animate lg-animate-delay-5">
+            <p class="lg-stat-value">{{ total_agents }}</p>
+            <p class="lg-stat-label">Drivers</p>
         </div>
-        <div class="log-stat-card">
-            <p class="stat-value emerald">{{ available_agents }}</p>
-            <p class="stat-label">Available</p>
+        <div class="lg-stat lg-animate lg-animate-delay-6">
+            <p class="lg-stat-value" style="color:var(--lg-green-dark);">{{ available_agents }}</p>
+            <p class="lg-stat-label">Available</p>
         </div>
     </div>
 
     {% if unassigned_count > 0 %}
-    <div class="log-card" style="border-color:#2563eb;">
-        <div class="log-card-header">
-            <h2 style="color:#1d4ed8;">📦 Unassigned Shipments</h2>
-            <a href="/logistics/tools/batch-assign" class="log-btn log-btn-sm" style="font-size:0.75rem;">Batch Assign →</a>
+    <div class="lg-card lg-animate" style="border-left:3px solid var(--lg-blue);">
+        <div class="lg-card-header">
+            <h2>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--lg-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+                Unassigned Shipments
+            </h2>
+            <a href="/logistics/tools/batch-assign" class="lg-btn lg-btn-sm lg-btn-primary" style="text-decoration:none;">Batch Assign →</a>
         </div>
-        <div style="padding:16px 20px;display:flex;flex-wrap:wrap;gap:24px;">
+        <div class="lg-card-body" style="display:flex;flex-wrap:wrap;gap:2rem;">
             <div>
-                <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:#78716c;">Awaiting Assignment</div>
-                <div style="font-size:1.25rem;font-weight:800;color:#1d4ed8;">{{ unassigned_count }}</div>
+                <div class="lg-stat-label">Awaiting Assignment</div>
+                <div style="font-size:1.25rem;font-weight:800;color:var(--lg-blue-dark);">{{ unassigned_count }}</div>
             </div>
             <div>
-                <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:#78716c;">Platform Fulfilled</div>
-                <div style="font-size:1.25rem;font-weight:800;color:#1d4ed8;">{{ platform_fulfilled }}</div>
+                <div class="lg-stat-label">Platform Fulfilled</div>
+                <div style="font-size:1.25rem;font-weight:800;color:var(--lg-blue-dark);">{{ platform_fulfilled }}</div>
             </div>
         </div>
     </div>
     {% endif %}
 
     {% if cod_pending_count > 0 %}
-    <div class="log-card" style="border-color:#f59e0b;">
-        <div class="log-card-header">
-            <h2 style="color:#b45309;">💵 Cash on Delivery (COD)</h2>
-            <a href="/logistics/shipments">View All</a>
+    <div class="lg-card lg-animate" style="border-left:3px solid var(--lg-amber);">
+        <div class="lg-card-header">
+            <h2>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--lg-amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                Cash on Delivery (COD)
+            </h2>
+            <a href="/logistics/shipments" class="lg-btn lg-btn-ghost lg-btn-sm">View All</a>
         </div>
-        <div style="padding:16px 20px;display:flex;flex-wrap:wrap;gap:24px;">
+        <div class="lg-card-body" style="display:flex;flex-wrap:wrap;gap:2rem;">
             <div>
-                <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:#78716c;">Pending COD Shipments</div>
-                <div style="font-size:1.25rem;font-weight:800;color:#b45309;">{{ cod_pending_count }}</div>
+                <div class="lg-stat-label">Pending COD Shipments</div>
+                <div style="font-size:1.25rem;font-weight:800;color:var(--lg-amber-dark);">{{ cod_pending_count }}</div>
             </div>
             <div>
-                <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:#78716c;">Total COD Value</div>
-                <div style="font-size:1.25rem;font-weight:800;color:#b45309;">₦{{ "%.2f"|format(cod_pending_total) }}</div>
+                <div class="lg-stat-label">Total COD Value</div>
+                <div style="font-size:1.25rem;font-weight:800;color:var(--lg-amber-dark);">₦{{ "%.2f"|format(cod_pending_total) }}</div>
             </div>
         </div>
     </div>
     {% endif %}
 
-    <div class="log-card">
-        <div class="log-card-header">
-            <h2>Recent Shipments</h2>
-            <a href="/logistics/shipments">View All</a>
+    <div class="lg-card lg-animate">
+        <div class="lg-card-header">
+            <h2>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--lg-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                Recent Shipments
+            </h2>
+            <a href="/logistics/shipments" class="lg-btn lg-btn-ghost lg-btn-sm">View All</a>
         </div>
         {% if recent_shipments %}
-        <div class="log-shipment-list">
+        <div style="display:flex;flex-direction:column;">
             {% for s in recent_shipments %}
-            <a href="/logistics/shipments/{{ s.id }}" class="log-shipment-item" style="text-decoration:none;color:inherit;">
-                <div class="log-shipment-info">
-                    <p>{{ s.tracking_number }}</p>
-                    <p>{{ s.origin or 'N/A' }} → {{ s.destination or 'N/A' }}</p>
+            <a href="/logistics/shipments/{{ s.id }}" class="lg-animate" style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.875rem 1.25rem;border-bottom:1px solid var(--lg-border-light);text-decoration:none;color:inherit;transition:background var(--lg-transition);">
+                <div style="overflow:hidden;min-width:0;">
+                    <p style="font-size:.875rem;font-weight:600;color:var(--lg-text);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ s.tracking_number }}</p>
+                    <p style="font-size:.75rem;color:var(--lg-text-secondary);margin:0;margin-top:2px;">{{ s.origin or 'N/A' }} → {{ s.destination or 'N/A' }}</p>
                 </div>
-                <span class="log-badge
-                    {% if s.status == 'DELIVERED' %}delivered
-                    {% elif s.status == 'IN_TRANSIT' %}in-transit
-                    {% elif s.status == 'PENDING' %}pending
-                    {% endif %}">{{ s.status }}</span>
+                <span class="lg-badge
+                    {% if s.status == 'DELIVERED' %}green
+                    {% elif s.status == 'IN_TRANSIT' %}blue
+                    {% elif s.status == 'PENDING' %}amber
+                    {% else %}neutral{% endif %}">{{ s.status }}</span>
             </a>
             {% endfor %}
         </div>
         {% else %}
-        <div class="log-empty">No shipments yet.</div>
+        <div class="lg-empty">
+            <div class="lg-empty-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+            </div>
+            <p>No shipments yet.</p>
+        </div>
         {% endif %}
     </div>
 </div>

@@ -1,439 +1,96 @@
 {% extends "admin/sidebar.html" %}
 {% block title %}Shipment #{{ shipment.tracking_number }} — ForgeStore{% endblock %}
 {% block content %}
-<style>
-    :root {
-        --log-primary: #d97706;
-        --log-primary-hover: #f59e0b;
-        --log-primary-light: #fef3c7;
-        --log-primary-ring: rgba(217, 119, 6, 0.25);
-        --log-text: #1c1917;
-        --log-text-secondary: #78716c;
-        --log-text-muted: #a8a29e;
-        --log-bg: #fafaf9;
-        --log-surface: #ffffff;
-        --log-border: #e7e5e4;
-        --log-border-hover: #d6d3d1;
-        --log-radius: 12px;
-        --log-radius-sm: 8px;
-        --log-shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
-        --log-shadow-lg: 0 10px 25px -5px rgba(0,0,0,.08), 0 4px 10px -3px rgba(0,0,0,.04);
-        --log-transition: 0.2s cubic-bezier(.4,0,.2,1);
-        --log-green: #047857;
-        --log-green-bg: #d1fae5;
-        --log-green-text: #047857;
-        --log-orange: #d97706;
-        --log-orange-bg: #fef3c7;
-        --log-red: #dc2626;
-        --log-red-bg: #fee2e2;
-        --log-blue: #2563eb;
-        --log-blue-bg: #dbeafe;
-    }
-    .log-page {
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
-        padding: 0;
-    }
-    .log-page-header {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-    @media (min-width: 640px) {
-        .log-page-header {
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
-        }
-    }
-    .log-page-header h1 {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: var(--log-text);
-        margin: 0;
-        letter-spacing: -0.025em;
-    }
-    .log-page-header p {
-        font-size: 0.875rem;
-        color: var(--log-text-secondary);
-        margin: 0;
-    }
-    .log-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 44px;
-        padding: 8px 16px;
-        border: none;
-        border-radius: var(--log-radius-sm);
-        background: var(--log-primary);
-        color: #1c1917;
-        font-size: 0.875rem;
-        font-weight: 700;
-        cursor: pointer;
-        text-decoration: none;
-        transition: background var(--log-transition), transform var(--log-transition);
-        width: 100%;
-        letter-spacing: 0.02em;
-    }
-    @media (min-width: 640px) {
-        .log-btn { width: auto; }
-    }
-    .log-btn:hover {
-        background: var(--log-primary-hover);
-        transform: translateY(-1px);
-    }
-    .log-btn:active { transform: translateY(0); }
-    .log-btn-outline {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 44px;
-        padding: 8px 16px;
-        border: 1px solid var(--log-border);
-        border-radius: var(--log-radius-sm);
-        background: var(--log-surface);
-        color: var(--log-text-secondary);
-        font-size: 0.875rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: background var(--log-transition), border-color var(--log-transition);
-    }
-    .log-btn-outline:hover {
-        background: var(--log-bg);
-        border-color: var(--log-border-hover);
-    }
-    .log-card {
-        background: var(--log-surface);
-        border: 1px solid var(--log-border);
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: var(--log-shadow);
-    }
-    .log-card-header {
-        padding: 16px 20px;
-        border-bottom: 1px solid var(--log-border);
-        font-weight: 700;
-        font-size: 0.9375rem;
-        color: var(--log-text);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .log-card-body {
-        padding: 20px;
-    }
-    .log-detail-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 24px;
-    }
-    @media (min-width: 768px) {
-        .log-detail-grid {
-            grid-template-columns: 2fr 1fr;
-        }
-    }
-    .log-info-row {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        padding: 12px 0;
-        border-bottom: 1px solid var(--log-border);
-    }
-    .log-info-row:last-child { border-bottom: none; }
-    .log-info-label {
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--log-text-secondary);
-    }
-    .log-info-value {
-        font-size: 0.9375rem;
-        color: var(--log-text);
-        font-weight: 500;
-    }
-    .log-badge {
-        display: inline-flex;
-        align-items: center;
-        font-size: 0.625rem;
-        font-weight: 700;
-        padding: 4px 10px;
-        border-radius: 9999px;
-        white-space: nowrap;
-        min-height: 24px;
-        letter-spacing: 0.02em;
-    }
-    .log-badge.pending { background: var(--log-orange-bg); color: var(--log-orange); }
-    .log-badge.picked_up { background: var(--log-blue-bg); color: var(--log-blue); }
-    .log-badge.in_transit { background: var(--log-primary-light); color: #b45309; }
-    .log-badge.out_for_delivery { background: #e0e7ff; color: #4338ca; }
-    .log-badge.delivered { background: var(--log-green-bg); color: var(--log-green-text); }
-    .log-badge.failed { background: var(--log-red-bg); color: var(--log-red); }
-    .log-badge.returned { background: #f3e8ff; color: #7c3aed; }
-    .log-badge.available { background: var(--log-green-bg); color: var(--log-green-text); }
-    .log-badge.busy { background: var(--log-orange-bg); color: #b45309; }
-    .log-timeline {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-        padding: 16px 0;
-    }
-    .log-timeline-item {
-        display: flex;
-        gap: 16px;
-        position: relative;
-        padding-bottom: 24px;
-    }
-    .log-timeline-item:last-child { padding-bottom: 0; }
-    .log-timeline-dot-col {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 24px;
-        flex-shrink: 0;
-    }
-    .log-timeline-dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: var(--log-border);
-        border: 2px solid var(--log-surface);
-        box-shadow: 0 0 0 2px var(--log-border);
-        z-index: 1;
-    }
-    .log-timeline-dot.active {
-        background: var(--log-primary);
-        box-shadow: 0 0 0 2px var(--log-primary), 0 0 0 6px var(--log-primary-ring);
-    }
-    .log-timeline-dot.completed {
-        background: var(--log-green);
-        box-shadow: 0 0 0 2px var(--log-green);
-    }
-    .log-timeline-line {
-        flex: 1;
-        width: 2px;
-        background: var(--log-border);
-        margin-top: 4px;
-    }
-    .log-timeline-item:last-child .log-timeline-line { display: none; }
-    .log-timeline-content {
-        flex: 1;
-        min-width: 0;
-    }
-    .log-timeline-status {
-        font-size: 0.875rem;
-        font-weight: 700;
-        color: var(--log-text);
-        margin-bottom: 4px;
-    }
-    .log-timeline-desc {
-        font-size: 0.8125rem;
-        color: var(--log-text-secondary);
-        margin-bottom: 4px;
-    }
-    .log-timeline-meta {
-        font-size: 0.75rem;
-        color: var(--log-text-muted);
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-    }
-    .log-action-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 8px;
-    }
-    @media (min-width: 480px) {
-        .log-action-grid {
-            grid-template-columns: 1fr 1fr;
-        }
-    }
-    .log-form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-    .log-form-group label {
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--log-text-secondary);
-    }
-    .log-form-select,
-    .log-form-input {
-        width: 100%;
-        min-height: 44px;
-        padding: 10px 16px;
-        border: 1px solid var(--log-border);
-        border-radius: var(--log-radius-sm);
-        background: var(--log-bg);
-        font-size: 0.875rem;
-        color: var(--log-text);
-        box-sizing: border-box;
-        transition: border-color var(--log-transition), box-shadow var(--log-transition);
-    }
-    .log-form-select:focus,
-    .log-form-input:focus {
-        outline: none;
-        border-color: var(--log-primary);
-        box-shadow: 0 0 0 3px var(--log-primary-ring);
-    }
-    .log-items-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.875rem;
-    }
-    .log-items-table th {
-        padding: 10px 12px;
-        text-align: left;
-        font-size: 0.6875rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--log-text-secondary);
-        border-bottom: 1px solid var(--log-border);
-        background: var(--log-bg);
-        white-space: nowrap;
-    }
-    .log-items-table td {
-        padding: 12px;
-        border-bottom: 1px solid var(--log-border);
-        color: var(--log-text);
-    }
-    .log-items-table tbody tr:last-child td { border-bottom: none; }
-    .log-empty {
-        padding: 32px 16px;
-        text-align: center;
-        font-size: 0.875rem;
-        color: var(--log-text-muted);
-    }
-    .log-modal-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(28, 25, 23, 0.5);
-        backdrop-filter: blur(4px);
-        z-index: 50;
-        align-items: center;
-        justify-content: center;
-        padding: 16px;
-    }
-    .log-modal-overlay.show { display: flex; }
-    .log-modal {
-        background: var(--log-surface);
-        border: 1px solid var(--log-border);
-        border-radius: 16px;
-        padding: 24px;
-        width: 100%;
-        max-width: 28rem;
-        box-shadow: var(--log-shadow-lg);
-    }
-    .log-modal h3 {
-        font-size: 1.125rem;
-        font-weight: 700;
-        color: var(--log-text);
-        margin: 0 0 16px 0;
-    }
-    .log-form-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        padding-top: 12px;
-    }
-    @media (min-width: 480px) {
-        .log-form-actions { flex-direction: row; }
-    }
-    .log-form-actions .log-btn { flex: 1; }
-</style>
+<link rel="stylesheet" href="/static/css/logistics.css">
 
-<div class="log-page">
-    <div class="log-page-header">
+<div class="lg-page">
+    <div class="lg-header">
         <div>
-            <a href="/logistics/shipments" style="font-size:0.8125rem;color:var(--log-text-secondary);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:8px;">
+            <a href="/logistics/shipments" style="font-size:.8125rem;color:var(--lg-text-secondary);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:8px;">
                 ← Back to Shipments
             </a>
             <h1>Shipment #{{ shipment.tracking_number }}</h1>
-            <p style="margin-top:4px;">Order #{{ shipment.order.order_number if shipment.order else 'N/A' }}</p>
+            <p class="lg-subtitle" style="margin-top:4px;">Order #{{ shipment.order.order_number if shipment.order else 'N/A' }}</p>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <a href="/logistics/shipments" class="log-btn-outline" style="text-decoration:none;">All Shipments</a>
+        <div class="lg-header-actions">
+            <a href="/logistics/shipments" class="lg-btn lg-btn-secondary">All Shipments</a>
         </div>
     </div>
 
-    <div class="log-detail-grid">
-        <div style="display:flex;flex-direction:column;gap:24px;">
-            <div class="log-card">
-                <div class="log-card-header">
-                    <span style="font-size:1.1rem;">📦</span> Shipment Details
+    <div class="lg-grid-2">
+        <div style="display:flex;flex-direction:column;gap:1.5rem;">
+            <div class="lg-card">
+                <div class="lg-card-header">
+                    <h2>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--lg-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                        Shipment Details
+                    </h2>
                 </div>
-                <div class="log-card-body">
+                <div class="lg-card-body">
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
-                        <div class="log-info-row" style="padding-right:16px;">
-                            <span class="log-info-label">Tracking Number</span>
-                            <span class="log-info-value" style="font-family:monospace;">{{ shipment.tracking_number }}</span>
+                        <div class="lg-form-group" style="padding:12px 16px 12px 0;border-bottom:1px solid var(--lg-border-light);">
+                            <span class="lg-form-label">Tracking Number</span>
+                            <span style="font-size:.9375rem;color:var(--lg-text);font-weight:500;font-family:monospace;">{{ shipment.tracking_number }}</span>
                         </div>
-                        <div class="log-info-row">
-                            <span class="log-info-label">Status</span>
-                            <span class="log-info-value">
-                                <span class="log-badge {{ shipment.status|lower|replace('_','_') }}">{{ shipment.status|replace('_',' ') }}</span>
+                        <div class="lg-form-group" style="padding:12px 0;border-bottom:1px solid var(--lg-border-light);">
+                            <span class="lg-form-label">Status</span>
+                            <span style="font-size:.9375rem;color:var(--lg-text);font-weight:500;">
+                                <span class="lg-badge {{ shipment.status|lower|replace('_','_') }}">{{ shipment.status|replace('_',' ') }}</span>
                             </span>
                         </div>
-                        <div class="log-info-row" style="padding-right:16px;">
-                            <span class="log-info-label">Carrier</span>
-                            <span class="log-info-value">{{ shipment.carrier or 'Not assigned' }}</span>
+                        <div class="lg-form-group" style="padding:12px 16px 12px 0;border-bottom:1px solid var(--lg-border-light);">
+                            <span class="lg-form-label">Carrier</span>
+                            <span style="font-size:.9375rem;color:var(--lg-text);font-weight:500;">{{ shipment.carrier or 'Not assigned' }}</span>
                         </div>
-                        <div class="log-info-row">
-                            <span class="log-info-label">Weight</span>
-                            <span class="log-info-value">{{ "%.1f"|format(shipment.weight_kg) if shipment.weight_kg else '---' }} kg</span>
+                        <div class="lg-form-group" style="padding:12px 0;border-bottom:1px solid var(--lg-border-light);">
+                            <span class="lg-form-label">Weight</span>
+                            <span style="font-size:.9375rem;color:var(--lg-text);font-weight:500;">{{ "%.1f"|format(shipment.weight_kg) if shipment.weight_kg else '---' }} kg</span>
                         </div>
-                        <div class="log-info-row" style="padding-right:16px;">
-                            <span class="log-info-label">Origin</span>
-                            <span class="log-info-value">{{ shipment.origin or 'Not set' }}</span>
+                        <div class="lg-form-group" style="padding:12px 16px 12px 0;border-bottom:1px solid var(--lg-border-light);">
+                            <span class="lg-form-label">Origin</span>
+                            <span style="font-size:.9375rem;color:var(--lg-text);font-weight:500;">{{ shipment.origin or 'Not set' }}</span>
                         </div>
-                        <div class="log-info-row">
-                            <span class="log-info-label">Destination</span>
-                            <span class="log-info-value">{{ shipment.destination or 'Not set' }}</span>
+                        <div class="lg-form-group" style="padding:12px 0;border-bottom:1px solid var(--lg-border-light);">
+                            <span class="lg-form-label">Destination</span>
+                            <span style="font-size:.9375rem;color:var(--lg-text);font-weight:500;">{{ shipment.destination or 'Not set' }}</span>
                         </div>
-                        <div class="log-info-row" style="padding-right:16px;">
-                            <span class="log-info-label">Estimated Delivery</span>
-                            <span class="log-info-value">{{ shipment.estimated_delivery.strftime('%b %d, %Y %H:%M') if shipment.estimated_delivery else 'Not set' }}</span>
+                        <div class="lg-form-group" style="padding:12px 16px 12px 0;border-bottom:1px solid var(--lg-border-light);">
+                            <span class="lg-form-label">Estimated Delivery</span>
+                            <span style="font-size:.9375rem;color:var(--lg-text);font-weight:500;">{{ shipment.estimated_delivery.strftime('%b %d, %Y %H:%M') if shipment.estimated_delivery else 'Not set' }}</span>
                         </div>
-                        <div class="log-info-row">
-                            <span class="log-info-label">Actual Delivery</span>
-                            <span class="log-info-value">{{ shipment.actual_delivery.strftime('%b %d, %Y %H:%M') if shipment.actual_delivery else 'Pending' }}</span>
+                        <div class="lg-form-group" style="padding:12px 0;border-bottom:1px solid var(--lg-border-light);">
+                            <span class="lg-form-label">Actual Delivery</span>
+                            <span style="font-size:.9375rem;color:var(--lg-text);font-weight:500;">{{ shipment.actual_delivery.strftime('%b %d, %Y %H:%M') if shipment.actual_delivery else 'Pending' }}</span>
                         </div>
                     </div>
                     {% if shipment.notes %}
-                    <div class="log-info-row">
-                        <span class="log-info-label">Notes</span>
-                        <span class="log-info-value" style="white-space:pre-wrap;">{{ shipment.notes }}</span>
+                    <div class="lg-form-group" style="padding:12px 0;">
+                        <span class="lg-form-label">Notes</span>
+                        <span style="font-size:.9375rem;color:var(--lg-text);font-weight:500;white-space:pre-wrap;">{{ shipment.notes }}</span>
                     </div>
                     {% endif %}
                 </div>
             </div>
 
-            <div class="log-card">
-                <div class="log-card-header">
-                    <span style="font-size:1.1rem;">🔄</span> Tracking Timeline
+            <div class="lg-card">
+                <div class="lg-card-header">
+                    <h2>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--lg-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        Tracking Timeline
+                    </h2>
                 </div>
-                <div class="log-card-body">
+                <div class="lg-card-body">
                     {% if events %}
-                    <div class="log-timeline">
+                    <div class="lg-timeline">
                         {% for event in events %}
-                        <div class="log-timeline-item">
-                            <div class="log-timeline-dot-col">
-                                <div class="log-timeline-dot {% if loop.first %}active{% elif loop.index < events|length %}completed{% endif %}"></div>
-                                <div class="log-timeline-line"></div>
-                            </div>
-                            <div class="log-timeline-content">
-                                <div class="log-timeline-status">{{ event.status|replace('_',' ') }}</div>
+                        <div class="lg-timeline-item">
+                            <div class="lg-timeline-dot {% if loop.first %}active{% else %}inactive{% endif %}"></div>
+                            <div class="lg-timeline-content">
+                                <div class="lg-timeline-title">{{ event.status|replace('_',' ') }}</div>
                                 {% if event.description %}
-                                <div class="log-timeline-desc">{{ event.description }}</div>
+                                <div class="lg-timeline-desc">{{ event.description }}</div>
                                 {% endif %}
-                                <div class="log-timeline-meta">
+                                <div style="font-size:.75rem;color:var(--lg-text-muted);display:flex;flex-wrap:wrap;gap:.75rem;margin-top:4px;">
                                     <span>{{ event.timestamp.strftime('%b %d, %Y %H:%M') }}</span>
                                     {% if event.location %}
                                     <span>📍 {{ event.location }}</span>
@@ -444,19 +101,24 @@
                         {% endfor %}
                     </div>
                     {% else %}
-                    <div class="log-empty">No tracking events yet. Update the shipment status to begin tracking.</div>
+                    <div class="lg-empty">
+                        <p>No tracking events yet. Update the shipment status to begin tracking.</p>
+                    </div>
                     {% endif %}
                 </div>
             </div>
 
-            <div class="log-card">
-                <div class="log-card-header">
-                    <span style="font-size:1.1rem;">🛒</span> Order Items
+            <div class="lg-card">
+                <div class="lg-card-header">
+                    <h2>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--lg-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                        Order Items
+                    </h2>
                 </div>
-                <div class="log-card-body" style="padding:0;">
+                <div class="lg-card-body" style="padding:0;">
                     {% if shipment.order and shipment.order.items %}
                     <div style="overflow-x:auto;">
-                        <table class="log-items-table">
+                        <table class="lg-table">
                             <thead>
                                 <tr>
                                     <th>Product</th>
@@ -468,76 +130,84 @@
                             <tbody>
                                 {% for item in shipment.order.items %}
                                 <tr>
-                                    <td style="font-weight:600;">{{ item.product.name if item.product else 'Product' }}</td>
+                                    <td class="cell-primary">{{ item.product.name if item.product else 'Product' }}</td>
                                     <td>{{ item.quantity }}</td>
                                     <td>₦{{ "%.2f"|format(item.price) }}</td>
-                                    <td style="font-weight:600;">₦{{ "%.2f"|format(item.price * item.quantity) }}</td>
+                                    <td class="cell-primary">₦{{ "%.2f"|format(item.price * item.quantity) }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
-                    <div style="padding:16px 12px;border-top:1px solid var(--log-border);display:flex;justify-content:flex-end;">
-                        <span style="font-weight:700;font-size:0.9375rem;">Total: ₦{{ "%.2f"|format(shipment.order.total_amount) }}</span>
+                    <div style="padding:1rem 1.25rem;border-top:1px solid var(--lg-border);display:flex;justify-content:flex-end;">
+                        <span style="font-weight:700;font-size:.9375rem;">Total: ₦{{ "%.2f"|format(shipment.order.total_amount) }}</span>
                     </div>
                     {% else %}
-                    <div class="log-empty">No order items found.</div>
+                    <div class="lg-empty">
+                        <p>No order items found.</p>
+                    </div>
                     {% endif %}
                 </div>
             </div>
         </div>
 
-        <div style="display:flex;flex-direction:column;gap:24px;">
-            <div class="log-card">
-                <div class="log-card-header">
-                    <span style="font-size:1.1rem;">🚚</span> Assigned Driver
+        <div style="display:flex;flex-direction:column;gap:1.5rem;">
+            <div class="lg-card">
+                <div class="lg-card-header">
+                    <h2>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--lg-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+                        Assigned Driver
+                    </h2>
                 </div>
-                <div class="log-card-body">
+                <div class="lg-card-body">
                     {% if shipment.delivery_agent %}
                     <div style="display:flex;flex-direction:column;gap:12px;">
-                        <div class="log-info-row">
-                            <span class="log-info-label">Name</span>
-                            <span class="log-info-value">{{ shipment.delivery_agent.name }}</span>
+                        <div class="lg-form-group" style="padding:12px 0;border-bottom:1px solid var(--lg-border-light);">
+                            <span class="lg-form-label">Name</span>
+                            <span style="font-size:.9375rem;color:var(--lg-text);font-weight:500;">{{ shipment.delivery_agent.name }}</span>
                         </div>
-                        <div class="log-info-row">
-                            <span class="log-info-label">Phone</span>
-                            <span class="log-info-value">{{ shipment.delivery_agent.phone or '---' }}</span>
+                        <div class="lg-form-group" style="padding:12px 0;border-bottom:1px solid var(--lg-border-light);">
+                            <span class="lg-form-label">Phone</span>
+                            <span style="font-size:.9375rem;color:var(--lg-text);font-weight:500;">{{ shipment.delivery_agent.phone or '---' }}</span>
                         </div>
-                        <div class="log-info-row">
-                            <span class="log-info-label">Vehicle</span>
-                            <span class="log-info-value">{{ shipment.delivery_agent.vehicle_type or '---' }} {{ shipment.delivery_agent.vehicle_number or '' }}</span>
+                        <div class="lg-form-group" style="padding:12px 0;border-bottom:1px solid var(--lg-border-light);">
+                            <span class="lg-form-label">Vehicle</span>
+                            <span style="font-size:.9375rem;color:var(--lg-text);font-weight:500;">{{ shipment.delivery_agent.vehicle_type or '---' }} {{ shipment.delivery_agent.vehicle_number or '' }}</span>
                         </div>
-                        <div class="log-info-row">
-                            <span class="log-info-label">Status</span>
-                            <span class="log-info-value">
-                                <span class="log-badge {{ shipment.delivery_agent.status|lower }}">{{ shipment.delivery_agent.status }}</span>
+                        <div class="lg-form-group" style="padding:12px 0;border-bottom:1px solid var(--lg-border-light);">
+                            <span class="lg-form-label">Status</span>
+                            <span style="font-size:.9375rem;color:var(--lg-text);font-weight:500;">
+                                <span class="lg-badge {{ shipment.delivery_agent.status|lower }}">{{ shipment.delivery_agent.status }}</span>
                             </span>
                         </div>
-                        <div class="log-info-row" style="border-bottom:none;">
-                            <span class="log-info-label">Rating</span>
-                            <span class="log-info-value">{{ "%.1f"|format(shipment.delivery_agent.rating) }} ⭐</span>
+                        <div class="lg-form-group" style="padding:12px 0;">
+                            <span class="lg-form-label">Rating</span>
+                            <span style="font-size:.9375rem;color:var(--lg-text);font-weight:500;">{{ "%.1f"|format(shipment.delivery_agent.rating) }} ⭐</span>
                         </div>
                     </div>
                     {% else %}
-                    <div class="log-empty" style="padding:24px 16px;">
-                        <div style="margin-bottom:8px;">No driver assigned</div>
-                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                            <button onclick="autoAssign()" class="log-btn" style="flex:1;" id="auto-assign-btn">⚡ Auto-Assign</button>
-                            <button onclick="document.getElementById('assign-driver-modal').classList.add('show')" class="log-btn-outline" style="flex:1;">Manual</button>
+                    <div class="lg-empty" style="padding:1.5rem;">
+                        <p>No driver assigned</p>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+                            <button onclick="autoAssign()" class="lg-btn lg-btn-primary" style="flex:1;" id="auto-assign-btn">⚡ Auto-Assign</button>
+                            <button onclick="openModal('assign-driver-modal')" class="lg-btn lg-btn-secondary" style="flex:1;">Manual</button>
                         </div>
                     </div>
                     {% endif %}
                 </div>
             </div>
 
-            <div class="log-card">
-                <div class="log-card-header">
-                    <span style="font-size:1.1rem;">⚡</span> Quick Actions
+            <div class="lg-card">
+                <div class="lg-card-header">
+                    <h2>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--lg-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        Quick Actions
+                    </h2>
                 </div>
-                <div class="log-card-body">
-                    <form method="post" action="/logistics/shipments/{{ shipment.id }}/status" class="log-form-group">
-                        <label>Update Status</label>
-                        <select name="status" class="log-form-select">
+                <div class="lg-card-body">
+                    <form method="post" action="/logistics/shipments/{{ shipment.id }}/status" class="lg-form-group">
+                        <label class="lg-form-label">Update Status</label>
+                        <select name="status" class="lg-form-select">
                             <option value="PENDING" {% if shipment.status == 'PENDING' %}selected{% endif %}>Pending</option>
                             <option value="PICKED_UP" {% if shipment.status == 'PICKED_UP' %}selected{% endif %}>Picked Up</option>
                             <option value="IN_TRANSIT" {% if shipment.status == 'IN_TRANSIT' %}selected{% endif %}>In Transit</option>
@@ -546,40 +216,46 @@
                             <option value="FAILED" {% if shipment.status == 'FAILED' %}selected{% endif %}>Failed</option>
                             <option value="RETURNED" {% if shipment.status == 'RETURNED' %}selected{% endif %}>Returned</option>
                         </select>
-                        <input name="location" placeholder="Location (optional)" class="log-form-input">
-                        <textarea name="description" placeholder="Notes (optional)" class="log-form-input" style="min-height:80px;resize:vertical;"></textarea>
-                        <button type="submit" class="log-btn" style="width:100%;">Update Status</button>
+                        <input name="location" placeholder="Location (optional)" class="lg-form-input">
+                        <textarea name="description" placeholder="Notes (optional)" class="lg-form-textarea"></textarea>
+                        <button type="submit" class="lg-btn lg-btn-primary" style="width:100%;">Update Status</button>
                     </form>
 
                     {% if shipment.delivery_agent %}
                     <form method="post" action="/logistics/shipments/{{ shipment.id }}/unassign" style="margin-top:12px;">
-                        <button type="submit" class="log-btn-outline" style="width:100%;text-decoration:none;color:var(--log-red);border-color:var(--log-red);">Unassign Driver</button>
+                        <button type="submit" class="lg-btn lg-btn-danger" style="width:100%;text-decoration:none;">Unassign Driver</button>
                     </form>
                     {% endif %}
                 </div>
             </div>
 
             {% if shipment.status != 'DELIVERED' %}
-            <div class="log-card">
-                <div class="log-card-header">
-                    <span style="font-size:1.1rem;">📸</span> Delivery Photo Proof
+            <div class="lg-card">
+                <div class="lg-card-header">
+                    <h2>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--lg-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                        Delivery Photo Proof
+                    </h2>
                 </div>
-                <div class="log-card-body">
-                    <form method="post" action="/logistics/shipments/{{ shipment.id }}/proof" enctype="multipart/form-data" class="log-form-group">
-                        <label>Upload photo on delivery completion</label>
-                        <input type="file" name="proof_photo" accept="image/*" capture="environment" required class="log-form-input" style="padding:8px;">
-                        <button type="submit" class="log-btn" style="width:100%;">Upload Proof & Mark Delivered</button>
+                <div class="lg-card-body">
+                    <form method="post" action="/logistics/shipments/{{ shipment.id }}/proof" enctype="multipart/form-data" class="lg-form-group">
+                        <label class="lg-form-label">Upload photo on delivery completion</label>
+                        <input type="file" name="proof_photo" accept="image/*" capture="environment" required class="lg-form-input" style="padding:8px;">
+                        <button type="submit" class="lg-btn lg-btn-primary" style="width:100%;">Upload Proof & Mark Delivered</button>
                     </form>
                 </div>
             </div>
             {% elif shipment.proof_photo_url %}
-            <div class="log-card">
-                <div class="log-card-header">
-                    <span style="font-size:1.1rem;">📸</span> Delivery Proof
+            <div class="lg-card">
+                <div class="lg-card-header">
+                    <h2>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--lg-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                        Delivery Proof
+                    </h2>
                 </div>
-                <div class="log-card-body" style="text-align:center;">
-                    <img src="{{ shipment.proof_photo_url }}" alt="Delivery proof" style="max-width:100%;border-radius:8px;border:1px solid var(--log-border);">
-                    <div style="font-size:0.75rem;color:var(--log-text-muted);margin-top:8px;">Uploaded {{ shipment.actual_delivery.strftime('%b %d, %Y %H:%M') if shipment.actual_delivery else '' }}</div>
+                <div class="lg-card-body" style="text-align:center;">
+                    <img src="{{ shipment.proof_photo_url }}" alt="Delivery proof" style="max-width:100%;border-radius:var(--lg-radius-sm);border:1px solid var(--lg-border);">
+                    <div style="font-size:.75rem;color:var(--lg-text-muted);margin-top:8px;">Uploaded {{ shipment.actual_delivery.strftime('%b %d, %Y %H:%M') if shipment.actual_delivery else '' }}</div>
                 </div>
             </div>
             {% endif %}
@@ -587,33 +263,51 @@
     </div>
 </div>
 
-<div id="assign-driver-modal" class="log-modal-overlay">
-    <div class="log-modal">
-        <h3>Assign Driver to Shipment</h3>
-        {% if available_drivers %}
-        <form method="post" action="/logistics/shipments/{{ shipment.id }}/assign" class="log-form-group">
-            <label>Select Driver</label>
-            <select name="agent_id" class="log-form-select" required>
-                <option value="">Choose a driver...</option>
-                {% for driver in available_drivers %}
-                <option value="{{ driver.id }}">{{ driver.name }} — {{ driver.vehicle_type or 'No vehicle' }} ({{ driver.status }})</option>
-                {% endfor %}
-            </select>
-            <div class="log-form-actions">
-                <button type="submit" class="log-btn">Assign</button>
-                <button type="button" onclick="document.getElementById('assign-driver-modal').classList.remove('show')" class="log-btn-outline">Cancel</button>
-            </div>
-        </form>
-        {% else %}
-        <div class="log-empty">No drivers available. Add a driver first.</div>
-        <div class="log-form-actions" style="padding-top:12px;">
-            <button type="button" onclick="document.getElementById('assign-driver-modal').classList.remove('show')" class="log-btn-outline" style="width:100%;">Close</button>
+<div id="assign-driver-modal" class="lg-modal-overlay">
+    <div class="lg-modal">
+        <div class="lg-modal-header">
+            <h3>Assign Driver to Shipment</h3>
         </div>
-        {% endif %}
+        <div class="lg-modal-body">
+            {% if available_drivers %}
+            <form method="post" action="/logistics/shipments/{{ shipment.id }}/assign" class="lg-form-group">
+                <label class="lg-form-label">Select Driver</label>
+                <select name="agent_id" class="lg-form-select" required>
+                    <option value="">Choose a driver...</option>
+                    {% for driver in available_drivers %}
+                    <option value="{{ driver.id }}">{{ driver.name }} — {{ driver.vehicle_type or 'No vehicle' }} ({{ driver.status }})</option>
+                    {% endfor %}
+                </select>
+            </form>
+            {% else %}
+            <div class="lg-empty">
+                <p>No drivers available. Add a driver first.</p>
+            </div>
+            {% endif %}
+        </div>
+        <div class="lg-modal-footer">
+            {% if available_drivers %}
+            <button type="button" onclick="closeModal('assign-driver-modal')" class="lg-btn lg-btn-ghost">Cancel</button>
+            <button type="submit" formaction="/logistics/shipments/{{ shipment.id }}/assign" class="lg-btn lg-btn-primary">Assign</button>
+            {% else %}
+            <button type="button" onclick="closeModal('assign-driver-modal')" class="lg-btn lg-btn-secondary" style="width:100%;">Close</button>
+            {% endif %}
+        </div>
     </div>
 </div>
 
 <script>
+function openModal(id) {
+    document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.lg-modal-overlay').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+        if (e.target === el) el.classList.remove('open');
+    });
+});
 function autoAssign() {
     var btn = document.getElementById('auto-assign-btn');
     btn.textContent = '⏳ Assigning...';

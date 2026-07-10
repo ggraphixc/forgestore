@@ -1,68 +1,44 @@
 {% extends "admin/sidebar.html" %}
 {% block title %}Returns Management — ForgeStore Logistics{% endblock %}
 {% block content %}
-<style>
-    :root{--log-primary:#d97706;--log-primary-hover:#f59e0b;--log-text:#1c1917;--log-text-secondary:#78716c;--log-text-muted:#a8a29e;--log-bg:#fafaf9;--log-surface:#ffffff;--log-border:#e7e5e4;--log-radius:12px;--log-radius-sm:8px;--log-shadow:0 1px 3px rgba(0,0,0,.06);--log-transition:0.2s cubic-bezier(.4,0,.2,1)}
-    .log-page{display:flex;flex-direction:column;gap:20px;padding:0}
-    .log-page-header h1{font-size:1.5rem;font-weight:800;color:var(--log-text);margin:0}
-    .log-page-header p{font-size:0.875rem;color:var(--log-text-secondary);margin:0}
-    .log-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-    .log-stat-card{background:var(--log-surface);border:1px solid var(--log-border);border-radius:var(--log-radius);padding:16px;text-align:center;box-shadow:var(--log-shadow)}
-    .log-stat-card .stat-value{font-size:1.5rem;font-weight:900;color:var(--log-text)}
-    .log-stat-card .stat-value.amber{color:#b45309}
-    .log-stat-card .stat-value.blue{color:#2563eb}
-    .log-stat-card .stat-value.emerald{color:#047857}
-    .log-stat-card .stat-label{font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--log-text-secondary)}
-    .log-card{background:var(--log-surface);border:1px solid var(--log-border);border-radius:16px;overflow:hidden;box-shadow:var(--log-shadow)}
-    .log-card-header{padding:16px 20px;border-bottom:1px solid var(--log-border);font-weight:700;font-size:0.9375rem;color:var(--log-text);display:flex;align-items:center;justify-content:space-between;gap:8px}
-    .log-table{width:100%;border-collapse:collapse}
-    .log-table th{padding:12px 16px;text-align:left;font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--log-text-secondary);border-bottom:1px solid var(--log-border)}
-    .log-table td{padding:12px 16px;font-size:0.875rem;color:var(--log-text);border-bottom:1px solid var(--log-border)}
-    .log-table tr:last-child td{border-bottom:none}
-    .log-badge{font-size:0.6875rem;font-weight:700;padding:4px 10px;border-radius:9999px;white-space:nowrap}
-    .log-badge.pending{background:#fef3c7;color:#92400e}
-    .log-badge.approved{background:#dbeafe;color:#1d4ed8}
-    .log-badge.in-transit{background:#ede9fe;color:#6d28d9}
-    .log-badge.received{background:#d1fae5;color:#047857}
-    .log-badge.rejected{background:#fee2e2;color:#991b1b}
-    .log-badge.refunded{background:#fce7f3;color:#9d174d}
-    .log-btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 16px;border:none;border-radius:var(--log-radius-sm);background:var(--log-primary);color:#1c1917;font-size:0.875rem;font-weight:700;cursor:pointer;transition:background var(--log-transition);text-decoration:none}
-    .log-btn:hover{background:var(--log-primary-hover)}
-    .log-btn-outline{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 16px;border:1px solid var(--log-border);border-radius:var(--log-radius-sm);background:var(--log-surface);color:var(--log-text-secondary);font-size:0.875rem;font-weight:700;cursor:pointer;transition:background var(--log-transition)}
-    .log-btn-outline:hover{background:var(--log-bg)}
-    .log-empty{padding:40px 20px;text-align:center;font-size:0.875rem;color:var(--log-text-muted)}
-    .log-filters{display:flex;gap:8px;flex-wrap:wrap}
-    .log-filter-btn{padding:6px 14px;border:1px solid var(--log-border);border-radius:9999px;background:var(--log-surface);color:var(--log-text-secondary);font-size:0.8125rem;font-weight:600;cursor:pointer;text-decoration:none;transition:all var(--log-transition)}
-    .log-filter-btn:hover,.log-filter-btn.active{background:var(--log-primary);color:#1c1917;border-color:var(--log-primary)}
-</style>
+<link rel="stylesheet" href="/static/css/logistics.css">
 
-<div class="log-page">
-    <div class="log-page-header">
+<div class="lg-page">
+    <div class="lg-header">
         <div>
             <h1>Returns Management</h1>
-            <p>Manage reverse logistics for failed deliveries and customer returns</p>
+            <p class="lg-subtitle">Manage reverse logistics for failed deliveries and customer returns</p>
         </div>
     </div>
 
-    <div class="log-stats-grid">
-        <div class="log-stat-card"><p class="stat-value amber">{{ pending }}</p><p class="stat-label">Pending</p></div>
-        <div class="log-stat-card"><p class="stat-value blue">{{ in_transit_returns }}</p><p class="stat-label">In Transit</p></div>
-        <div class="log-stat-card"><p class="stat-value emerald">{{ received }}</p><p class="stat-label">Received</p></div>
+    <div class="lg-stats">
+        <div class="lg-stat lg-animate lg-animate-delay-1">
+            <span class="lg-stat-label">Pending</span>
+            <span class="lg-stat-value" style="color:var(--lg-amber);">{{ pending }}</span>
+        </div>
+        <div class="lg-stat lg-animate lg-animate-delay-2">
+            <span class="lg-stat-label">In Transit</span>
+            <span class="lg-stat-value" style="color:var(--lg-blue);">{{ in_transit_returns }}</span>
+        </div>
+        <div class="lg-stat lg-animate lg-animate-delay-3">
+            <span class="lg-stat-label">Received</span>
+            <span class="lg-stat-value" style="color:var(--lg-green);">{{ received }}</span>
+        </div>
     </div>
 
-    <div class="log-filters">
-        <a href="/logistics/returns" class="log-filter-btn {% if not status_filter %}active{% endif %}">All</a>
-        <a href="/logistics/returns?status=PENDING" class="log-filter-btn {% if status_filter=='PENDING' %}active{% endif %}">Pending</a>
-        <a href="/logistics/returns?status=APPROVED" class="log-filter-btn {% if status_filter=='APPROVED' %}active{% endif %}">Approved</a>
-        <a href="/logistics/returns?status=PICKUP_SCHEDULED" class="log-filter-btn {% if status_filter=='PICKUP_SCHEDULED' %}active{% endif %}">Pickup</a>
-        <a href="/logistics/returns?status=IN_TRANSIT" class="log-filter-btn {% if status_filter=='IN_TRANSIT' %}active{% endif %}">In Transit</a>
-        <a href="/logistics/returns?status=RECEIVED" class="log-filter-btn {% if status_filter=='RECEIVED' %}active{% endif %}">Received</a>
+    <div class="lg-tabs">
+        <a href="/logistics/returns" class="lg-tab {% if not status_filter %}active{% endif %}">All</a>
+        <a href="/logistics/returns?status=PENDING" class="lg-tab {% if status_filter=='PENDING' %}active{% endif %}">Pending</a>
+        <a href="/logistics/returns?status=APPROVED" class="lg-tab {% if status_filter=='APPROVED' %}active{% endif %}">Approved</a>
+        <a href="/logistics/returns?status=PICKUP_SCHEDULED" class="lg-tab {% if status_filter=='PICKUP_SCHEDULED' %}active{% endif %}">Pickup</a>
+        <a href="/logistics/returns?status=IN_TRANSIT" class="lg-tab {% if status_filter=='IN_TRANSIT' %}active{% endif %}">In Transit</a>
+        <a href="/logistics/returns?status=RECEIVED" class="lg-tab {% if status_filter=='RECEIVED' %}active{% endif %}">Received</a>
     </div>
 
-    <div class="log-card">
+    <div class="lg-card lg-animate lg-animate-delay-2">
         {% if returns %}
-        <div style="overflow-x:auto;">
-            <table class="log-table">
+        <div class="lg-table-wrap">
+            <table class="lg-table">
                 <thead>
                     <tr>
                         <th>Return #</th>
@@ -77,20 +53,42 @@
                 <tbody>
                     {% for r in returns %}
                     <tr>
-                        <td style="font-family:monospace;font-weight:600;">{{ r.return_number }}</td>
-                        <td>{{ r.order.order_number if r.order else 'N/A' }}</td>
+                        <td class="cell-mono cell-primary">{{ r.return_number }}</td>
+                        <td class="cell-primary">{{ r.order.order_number if r.order else 'N/A' }}</td>
                         <td>{{ r.reason.replace('_', ' ').title() }}</td>
-                        <td><span class="log-badge {{ r.status|lower|replace('_', '-') }}">{{ r.status.replace('_', ' ').title() }}</span></td>
+                        <td>
+                            {% set status_lower = r.status|lower|replace('_', '-') %}
+                            {% if status_lower == 'pending' or status_lower == 'pickup-scheduled' %}
+                            <span class="lg-badge amber">{{ r.status.replace('_', ' ').title() }}</span>
+                            {% elif status_lower == 'approved' %}
+                            <span class="lg-badge blue">{{ r.status.replace('_', ' ').title() }}</span>
+                            {% elif status_lower == 'in-transit' %}
+                            <span class="lg-badge purple">{{ r.status.replace('_', ' ').title() }}</span>
+                            {% elif status_lower == 'received' %}
+                            <span class="lg-badge green">{{ r.status.replace('_', ' ').title() }}</span>
+                            {% elif status_lower == 'rejected' %}
+                            <span class="lg-badge red">{{ r.status.replace('_', ' ').title() }}</span>
+                            {% elif status_lower == 'refunded' %}
+                            <span class="lg-badge purple">{{ r.status.replace('_', ' ').title() }}</span>
+                            {% else %}
+                            <span class="lg-badge neutral">{{ r.status.replace('_', ' ').title() }}</span>
+                            {% endif %}
+                        </td>
                         <td>₦{{ "%.2f"|format(r.return_fee) }}</td>
-                        <td style="font-size:0.8125rem;color:var(--log-text-muted);">{{ r.created_at.strftime('%b %d, %Y') if r.created_at else '' }}</td>
-                        <td><a href="/logistics/returns/{{ r.id }}" class="log-btn-outline" style="min-height:36px;font-size:0.8125rem;">View</a></td>
+                        <td style="color:var(--lg-text-muted);">{{ r.created_at.strftime('%b %d, %Y') if r.created_at else '' }}</td>
+                        <td><a href="/logistics/returns/{{ r.id }}" class="lg-btn lg-btn-secondary lg-btn-sm">View</a></td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         {% else %}
-        <div class="log-empty">No return requests found.</div>
+        <div class="lg-empty">
+            <div class="lg-empty-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+            </div>
+            <p>No return requests found.</p>
+        </div>
         {% endif %}
     </div>
 </div>
