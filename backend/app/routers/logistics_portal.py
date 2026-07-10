@@ -46,13 +46,6 @@ def logistics_dashboard(request: Request, db: Session = Depends(get_db)):
     unassigned_count = db.query(func.count(Shipment.id)).filter(Shipment.delivery_agent_id.is_(None), Shipment.status == "PENDING").scalar() or 0
     platform_fulfilled = db.query(func.count(Order.id)).filter(Order.fulfillment_mode == "PLATFORM", Order.status.in_(["PAID", "PROCESSING"])).scalar() or 0
 
-    cod_shipments = db.query(Shipment).join(Order).filter(
-        Order.payment_method == "cod",
-        Shipment.status.in_(["PENDING", "PICKED_UP", "IN_TRANSIT", "OUT_FOR_DELIVERY"])
-    ).all()
-    cod_pending_count = len(cod_shipments)
-    cod_pending_total = sum(s.order.total_amount for s in cod_shipments if s.order)
-
     recent_shipments = db.query(Shipment).order_by(desc(Shipment.created_at)).limit(10).all()
 
     return render_template("logistics/dashboard.html", {
@@ -66,8 +59,8 @@ def logistics_dashboard(request: Request, db: Session = Depends(get_db)):
         "available_agents": available_agents,
         "unassigned_count": unassigned_count,
         "platform_fulfilled": platform_fulfilled,
-        "cod_pending_count": cod_pending_count,
-        "cod_pending_total": cod_pending_total,
+        "cod_pending_count": 0,
+        "cod_pending_total": 0,
         "recent_shipments": recent_shipments,
         "has_permission": has_permission,
     })
