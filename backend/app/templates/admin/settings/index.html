@@ -609,7 +609,7 @@
             <!-- Settings fields -->
             <div class="admin-settings-section-body">
                 {% for s in cat_settings %}
-                <div data-search="{{ s.label|lower }} {{ s.key|lower }} {{ s.description|default('', true)|lower }}">
+                <div data-search="{{ s.label|lower }} {{ s.key|lower }} {{ s.description|default('', true)|lower }} {{ s.value|lower }}">
                     <div class="admin-settings-group">
                         <div class="admin-settings-field">
                             <label for="setting-{{ s.key }}" class="admin-settings-label">{{ s.label }}</label>
@@ -638,6 +638,9 @@
                                 </button>
                             </div>
                             <p class="admin-settings-eye-hint {% if s.value %}set{% endif %}">{% if s.value %}Key is set{% else %}Not configured{% endif %}</p>
+                            {% elif s.type == 'json' %}
+                            <textarea id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" rows="4" class="admin-settings-textarea admin-settings-input mono" placeholder='{"key": "value"}' onblur="formatJsonField(this)">{{ s.value }}</textarea>
+                            <p class="admin-settings-eye-hint">JSON format</p>
                             {% elif s.type == 'textarea' %}
                             <textarea id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" rows="2" class="admin-settings-textarea admin-settings-input">{{ s.value }}</textarea>
                             {% elif s.type == 'number' %}
@@ -724,6 +727,16 @@ function getSettingValue(el) {
     return el.value;
 }
 
+function formatJsonField(el) {
+    if (!el || el.type === 'hidden') return;
+    try {
+        const parsed = JSON.parse(el.value);
+        el.value = JSON.stringify(parsed, null, 2);
+    } catch {
+        // leave as-is if not valid JSON
+    }
+}
+
 function filterSettings(query) {
     const q = query.toLowerCase().trim();
     const clearBtn = document.getElementById('settings-clear-btn');
@@ -741,6 +754,15 @@ function filterSettings(query) {
     });
 }
 
+const CONFIRM_SETTINGS = {
+    maintenance_mode: "Enabling maintenance mode will block all non-admin access to the site. Continue?",
+    market_commission_percentage: "Changing the commission percentage affects all future payouts. Continue?",
+    vendor_minimum_rating: "Changing the minimum vendor rating will affect vendor suspension rules. Continue?",
+    default_shipping_fee: "Changing the default shipping fee affects all new orders. Continue?",
+    tax_percentage: "Changing the tax percentage affects all new orders. Continue?",
+    free_shipping_threshold: "Changing the free shipping threshold affects checkout calculations. Continue?",
+};
+
 async function saveSection(category) {
     const btn = event.currentTarget;
     btn.disabled = true;
@@ -755,6 +777,16 @@ async function saveSection(category) {
             data[key] = getSettingValue(el);
         }
     });
+
+    const confirmKeys = Object.keys(CONFIRM_SETTINGS).filter(k => k in data && data[k] !== 'false' && data[k] !== '0');
+    if (confirmKeys.length > 0) {
+        const msg = confirmKeys.map(k => CONFIRM_SETTINGS[k]).join('\n');
+        if (!window.confirm(msg)) {
+            btn.disabled = false;
+            btn.textContent = originalText;
+            return;
+        }
+    }
 
     try {
         const res = await fetch('/api/admin/settings/bulk', {
@@ -785,6 +817,16 @@ async function saveAllSettings() {
     document.querySelectorAll('[data-setting]').forEach(el => {
         data[el.getAttribute('data-setting')] = getSettingValue(el);
     });
+
+    const confirmKeys = Object.keys(CONFIRM_SETTINGS).filter(k => k in data && data[k] !== 'false' && data[k] !== '0');
+    if (confirmKeys.length > 0) {
+        const msg = confirmKeys.map(k => CONFIRM_SETTINGS[k]).join('\n');
+        if (!window.confirm(msg)) {
+            btn.disabled = false;
+            btn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Save All Changes';
+            return;
+        }
+    }
 
     try {
         const res = await fetch('/api/admin/settings/bulk', {

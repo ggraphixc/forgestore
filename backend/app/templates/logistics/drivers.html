@@ -133,7 +133,7 @@
     </div>
 </div>
 
-<script>
+<style>
 .vehicle-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -182,7 +182,9 @@
   .vehicle-icon { font-size: 1.25rem; }
   .vehicle-label { font-size: .6rem; }
 }
+</style>
 
+<script>
 function selectVehicle(el) {
   document.querySelectorAll('.vehicle-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');

@@ -621,6 +621,49 @@ def _get_setting_def(key: str):
     return None
 
 
+def _validate_setting_value(sd: dict, value: str):
+    """Validate a setting value against its definition. Raises HTTPException on invalid input."""
+    setting_type = sd.get("type", "text")
+    if setting_type == "number":
+        if value == "":
+            return value
+        try:
+            float(value)
+        except (ValueError, TypeError):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Setting '{sd['label']}' must be a number, got '{value}'"
+            )
+        if "min" in sd and float(value) < sd["min"]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Setting '{sd['label']}' must be at least {sd['min']}"
+            )
+        if "max" in sd and float(value) > sd["max"]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Setting '{sd['label']}' must be at most {sd['max']}"
+            )
+    elif setting_type == "select":
+        options = sd.get("options", [])
+        valid_values = [opt["value"] for opt in options]
+        if value and value not in valid_values:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid value '{value}' for '{sd['label']}'. Valid options: {', '.join(valid_values)}"
+            )
+    elif setting_type == "json":
+        if value and value.strip():
+            try:
+                json.loads(value)
+            except (json.JSONDecodeError, TypeError) as e:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Setting '{sd['label']}' must be valid JSON: {e}"
+                )
+    return value
+
+
 @router.get("/settings")
 def get_settings(
     db: Session = Depends(get_db),
@@ -652,10 +695,15 @@ def update_setting(
     if not has_permission(admin, cat_perm):
         raise HTTPException(status_code=403, detail=f"You don't have permission to modify {sd['category']} settings")
 
+    # Validate value
+    _validate_setting_value(sd, value)
+
     setting = db.query(SettingsModel).filter(SettingsModel.key == key).first()
     if setting:
+        old_value = setting.value
         setting.value = value
     else:
+        old_value = None
         setting = SettingsModel(
             key=key, value=value,
             category=sd["category"],
@@ -666,7 +714,7 @@ def update_setting(
         db.add(setting)
     db.commit()
 
-    log_admin_action(db, admin, "update", "setting", key, f"Updated setting '{key}'")
+    log_admin_action(db, admin, "update", "setting", key, f"Updated setting '{key}': '{old_value}' → '{value}'")
     from app.config import invalidate_settings_cache
     invalidate_settings_cache()
     return {"success": True}
@@ -683,6 +731,7 @@ def bulk_update_settings(
     from app.services.ai_service import SETTINGS_DEFINITIONS
 
     updated = 0
+    diffs = []
     for key, value in data.items():
         # Validate setting exists
         sd = _get_setting_def(key)
@@ -692,22 +741,37 @@ def bulk_update_settings(
         if not has_permission(admin, cat_perm):
             continue
 
+        # Validate value
+        str_value = str(value)
+        try:
+            _validate_setting_value(sd, str_value)
+        except HTTPException as e:
+            continue
+
         setting = db.query(SettingsModel).filter(SettingsModel.key == key).first()
+        old_value = setting.value if setting else None
         if setting:
-            setting.value = str(value)
+            if setting.value != str_value:
+                diffs.append(f"{key}: '{old_value}' → '{str_value}'")
+                setting.value = str_value
+            else:
+                continue
         else:
+            diffs.append(f"{key}: (new) → '{str_value}'")
             setting = SettingsModel(
-                key=key, value=str(value),
+                key=key, value=str_value,
                 category=sd["category"],
                 setting_type=sd["type"],
                 label=sd["label"],
                 description=sd.get("description", ""),
+                options=sd.get("options"),
             )
             db.add(setting)
         updated += 1
     db.commit()
 
-    log_admin_action(db, admin, "update", "settings_bulk", "", f"Bulk updated {updated} settings")
+    diff_summary = "; ".join(diffs) if diffs else "no changes"
+    log_admin_action(db, admin, "update", "settings_bulk", "", f"Bulk updated {updated} settings: {diff_summary}")
     from app.config import invalidate_settings_cache
     invalidate_settings_cache()
     return {"success": True, "updated": updated}
