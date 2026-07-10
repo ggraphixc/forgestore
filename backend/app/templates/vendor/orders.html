@@ -361,7 +361,7 @@
             <th>Total</th>
             <th class="hide-mobile">Status</th>
             <th class="hide-mobile">Date</th>
-            <th>Details</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -374,11 +374,14 @@
               <span class="vendor-badge {% if o.status.value == 'DELIVERED' %}delivered{% elif o.status.value == 'SHIPPED' %}shipped{% elif o.status.value == 'PROCESSING' %}processing{% else %}default{% endif %}">{{ o.status.value }}</span>
             </td>
             <td class="hide-mobile cell-muted">{{ o.created_at.strftime('%b %d, %Y') if o.created_at else '' }}</td>
-            <td>
-              <a href="/vendor/orders/{{ o.id }}" class="vendor-btn-outline">
+            <td style="display:flex;gap:4px;flex-wrap:wrap;">
+              <a href="/vendor/orders/{{ o.id }}" class="vendor-btn-outline" style="min-height:36px;font-size:0.8125rem;">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                 View
               </a>
+              {% if o.status.value == 'PAID' %}
+              <button onclick="vendorMarkShipped('{{ o.id }}', this)" class="vendor-btn-primary" style="min-height:36px;padding:6px 12px;font-size:0.8125rem;">📦 Ship</button>
+              {% endif %}
             </td>
           </tr>
           {% endfor %}
@@ -402,6 +405,30 @@ function filterOrders() {
     const search = row.getAttribute('data-search') || '';
     row.style.display = search.includes(query) ? '' : 'none';
   });
+}
+
+function vendorMarkShipped(orderId, btn) {
+  btn.textContent = '⏳';
+  btn.disabled = true;
+  fetch('/vendor/orders/' + orderId + '/ship', { method: 'POST' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok) {
+        btn.textContent = '✓ Sent to logistics';
+        btn.style.background = '#d1fae5';
+        btn.style.color = '#047857';
+        setTimeout(function() { location.reload(); }, 1200);
+      } else {
+        btn.textContent = '📦 Ship';
+        btn.disabled = false;
+        alert(d.error || 'Error occurred');
+      }
+    })
+    .catch(function() {
+      btn.textContent = '📦 Ship';
+      btn.disabled = false;
+      alert('Network error');
+    });
 }
 </script>
 {% endblock %}

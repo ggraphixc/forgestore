@@ -8,7 +8,7 @@ from app.core.image_compressor import compress_image
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, UploadFile, File
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, desc
 import uuid
 import random
 import string
@@ -89,6 +89,29 @@ def get_cart(request: Request, db: Session = Depends(get_db)):
         })
 
     return {"items": items, "total": total, "count": len(items)}
+
+
+@router.get("/orders")
+def get_customer_orders(request: Request, db: Session = Depends(get_db)):
+    customer = get_current_customer_from_cookie(request, db)
+    if not customer:
+        return {"orders": []}
+
+    orders = db.query(Order).filter(
+        Order.customer_id == customer.id
+    ).order_by(desc(Order.created_at)).limit(20).all()
+
+    return {"orders": [
+        {
+            "id": o.id,
+            "order_number": o.order_number,
+            "status": o.status.value if o.status else "PENDING",
+            "total": o.total_amount,
+            "created_at": o.created_at.isoformat() if o.created_at else None,
+            "tracking_number": getattr(o, 'tracking_number', None),
+        }
+        for o in orders
+    ]}
 
 
 @router.post("/cart/add")
@@ -1680,3 +1703,63 @@ def delete_customer_account(request: Request, response: Response, db: Session = 
 
     response.delete_cookie("customer_token")
     return {"success": True, "message": "Account deleted successfully"}
+
+
+# ─── Customer Return Requests ───────────────────────────────────────────────
+
+@router.post("/returns/request")
+def request_return(
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """Customer submits a return request for an order."""
+    import asyncio
+    import uuid
+    from app.models import ReturnRequest, ReturnEvent, Shipment
+    from app.services.delivery_pricing import calculate_return_fee
+
+    customer = get_current_customer_from_cookie(request, db)
+    if not customer:
+        raise HTTPException(status_code=401, detail="Not logged in")
+
+    loop = asyncio.new_event_loop()
+    body = loop.run_until_complete(request.json())
+    loop.close()
+
+    order_id = body.get("order_id", "")
+    reason = body.get("reason", "")
+    description = body.get("description", "")
+
+    if not order_id or not reason:
+        raise HTTPException(status_code=400, detail="order_id and reason required")
+
+    order = db.query(Order).filter(Order.id == order_id, Order.customer_id == customer.id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    # Check for existing return request
+    existing = db.query(ReturnRequest).filter(ReturnRequest.order_id == order_id, ReturnRequest.status.notin_(["REJECTED", "REFUNDED"])).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Return already requested for this order")
+
+    # Calculate return fee
+    return_fee = calculate_return_fee(original_fee=0, weight_kg=0)
+
+    rr = ReturnRequest(
+        return_number=f"RET-{uuid.uuid4().hex[:8].upper()}",
+        order_id=order.id,
+        customer_id=customer.id,
+        reason=reason,
+        description=description,
+        status="PENDING",
+        return_fee=return_fee,
+        pickup_address=order.shipping_address.get("address", "") if isinstance(order.shipping_address, dict) else "",
+    )
+    db.add(rr)
+    db.flush()
+
+    event = ReturnEvent(return_id=rr.id, status="PENDING", description=f"Return requested: {reason}", created_by=customer.id)
+    db.add(event)
+    db.commit()
+
+    return {"ok": True, "return_number": rr.return_number, "return_fee": return_fee}

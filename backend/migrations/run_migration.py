@@ -21,6 +21,9 @@ MIGRATIONS = {
     "005": "migrations.005_add_product_chat",
     "006": "migrations.006_chat_moderation",
     "007": "migrations.007_add_multivendor_columns",
+    "008": "migrations.008_add_support_tables",
+    "009": "migrations.009_add_ai_chat_tables",
+    "010": "migrations.010_add_product_views_sold",
 }
 
 

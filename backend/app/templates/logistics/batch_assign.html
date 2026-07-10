@@ -1,0 +1,176 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}Batch Assignment — ForgeStore Logistics{% endblock %}
+{% block content %}
+<style>
+    :root {
+        --log-primary: #d97706;
+        --log-primary-hover: #f59e0b;
+        --log-primary-light: #fef3c7;
+        --log-text: #1c1917;
+        --log-text-secondary: #78716c;
+        --log-text-muted: #a8a29e;
+        --log-bg: #fafaf9;
+        --log-surface: #ffffff;
+        --log-border: #e7e5e4;
+        --log-radius: 12px;
+        --log-radius-sm: 8px;
+        --log-shadow: 0 1px 3px rgba(0,0,0,.06);
+        --log-shadow-lg: 0 10px 25px -5px rgba(0,0,0,.08);
+        --log-transition: 0.2s cubic-bezier(.4,0,.2,1);
+        --log-green: #047857;
+        --log-green-bg: #d1fae5;
+        --log-green-text: #047857;
+        --log-blue: #2563eb;
+        --log-blue-bg: #dbeafe;
+        --log-blue-text: #1d4ed8;
+    }
+    .log-page { display:flex; flex-direction:column; gap:20px; padding:0; }
+    .log-page-header { display:flex; flex-direction:column; gap:12px; }
+    @media(min-width:640px){ .log-page-header { flex-direction:row; align-items:center; justify-content:space-between; } }
+    .log-page-header h1 { font-size:1.5rem; font-weight:800; color:var(--log-text); margin:0; }
+    .log-page-header p { font-size:0.875rem; color:var(--log-text-secondary); margin:0; }
+    .log-stats-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+    @media(min-width:640px){ .log-stats-grid { grid-template-columns:repeat(3,1fr); } }
+    .log-stat-card {
+        background:var(--log-surface); border:1px solid var(--log-border); border-radius:var(--log-radius);
+        padding:16px; text-align:center; box-shadow:var(--log-shadow);
+    }
+    .log-stat-card .stat-value { font-size:1.5rem; font-weight:900; color:var(--log-text); }
+    .log-stat-card .stat-value.green { color:var(--log-green-text); }
+    .log-stat-card .stat-value.blue { color:var(--log-blue-text); }
+    .log-stat-card .stat-label { font-size:0.625rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--log-text-secondary); }
+    .log-card {
+        background:var(--log-surface); border:1px solid var(--log-border);
+        border-radius:16px; overflow:hidden; box-shadow:var(--log-shadow);
+    }
+    .log-card-header {
+        padding:16px 20px; border-bottom:1px solid var(--log-border);
+        font-weight:700; font-size:0.9375rem; color:var(--log-text);
+        display:flex; align-items:center; justify-content:space-between; gap:8px;
+    }
+    .log-card-body { padding:20px; }
+    .log-btn {
+        display:inline-flex; align-items:center; justify-content:center;
+        min-height:44px; padding:8px 16px; border:none; border-radius:var(--log-radius-sm);
+        background:var(--log-primary); color:#1c1917; font-size:0.875rem;
+        font-weight:700; cursor:pointer; transition:background var(--log-transition), transform var(--log-transition);
+        text-decoration:none;
+    }
+    .log-btn:hover { background:var(--log-primary-hover); transform:translateY(-1px); }
+    .log-btn-sm { min-height:36px; padding:6px 12px; font-size:0.8125rem; }
+    .log-btn-outline {
+        display:inline-flex; align-items:center; justify-content:center;
+        min-height:44px; padding:8px 16px; border:1px solid var(--log-border);
+        border-radius:var(--log-radius-sm); background:var(--log-surface);
+        color:var(--log-text-secondary); font-size:0.875rem; font-weight:700;
+        cursor:pointer; transition:background var(--log-transition);
+    }
+    .log-btn-outline:hover { background:var(--log-bg); }
+    .log-group-card {
+        background:var(--log-surface); border:1px solid var(--log-border); border-radius:var(--log-radius);
+        padding:16px; margin-bottom:12px; box-shadow:var(--log-shadow);
+    }
+    .log-group-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .log-group-title { font-weight:700; font-size:0.875rem; color:var(--log-text); }
+    .log-group-badge { font-size:0.6875rem; font-weight:700; padding:4px 10px; border-radius:9999px; background:var(--log-blue-bg); color:var(--log-blue-text); }
+    .log-shipment-row {
+        display:flex; align-items:center; gap:12px; padding:8px 0;
+        border-bottom:1px solid var(--log-border); font-size:0.8125rem;
+    }
+    .log-shipment-row:last-child { border-bottom:none; }
+    .log-empty { padding:40px 20px; text-align:center; font-size:0.875rem; color:var(--log-text-muted); }
+    #batch-result { display:none; padding:12px 16px; border-radius:var(--log-radius-sm); margin-top:12px; font-size:0.875rem; font-weight:600; }
+    #batch-result.success { display:block; background:var(--log-green-bg); color:var(--log-green-text); }
+    #batch-result.info { display:block; background:var(--log-blue-bg); color:var(--log-blue-text); }
+</style>
+
+<div class="log-page">
+    <div class="log-page-header">
+        <div>
+            <h1>Batch Assignment</h1>
+            <p>Group nearby orders and assign to drivers efficiently</p>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <button onclick="runBatchAssign()" class="log-btn" id="batch-btn">⚡ Auto Batch Assign</button>
+            <button onclick="recalcPerformance()" class="log-btn log-btn-sm" style="background:var(--log-surface);border:1px solid var(--log-border);color:var(--log-text-secondary);">↻ Recalc Scores</button>
+        </div>
+    </div>
+
+    <div class="log-stats-grid">
+        <div class="log-stat-card">
+            <p class="stat-value blue">{{ unassigned_count }}</p>
+            <p class="stat-label">Unassigned</p>
+        </div>
+        <div class="log-stat-card">
+            <p class="stat-value green">{{ available_drivers }}</p>
+            <p class="stat-label">Available Drivers</p>
+        </div>
+        <div class="log-stat-card">
+            <p class="stat-value">{{ groups|length }}</p>
+            <p class="stat-label">Proximity Groups</p>
+        </div>
+    </div>
+
+    <div id="batch-result"></div>
+
+    {% if groups %}
+    {% for group in groups %}
+    <div class="log-group-card">
+        <div class="log-group-header">
+            <div class="log-group-title">📍 Group {{ loop.index }} — {{ group.shipments|length }} orders nearby</div>
+            <div class="log-group-badge">{{ "%.1f"|format(group.shipments|length * 2.5) }} km route</div>
+        </div>
+        {% for s in group.shipments %}
+        <div class="log-shipment-row">
+            <span style="font-family:monospace;font-weight:600;">{{ s.tracking_number }}</span>
+            <span style="flex:1;color:var(--log-text-secondary);">{{ s.destination or 'N/A' }}</span>
+            <span style="font-size:0.75rem;color:var(--log-text-muted);">{{ s.order.order_number if s.order else 'N/A' }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="log-card">
+        <div class="log-empty">No proximity groups found. All unassigned shipments are spread out too far to batch.</div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function runBatchAssign() {
+    var btn = document.getElementById('batch-btn');
+    var result = document.getElementById('batch-result');
+    btn.textContent = '⏳ Assigning...';
+    btn.disabled = true;
+
+    fetch('/logistics/api/batch-assign', {method: 'POST'})
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+            btn.textContent = '⚡ Auto Batch Assign';
+            btn.disabled = false;
+            if (data.assigned > 0) {
+                result.className = 'success';
+                result.textContent = '✓ Assigned ' + data.assigned + ' shipments to available drivers.';
+                setTimeout(function(){ location.reload(); }, 1500);
+            } else {
+                result.className = 'info';
+                result.textContent = data.message || 'No shipments could be assigned.';
+            }
+        })
+        .catch(function(){
+            btn.textContent = '⚡ Auto Batch Assign';
+            btn.disabled = false;
+            result.className = 'info';
+            result.textContent = 'Error occurred. Try again.';
+        });
+}
+
+function recalcPerformance() {
+    fetch('/logistics/api/recalculate-performance', {method: 'POST'})
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+            alert('Recalculated performance scores for ' + data.drivers + ' drivers.');
+        });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}Return {{ rr.return_number }} — ForgeStore Logistics{% endblock %}
+{% block content %}
+<style>
+    :root{--log-primary:#d97706;--log-primary-hover:#f59e0b;--log-text:#1c1917;--log-text-secondary:#78716c;--log-text-muted:#a8a29e;--log-bg:#fafaf9;--log-surface:#ffffff;--log-border:#e7e5e4;--log-radius:12px;--log-radius-sm:8px;--log-shadow:0 1px 3px rgba(0,0,0,.06);--log-transition:0.2s cubic-bezier(.4,0,.2,1)}
+    .log-page{display:flex;flex-direction:column;gap:20px;padding:0}
+    .log-back{display:inline-flex;align-items:center;gap:6px;font-size:0.875rem;font-weight:600;color:var(--log-text-secondary);text-decoration:none}
+    .log-back:hover{color:var(--log-text)}
+    .log-grid{display:grid;grid-template-columns:1fr;gap:20px}
+    @media(min-width:768px){.log-grid{grid-template-columns:2fr 1fr;}}
+    .log-card{background:var(--log-surface);border:1px solid var(--log-border);border-radius:16px;overflow:hidden;box-shadow:var(--log-shadow)}
+    .log-card-header{padding:16px 20px;border-bottom:1px solid var(--log-border);font-weight:700;font-size:0.9375rem;color:var(--log-text);display:flex;align-items:center;justify-content:space-between}
+    .log-card-body{padding:20px}
+    .log-info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--log-border);font-size:0.875rem}
+    .log-info-row:last-child{border-bottom:none}
+    .log-info-label{font-weight:600;color:var(--log-text-secondary)}
+    .log-info-value{color:var(--log-text);font-weight:500;text-align:right;max-width:60%;word-break:break-word}
+    .log-badge{font-size:0.6875rem;font-weight:700;padding:4px 10px;border-radius:9999px;white-space:nowrap}
+    .log-badge.pending{background:#fef3c7;color:#92400e}
+    .log-badge.approved{background:#dbeafe;color:#1d4ed8}
+    .log-badge.in-transit{background:#ede9fe;color:#6d28d9}
+    .log-badge.received{background:#d1fae5;color:#047857}
+    .log-badge.rejected{background:#fee2e2;color:#991b1b}
+    .log-badge.refunded{background:#fce7f3;color:#9d174d}
+    .log-timeline{position:relative;padding-left:24px}
+    .log-timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--log-border)}
+    .log-timeline-item{position:relative;padding-bottom:16px}
+    .log-timeline-item::before{content:'';position:absolute;left:-20px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--log-primary);border:2px solid var(--log-surface);z-index:1}
+    .log-timeline-item:last-child{padding-bottom:0}
+    .log-timeline-status{font-weight:700;font-size:0.8125rem;color:var(--log-text)}
+    .log-timeline-desc{font-size:0.8125rem;color:var(--log-text-secondary);margin-top:2px}
+    .log-timeline-time{font-size:0.75rem;color:var(--log-text-muted);margin-top:2px}
+    .log-form-group{margin-bottom:16px}
+    .log-form-group label{display:block;font-size:0.8125rem;font-weight:700;color:var(--log-text-secondary);margin-bottom:6px}
+    .log-form-select,.log-form-input{width:100%;min-height:44px;padding:10px 14px;border:1px solid var(--log-border);border-radius:var(--log-radius-sm);font-size:0.875rem;color:var(--log-text);background:var(--log-surface)}
+    .log-form-textarea{width:100%;min-height:80px;padding:10px 14px;border:1px solid var(--log-border);border-radius:var(--log-radius-sm);font-size:0.875rem;color:var(--log-text);resize:vertical}
+    .log-form-actions{display:flex;gap:8px;margin-top:16px}
+    .log-btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 16px;border:none;border-radius:var(--log-radius-sm);background:var(--log-primary);color:#1c1917;font-size:0.875rem;font-weight:700;cursor:pointer;transition:background var(--log-transition)}
+    .log-btn:hover{background:var(--log-primary-hover)}
+    .log-btn-outline{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 16px;border:1px solid var(--log-border);border-radius:var(--log-radius-sm);background:var(--log-surface);color:var(--log-text-secondary);font-size:0.875rem;font-weight:700;cursor:pointer}
+    .log-empty{padding:40px 20px;text-align:center;font-size:0.875rem;color:var(--log-text-muted)}
+</style>
+
+<div class="log-page">
+    <a href="/logistics/returns" class="log-back">← Back to Returns</a>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div>
+            <h1 style="font-size:1.5rem;font-weight:800;color:var(--log-text);margin:0;">Return {{ rr.return_number }}</h1>
+            <p style="font-size:0.875rem;color:var(--log-text-secondary);margin:4px 0 0;">Order #{{ rr.order.order_number if rr.order else 'N/A' }} — {{ rr.reason.replace('_', ' ').title() }}</p>
+        </div>
+        <span class="log-badge {{ rr.status|lower|replace('_', '-') }}">{{ rr.status.replace('_', ' ').title() }}</span>
+    </div>
+
+    <div class="log-grid">
+        <div style="display:flex;flex-direction:column;gap:20px;">
+            <div class="log-card">
+                <div class="log-card-header">Return Details</div>
+                <div class="log-card-body">
+                    <div class="log-info-row"><span class="log-info-label">Customer</span><span class="log-info-value">{{ rr.customer.name if rr.customer else 'Unknown' }}</span></div>
+                    <div class="log-info-row"><span class="log-info-label">Reason</span><span class="log-info-value">{{ rr.reason.replace('_', ' ').title() }}</span></div>
+                    <div class="log-info-row"><span class="log-info-label">Description</span><span class="log-info-value">{{ rr.description or 'No description' }}</span></div>
+                    <div class="log-info-row"><span class="log-info-label">Return Fee</span><span class="log-info-value">₦{{ "%.2f"|format(rr.return_fee) }}</span></div>
+                    <div class="log-info-row"><span class="log-info-label">Refund Amount</span><span class="log-info-value">{{ '₦%.2f'|format(rr.refund_amount) if rr.refund_amount else 'Pending' }}</span></div>
+                    <div class="log-info-row"><span class="log-info-label">Pickup Address</span><span class="log-info-value">{{ rr.pickup_address or 'N/A' }}</span></div>
+                    <div class="log-info-row"><span class="log-info-label">Delivery Address</span><span class="log-info-value">{{ rr.delivery_address or 'N/A' }}</span></div>
+                </div>
+            </div>
+
+            <div class="log-card">
+                <div class="log-card-header">Timeline</div>
+                <div class="log-card-body">
+                    {% if events %}
+                    <div class="log-timeline">
+                        {% for e in events %}
+                        <div class="log-timeline-item">
+                            <div class="log-timeline-status">{{ e.status.replace('_', ' ').title() }}</div>
+                            <div class="log-timeline-desc">{{ e.description or 'No details' }}</div>
+                            <div class="log-timeline-time">{{ e.created_at.strftime('%b %d, %Y %H:%M') if e.created_at else '' }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="log-empty">No events yet.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:20px;">
+            <div class="log-card">
+                <div class="log-card-header">Update Status</div>
+                <div class="log-card-body">
+                    <form method="POST" action="/logistics/returns/{{ rr.id }}/status">
+                        <div class="log-form-group">
+                            <label>Status</label>
+                            <select name="status" class="log-form-select" required>
+                                <option value="APPROVED" {% if rr.status=='APPROVED' %}selected{% endif %}>Approve</option>
+                                <option value="PICKUP_SCHEDULED" {% if rr.status=='PICKUP_SCHEDULED' %}selected{% endif %}>Schedule Pickup</option>
+                                <option value="IN_TRANSIT" {% if rr.status=='IN_TRANSIT' %}selected{% endif %}>In Transit</option>
+                                <option value="RECEIVED" {% if rr.status=='RECEIVED' %}selected{% endif %}>Received</option>
+                                <option value="REFUNDED" {% if rr.status=='REFUNDED' %}selected{% endif %}>Refunded</option>
+                                <option value="REJECTED" {% if rr.status=='REJECTED' %}selected{% endif %}>Reject</option>
+                            </select>
+                        </div>
+                        <div class="log-form-group">
+                            <label>Notes</label>
+                            <textarea name="notes" class="log-form-textarea" placeholder="Optional notes..."></textarea>
+                        </div>
+                        <div class="log-form-actions">
+                            <button type="submit" class="log-btn">Update</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if rr.status in ['APPROVED', 'PENDING'] %}
+            <div class="log-card">
+                <div class="log-card-header">Assign Driver</div>
+                <div class="log-card-body">
+                    <form method="POST" action="/logistics/returns/{{ rr.id }}/assign">
+                        <div class="log-form-group">
+                            <label>Driver</label>
+                            <select name="agent_id" class="log-form-select" required>
+                                <option value="">Choose driver...</option>
+                                {% for d in available_drivers %}
+                                <option value="{{ d.id }}">{{ d.name }} — {{ d.vehicle_type or 'N/A' }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="log-form-actions">
+                            <button type="submit" class="log-btn">Assign Pickup</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

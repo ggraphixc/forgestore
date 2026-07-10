@@ -219,6 +219,7 @@
     }
     .log-badge.available { background: var(--log-green-bg); color: var(--log-green-text); }
     .log-badge.busy { background: var(--log-primary-light); color: #b45309; }
+    .log-badge.offline { background: #f3f4f6; color: #6b7280; }
     .log-empty {
         padding: 48px 20px;
         text-align: center;
@@ -267,6 +268,7 @@
                         <th>Status</th>
                         <th>Deliveries</th>
                         <th class="cell-hidden-sm">Rating</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -279,10 +281,26 @@
                         <span class="log-badge
                             {% if d.status == 'AVAILABLE' %}available
                             {% elif d.status == 'BUSY' %}busy
+                            {% elif d.status == 'OFFLINE' %}offline
                             {% endif %}">{{ d.status }}</span>
                     </td>
                     <td class="cell-secondary">{{ d.total_deliveries }}</td>
                     <td class="cell-secondary cell-hidden-sm">{{ "%.1f"|format(d.rating) }}</td>
+                    <td>
+                        {% if d.status == 'AVAILABLE' %}
+                        <form method="post" action="/logistics/drivers/{{ d.id }}/status" style="display:inline;">
+                            <input type="hidden" name="status" value="OFFLINE">
+                            <button type="submit" class="log-btn-outline" style="min-height:32px;padding:4px 10px;font-size:0.75rem;">Set Offline</button>
+                        </form>
+                        {% elif d.status == 'OFFLINE' %}
+                        <form method="post" action="/logistics/drivers/{{ d.id }}/status" style="display:inline;">
+                            <input type="hidden" name="status" value="AVAILABLE">
+                            <button type="submit" class="log-btn-outline" style="min-height:32px;padding:4px 10px;font-size:0.75rem;color:var(--log-green-text);border-color:var(--log-green-text);">Set Available</button>
+                        </form>
+                        {% else %}
+                        <span class="cell-xs">Busy</span>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
                 </tbody>

@@ -139,6 +139,7 @@ class Order(Base):
     total_amount = Column(Float, nullable=False)
     shipping_address = Column(JSON, nullable=False)
     customer_id = Column(String, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    fulfillment_mode = Column(String(20), nullable=False, default="VENDOR")  # VENDOR, PLATFORM
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
@@ -370,6 +371,8 @@ class Shipment(Base):
     weight_kg = Column(Float, nullable=True)
     notes = Column(Text, nullable=True)
     delivery_agent_id = Column(String, ForeignKey("delivery_agent.id", ondelete="SET NULL"), nullable=True)
+    proof_photo_url = Column(String(500), nullable=True)
+    batch_id = Column(String(50), nullable=True)  # Groups nearby orders for batch delivery
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
@@ -406,6 +409,9 @@ class DeliveryAgent(Base):
     status = Column(String(20), nullable=False, default="AVAILABLE")  # AVAILABLE, BUSY, OFFLINE
     rating = Column(Float, nullable=False, default=0.0)
     total_deliveries = Column(Integer, nullable=False, default=0)
+    successful_deliveries = Column(Integer, nullable=False, default=0)
+    avg_delivery_hours = Column(Float, nullable=False, default=0.0)
+    performance_score = Column(Float, nullable=False, default=0.0)
     current_latitude = Column(Float, nullable=True)
     current_longitude = Column(Float, nullable=True)
     last_location_update = Column(DateTime, nullable=True)
@@ -1557,7 +1563,60 @@ class OrderDispute(Base):
 
 
 # ==============================================================================
-# SYSTEM 21: DAILY ANALYTICS MATERIALIZATION
+# SYSTEM 21: REVERSE LOGISTICS & RETURNS
+# ==============================================================================
+
+
+class ReturnRequest(Base):
+    """Customer return request — reverse logistics flow for failed/undelivered orders."""
+    __tablename__ = "return_request"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    return_number = Column(String(50), nullable=False, unique=True)
+    order_id = Column(String, ForeignKey("order.id", ondelete="CASCADE"), nullable=False)
+    shipment_id = Column(String, ForeignKey("shipment.id", ondelete="SET NULL"), nullable=True)
+    customer_id = Column(String, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    retailer_id = Column(String, ForeignKey("retailer.id", ondelete="SET NULL"), nullable=True)
+    reason = Column(String(50), nullable=False)  # FAILED_DELIVERY, DAMAGED, WRONG_ITEM, NOT_RECEIVED, CUSTOMER_CANCEL, QUALITY_ISSUE
+    description = Column(Text, nullable=True)
+    status = Column(String(30), nullable=False, default="PENDING")  # PENDING, APPROVED, PICKUP_SCHEDULED, IN_TRANSIT, RECEIVED, REFUNDED, REJECTED
+    return_tracking = Column(String(100), nullable=True)
+    return_carrier = Column(String(50), nullable=True)  # gig, kwik, shapshap, internal
+    return_fee = Column(Float, nullable=False, default=0.0)
+    refund_amount = Column(Float, nullable=True)
+    pickup_address = Column(Text, nullable=True)
+    delivery_address = Column(Text, nullable=True)
+    pickup_date = Column(DateTime, nullable=True)
+    received_date = Column(DateTime, nullable=True)
+    resolved_by = Column(String, ForeignKey("admin_user.id", ondelete="SET NULL"), nullable=True)
+    resolution_notes = Column(Text, nullable=True)
+    evidence_urls = Column(JSON, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+    order: "Order" = relationship("Order")
+    shipment: "Shipment | None" = relationship("Shipment")
+    customer: "User" = relationship("User")
+    retailer: "Retailer | None" = relationship("Retailer")
+    resolver: "AdminUser | None" = relationship("AdminUser")
+
+
+class ReturnEvent(Base):
+    """Audit log for return request status changes."""
+    __tablename__ = "return_event"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    return_id = Column(String, ForeignKey("return_request.id", ondelete="CASCADE"), nullable=False)
+    status = Column(String(30), nullable=False)
+    description = Column(Text, nullable=True)
+    created_by = Column(String, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+
+    return_request: "ReturnRequest" = relationship("ReturnRequest", backref="events")
+
+
+# ==============================================================================
+# SYSTEM 22: DAILY ANALYTICS MATERIALIZATION
 # ==============================================================================
 
 
@@ -1641,3 +1700,37 @@ class SupportMessage(Base):
 
     ticket: "SupportTicket" = relationship("SupportTicket", back_populates="messages")
     sender: "User" = relationship("User")
+
+
+class PickupPoint(Base):
+    """Physical pickup station where customers can collect orders."""
+    __tablename__ = "pickup_point"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    name = Column(String(255), nullable=False)
+    address = Column(String(500), nullable=False)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
+    phone = Column(String(50), nullable=True)
+    operating_hours = Column(String(255), nullable=True)  # e.g. "Mon-Fri 9am-6pm"
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+    inventory: list["PickupInventory"] = relationship("PickupInventory", back_populates="pickup_point", cascade="all, delete-orphan")
+
+
+class PickupInventory(Base):
+    """Inventory of products stored at a pickup point."""
+    __tablename__ = "pickup_inventory"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    pickup_point_id = Column(String, ForeignKey("pickup_point.id", ondelete="CASCADE"), nullable=False)
+    product_id = Column(String, ForeignKey("product.id", ondelete="CASCADE"), nullable=False)
+    quantity = Column(Integer, nullable=False, default=0)
+    reserved = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+    pickup_point: "PickupPoint" = relationship("PickupPoint", back_populates="inventory")
+    product: "Product" = relationship("Product")

@@ -75,6 +75,10 @@ def vendor_dashboard(request: Request, db: Session = Depends(get_db)):
     recent_orders = []
     low_stock_count = 0
     low_stock_items = []
+    wallet_balance = 0.0
+    pending_earnings = 0.0
+    total_earnings = 0.0
+    active_campaigns = 0
 
     if retailer:
         total_products = db.query(func.count(Product.id)).filter(Product.retailer_id == retailer.id).scalar() or 0
@@ -98,6 +102,21 @@ def vendor_dashboard(request: Request, db: Session = Depends(get_db)):
         ).all()
         low_stock_count = len(low_stock_items)
 
+        # Wallet & earnings
+        wallet = db.query(VendorWallet).filter(VendorWallet.retailer_id == retailer.id).first()
+        if wallet:
+            wallet_balance = wallet.balance or 0
+
+        earnings = db.query(OrderEarning).filter(OrderEarning.retailer_id == retailer.id).all()
+        total_earnings = sum(e.net_amount or 0 for e in earnings)
+        pending_earnings = sum(e.net_amount or 0 for e in earnings if e.status == "PENDING")
+
+        # Active ad campaigns
+        active_campaigns = db.query(func.count(AdCampaign.id)).filter(
+            AdCampaign.retailer_id == retailer.id,
+            AdCampaign.status == "ACTIVE",
+        ).scalar() or 0
+
     return render_template("vendor/dashboard.html", {
         "request": request,
         "admin": admin,
@@ -108,6 +127,10 @@ def vendor_dashboard(request: Request, db: Session = Depends(get_db)):
         "recent_orders": recent_orders,
         "low_stock_count": low_stock_count,
         "low_stock_items": low_stock_items[:5],
+        "wallet_balance": float(wallet_balance),
+        "pending_earnings": float(pending_earnings),
+        "total_earnings": float(total_earnings),
+        "active_campaigns": active_campaigns,
         "has_permission": has_permission,
     })
 
@@ -164,6 +187,48 @@ def vendor_orders(request: Request, db: Session = Depends(get_db)):
     })
 
 
+@router.post("/vendor/orders/{order_id}/ship")
+async def vendor_mark_shipped(order_id: str, request: Request, db: Session = Depends(get_db)):
+    """Vendor marks their fulfillment as shipped — triggers logistics assignment."""
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    from app.models import VendorFulfillment, Shipment, ShipmentEvent
+    import uuid
+
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        return JSONResponse({"error": "Order not found"}, status_code=404)
+
+    vf = db.query(VendorFulfillment).filter(
+        VendorFulfillment.order_id == order.id,
+        VendorFulfillment.retailer_id == retailer.id
+    ).first()
+
+    if vf:
+        vf.status = "SHIPPED"
+        vf.assigned_driver_id = None
+
+        existing_shipment = db.query(Shipment).filter(Shipment.order_id == order.id).first()
+        if not existing_shipment:
+            tracking = f"FS-{uuid.uuid4().hex[:8].upper()}"
+            shipment = Shipment(
+                order_id=order.id,
+                tracking_number=tracking,
+                status="PENDING",
+                origin=vf.origin_address or (retailer.business_name if retailer else ""),
+                destination=vf.destination_address or str(order.shipping_address),
+                carrier=None,
+            )
+            db.add(shipment)
+
+        db.commit()
+        return JSONResponse({"ok": True, "message": "Shipment created, awaiting logistics assignment"})
+
+    return JSONResponse({"error": "No vendor fulfillment found for this order"}, status_code=404)
+
+
 @router.get("/vendor/earnings", response_class=HTMLResponse)
 def vendor_earnings(request: Request, db: Session = Depends(get_db)):
     admin, retailer, redirect = _require_retailer(request, db)
@@ -206,6 +271,124 @@ def vendor_analytics(request: Request, db: Session = Depends(get_db)):
         "retailer": retailer,
         "analytics": analytics,
         "has_permission": has_permission,
+    })
+
+
+@router.get("/api/vendor/analytics")
+def vendor_analytics_api(
+    request: Request,
+    period: str = "daily",
+    days: int = 30,
+    db: Session = Depends(get_db),
+):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    if not retailer:
+        raise HTTPException(status_code=400, detail="No vendor profile")
+
+    # ── Period analytics ──
+    period_records = db.query(VendorAnalytics).filter(
+        VendorAnalytics.retailer_id == retailer.id,
+        VendorAnalytics.period == period,
+    ).order_by(desc(VendorAnalytics.period_start)).limit(days).all()
+
+    # ── Totals from period records ──
+    total_revenue = sum(r.total_revenue or 0 for r in period_records)
+    total_orders = sum(r.total_orders or 0 for r in period_records)
+    total_products_sold = sum(r.total_products_sold or 0 for r in period_records)
+    total_customers = sum(r.unique_customers or 0 for r in period_records)
+    avg_order_value = total_revenue / total_orders if total_orders > 0 else 0
+    avg_conversion = sum(r.conversion_rate or 0 for r in period_records) / len(period_records) if period_records else 0
+    total_page_views = sum(r.page_views or 0 for r in period_records)
+
+    # ── Earnings breakdown ──
+    earnings = db.query(OrderEarning).filter(
+        OrderEarning.retailer_id == retailer.id,
+    ).order_by(desc(OrderEarning.created_at)).limit(200).all()
+    net_earnings = sum(e.net_amount or 0 for e in earnings)
+    gross_earnings = sum(e.amount or 0 for e in earnings)
+    total_commission = sum(e.commission or 0 for e in earnings)
+    pending_earnings = sum(e.net_amount or 0 for e in earnings if e.status == "PENDING")
+    paid_earnings = sum(e.net_amount or 0 for e in earnings if e.status == "PAID")
+
+    # ── Top products ──
+    from app.models import Product
+    product_sales = {}
+    for item in db.query(OrderItem).join(Order).filter(
+        Order.retailer_ids.any(retailer.id) if hasattr(Order, 'retailer_ids') else Order.retailer_id == retailer.id
+    ).all():
+        pid = item.product_id
+        if pid not in product_sales:
+            product_sales[pid] = {"qty": 0, "revenue": 0}
+        product_sales[pid]["qty"] += item.quantity or 1
+        product_sales[pid]["revenue"] += (item.price or 0) * (item.quantity or 1)
+
+    top_products = []
+    for pid, data in sorted(product_sales.items(), key=lambda x: x[1]["revenue"], reverse=True)[:5]:
+        product = db.query(Product).filter(Product.id == pid).first()
+        top_products.append({
+            "name": product.name if product else "Unknown",
+            "qty": data["qty"],
+            "revenue": data["revenue"],
+            "image": product.images[0] if product and product.images else None,
+        })
+
+    # ── Recent orders for table ──
+    recent_orders = []
+    order_query = db.query(Order).join(OrderItem).join(
+        Product, OrderItem.product_id == Product.id
+    ).filter(Product.retailer_id == retailer.id).order_by(desc(Order.created_at)).limit(10).all()
+    seen_orders = set()
+    for o in order_query:
+        if o.id not in seen_orders:
+            seen_orders.add(o.id)
+            recent_orders.append({
+                "id": o.id,
+                "order_number": o.order_number,
+                "status": o.status.value if hasattr(o.status, 'value') else str(o.status),
+                "total": o.total_amount,
+                "created_at": o.created_at.isoformat() if o.created_at else None,
+            })
+
+    # ── Status distribution ──
+    status_dist = {}
+    for o in order_query:
+        s = o.status.value if hasattr(o.status, 'value') else str(o.status)
+        status_dist[s] = status_dist.get(s, 0) + 1
+
+    return JSONResponse({
+        "period_records": [{
+            "period": r.period,
+            "period_start": r.period_start.isoformat() if r.period_start else None,
+            "revenue": r.total_revenue,
+            "orders": r.total_orders,
+            "products_sold": r.total_products_sold,
+            "customers": r.unique_customers,
+            "avg_order_value": r.avg_order_value,
+            "conversion_rate": r.conversion_rate,
+            "page_views": r.page_views,
+        } for r in reversed(period_records)],
+        "totals": {
+            "revenue": total_revenue,
+            "orders": total_orders,
+            "products_sold": total_products_sold,
+            "customers": total_customers,
+            "avg_order_value": round(avg_order_value, 2),
+            "avg_conversion": round(avg_conversion, 2),
+            "page_views": total_page_views,
+        },
+        "earnings": {
+            "net": net_earnings,
+            "gross": gross_earnings,
+            "commission": total_commission,
+            "pending": pending_earnings,
+            "paid": paid_earnings,
+        },
+        "top_products": top_products,
+        "recent_orders": recent_orders,
+        "status_distribution": status_dist,
     })
 
 

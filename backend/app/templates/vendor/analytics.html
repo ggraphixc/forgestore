@@ -3,340 +3,307 @@
 {% block content %}
 <style>
   :root {
-    --color-primary: #f59e0b;
-    --color-primary-hover: #d97706;
-    --color-primary-light: #fef3c7;
-    --color-primary-bg: #fffbeb;
-    --color-text: #78716c;
-    --color-text-dark: #1c1917;
-    --color-text-muted: #a8a29e;
-    --color-border: #e7e5e4;
-    --color-border-light: #f5f5f4;
-    --color-bg: #f5f5f4;
-    --color-bg-alt: #ffffff;
-    --color-emerald: #10b981;
-    --color-emerald-light: #d1fae5;
-    --color-emerald-dark: #065f46;
-    --color-blue: #3b82f6;
-    --color-blue-light: #dbeafe;
-    --color-blue-dark: #1e40af;
-    --color-amber: #f59e0b;
-    --color-amber-light: #fef3c7;
-    --color-amber-dark: #92400e;
-    --color-purple: #8b5cf6;
-    --color-purple-light: #ede9fe;
-    --color-purple-dark: #5b21b6;
-    --color-red: #ef4444;
-    --color-red-light: #fee2e2;
-    --color-red-dark: #991b1b;
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
-    --radius-lg: 1rem;
-    --radius-md: 0.75rem;
-    --radius-sm: 0.5rem;
+    --va-primary: #f59e0b;
+    --va-primary-hover: #d97706;
+    --va-primary-light: #fef3c7;
+    --va-text: #78716c;
+    --va-text-dark: #1c1917;
+    --va-text-muted: #a8a29e;
+    --va-border: #e7e5e4;
+    --va-border-light: #f5f5f4;
+    --va-bg: #f5f5f4;
+    --va-bg-alt: #ffffff;
+    --va-emerald: #10b981;
+    --va-emerald-light: #d1fae5;
+    --va-blue: #3b82f6;
+    --va-blue-light: #dbeafe;
+    --va-amber: #f59e0b;
+    --va-amber-light: #fef3c7;
+    --va-purple: #8b5cf6;
+    --va-purple-light: #ede9fe;
+    --va-red: #ef4444;
+    --va-red-light: #fee2e2;
+    --va-shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --va-shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+    --va-radius-lg: 1rem;
+    --va-radius-md: 0.75rem;
   }
-
-  .vendor-page {
-    max-width: 72rem;
-    margin: 0 auto;
-    padding: 1.5rem;
-  }
-
-  .vendor-page-header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem;
-    justify-content: space-between;
-  }
-
-  .vendor-page-header h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--color-text-dark);
-    margin: 0;
-  }
-
-  .vendor-page-header .subtitle {
-    font-size: 0.875rem;
-    color: var(--color-text-muted);
-    margin-top: 0.25rem;
-  }
-
-  .vendor-stats-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  @media (min-width: 640px) {
-    .vendor-stats-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-
-  @media (min-width: 1024px) {
-    .vendor-stats-grid { grid-template-columns: repeat(4, 1fr); }
-  }
-
-  .vendor-stat-card {
-    background: var(--color-bg-alt);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-border);
-    padding: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    transition: box-shadow 0.2s;
-  }
-
-  .vendor-stat-card:hover {
-    box-shadow: var(--shadow-md);
-  }
-
-  .vendor-stat-card .label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-text-muted);
-  }
-
-  .vendor-stat-card .value {
-    font-size: 1.875rem;
-    font-weight: 900;
-    color: var(--color-text-dark);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .vendor-stat-card .value.amber { color: var(--color-amber); }
-  .vendor-stat-card .value.emerald { color: var(--color-emerald); }
-  .vendor-stat-card .value.blue { color: var(--color-blue); }
-  .vendor-stat-card .value.purple { color: var(--color-purple); }
-
-  .vendor-stat-card .meta {
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-    margin-top: 0.125rem;
-  }
-
-  .vendor-stat-card .trend {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    margin-top: 0.25rem;
-  }
-
-  .vendor-stat-card .trend.up {
-    color: var(--color-emerald);
-  }
-
-  .vendor-stat-card .trend.down {
-    color: var(--color-red);
-  }
-
-  .vendor-card {
-    background: var(--color-bg-alt);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-border);
-    overflow: hidden;
-  }
-
-  .vendor-card-header {
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--color-border-light);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-
-  .vendor-card-header h2 {
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: var(--color-text-dark);
-    margin: 0;
-  }
-
-  .vendor-table-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .vendor-table {
-    width: 100%;
-    font-size: 0.875rem;
-    border-collapse: collapse;
-  }
-
-  .vendor-table th {
-    padding: 0.75rem 1.25rem;
-    text-align: left;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-text-muted);
-    border-bottom: 1px solid var(--color-border-light);
-    white-space: nowrap;
-    background: var(--color-bg);
-  }
-
-  .vendor-table td {
-    padding: 0.75rem 1.25rem;
-    border-bottom: 1px solid var(--color-border-light);
-    color: var(--color-text);
-    vertical-align: middle;
-  }
-
-  .vendor-table tbody tr:hover {
-    background: var(--color-bg);
-  }
-
-  .vendor-table tbody tr:last-child td {
-    border-bottom: none;
-  }
-
-  .vendor-table .cell-period {
-    font-weight: 700;
-    color: var(--color-text-dark);
-  }
-
-  .vendor-table .cell-revenue {
-    font-weight: 700;
-    color: var(--color-text-dark);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .vendor-table .cell-orders {
-    font-variant-numeric: tabular-nums;
-  }
-
-  .vendor-badge {
-    display: inline-block;
-    font-size: 0.625rem;
-    font-weight: 700;
-    padding: 0.1875rem 0.625rem;
-    border-radius: 9999px;
-    line-height: 1.4;
-    white-space: nowrap;
-  }
-
-  .vendor-badge.current {
-    background: var(--color-emerald-light);
-    color: var(--color-emerald-dark);
-  }
-
-  .vendor-badge.past {
-    background: var(--color-border-light);
-    color: var(--color-text-muted);
-  }
-
-  .vendor-empty {
-    padding: 3rem 1.25rem;
-    text-align: center;
-    font-size: 0.875rem;
-    color: var(--color-text-muted);
-  }
-
-  .vendor-empty svg {
-    width: 2.5rem;
-    height: 2.5rem;
-    margin: 0 auto 0.75rem;
-    color: var(--color-border);
-  }
-
-  .hide-mobile {
-    display: table-cell;
-  }
-
-  @media (max-width: 640px) {
-    .vendor-page { padding: 1rem; }
-    .vendor-page-header h1 { font-size: 1.25rem; }
-    .vendor-stat-card .value { font-size: 1.5rem; }
-    .vendor-table th,
-    .vendor-table td { padding: 0.625rem 0.75rem; }
-    .hide-mobile { display: none; }
-  }
+  .va-page { max-width:72rem; margin:0 auto; padding:1.5rem; }
+  .va-header { display:flex; flex-wrap:wrap; align-items:center; gap:.75rem; justify-content:space-between; }
+  .va-header h1 { font-size:1.5rem; font-weight:700; color:var(--va-text-dark); margin:0; }
+  .va-header .sub { font-size:.875rem; color:var(--va-text-muted); margin-top:.25rem; }
+  .va-filters { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:1rem; }
+  .va-filter-btn { padding:.5rem 1rem; border-radius:var(--va-radius-md); border:1px solid var(--va-border); background:var(--va-bg-alt); font-size:.8125rem; font-weight:600; color:var(--va-text); cursor:pointer; transition:all .15s; min-height:36px; }
+  .va-filter-btn:hover { border-color:var(--va-primary); color:var(--va-primary); }
+  .va-filter-btn.active { background:var(--va-primary); color:white; border-color:var(--va-primary); }
+  .va-stats { display:grid; grid-template-columns:repeat(2,1fr); gap:.75rem; margin-top:1.5rem; }
+  @media(min-width:640px) { .va-stats { grid-template-columns:repeat(3,1fr); } }
+  @media(min-width:1024px) { .va-stats { grid-template-columns:repeat(6,1fr); } }
+  .va-stat { background:var(--va-bg-alt); border:1px solid var(--va-border); border-radius:var(--va-radius-lg); padding:1rem; }
+  .va-stat .lbl { font-size:.6875rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--va-text-muted); }
+  .va-stat .val { font-size:1.5rem; font-weight:900; color:var(--va-text-dark); font-variant-numeric:tabular-nums; margin-top:.25rem; }
+  .va-stat .meta { font-size:.6875rem; color:var(--va-text-muted); margin-top:.125rem; }
+  .va-stat .trend { font-size:.6875rem; font-weight:600; margin-top:.25rem; }
+  .va-stat .trend.up { color:var(--va-emerald); }
+  .va-stat .trend.down { color:var(--va-red); }
+  .va-chart-row { display:grid; grid-template-columns:1fr; gap:1rem; margin-top:1.5rem; }
+  @media(min-width:768px) { .va-chart-row { grid-template-columns:2fr 1fr; } }
+  .va-card { background:var(--va-bg-alt); border:1px solid var(--va-border); border-radius:var(--va-radius-lg); overflow:hidden; }
+  .va-card-hdr { padding:1rem 1.25rem; border-bottom:1px solid var(--va-border-light); display:flex; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap; }
+  .va-card-hdr h2 { font-size:.875rem; font-weight:700; color:var(--va-text-dark); margin:0; }
+  .va-card-body { padding:1.25rem; }
+  .va-table { width:100%; font-size:.8125rem; border-collapse:collapse; }
+  .va-table th { padding:.625rem 1rem; text-align:left; font-size:.6875rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--va-text-muted); border-bottom:1px solid var(--va-border-light); background:var(--va-bg); white-space:nowrap; }
+  .va-table td { padding:.625rem 1rem; border-bottom:1px solid var(--va-border-light); color:var(--va-text); }
+  .va-table tbody tr:hover { background:var(--va-bg); }
+  .va-table tbody tr:last-child td { border-bottom:none; }
+  .va-badge { display:inline-block; font-size:.625rem; font-weight:700; padding:.1875rem .5rem; border-radius:9999px; line-height:1.4; white-space:nowrap; }
+  .va-badge--green { background:var(--va-emerald-light); color:#065f46; }
+  .va-badge--amber { background:var(--va-amber-light); color:#92400e; }
+  .va-badge--blue { background:var(--va-blue-light); color:#1e40af; }
+  .va-badge--red { background:var(--va-red-light); color:#991b1b; }
+  .va-badge--purple { background:var(--va-purple-light); color:#5b21b6; }
+  .va-empty { padding:3rem 1.25rem; text-align:center; font-size:.875rem; color:var(--va-text-muted); }
+  .va-empty svg { width:2.5rem; height:2.5rem; margin:0 auto .75rem; color:var(--va-border); }
+  .va-product-row { display:flex; align-items:center; gap:.75rem; padding:.625rem 0; border-bottom:1px solid var(--va-border-light); }
+  .va-product-row:last-child { border-bottom:none; }
+  .va-product-img { width:2.5rem; height:2.5rem; border-radius:.5rem; object-fit:cover; background:var(--va-bg); flex-shrink:0; }
+  .va-product-name { font-size:.8125rem; font-weight:600; color:var(--va-text-dark); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .va-product-meta { font-size:.6875rem; color:var(--va-text-muted); }
+  .va-product-rev { font-size:.8125rem; font-weight:700; color:var(--va-text-dark); text-align:right; white-space:nowrap; }
+  @media(max-width:640px) { .va-page { padding:1rem; } .va-header h1 { font-size:1.25rem; } .va-stat .val { font-size:1.25rem; } }
 </style>
 
-<div class="vendor-page">
-  <div class="vendor-page-header">
+<div class="va-page">
+  <div class="va-header">
     <div>
       <h1>Analytics</h1>
-      <p class="subtitle">Sales performance and revenue insights</p>
+      <p class="sub">Sales performance, revenue insights, and top products</p>
+    </div>
+    <div class="va-filters">
+      <button class="va-filter-btn active" onclick="setPeriod('daily',this)">Daily</button>
+      <button class="va-filter-btn" onclick="setPeriod('weekly',this)">Weekly</button>
+      <button class="va-filter-btn" onclick="setPeriod('monthly',this)">Monthly</button>
     </div>
   </div>
 
-  {% if analytics %}
-  <div class="vendor-stats-grid" style="margin-top:1.5rem;">
-    {% set latest = analytics[0] if analytics else None %}
-    {% if latest %}
-    <div class="vendor-stat-card">
-      <span class="label">Latest Period</span>
-      <span class="value">₦{{ "{:,.2f}".format(latest.total_revenue) }}</span>
-      <span class="meta">{{ latest.total_orders }} order{{ 's' if latest.total_orders != 1 else '' }}</span>
+  <div class="va-stats" id="stats-grid">
+    <div class="va-stat"><span class="lbl">Revenue</span><span class="val" id="s-revenue">-</span><span class="meta" id="s-revenue-meta"></span></div>
+    <div class="va-stat"><span class="lbl">Orders</span><span class="val" id="s-orders">-</span><span class="meta" id="s-orders-meta"></span></div>
+    <div class="va-stat"><span class="lbl">Avg Order</span><span class="val" id="s-aov">-</span><span class="meta">per order</span></div>
+    <div class="va-stat"><span class="lbl">Customers</span><span class="val" id="s-customers">-</span><span class="meta" id="s-customers-meta"></span></div>
+    <div class="va-stat"><span class="lbl">Net Earnings</span><span class="val" id="s-earnings">-</span><span class="meta" id="s-earnings-meta"></span></div>
+    <div class="va-stat"><span class="lbl">Page Views</span><span class="val" id="s-views">-</span><span class="meta" id="s-views-meta"></span></div>
+  </div>
+
+  <div class="va-chart-row">
+    <div class="va-card">
+      <div class="va-card-hdr"><h2>Revenue Trend</h2></div>
+      <div class="va-card-body"><canvas id="revenueChart" height="220"></canvas></div>
     </div>
-    {% endif %}
-    {% set all_revenue = analytics|map(attribute='total_revenue')|sum %}
-    {% set all_orders = analytics|map(attribute='total_orders')|sum %}
-    <div class="vendor-stat-card">
-      <span class="label">Total Revenue</span>
-      <span class="value amber">₦{{ "{:,.2f}".format(all_revenue) }}</span>
-      <span class="meta">across {{ analytics|length }} period{{ 's' if analytics|length != 1 else '' }}</span>
-    </div>
-    <div class="vendor-stat-card">
-      <span class="label">Total Orders</span>
-      <span class="value blue">{{ all_orders }}</span>
-      <span class="meta">{{ (all_orders / analytics|length)|round(1) if analytics|length > 0 else 0 }} avg per period</span>
-    </div>
-    <div class="vendor-stat-card">
-      <span class="label">Avg Order Value</span>
-      <span class="value purple">₦{{ "{:,.2f}".format(all_revenue / all_orders) if all_orders > 0 else '0.00' }}</span>
-      <span class="meta">per order</span>
+    <div class="va-card">
+      <div class="va-card-hdr"><h2>Order Status</h2></div>
+      <div class="va-card-body"><canvas id="statusChart" height="220"></canvas></div>
     </div>
   </div>
 
-  <div class="vendor-card" style="margin-top:1.5rem;">
-    <div class="vendor-card-header">
-      <h2>Period Breakdown</h2>
+  <div class="va-chart-row" style="margin-top:1rem">
+    <div class="va-card">
+      <div class="va-card-hdr"><h2>Top Products</h2></div>
+      <div class="va-card-body" id="top-products"><div class="va-empty">Loading...</div></div>
     </div>
-    <div class="vendor-table-container">
-      <table class="vendor-table">
-        <thead>
-          <tr>
-            <th>Period</th>
-            <th>Revenue</th>
-            <th class="hide-mobile">Orders</th>
-            <th class="hide-mobile">Avg / Order</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for a in analytics %}
-          <tr>
-            <td class="cell-period">{{ a.period }}</td>
-            <td class="cell-revenue">₦{{ "{:,.2f}".format(a.total_revenue) }}</td>
-            <td class="hide-mobile cell-orders">{{ a.total_orders }}</td>
-            <td class="hide-mobile">₦{{ "{:,.2f}".format(a.total_revenue / a.total_orders) if a.total_orders > 0 else '0.00' }}</td>
-            <td>
-              <span class="vendor-badge {% if loop.first %}current{% else %}past{% endif %}">{% if loop.first %}Current{% else %}Past{% endif %}</span>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
+    <div class="va-card">
+      <div class="va-card-hdr"><h2>Earnings Breakdown</h2></div>
+      <div class="va-card-body"><canvas id="earningsChart" height="200"></canvas></div>
+    </div>
+  </div>
+
+  <div class="va-card" style="margin-top:1rem">
+    <div class="va-card-hdr"><h2>Recent Orders</h2></div>
+    <div style="overflow-x:auto">
+      <table class="va-table" id="orders-table">
+        <thead><tr><th>Order</th><th>Status</th><th>Total</th><th>Date</th></tr></thead>
+        <tbody id="orders-body"><tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--va-text-muted)">Loading...</td></tr></tbody>
       </table>
     </div>
   </div>
-  {% else %}
-  <div class="vendor-card" style="margin-top:1.5rem;">
-    <div class="vendor-empty">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-      <p>No analytics data available yet.</p>
-      <p style="font-size:0.75rem;margin-top:0.5rem;">Analytics are generated as sales come in.</p>
-    </div>
-  </div>
-  {% endif %}
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+let revenueChart, statusChart, earningsChart;
+let currentPeriod = 'daily';
+
+const fmt = n => '₦' + Number(n||0).toLocaleString('en-NG', {minimumFractionDigits:0, maximumFractionDigits:0});
+const fmtK = n => n >= 1000 ? (n/1000).toFixed(1)+'k' : String(n);
+
+function setPeriod(p, el) {
+  currentPeriod = p;
+  document.querySelectorAll('.va-filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  loadAnalytics(p);
+}
+
+async function loadAnalytics(period) {
+  try {
+    const res = await fetch('/vendor/api/vendor/analytics?period=' + period + '&days=30');
+    if (!res.ok) throw new Error('Failed');
+    const d = await res.json();
+    renderStats(d);
+    renderRevenueChart(d.period_records);
+    renderStatusChart(d.status_distribution);
+    renderEarningsChart(d.earnings);
+    renderTopProducts(d.top_products);
+    renderOrders(d.recent_orders);
+  } catch(e) {
+    console.error('Analytics load error:', e);
+  }
+}
+
+function renderStats(d) {
+  const t = d.totals;
+  const e = d.earnings;
+  document.getElementById('s-revenue').textContent = fmt(t.revenue);
+  document.getElementById('s-revenue-meta').textContent = t.orders + ' orders total';
+  document.getElementById('s-orders').textContent = t.orders;
+  document.getElementById('s-orders-meta').textContent = (t.products_sold || 0) + ' items sold';
+  document.getElementById('s-aov').textContent = fmt(t.avg_order_value);
+  document.getElementById('s-customers').textContent = t.customers;
+  document.getElementById('s-customers-meta').textContent = t.avg_conversion + '% conversion';
+  document.getElementById('s-earnings').textContent = fmt(e.net);
+  document.getElementById('s-earnings-meta').textContent = fmt(e.pending) + ' pending';
+  document.getElementById('s-views').textContent = fmtK(t.page_views);
+  document.getElementById('s-views-meta').textContent = 'visitors';
+}
+
+function renderRevenueChart(records) {
+  const ctx = document.getElementById('revenueChart').getContext('2d');
+  if (revenueChart) revenueChart.destroy();
+  const labels = records.map(r => {
+    const d = r.period_start ? new Date(r.period_start) : new Date();
+    return d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+  });
+  revenueChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Revenue',
+        data: records.map(r => r.revenue),
+        borderColor: '#f59e0b',
+        backgroundColor: 'rgba(245,158,11,0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3,
+        pointBackgroundColor: '#f59e0b',
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { callback: v => '₦'+fmtK(v) }, grid: { color: '#f5f5f4' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+function renderStatusChart(dist) {
+  const ctx = document.getElementById('statusChart').getContext('2d');
+  if (statusChart) statusChart.destroy();
+  const colors = { PAID:'#3b82f6', SHIPPED:'#8b5cf6', DELIVERED:'#10b981', CANCELLED:'#ef4444', PENDING:'#f59e0b', PROCESSING:'#6366f1' };
+  const labels = Object.keys(dist);
+  const values = Object.values(dist);
+  statusChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: labels.map(l => colors[l] || '#a8a29e'),
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 11 } } } },
+      cutout: '65%',
+    }
+  });
+}
+
+function renderEarningsChart(e) {
+  const ctx = document.getElementById('earningsChart').getContext('2d');
+  if (earningsChart) earningsChart.destroy();
+  earningsChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Gross', 'Commission', 'Net', 'Pending', 'Paid'],
+      datasets: [{
+        data: [e.gross, e.commission, e.net, e.pending, e.paid],
+        backgroundColor: ['#3b82f6','#ef4444','#10b981','#f59e0b','#8b5cf6'],
+        borderRadius: 6,
+        barThickness: 28,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { beginAtZero: true, ticks: { callback: v => '₦'+fmtK(v) }, grid: { color: '#f5f5f4' } },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+function renderTopProducts(products) {
+  const el = document.getElementById('top-products');
+  if (!products || products.length === 0) {
+    el.innerHTML = '<div class="va-empty" style="padding:1.5rem"><p>No product sales data yet</p></div>';
+    return;
+  }
+  el.innerHTML = products.map(p => `
+    <div class="va-product-row">
+      ${p.image ? `<img src="${p.image}" class="va-product-img" alt="">` : `<div class="va-product-img" style="display:flex;align-items:center;justify-content:center;font-size:.75rem;color:var(--va-text-muted)">No img</div>`}
+      <div style="flex:1;min-width:0">
+        <div class="va-product-name">${p.name}</div>
+        <div class="va-product-meta">${p.qty} sold</div>
+      </div>
+      <div class="va-product-rev">${fmt(p.revenue)}</div>
+    </div>
+  `).join('');
+}
+
+function renderOrders(orders) {
+  const tbody = document.getElementById('orders-body');
+  if (!orders || orders.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--va-text-muted)">No orders yet</td></tr>';
+    return;
+  }
+  const badgeCls = s => {
+    if (s==='DELIVERED') return 'va-badge--green';
+    if (s==='SHIPPED'||s==='PROCESSING') return 'va-badge--blue';
+    if (s==='PAID') return 'va-badge--amber';
+    if (s==='CANCELLED') return 'va-badge--red';
+    return 'va-badge--purple';
+  };
+  tbody.innerHTML = orders.map(o => {
+    const d = o.created_at ? new Date(o.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+    return `<tr>
+      <td style="font-weight:600;color:var(--va-text-dark)">${o.order_number || o.id.slice(0,8)}</td>
+      <td><span class="va-badge ${badgeCls(o.status)}">${o.status}</span></td>
+      <td style="font-weight:600">${fmt(o.total)}</td>
+      <td>${d}</td>
+    </tr>`;
+  }).join('');
+}
+
+document.addEventListener('DOMContentLoaded', () => loadAnalytics('daily'));
+</script>
 {% endblock %}

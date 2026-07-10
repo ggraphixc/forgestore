@@ -556,6 +556,22 @@ def account_order_detail(request: Request, order_id: str, db: Session = Depends(
     })
 
 
+@router.get("/account/tracking", response_class=HTMLResponse)
+def account_tracking(request: Request, db: Session = Depends(get_db)):
+    customer = get_current_customer_from_cookie(request, db)
+    if not customer:
+        return RedirectResponse(url="/shop/login", status_code=302)
+
+    categories = db.query(Category).order_by(Category.name).all()
+
+    return render_template("web/account/tracking.html", {
+        "request": request,
+        "settings": _site_settings(db),
+        "user": customer,
+        "categories": categories,
+    })
+
+
 @router.get("/account/reviews", response_class=HTMLResponse)
 def account_reviews(request: Request, db: Session = Depends(get_db)):
     customer = get_current_customer_from_cookie(request, db)

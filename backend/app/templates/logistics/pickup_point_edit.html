@@ -1,0 +1,174 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}Edit Pickup Point — ForgeStore Logistics{% endblock %}
+{% block content %}
+<style>
+    :root {
+        --log-primary: #d97706;
+        --log-primary-hover: #f59e0b;
+        --log-primary-light: #fef3c7;
+        --log-primary-ring: rgba(217,119,6,.25);
+        --log-text: #1c1917;
+        --log-text-secondary: #78716c;
+        --log-text-muted: #a8a29e;
+        --log-bg: #fafaf9;
+        --log-surface: #ffffff;
+        --log-border: #e7e5e4;
+        --log-radius: 12px;
+        --log-radius-sm: 8px;
+        --log-shadow: 0 1px 3px rgba(0,0,0,.06);
+        --log-shadow-lg: 0 10px 25px -5px rgba(0,0,0,.08);
+        --log-transition: 0.2s cubic-bezier(.4,0,.2,1);
+        --log-green-bg: #d1fae5;
+        --log-green-text: #047857;
+    }
+    .log-page { display:flex; flex-direction:column; gap:20px; padding:0; max-width:640px; }
+    .log-page-header h1 { font-size:1.5rem; font-weight:800; color:var(--log-text); margin:0; letter-spacing:-0.025em; }
+    .log-page-header p { font-size:0.875rem; color:var(--log-text-secondary); margin:4px 0 0 0; }
+    .log-card {
+        background:var(--log-surface); border:1px solid var(--log-border);
+        border-radius:16px; overflow:hidden; box-shadow:var(--log-shadow);
+    }
+    .log-card-header {
+        padding:16px 20px; border-bottom:1px solid var(--log-border);
+        font-weight:700; font-size:0.9375rem; color:var(--log-text);
+        display:flex; align-items:center; gap:8px;
+    }
+    .log-card-body { padding:20px; }
+    .log-btn {
+        display:inline-flex; align-items:center; justify-content:center;
+        min-height:44px; padding:8px 16px; border:none; border-radius:var(--log-radius-sm);
+        background:var(--log-primary); color:#1c1917; font-size:0.875rem;
+        font-weight:700; cursor:pointer; transition:background var(--log-transition), transform var(--log-transition);
+        width:100%; text-decoration:none;
+    }
+    .log-btn:hover { background:var(--log-primary-hover); transform:translateY(-1px); }
+    .log-btn-outline {
+        display:inline-flex; align-items:center; justify-content:center;
+        min-height:44px; padding:8px 16px; border:1px solid var(--log-border);
+        border-radius:var(--log-radius-sm); background:var(--log-surface);
+        color:var(--log-text-secondary); font-size:0.875rem; font-weight:700;
+        cursor:pointer; transition:background var(--log-transition);
+    }
+    .log-btn-outline:hover { background:var(--log-bg); }
+    .log-form-group { display:flex; flex-direction:column; gap:8px; }
+    .log-form-group label { font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; color:var(--log-text-secondary); }
+    .log-form-input {
+        width:100%; min-height:44px; padding:10px 16px; border:1px solid var(--log-border);
+        border-radius:var(--log-radius-sm); background:var(--log-bg); font-size:0.875rem;
+        color:var(--log-text); box-sizing:border-box; transition:border-color var(--log-transition), box-shadow var(--log-transition);
+    }
+    .log-form-input:focus { outline:none; border-color:var(--log-primary); box-shadow:0 0 0 3px var(--log-primary-ring); }
+    .log-form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .log-form-actions { display:flex; flex-direction:column; gap:8px; padding-top:8px; }
+    @media(min-width:480px){ .log-form-actions { flex-direction:row; } }
+    .log-form-actions .log-btn { flex:1; }
+    .log-inv-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .log-inv-table { width:100%; border-collapse:collapse; font-size:0.8125rem; }
+    .log-inv-table th {
+        padding:8px 12px; text-align:left; font-size:0.6875rem; font-weight:700;
+        text-transform:uppercase; letter-spacing:0.04em; color:var(--log-text-secondary);
+        border-bottom:1px solid var(--log-border); background:var(--log-bg);
+    }
+    .log-inv-table td { padding:10px 12px; border-bottom:1px solid var(--log-border); }
+    .log-inv-table tbody tr:last-child td { border-bottom:none; }
+    .log-inv-add { display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; padding-top:12px; }
+    .log-inv-add .log-form-group { flex:1; min-width:100px; }
+</style>
+
+<div class="log-page">
+    <div class="log-page-header">
+        <div>
+            <a href="/logistics/pickup-points" style="font-size:0.8125rem;color:var(--log-text-secondary);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:8px;">← Back to Pickup Points</a>
+            <h1>Edit: {{ point.name }}</h1>
+        </div>
+    </div>
+
+    <div class="log-card">
+        <div class="log-card-header"><span>📍</span> Station Details</div>
+        <div class="log-card-body">
+            <form method="post" action="/logistics/pickup-points/{{ point.id }}/update" style="display:flex;flex-direction:column;gap:12px;">
+                <div class="log-form-group">
+                    <label>Station Name</label>
+                    <input name="name" value="{{ point.name }}" required class="log-form-input">
+                </div>
+                <div class="log-form-group">
+                    <label>Address</label>
+                    <input name="address" value="{{ point.address }}" required class="log-form-input">
+                </div>
+                <div class="log-form-row">
+                    <div class="log-form-group">
+                        <label>Latitude</label>
+                        <input name="latitude" type="number" step="any" value="{{ point.latitude or '' }}" class="log-form-input">
+                    </div>
+                    <div class="log-form-group">
+                        <label>Longitude</label>
+                        <input name="longitude" type="number" step="any" value="{{ point.longitude or '' }}" class="log-form-input">
+                    </div>
+                </div>
+                <div class="log-form-row">
+                    <div class="log-form-group">
+                        <label>Phone</label>
+                        <input name="phone" value="{{ point.phone or '' }}" class="log-form-input">
+                    </div>
+                    <div class="log-form-group">
+                        <label>Operating Hours</label>
+                        <input name="operating_hours" value="{{ point.operating_hours or '' }}" class="log-form-input">
+                    </div>
+                </div>
+                <div class="log-form-actions">
+                    <button type="submit" class="log-btn">Save Changes</button>
+                    <a href="/logistics/pickup-points" class="log-btn-outline" style="text-decoration:none;text-align:center;">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="log-card">
+        <div class="log-card-header"><span>📦</span> Inventory</div>
+        <div class="log-card-body">
+            {% if point.inventory %}
+            <table class="log-inv-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Qty</th>
+                        <th>Reserved</th>
+                        <th>Available</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for inv in point.inventory %}
+                <tr>
+                    <td style="font-weight:600;">{{ inv.product.name if inv.product else 'Deleted product' }}</td>
+                    <td>{{ inv.quantity }}</td>
+                    <td>{{ inv.reserved }}</td>
+                    <td style="font-weight:700;">{{ inv.quantity - inv.reserved }}</td>
+                    <td>
+                        <form method="post" action="/logistics/pickup-points/{{ point.id }}/inventory/{{ inv.id }}/remove" style="display:inline;">
+                            <button type="submit" class="log-btn-outline" style="min-height:32px;padding:4px 10px;font-size:0.75rem;color:var(--log-red);border-color:var(--log-red);">Remove</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="padding:16px;text-align:center;color:var(--log-text-muted);font-size:0.875rem;">No products in inventory.</div>
+            {% endif %}
+
+            <form method="post" action="/logistics/pickup-points/{{ point.id }}/inventory/add" class="log-inv-add">
+                <div class="log-form-group">
+                    <label>Product ID</label>
+                    <input name="product_id" placeholder="Product UUID" class="log-form-input" style="min-height:36px;">
+                </div>
+                <div class="log-form-group">
+                    <label>Quantity</label>
+                    <input name="quantity" type="number" min="1" value="1" class="log-form-input" style="min-height:36px;">
+                </div>
+                <button type="submit" class="log-btn" style="min-height:36px;padding:6px 14px;font-size:0.8125rem;">Add</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,252 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}Live Map — ForgeStore Logistics{% endblock %}
+{% block content %}
+<style>
+    :root {
+        --log-primary: #d97706;
+        --log-primary-hover: #f59e0b;
+        --log-text: #1c1917;
+        --log-text-secondary: #78716c;
+        --log-bg: #fafaf9;
+        --log-surface: #ffffff;
+        --log-border: #e7e5e4;
+        --log-radius: 12px;
+        --log-radius-sm: 8px;
+        --log-shadow: 0 1px 3px rgba(0,0,0,.06);
+        --log-shadow-lg: 0 10px 25px -5px rgba(0,0,0,.08);
+        --log-transition: 0.2s cubic-bezier(.4,0,.2,1);
+    }
+    .log-page { display:flex; flex-direction:column; gap:16px; padding:0; }
+    .log-page-header { display:flex; flex-direction:column; gap:6px; }
+    @media(min-width:640px){ .log-page-header { flex-direction:row; align-items:center; justify-content:space-between; } }
+    .log-page-header h1 { font-size:1.5rem; font-weight:800; color:var(--log-text); margin:0; letter-spacing:-0.025em; }
+    .log-page-header p { font-size:0.875rem; color:var(--log-text-secondary); margin:0; }
+    .log-map-container {
+        position: relative;
+        width: 100%;
+        height: 65vh;
+        min-height: 400px;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid var(--log-border);
+        box-shadow: var(--log-shadow);
+    }
+    #logistics-map { width:100%; height:100%; }
+    .log-map-legend {
+        position: absolute;
+        bottom: 16px;
+        left: 16px;
+        background: var(--log-surface);
+        border: 1px solid var(--log-border);
+        border-radius: var(--log-radius-sm);
+        padding: 12px 16px;
+        box-shadow: var(--log-shadow-lg);
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        font-size: 0.75rem;
+    }
+    .log-map-legend-title { font-weight: 700; color: var(--log-text); margin-bottom: 2px; }
+    .log-map-legend-item { display:flex; align-items:center; gap:8px; color:var(--log-text-secondary); }
+    .log-map-legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .log-map-controls {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        z-index: 1000;
+        display: flex;
+        gap: 8px;
+    }
+    .log-map-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border: 1px solid var(--log-border);
+        border-radius: var(--log-radius-sm);
+        background: var(--log-surface);
+        color: var(--log-text);
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: var(--log-shadow);
+        transition: background var(--log-transition), border-color var(--log-transition);
+        min-height: 36px;
+    }
+    .log-map-btn:hover { background:var(--log-bg); border-color:var(--log-border); }
+    .log-map-btn.active { background:var(--log-primary); border-color:var(--log-primary); color:#1c1917; }
+    .log-driver-panel {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        z-index: 1000;
+        background: var(--log-surface);
+        border: 1px solid var(--log-border);
+        border-radius: var(--log-radius);
+        padding: 16px;
+        box-shadow: var(--log-shadow-lg);
+        max-height: 50vh;
+        overflow-y: auto;
+        width: 280px;
+        display: none;
+    }
+    .log-driver-panel.show { display:block; }
+    .log-driver-panel h3 { font-size:0.8125rem; font-weight:700; color:var(--log-text); margin:0 0 12px 0; }
+    .log-driver-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--log-border);
+        cursor: pointer;
+        transition: background var(--log-transition);
+    }
+    .log-driver-item:last-child { border-bottom:none; }
+    .log-driver-item:hover { background:var(--log-bg); }
+    .log-driver-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .log-driver-dot.available { background:#047857; }
+    .log-driver-dot.busy { background:#d97706; }
+    .log-driver-dot.offline { background:#9ca3af; }
+    .log-driver-info { flex:1; min-width:0; }
+    .log-driver-name { font-size:0.8125rem; font-weight:600; color:var(--log-text); }
+    .log-driver-meta { font-size:0.6875rem; color:var(--log-text-secondary); }
+</style>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+<div class="log-page">
+    <div class="log-page-header">
+        <div>
+            <h1>Live Map</h1>
+            <p>Real-time driver GPS positions</p>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <button class="log-map-btn" onclick="toggleDriverPanel()" id="driver-list-btn">☰ Drivers</button>
+            <button class="log-map-btn" onclick="refreshPositions()" id="refresh-btn">↻ Refresh</button>
+        </div>
+    </div>
+
+    <div class="log-map-container">
+        <div id="logistics-map"></div>
+
+        <div class="log-driver-panel" id="driver-panel">
+            <h3>Delivery Drivers</h3>
+            <div id="driver-list"></div>
+        </div>
+
+        <div class="log-map-legend">
+            <div class="log-map-legend-title">Legend</div>
+            <div class="log-map-legend-item">
+                <div class="log-map-legend-dot" style="background:#047857;"></div>
+                <span>Available</span>
+            </div>
+            <div class="log-map-legend-item">
+                <div class="log-map-legend-dot" style="background:#d97706;"></div>
+                <span>Busy / In Transit</span>
+            </div>
+            <div class="log-map-legend-item">
+                <div class="log-map-legend-dot" style="background:#9ca3af;"></div>
+                <span>Offline / No Signal</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function(){
+    var map = L.map('logistics-map').setView([6.5244, 3.3792], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(map);
+
+    var markers = {};
+    var driverData = {{ drivers_json|safe }};
+    var panelVisible = false;
+
+    function statusColor(status) {
+        if (status === 'AVAILABLE') return '#047857';
+        if (status === 'BUSY') return '#d97706';
+        return '#9ca3af';
+    }
+
+    function createIcon(color) {
+        return L.divIcon({
+            className: '',
+            html: '<div style="width:28px;height:28px;border-radius:50%;background:'+color+';border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg></div>',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+        });
+    }
+
+    function renderMarkers(data) {
+        Object.values(markers).forEach(function(m){ map.removeLayer(m); });
+        markers = {};
+        var listHtml = '';
+        data.forEach(function(d) {
+            if (d.lat && d.lng) {
+                var icon = createIcon(statusColor(d.status));
+                var marker = L.marker([d.lat, d.lng], {icon: icon}).addTo(map);
+                marker.bindPopup(
+                    '<div style="font-family:system-ui;min-width:160px;">' +
+                    '<div style="font-weight:700;font-size:14px;margin-bottom:4px;">'+d.name+'</div>' +
+                    '<div style="font-size:12px;color:#666;margin-bottom:4px;">'+d.vehicle+'</div>' +
+                    '<div style="font-size:12px;"><b>Status:</b> '+d.status+'</div>' +
+                    '<div style="font-size:12px;"><b>Rating:</b> '+d.rating+' ⭐</div>' +
+                    '<div style="font-size:11px;color:#999;margin-top:4px;">'+d.last_update+'</div>' +
+                    '</div>'
+                );
+                markers[d.id] = marker;
+            }
+            listHtml += '<div class="log-driver-item" onclick="focusDriver(\''+d.id+'\')">' +
+                '<div class="log-driver-dot '+d.status.toLowerCase()+'"></div>' +
+                '<div class="log-driver-info">' +
+                '<div class="log-driver-name">'+d.name+'</div>' +
+                '<div class="log-driver-meta">'+(d.vehicle||'---')+' &middot; '+d.status+'</div>' +
+                '</div></div>';
+        });
+        document.getElementById('driver-list').innerHTML = listHtml || '<div style="padding:12px;color:#a8a29e;font-size:0.8125rem;">No drivers with GPS data</div>';
+    }
+
+    window.focusDriver = function(id) {
+        if (markers[id]) {
+            map.setView(markers[id].getLatLng(), 15);
+            markers[id].openPopup();
+        }
+    };
+
+    window.toggleDriverPanel = function() {
+        panelVisible = !panelVisible;
+        document.getElementById('driver-panel').classList.toggle('show', panelVisible);
+        document.getElementById('driver-list-btn').classList.toggle('active', panelVisible);
+    };
+
+    window.refreshPositions = function() {
+        var btn = document.getElementById('refresh-btn');
+        btn.textContent = '↻ Loading...';
+        fetch('/logistics/api/drivers/locations')
+            .then(function(r){ return r.json(); })
+            .then(function(data){
+                driverData = data;
+                renderMarkers(data);
+                btn.textContent = '↻ Refresh';
+            })
+            .catch(function(){ btn.textContent = '↻ Refresh'; });
+    };
+
+    renderMarkers(driverData);
+
+    setInterval(function(){
+        fetch('/logistics/api/drivers/locations')
+            .then(function(r){ return r.json(); })
+            .then(function(data){
+                driverData = data;
+                renderMarkers(data);
+            })
+            .catch(function(){});
+    }, 30000);
+})();
+</script>
+{% endblock %}

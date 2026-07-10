@@ -224,6 +224,44 @@
         </div>
     </div>
 
+    {% if unassigned_count > 0 %}
+    <div class="log-card" style="border-color:#2563eb;">
+        <div class="log-card-header">
+            <h2 style="color:#1d4ed8;">📦 Unassigned Shipments</h2>
+            <a href="/logistics/tools/batch-assign" class="log-btn log-btn-sm" style="font-size:0.75rem;">Batch Assign →</a>
+        </div>
+        <div style="padding:16px 20px;display:flex;flex-wrap:wrap;gap:24px;">
+            <div>
+                <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:#78716c;">Awaiting Assignment</div>
+                <div style="font-size:1.25rem;font-weight:800;color:#1d4ed8;">{{ unassigned_count }}</div>
+            </div>
+            <div>
+                <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:#78716c;">Platform Fulfilled</div>
+                <div style="font-size:1.25rem;font-weight:800;color:#1d4ed8;">{{ platform_fulfilled }}</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if cod_pending_count > 0 %}
+    <div class="log-card" style="border-color:#f59e0b;">
+        <div class="log-card-header">
+            <h2 style="color:#b45309;">💵 Cash on Delivery (COD)</h2>
+            <a href="/logistics/shipments">View All</a>
+        </div>
+        <div style="padding:16px 20px;display:flex;flex-wrap:wrap;gap:24px;">
+            <div>
+                <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:#78716c;">Pending COD Shipments</div>
+                <div style="font-size:1.25rem;font-weight:800;color:#b45309;">{{ cod_pending_count }}</div>
+            </div>
+            <div>
+                <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:#78716c;">Total COD Value</div>
+                <div style="font-size:1.25rem;font-weight:800;color:#b45309;">₦{{ "%.2f"|format(cod_pending_total) }}</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="log-card">
         <div class="log-card-header">
             <h2>Recent Shipments</h2>
@@ -232,7 +270,7 @@
         {% if recent_shipments %}
         <div class="log-shipment-list">
             {% for s in recent_shipments %}
-            <div class="log-shipment-item">
+            <a href="/logistics/shipments/{{ s.id }}" class="log-shipment-item" style="text-decoration:none;color:inherit;">
                 <div class="log-shipment-info">
                     <p>{{ s.tracking_number }}</p>
                     <p>{{ s.origin or 'N/A' }} → {{ s.destination or 'N/A' }}</p>
@@ -242,7 +280,7 @@
                     {% elif s.status == 'IN_TRANSIT' %}in-transit
                     {% elif s.status == 'PENDING' %}pending
                     {% endif %}">{{ s.status }}</span>
-            </div>
+            </a>
             {% endfor %}
         </div>
         {% else %}

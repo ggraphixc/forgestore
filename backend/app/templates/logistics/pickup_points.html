@@ -1,0 +1,204 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}Pickup Points — ForgeStore Logistics{% endblock %}
+{% block content %}
+<style>
+    :root {
+        --log-primary: #d97706;
+        --log-primary-hover: #f59e0b;
+        --log-primary-light: #fef3c7;
+        --log-primary-ring: rgba(217,119,6,.25);
+        --log-text: #1c1917;
+        --log-text-secondary: #78716c;
+        --log-text-muted: #a8a29e;
+        --log-bg: #fafaf9;
+        --log-surface: #ffffff;
+        --log-border: #e7e5e4;
+        --log-border-hover: #d6d3d1;
+        --log-radius: 12px;
+        --log-radius-sm: 8px;
+        --log-shadow: 0 1px 3px rgba(0,0,0,.06);
+        --log-shadow-lg: 0 10px 25px -5px rgba(0,0,0,.08);
+        --log-transition: 0.2s cubic-bezier(.4,0,.2,1);
+        --log-green-bg: #d1fae5;
+        --log-green-text: #047857;
+        --log-red: #dc2626;
+        --log-red-bg: #fee2e2;
+    }
+    .log-page { display:flex; flex-direction:column; gap:20px; padding:0; }
+    .log-page-header { display:flex; flex-direction:column; gap:12px; }
+    @media(min-width:640px){ .log-page-header { flex-direction:row; align-items:center; justify-content:space-between; } }
+    .log-page-header h1 { font-size:1.5rem; font-weight:800; color:var(--log-text); margin:0; letter-spacing:-0.025em; }
+    .log-page-header p { font-size:0.875rem; color:var(--log-text-secondary); margin:0; }
+    .log-btn {
+        display:inline-flex; align-items:center; justify-content:center;
+        min-height:44px; padding:8px 16px; border:none; border-radius:var(--log-radius-sm);
+        background:var(--log-primary); color:#1c1917; font-size:0.875rem;
+        font-weight:700; cursor:pointer; transition:background var(--log-transition), transform var(--log-transition);
+        width:100%; text-decoration:none; letter-spacing:0.02em;
+    }
+    @media(min-width:640px){ .log-btn { width:auto; } }
+    .log-btn:hover { background:var(--log-primary-hover); transform:translateY(-1px); }
+    .log-btn-outline {
+        display:inline-flex; align-items:center; justify-content:center;
+        min-height:44px; padding:8px 16px; border:1px solid var(--log-border);
+        border-radius:var(--log-radius-sm); background:var(--log-surface);
+        color:var(--log-text-secondary); font-size:0.875rem; font-weight:700;
+        cursor:pointer; transition:background var(--log-transition), border-color var(--log-transition);
+    }
+    .log-btn-outline:hover { background:var(--log-bg); border-color:var(--log-border-hover); }
+    .log-card {
+        background:var(--log-surface); border:1px solid var(--log-border);
+        border-radius:16px; overflow:hidden; box-shadow:var(--log-shadow);
+    }
+    .log-card-header {
+        padding:16px 20px; border-bottom:1px solid var(--log-border);
+        font-weight:700; font-size:0.9375rem; color:var(--log-text);
+        display:flex; align-items:center; gap:8px;
+    }
+    .log-card-body { padding:20px; }
+    .log-grid { display:grid; grid-template-columns:1fr; gap:16px; }
+    @media(min-width:640px){ .log-grid { grid-template-columns:repeat(2,1fr); } }
+    @media(min-width:1024px){ .log-grid { grid-template-columns:repeat(3,1fr); } }
+    .log-point-card {
+        background:var(--log-surface); border:1px solid var(--log-border); border-radius:var(--log-radius);
+        padding:20px; display:flex; flex-direction:column; gap:12px;
+        box-shadow:var(--log-shadow); transition:box-shadow var(--log-transition), border-color var(--log-transition);
+    }
+    .log-point-card:hover { border-color:var(--log-border-hover); box-shadow:var(--log-shadow-lg); }
+    .log-point-name { font-size:1rem; font-weight:700; color:var(--log-text); }
+    .log-point-addr { font-size:0.8125rem; color:var(--log-text-secondary); line-height:1.4; }
+    .log-point-meta { display:flex; flex-wrap:wrap; gap:12px; font-size:0.75rem; color:var(--log-text-muted); }
+    .log-point-actions { display:flex; gap:8px; margin-top:auto; }
+    .log-point-actions .log-btn, .log-point-actions .log-btn-outline { flex:1; min-height:36px; padding:6px 10px; font-size:0.75rem; }
+    .log-badge {
+        display:inline-flex; align-items:center; font-size:0.625rem; font-weight:700;
+        padding:4px 10px; border-radius:9999px; white-space:nowrap; min-height:24px; letter-spacing:0.02em;
+    }
+    .log-badge.active { background:var(--log-green-bg); color:var(--log-green-text); }
+    .log-badge.inactive { background:var(--log-red-bg); color:var(--log-red); }
+    .log-inv-row {
+        display:flex; justify-content:space-between; align-items:center;
+        padding:8px 0; border-bottom:1px solid var(--log-border); font-size:0.8125rem;
+    }
+    .log-inv-row:last-child { border-bottom:none; }
+    .log-modal-overlay {
+        display:none; position:fixed; inset:0; background:rgba(28,25,23,.5);
+        backdrop-filter:blur(4px); z-index:50; align-items:center; justify-content:center; padding:16px;
+    }
+    .log-modal-overlay.show { display:flex; }
+    .log-modal {
+        background:var(--log-surface); border:1px solid var(--log-border); border-radius:16px;
+        padding:24px; width:100%; max-width:32rem; box-shadow:var(--log-shadow-lg);
+        max-height:90vh; overflow-y:auto;
+    }
+    .log-modal h3 { font-size:1.125rem; font-weight:700; color:var(--log-text); margin:0 0 16px 0; }
+    .log-form-group { display:flex; flex-direction:column; gap:8px; }
+    .log-form-group label { font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; color:var(--log-text-secondary); }
+    .log-form-input {
+        width:100%; min-height:44px; padding:10px 16px; border:1px solid var(--log-border);
+        border-radius:var(--log-radius-sm); background:var(--log-bg); font-size:0.875rem;
+        color:var(--log-text); box-sizing:border-box; transition:border-color var(--log-transition), box-shadow var(--log-transition);
+    }
+    .log-form-input:focus { outline:none; border-color:var(--log-primary); box-shadow:0 0 0 3px var(--log-primary-ring); }
+    .log-form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .log-form-actions { display:flex; flex-direction:column; gap:8px; padding-top:8px; }
+    @media(min-width:480px){ .log-form-actions { flex-direction:row; } }
+    .log-form-actions .log-btn { flex:1; }
+    .log-empty { padding:40px 20px; text-align:center; font-size:0.875rem; color:var(--log-text-muted); }
+    .log-inv-add { display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; }
+    .log-inv-add .log-form-group { flex:1; min-width:120px; }
+</style>
+
+<div class="log-page">
+    <div class="log-page-header">
+        <h1>Pickup Points</h1>
+        <button onclick="document.getElementById('new-point-modal').classList.add('show')" class="log-btn">Add Pickup Point</button>
+    </div>
+
+    {% if points %}
+    <div class="log-grid">
+        {% for p in points %}
+        <div class="log-point-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <div class="log-point-name">{{ p.name }}</div>
+                <span class="log-badge {% if p.is_active %}active{% else %}inactive{% endif %}">
+                    {% if p.is_active %}Active{% else %}Inactive{% endif %}
+                </span>
+            </div>
+            <div class="log-point-addr">{{ p.address }}</div>
+            <div class="log-point-meta">
+                {% if p.phone %}<span>📞 {{ p.phone }}</span>{% endif %}
+                {% if p.operating_hours %}<span>🕐 {{ p.operating_hours }}</span>{% endif %}
+            </div>
+            {% if p.inventory %}
+            <div style="margin-top:4px;">
+                <div style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--log-text-secondary);margin-bottom:6px;">Inventory ({{ p.inventory|length }} items)</div>
+                {% for inv in p.inventory[:3] %}
+                <div class="log-inv-row">
+                    <span>{{ inv.product.name if inv.product else 'Product' }}</span>
+                    <span style="font-weight:600;">{{ inv.quantity - inv.reserved }} available</span>
+                </div>
+                {% endfor %}
+                {% if p.inventory|length > 3 %}
+                <div style="font-size:0.75rem;color:var(--log-text-muted);padding-top:4px;">+{{ p.inventory|length - 3 }} more</div>
+                {% endif %}
+            </div>
+            {% endif %}
+            <div class="log-point-actions">
+                <a href="/logistics/pickup-points/{{ p.id }}/edit" class="log-btn-outline" style="text-decoration:none;text-align:center;">Edit</a>
+                <form method="post" action="/logistics/pickup-points/{{ p.id }}/toggle" style="flex:1;">
+                    <button type="submit" class="log-btn-outline" style="width:100%;{% if p.is_active %}color:var(--log-red);border-color:var(--log-red);{% endif %}">
+                        {% if p.is_active %}Deactivate{% else %}Activate{% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="log-card">
+        <div class="log-empty">No pickup points configured yet. Add your first pickup station to get started.</div>
+    </div>
+    {% endif %}
+</div>
+
+<div id="new-point-modal" class="log-modal-overlay">
+    <div class="log-modal">
+        <h3>Add New Pickup Point</h3>
+        <form method="post" action="/logistics/pickup-points/new" style="display:flex;flex-direction:column;gap:12px;">
+            <div class="log-form-group">
+                <label>Station Name</label>
+                <input name="name" required placeholder="e.g. Ikeja Pickup Hub" class="log-form-input">
+            </div>
+            <div class="log-form-group">
+                <label>Address</label>
+                <input name="address" required placeholder="Full address" class="log-form-input">
+            </div>
+            <div class="log-form-row">
+                <div class="log-form-group">
+                    <label>Latitude</label>
+                    <input name="latitude" type="number" step="any" placeholder="6.5244" class="log-form-input">
+                </div>
+                <div class="log-form-group">
+                    <label>Longitude</label>
+                    <input name="longitude" type="number" step="any" placeholder="3.3792" class="log-form-input">
+                </div>
+            </div>
+            <div class="log-form-row">
+                <div class="log-form-group">
+                    <label>Phone</label>
+                    <input name="phone" placeholder="+234..." class="log-form-input">
+                </div>
+                <div class="log-form-group">
+                    <label>Operating Hours</label>
+                    <input name="operating_hours" placeholder="Mon-Fri 9am-6pm" class="log-form-input">
+                </div>
+            </div>
+            <div class="log-form-actions">
+                <button type="submit" class="log-btn">Create Pickup Point</button>
+                <button type="button" onclick="document.getElementById('new-point-modal').classList.remove('show')" class="log-btn-outline">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,154 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}Performance Dashboard — ForgeStore Logistics{% endblock %}
+{% block content %}
+<style>
+    :root {
+        --log-primary: #d97706;
+        --log-primary-hover: #f59e0b;
+        --log-primary-light: #fef3c7;
+        --log-text: #1c1917;
+        --log-text-secondary: #78716c;
+        --log-text-muted: #a8a29e;
+        --log-bg: #fafaf9;
+        --log-surface: #ffffff;
+        --log-border: #e7e5e4;
+        --log-radius: 12px;
+        --log-radius-sm: 8px;
+        --log-shadow: 0 1px 3px rgba(0,0,0,.06);
+        --log-shadow-lg: 0 10px 25px -5px rgba(0,0,0,.08);
+        --log-transition: 0.2s cubic-bezier(.4,0,.2,1);
+        --log-green: #047857;
+        --log-green-bg: #d1fae5;
+        --log-green-text: #047857;
+        --log-blue: #2563eb;
+        --log-blue-bg: #dbeafe;
+        --log-blue-text: #1d4ed8;
+        --log-red: #dc2626;
+        --log-red-bg: #fee2e2;
+    }
+    .log-page { display:flex; flex-direction:column; gap:20px; padding:0; }
+    .log-page-header h1 { font-size:1.5rem; font-weight:800; color:var(--log-text); margin:0; letter-spacing:-0.025em; }
+    .log-page-header p { font-size:0.875rem; color:var(--log-text-secondary); margin:4px 0 0 0; }
+    .log-stats-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+    @media(min-width:640px){ .log-stats-grid { grid-template-columns:repeat(4,1fr); } }
+    .log-stat-card {
+        background:var(--log-surface); border:1px solid var(--log-border); border-radius:var(--log-radius);
+        padding:16px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px;
+        box-shadow:var(--log-shadow); transition: box-shadow var(--log-transition), border-color var(--log-transition);
+    }
+    .log-stat-card:hover { border-color:var(--log-border); box-shadow:var(--log-shadow-lg); }
+    .log-stat-card .stat-value { font-size:1.5rem; font-weight:900; line-height:1; color:var(--log-text); }
+    .log-stat-card .stat-value.green { color:var(--log-green-text); }
+    .log-stat-card .stat-value.blue { color:var(--log-blue-text); }
+    .log-stat-card .stat-value.amber { color:var(--log-primary); }
+    .log-stat-card .stat-label { font-size:0.625rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--log-text-secondary); }
+    .log-card {
+        background:var(--log-surface); border:1px solid var(--log-border);
+        border-radius:16px; overflow:hidden; box-shadow:var(--log-shadow);
+    }
+    .log-card-header {
+        padding:16px 20px; border-bottom:1px solid var(--log-border);
+        font-weight:700; font-size:0.9375rem; color:var(--log-text);
+        display:flex; align-items:center; gap:8px;
+    }
+    .log-table-container { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .log-table { width:100%; border-collapse:collapse; font-size:0.875rem; min-width:600px; }
+    .log-table th {
+        padding:12px 20px; text-align:left; font-size:0.6875rem; font-weight:700;
+        text-transform:uppercase; letter-spacing:0.06em; color:var(--log-text-secondary);
+        border-bottom:1px solid var(--log-border); background:var(--log-bg); white-space:nowrap;
+    }
+    .log-table td { padding:14px 20px; border-bottom:1px solid var(--log-border); color:var(--log-text); vertical-align:middle; }
+    .log-table tbody tr:last-child td { border-bottom:none; }
+    .log-table tbody tr { transition:background var(--log-transition); }
+    .log-table tbody tr:hover { background:var(--log-bg); }
+    .log-badge {
+        display:inline-flex; align-items:center; font-size:0.625rem; font-weight:700;
+        padding:4px 10px; border-radius:9999px; white-space:nowrap; min-height:24px; letter-spacing:0.02em;
+    }
+    .log-badge.excellent { background:var(--log-green-bg); color:var(--log-green-text); }
+    .log-badge.good { background:var(--log-blue-bg); color:var(--log-blue-text); }
+    .log-badge.average { background:var(--log-primary-light); color:#b45309; }
+    .log-badge.poor { background:var(--log-red-bg); color:var(--log-red); }
+    .log-bar-track { width:100%; height:8px; background:var(--log-border); border-radius:4px; overflow:hidden; }
+    .log-bar-fill { height:100%; border-radius:4px; transition:width 0.6s ease; }
+    .log-empty { padding:40px 20px; text-align:center; font-size:0.875rem; color:var(--log-text-muted); }
+</style>
+
+<div class="log-page">
+    <div class="log-page-header">
+        <h1>Performance Dashboard</h1>
+        <p>Driver ratings, delivery times, and success rates</p>
+    </div>
+
+    <div class="log-stats-grid">
+        <div class="log-stat-card">
+            <p class="stat-value green">{{ "%.1f"|format(stats.avg_rating) }}</p>
+            <p class="stat-label">Avg Rating</p>
+        </div>
+        <div class="log-stat-card">
+            <p class="stat-value blue">{{ "%.1f"|format(stats.avg_delivery_hours) }}h</p>
+            <p class="stat-label">Avg Delivery Time</p>
+        </div>
+        <div class="log-stat-card">
+            <p class="stat-value green">{{ "%.0f"|format(stats.success_rate) }}%</p>
+            <p class="stat-label">Success Rate</p>
+        </div>
+        <div class="log-stat-card">
+            <p class="stat-value amber">{{ stats.total_deliveries }}</p>
+            <p class="stat-label">Total Deliveries</p>
+        </div>
+    </div>
+
+    <div class="log-card">
+        <div class="log-card-header">
+            <span>🏆</span> Driver Performance Rankings
+        </div>
+        {% if drivers %}
+        <div class="log-table-container">
+            <table class="log-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Driver</th>
+                        <th>Rating</th>
+                        <th>Deliveries</th>
+                        <th>Success Rate</th>
+                        <th>Avg Time</th>
+                        <th>Performance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for d in drivers %}
+                <tr>
+                    <td style="font-weight:800;color:var(--log-text-muted);">{{ loop.index }}</td>
+                    <td>
+                        <div style="font-weight:700;">{{ d.name }}</div>
+                        <div style="font-size:0.75rem;color:var(--log-text-secondary);">{{ d.vehicle_type or '---' }} {{ d.vehicle_number or '' }}</div>
+                    </td>
+                    <td style="font-weight:700;">{{ "%.1f"|format(d.rating) }} ⭐</td>
+                    <td>{{ d.total_deliveries }}</td>
+                    <td>
+                        {% set sr = ((d.success_count / d.total_deliveries * 100) if d.total_deliveries > 0 else 0) %}
+                        <span class="log-badge {% if sr >= 95 %}excellent{% elif sr >= 85 %}good{% elif sr >= 70 %}average{% else %}poor{% endif %}">
+                            {{ "%.0f"|format(sr) }}%
+                        </span>
+                    </td>
+                    <td>{{ "%.1f"|format(d.avg_hours) }}h</td>
+                    <td style="min-width:120px;">
+                        {% set score = (d.rating / 5 * 50 + ((d.success_count / d.total_deliveries * 100) if d.total_deliveries > 0 else 0) / 100 * 50) %}
+                        <div class="log-bar-track">
+                            <div class="log-bar-fill" style="width:{{ score }}%;background:{% if score >= 80 %}#047857{% elif score >= 60 %}#2563eb{% elif score >= 40 %}#d97706{% else %}#dc2626{% endif %};"></div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="log-empty">No driver performance data available yet.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

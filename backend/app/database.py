@@ -181,8 +181,25 @@ def init_db():
         ChatMessage,
         # System 20: Order Disputes & Escrow
         OrderDispute,
-        # System 21: Daily Analytics Materialization
+        # System 21: Reverse Logistics
+        ReturnRequest,
+        ReturnEvent,
+        # System 22: Daily Analytics Materialization
         DailyMarketplaceSnapshot,
         DailyVendorSnapshot,
+        # Additional models
+        CartItem,
+        OrderEarning,
+        PromoAd,
+        VendorFulfillment,
+        PayoutRequest,
+        PointRedemption,
+        SupportTicket,
+        SupportMessage,
+        PickupPoint,
+        PickupInventory,
+        VendorApplication,
+        AffiliateApplication,
+        PromoAd,
     )
     Base.metadata.create_all(bind=get_engine())

@@ -103,7 +103,7 @@ class ShipmentService:
         return event
 
     def update_status(self, shipment_id: str, status: str, description: Optional[str] = None) -> Shipment:
-        """Update shipment status with automatic event logging."""
+        """Update shipment status with automatic event logging + customer notifications."""
         shipment = self.db.query(Shipment).filter(Shipment.id == shipment_id).first()
         if not shipment:
             raise ValueError(f"Shipment {shipment_id} not found")
@@ -135,7 +135,86 @@ class ShipmentService:
         except Exception:
             logger.warning("Failed to broadcast shipment status update", exc_info=True)
 
+        # Automated customer/vendor notifications on status change
+        try:
+            asyncio.ensure_future(self._send_status_notifications(shipment, old_status, status))
+        except Exception:
+            logger.warning("Failed to send status notifications", exc_info=True)
+
         return shipment
+
+    async def _send_status_notifications(self, shipment, old_status: str, new_status: str):
+        """Send WhatsApp + email notifications to customer + vendor on shipment status changes."""
+        from app.core.notifications import send_whatsapp_message
+        from app.services.email_service import send_order_status_email
+        from app.models import User, OrderItem, Retailer
+        from app.services.delivery_pricing import calculate_delivery_fee
+
+        order = self.db.query(Order).filter(Order.id == shipment.order_id).first()
+        if not order:
+            return
+
+        # Customer info
+        customer = self.db.query(User).filter(User.id == order.customer_id).first()
+        customer_phone = getattr(customer, "phone", None)
+        customer_email = getattr(customer, "email", None)
+
+        # Status message mapping
+        status_messages = {
+            "PICKED_UP": f"Hi! Your order #{order.order_number} has been picked up for delivery. Tracking: {shipment.tracking_number}",
+            "IN_TRANSIT": f"Your order #{order.order_number} is on its way! Tracking: {shipment.tracking_number}. Estimated delivery: {shipment.estimated_delivery or 'within 2-3 days'}.",
+            "OUT_FOR_DELIVERY": f"Great news! Your order #{order.order_number} is out for delivery today. Please keep your phone handy.",
+            "DELIVERED": f"Your order #{order.order_number} has been delivered successfully! Thank you for shopping with ForgeStore.",
+            "RETURNED": f"Your order #{order.order_number} return has been initiated. Our logistics team will contact you shortly.",
+            "CANCELLED": f"Your order #{order.order_number} has been cancelled. If you have questions, please contact support.",
+        }
+
+        msg = status_messages.get(new_status)
+
+        # WhatsApp to customer
+        if msg and customer_phone:
+            try:
+                await send_whatsapp_message(customer_phone, msg)
+            except Exception:
+                logger.warning("Failed to send WhatsApp to customer %s", customer_phone)
+
+        # Email to customer
+        if customer_email:
+            try:
+                send_order_status_email(
+                    to_email=customer_email,
+                    order_number=order.order_number,
+                    status=new_status,
+                    tracking_number=shipment.tracking_number,
+                    estimated_delivery=shipment.estimated_delivery,
+                )
+            except Exception:
+                logger.warning("Failed to send email to customer %s", customer_email)
+
+        # Notify vendor (WhatsApp + email)
+        items = self.db.query(OrderItem).filter(OrderItem.order_id == order.id).all()
+        for item in items:
+            product = item.product
+            if product and product.retailer_id:
+                retailer = self.db.query(Retailer).filter(Retailer.id == product.retailer_id).first()
+                if retailer:
+                    if retailer.phone:
+                        vendor_msg = f"Order #{order.order_number} status updated: {new_status}. Tracking: {shipment.tracking_number}"
+                        try:
+                            await send_whatsapp_message(retailer.phone, vendor_msg)
+                        except Exception:
+                            logger.warning("Failed to send WhatsApp to vendor %s", retailer.phone)
+                    if retailer.email:
+                        try:
+                            from app.services.email_service import send_vendor_new_order_email
+                            send_vendor_new_order_email(
+                                to_email=retailer.email,
+                                order_number=order.order_number,
+                                customer_name=customer.name if customer else "Customer",
+                                total_amount=order.total_amount,
+                            )
+                        except Exception:
+                            logger.warning("Failed to send email to vendor %s", retailer.email)
 
     def assign_delivery_agent(self, shipment_id: str, agent_id: str) -> Shipment:
         """Assign a delivery agent to a shipment."""

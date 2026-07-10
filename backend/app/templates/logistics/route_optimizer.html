@@ -1,0 +1,160 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}Route Optimizer — ForgeStore Logistics{% endblock %}
+{% block content %}
+<style>
+    :root {
+        --log-primary: #d97706;
+        --log-primary-hover: #f59e0b;
+        --log-primary-light: #fef3c7;
+        --log-primary-ring: rgba(217,119,6,.25);
+        --log-text: #1c1917;
+        --log-text-secondary: #78716c;
+        --log-text-muted: #a8a29e;
+        --log-bg: #fafaf9;
+        --log-surface: #ffffff;
+        --log-border: #e7e5e4;
+        --log-radius: 12px;
+        --log-radius-sm: 8px;
+        --log-shadow: 0 1px 3px rgba(0,0,0,.06);
+        --log-shadow-lg: 0 10px 25px -5px rgba(0,0,0,.08);
+        --log-transition: 0.2s cubic-bezier(.4,0,.2,1);
+        --log-green-bg: #d1fae5;
+        --log-green-text: #047857;
+    }
+    .log-page { display:flex; flex-direction:column; gap:20px; padding:0; }
+    .log-page-header h1 { font-size:1.5rem; font-weight:800; color:var(--log-text); margin:0; letter-spacing:-0.025em; }
+    .log-page-header p { font-size:0.875rem; color:var(--log-text-secondary); margin:4px 0 0 0; }
+    .log-card {
+        background:var(--log-surface); border:1px solid var(--log-border);
+        border-radius:16px; overflow:hidden; box-shadow:var(--log-shadow);
+    }
+    .log-card-header {
+        padding:16px 20px; border-bottom:1px solid var(--log-border);
+        font-weight:700; font-size:0.9375rem; color:var(--log-text);
+        display:flex; align-items:center; gap:8px;
+    }
+    .log-card-body { padding:20px; }
+    .log-form-group { display:flex; flex-direction:column; gap:8px; }
+    .log-form-group label { font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; color:var(--log-text-secondary); }
+    .log-form-select, .log-form-input {
+        width:100%; min-height:44px; padding:10px 16px;
+        border:1px solid var(--log-border); border-radius:var(--log-radius-sm);
+        background:var(--log-bg); font-size:0.875rem; color:var(--log-text);
+        box-sizing:border-box; transition: border-color var(--log-transition), box-shadow var(--log-transition);
+    }
+    .log-form-select:focus, .log-form-input:focus {
+        outline:none; border-color:var(--log-primary); box-shadow:0 0 0 3px var(--log-primary-ring);
+    }
+    .log-btn {
+        display:inline-flex; align-items:center; justify-content:center;
+        min-height:44px; padding:8px 16px; border:none; border-radius:var(--log-radius-sm);
+        background:var(--log-primary); color:#1c1917; font-size:0.875rem;
+        font-weight:700; cursor:pointer; transition: background var(--log-transition), transform var(--log-transition);
+    }
+    .log-btn:hover { background:var(--log-primary-hover); transform:translateY(-1px); }
+    .log-route-step {
+        display:flex; gap:16px; position:relative; padding-bottom:20px;
+    }
+    .log-route-step:last-child { padding-bottom:0; }
+    .log-route-num {
+        width:32px; height:32px; border-radius:50%; background:var(--log-primary);
+        color:#1c1917; font-size:0.8125rem; font-weight:800;
+        display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .log-route-num.start { background:#047857; color:white; }
+    .log-route-connector {
+        position:absolute; left:15px; top:36px; bottom:0; width:2px; background:var(--log-border);
+    }
+    .log-route-step:last-child .log-route-connector { display:none; }
+    .log-route-content { flex:1; min-width:0; }
+    .log-route-title { font-size:0.875rem; font-weight:700; color:var(--log-text); margin-bottom:2px; }
+    .log-route-meta { font-size:0.75rem; color:var(--log-text-secondary); }
+    .log-route-dist { font-size:0.6875rem; color:var(--log-text-muted); margin-top:4px; }
+    .log-route-summary {
+        display:grid; grid-template-columns:repeat(3,1fr); gap:16px;
+        padding:16px 20px; background:var(--log-bg); border-top:1px solid var(--log-border);
+    }
+    .log-route-summary-item { text-align:center; }
+    .log-route-summary-val { font-size:1.25rem; font-weight:800; color:var(--log-primary); }
+    .log-route-summary-label { font-size:0.6875rem; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; color:var(--log-text-secondary); }
+</style>
+
+<div class="log-page">
+    <div class="log-page-header">
+        <h1>Route Optimizer</h1>
+        <p>Find the most efficient delivery sequence for a driver's assigned shipments</p>
+    </div>
+
+    <div class="log-card">
+        <div class="log-card-header">
+            <span>🗺️</span> Select Driver
+        </div>
+        <div class="log-card-body">
+            <form method="get" action="/logistics/tools/route-optimizer" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+                <div class="log-form-group" style="flex:1;min-width:200px;">
+                    <label>Delivery Driver</label>
+                    <select name="driver_id" class="log-form-select" required>
+                        <option value="">Choose a driver...</option>
+                        {% for d in drivers %}
+                        <option value="{{ d.id }}" {% if selected_driver and selected_driver.id == d.id %}selected{% endif %}>
+                            {{ d.name }} — {{ d.vehicle_type or 'No vehicle' }} ({{ d.total_deliveries }} deliveries)
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="log-btn">Optimize Route</button>
+            </form>
+        </div>
+    </div>
+
+    {% if optimized_route %}
+    <div class="log-card">
+        <div class="log-card-header">
+            <span>📍</span> Optimized Delivery Route — {{ selected_driver.name }}
+        </div>
+        <div class="log-card-body">
+            {% if optimized_route.stops %}
+            <div style="display:flex;flex-direction:column;gap:0;">
+                {% for stop in optimized_route.stops %}
+                <div class="log-route-step">
+                    <div class="log-route-num {% if loop.first %}start{% endif %}">{{ loop.index }}</div>
+                    {% if not loop.last %}<div class="log-route-connector"></div>{% endif %}
+                    <div class="log-route-content">
+                        <div class="log-route-title">{{ stop.destination or 'Destination not set' }}</div>
+                        <div class="log-route-meta">
+                            Shipment #{{ stop.tracking_number }} &middot; Order #{{ stop.order_number }}
+                        </div>
+                        <div class="log-route-dist">
+                            {% if stop.distance_km %}{{ "%.1f"|format(stop.distance_km) }} km from previous{% endif %}
+                            {% if stop.eta_minutes %} &middot; ~{{ stop.eta_minutes }} min drive{% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div style="padding:32px;text-align:center;color:var(--log-text-muted);font-size:0.875rem;">
+                No shipments with destinations assigned to this driver.
+            </div>
+            {% endif %}
+        </div>
+        {% if optimized_route.stops %}
+        <div class="log-route-summary">
+            <div class="log-route-summary-item">
+                <div class="log-route-summary-val">{{ optimized_route.total_stops }}</div>
+                <div class="log-route-summary-label">Stops</div>
+            </div>
+            <div class="log-route-summary-item">
+                <div class="log-route-summary-val">{{ "%.1f"|format(optimized_route.total_distance_km) }} km</div>
+                <div class="log-route-summary-label">Total Distance</div>
+            </div>
+            <div class="log-route-summary-item">
+                <div class="log-route-summary-val">~{{ optimized_route.total_eta_minutes }} min</div>
+                <div class="log-route-summary-label">Est. Time</div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
