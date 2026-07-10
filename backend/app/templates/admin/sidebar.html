@@ -353,7 +353,7 @@
   .admin-bottomnav { display: flex; }
   .admin-header { display: none; }
   .admin-content { padding: 24px 32px 88px; }
-  .admin-sidebar { transform: translateX(-100%) !important; pointer-events: none; }
+  .admin-sidebar { display: none !important; }
   .admin-sidebar-backdrop { display: none !important; }
 }
 
@@ -361,6 +361,71 @@
   .admin-sidebar-backdrop.visible { display: block; opacity: 1; }
   .admin-content { padding: 16px; padding-bottom: 24px; }
 }
+
+/* More panel (logistics) */
+.admin-more-panel {
+  display: none;
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 180px);
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(231,229,228,0.6);
+  border-radius: 20px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06);
+  z-index: 55;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px;
+}
+.admin-more-panel.open { display: block; }
+.admin-more-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #78716c;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  min-height: 44px;
+}
+.admin-more-link:hover { background: #fffbeb; color: #92400e; }
+.admin-more-link svg { width: 20px; height: 20px; flex-shrink: 0; color: #a8a29e; }
+.admin-more-link:hover svg { color: #d97706; }
+.admin-more-divider {
+  height: 1px;
+  background: #f5f5f4;
+  margin: 4px 12px;
+}
+.admin-more-signout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #78716c;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  min-height: 44px;
+}
+.admin-more-signout:hover { background: #fef2f2; color: #dc2626; }
+.admin-more-signout svg { width: 20px; height: 20px; flex-shrink: 0; color: #a8a29e; }
+.admin-more-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 54;
+}
+.admin-more-backdrop.open { display: block; }
 </style>
 
 <div class="admin-layout">
