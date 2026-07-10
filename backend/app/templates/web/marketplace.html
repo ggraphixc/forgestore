@@ -153,6 +153,12 @@
   padding: 0.1875rem 0.5rem; font-size: 0.625rem; font-weight: 700;
   border-radius: 0 0 0.5rem 0; background: #f43f5e; color: #fff;
 }
+.mp-new-badge {
+  position: absolute; top: 0; left: 0;
+  padding: 0.1875rem 0.5rem; font-size: 0.625rem; font-weight: 700;
+  border-radius: 0 0 0.5rem 0; background: #16a34a; color: #fff;
+}
+.mp-new-badge.has-discount { top: 1.5rem; }
 .mp-wishlist-btn {
   position: absolute; top: 0.5rem; right: 0.5rem; z-index: 10;
   width: 28px; height: 28px; background: rgba(255,255,255,0.85); backdrop-filter: blur(8px);
@@ -429,6 +435,9 @@
             <div class="mp-product-img-wrap">
               {% if p.discount_price and p.discount_price < p.price %}
               <span class="mp-sale-badge">-{{ ((1 - p.discount_price / p.price) * 100)|int }}%</span>
+              {% endif %}
+              {% if p.created_at and (utcnow() - p.created_at).days <= 7 %}
+              <span class="mp-new-badge{% if p.discount_price and p.discount_price < p.price %} has-discount{% endif %}">New</span>
               {% endif %}
               {% if p.images and p.images|length > 0 %}
               <img loading="lazy" src="{{ p.images[0] }}" alt="{{ p.name }}" class="mp-product-img">
