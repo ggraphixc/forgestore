@@ -277,6 +277,7 @@ def marketplace(request: Request, background_tasks: BackgroundTasks, db: Session
         "cat_counts": cat_counts,
         "active_ad_campaigns": active_ad_campaigns,
         "active_promo_ads": active_promo_ads,
+        "utcnow": utcnow,
     })
 
 

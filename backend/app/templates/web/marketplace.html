@@ -436,7 +436,7 @@
               {% if p.discount_price and p.discount_price < p.price %}
               <span class="mp-sale-badge">-{{ ((1 - p.discount_price / p.price) * 100)|int }}%</span>
               {% endif %}
-              {% if p.is_new_arrival %}
+              {% if p.is_new_arrival or (p.created_at and (utcnow() - p.created_at).days <= 5) %}
               <span class="mp-new-badge{% if p.discount_price and p.discount_price < p.price %} has-discount{% endif %}">New</span>
               {% endif %}
               {% if p.images and p.images|length > 0 %}
