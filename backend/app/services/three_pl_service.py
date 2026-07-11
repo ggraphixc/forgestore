@@ -1,7 +1,7 @@
 """
 3PL Integration Service — Abstract provider layer for GIG Logistics, Kwik, ShapShap.
 Each provider implements: create_shipment, track_shipment, cancel_shipment, get_quote.
-All providers run in MOCK mode by default (env var controls live vs mock).
+All providers run in MOCK mode by default (env var or DB setting controls live vs mock).
 """
 import os
 import uuid
@@ -139,8 +139,15 @@ class MockProvider(ThreePLProvider):
 
 class GIGLogisticsProvider(ThreePLProvider):
     name = "gig"
-    base_url = "https://api.gigl.com/api/v1"
-    sandbox_url = "https://sandbox.gigl.com/api/v1"
+
+    def __init__(self, api_key: str = "", sandbox: bool = True):
+        from app.config import get_db_setting
+        db_key = get_db_setting("gig_api_key", "")
+        db_base = get_db_setting("gig_base_url", "https://api.gigl.com/api/v1")
+        db_sandbox = get_db_setting("gig_sandbox_url", "https://sandbox.gigl.com/api/v1")
+        self.base_url = db_base
+        self.sandbox_url = db_sandbox
+        super().__init__(api_key=db_key or api_key, sandbox=sandbox)
 
     async def _request(self, method: str, path: str, data: dict = None) -> dict:
         url = f"{self._base}{path}"
@@ -206,8 +213,15 @@ class GIGLogisticsProvider(ThreePLProvider):
 
 class KwikDeliveryProvider(ThreePLProvider):
     name = "kwik"
-    base_url = "https://api.kwik.delivery/v1"
-    sandbox_url = "https://sandbox.kwik.delivery/v1"
+
+    def __init__(self, api_key: str = "", sandbox: bool = True):
+        from app.config import get_db_setting
+        db_key = get_db_setting("kwik_api_key", "")
+        db_base = get_db_setting("kwik_base_url", "https://api.kwik.delivery/v1")
+        db_sandbox = get_db_setting("kwik_sandbox_url", "https://sandbox.kwik.delivery/v1")
+        self.base_url = db_base
+        self.sandbox_url = db_sandbox
+        super().__init__(api_key=db_key or api_key, sandbox=sandbox)
 
     async def _request(self, method: str, path: str, data: dict = None) -> dict:
         url = f"{self._base}{path}"
@@ -277,8 +291,15 @@ class KwikDeliveryProvider(ThreePLProvider):
 
 class ShapShapProvider(ThreePLProvider):
     name = "shapshap"
-    base_url = "https://api.shapshap.com/v1"
-    sandbox_url = "https://sandbox.shapshap.com/v1"
+
+    def __init__(self, api_key: str = "", sandbox: bool = True):
+        from app.config import get_db_setting
+        db_key = get_db_setting("shapshap_api_key", "")
+        db_base = get_db_setting("shapshap_base_url", "https://api.shapshap.com/v1")
+        db_sandbox = get_db_setting("shapshap_sandbox_url", "https://sandbox.shapshap.com/v1")
+        self.base_url = db_base
+        self.sandbox_url = db_sandbox
+        super().__init__(api_key=db_key or api_key, sandbox=sandbox)
 
     async def _request(self, method: str, path: str, data: dict = None) -> dict:
         url = f"{self._base}{path}"
@@ -353,11 +374,13 @@ _PROVIDERS = {
 
 
 def get_3pl_provider(name: str = None, api_key: str = "", sandbox: bool = None) -> ThreePLProvider:
-    """Factory: returns the requested provider (defaults to env/DB config)."""
+    """Factory: returns the requested provider (defaults to DB/ env config)."""
+    from app.config import get_db_setting
     if sandbox is None:
-        sandbox = os.getenv("THREE_PL_SANDBOX", "true").lower() in ("true", "1", "t")
+        sandbox_val = get_db_setting("three_pl_sandbox", os.getenv("THREE_PL_SANDBOX", "true"))
+        sandbox = sandbox_val.lower() in ("true", "1", "t")
     if not name:
-        name = os.getenv("THREE_PL_PROVIDER", "mock")
+        name = get_db_setting("three_pl_provider", os.getenv("THREE_PL_PROVIDER", "mock"))
     cls = _PROVIDERS.get(name, MockProvider)
     return cls(api_key=api_key, sandbox=sandbox)
 

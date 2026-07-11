@@ -21,8 +21,14 @@ def _ensure_configured():
     if _configured:
         return
 
-    # Try CLOUDINARY_URL first (standard format from Cloudinary dashboard)
-    url = os.getenv("CLOUDINARY_URL", "")
+    # Try admin settings first, then CLOUDINARY_URL env var (standard format from Cloudinary dashboard)
+    try:
+        from app.config import get_settings
+        url = get_settings().cloudinary_url
+    except Exception:
+        url = ""
+    if not url:
+        url = os.getenv("CLOUDINARY_URL", "")
     if url:
         cloudinary.config(url=url, secure=True)
         _configured = True

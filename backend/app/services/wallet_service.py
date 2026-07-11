@@ -48,8 +48,21 @@ class PaymentProviderInterface(ABC):
 class PaystackProvider(PaymentProviderInterface):
     """Paystack payment provider implementation."""
 
+    _DEFAULT_API_BASE = "https://api.paystack.co"
+
     def __init__(self, secret_key: str) -> None:
         self.secret_key = secret_key
+        self._api_base = None
+
+    @property
+    def _base_url(self) -> str:
+        if self._api_base is None:
+            try:
+                from app.config import get_db_setting
+                self._api_base = get_db_setting("paystack_api_base", self._DEFAULT_API_BASE)
+            except Exception:
+                self._api_base = self._DEFAULT_API_BASE
+        return self._api_base
 
     def initialize_payment(self, amount: float, currency: str, reference: str, metadata: dict, split_config: Optional[dict] = None) -> dict:
         import requests
@@ -67,7 +80,7 @@ class PaystackProvider(PaymentProviderInterface):
             if "bearer" in split_config:
                 payload["bearer"] = split_config["bearer"]
         resp = requests.post(
-            "https://api.paystack.co/transaction/initialize",
+            f"{self._base_url}/transaction/initialize",
             json=payload,
             headers={"Authorization": f"Bearer {self.secret_key}"},
         )
@@ -76,7 +89,7 @@ class PaystackProvider(PaymentProviderInterface):
     def verify_payment(self, reference: str) -> dict:
         import requests
         resp = requests.get(
-            f"https://api.paystack.co/transaction/verify/{reference}",
+            f"{self._base_url}/transaction/verify/{reference}",
             headers={"Authorization": f"Bearer {self.secret_key}"},
         )
         return resp.json()
@@ -87,7 +100,7 @@ class PaystackProvider(PaymentProviderInterface):
         if amount:
             data["amount"] = int(amount * 100)
         resp = requests.post(
-            "https://api.paystack.co/refund",
+            f"{self._base_url}/refund",
             json=data,
             headers={"Authorization": f"Bearer {self.secret_key}"},
         )
@@ -97,7 +110,7 @@ class PaystackProvider(PaymentProviderInterface):
         """Create a Paystack subaccount for split payments."""
         import requests
         resp = requests.post(
-            "https://api.paystack.co/subaccount",
+            f"{self._base_url}/subaccount",
             json={
                 "business_name": business_name,
                 "bank_code": bank_code,

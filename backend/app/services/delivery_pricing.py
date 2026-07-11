@@ -2,8 +2,10 @@
 Dynamic Delivery Pricing — distance + demand multiplier + weight calculator.
 Calculates delivery fees based on Haversine distance between origin/destination,
 current demand multiplier (peak hours, holidays), package weight, and zone pricing.
+Zone rates and multipliers are read from admin DB settings (with hardcoded fallbacks).
 """
 import math
+import json
 import logging
 from datetime import datetime, timezone
 from typing import Optional
@@ -27,6 +29,14 @@ class PricingBreakdown:
 
 
 # ─── Nigerian Zone Pricing (Lagos-centric) ─────────────────────────────────
+# Default zone rates — overridden by DB setting 'delivery_zone_rates' when set.
+
+_DEFAULT_ZONE_RATES = {
+    "same_state": {"base": 1000, "per_km": 50, "per_kg": 100, "hours": 4},
+    "neighboring": {"base": 1500, "per_km": 80, "per_kg": 150, "hours": 24},
+    "regional": {"base": 2500, "per_km": 120, "per_kg": 200, "hours": 48},
+    "interstate": {"base": 4000, "per_km": 150, "per_kg": 250, "hours": 72},
+}
 
 _STATE_ZONES = {
     "lagos": "same_state",
@@ -44,12 +54,21 @@ _STATE_ZONES = {
     "edo": "regional",
 }
 
-_ZONE_RATES = {
-    "same_state": {"base": 1000, "per_km": 50, "per_kg": 100, "hours": 4},
-    "neighboring": {"base": 1500, "per_km": 80, "per_kg": 150, "hours": 24},
-    "regional": {"base": 2500, "per_km": 120, "per_kg": 200, "hours": 48},
-    "interstate": {"base": 4000, "per_km": 150, "per_kg": 250, "hours": 72},
-}
+
+def _get_zone_rates() -> dict:
+    """Load zone rates from DB setting, falling back to defaults."""
+    try:
+        from app.config import get_db_setting
+        raw = get_db_setting("delivery_zone_rates", "")
+        if raw:
+            parsed = json.loads(raw)
+            # Merge with defaults so any missing zone gets the hardcoded value
+            merged = dict(_DEFAULT_ZONE_RATES)
+            merged.update(parsed)
+            return merged
+    except Exception as e:
+        logger.warning(f"Failed to load delivery_zone_rates from DB: {e}")
+    return dict(_DEFAULT_ZONE_RATES)
 
 
 def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
@@ -67,25 +86,35 @@ def _get_demand_multiplier(dt: datetime = None) -> float:
     month = dt.month
     day = dt.day
 
+    # Load multipliers from DB settings (with hardcoded defaults)
+    try:
+        from app.config import get_db_setting
+        peak = float(get_db_setting("delivery_demand_peak_multiplier", "1.3"))
+        late_night = float(get_db_setting("delivery_demand_late_night_multiplier", "1.5"))
+        holiday = float(get_db_setting("delivery_demand_holiday_multiplier", "1.4"))
+        weekend = float(get_db_setting("delivery_demand_weekend_multiplier", "1.1"))
+    except Exception:
+        peak, late_night, holiday, weekend = 1.3, 1.5, 1.4, 1.1
+
     multiplier = 1.0
 
-    # Peak hours: 7-10am and 4-7pm = 1.3x
+    # Peak hours: 7-10am and 4-7pm
     if hour in (7, 8, 9, 16, 17, 18):
-        multiplier = 1.3
-    # Late night: 10pm-6am = 1.5x
+        multiplier = peak
+    # Late night: 10pm-6am
     elif hour >= 22 or hour < 6:
-        multiplier = 1.5
-    # Off-peak: 11am-3pm = 1.0x
+        multiplier = late_night
+    # Off-peak: 11am-3pm
     else:
         multiplier = 1.0
 
     # Holiday surcharge (Dec 20-26, Dec 31-Jan 2)
     if (month == 12 and 20 <= day <= 26) or (month == 12 and day == 31) or (month == 1 and day <= 2):
-        multiplier *= 1.4
+        multiplier *= holiday
 
     # Weekend slight premium
     if dt.weekday() >= 5:
-        multiplier *= 1.1
+        multiplier *= weekend
 
     return round(multiplier, 2)
 
@@ -130,7 +159,8 @@ def calculate_delivery_fee(
 ) -> PricingBreakdown:
     """Calculate delivery fee based on distance, weight, demand, and zone."""
     zone = _detect_zone(origin, destination)
-    rates = _ZONE_RATES[zone]
+    zone_rates = _get_zone_rates()
+    rates = zone_rates.get(zone, zone_rates.get("regional", {"base": 2500, "per_km": 120, "per_kg": 200, "hours": 48}))
 
     # Distance
     if origin_lat and origin_lng and dest_lat and dest_lng:
@@ -170,7 +200,13 @@ def calculate_return_fee(
     weight_kg: float = 0.0,
     distance_km: float = 0.0,
 ) -> float:
-    """Calculate return shipping fee — 60% of original or flat rate."""
+    """Calculate return shipping fee — configurable ratio of original or flat rate."""
+    try:
+        from app.config import get_db_setting
+        ratio = float(get_db_setting("delivery_return_fee_ratio", "0.6"))
+        flat_fee = float(get_db_setting("delivery_return_flat_fee", "1500"))
+    except Exception:
+        ratio, flat_fee = 0.6, 1500.0
     if original_fee > 0:
-        return round(original_fee * 0.6, 2)
-    return max(1500.0, round(distance_km * 80 + max(0, weight_kg - 1) * 150, 2))
+        return round(original_fee * ratio, 2)
+    return max(flat_fee, round(distance_km * 80 + max(0, weight_kg - 1) * 150, 2))

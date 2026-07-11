@@ -43,12 +43,23 @@ class PaymentProvider(abc.ABC):
 class PaystackProvider(PaymentProvider):
     """Paystack payment gateway implementation."""
 
-    API_BASE = "https://api.paystack.co"
+    _DEFAULT_API_BASE = "https://api.paystack.co"
     TIMEOUT = 15
 
     def __init__(self, secret_key: str, public_key: str = ""):
         self.secret_key = secret_key
         self.public_key = public_key
+        self._api_base = None
+
+    @property
+    def API_BASE(self) -> str:
+        if self._api_base is None:
+            try:
+                from app.config import get_db_setting
+                self._api_base = get_db_setting("paystack_api_base", self._DEFAULT_API_BASE)
+            except Exception:
+                self._api_base = self._DEFAULT_API_BASE
+        return self._api_base
 
     # ── helpers ──────────────────────────────────────────────────────
 
@@ -245,11 +256,22 @@ def get_payment_provider(
 class BankTransferEngine:
     """Async Paystack Transfer Engine — creates recipients and initiates transfers."""
 
-    API_BASE = "https://api.paystack.co"
+    _DEFAULT_API_BASE = "https://api.paystack.co"
     TIMEOUT = 30
 
     def __init__(self, secret_key: str):
         self.secret_key = secret_key
+        self._api_base = None
+
+    @property
+    def API_BASE(self) -> str:
+        if self._api_base is None:
+            try:
+                from app.config import get_db_setting
+                self._api_base = get_db_setting("paystack_api_base", self._DEFAULT_API_BASE)
+            except Exception:
+                self._api_base = self._DEFAULT_API_BASE
+        return self._api_base
 
     def _headers(self) -> dict:
         return {

@@ -13,8 +13,16 @@ import requests
 
 logger = logging.getLogger("forgestore.paystack")
 
-PAYSTACK_API = "https://api.paystack.co"
-TIMEOUT_SECONDS = 15
+__TIMEOUT_SECONDS = 15
+
+
+def _get_paystack_api_base() -> str:
+    """Get Paystack API base URL from DB settings (with hardcoded fallback)."""
+    try:
+        from app.config import get_db_setting
+        return get_db_setting("paystack_api_base", "https://api.paystack.co")
+    except Exception:
+        return "https://api.paystack.co"
 
 
 def _get_secret_key() -> str:
@@ -71,10 +79,10 @@ def initialize_payment(
 
     try:
         resp = requests.post(
-            f"{PAYSTACK_API}/transaction/initialize",
+            f"{_get_paystack_api_base()}/transaction/initialize",
             headers=headers,
             json=payload,
-            timeout=TIMEOUT_SECONDS,
+            timeout=_TIMEOUT_SECONDS,
         )
         resp.raise_for_status()
         data = resp.json()
@@ -122,9 +130,9 @@ def verify_payment(reference: str) -> dict:
 
     try:
         resp = requests.get(
-            f"{PAYSTACK_API}/transaction/verify/{reference}",
+            f"{_get_paystack_api_base()}/transaction/verify/{reference}",
             headers=headers,
-            timeout=TIMEOUT_SECONDS,
+            timeout=_TIMEOUT_SECONDS,
         )
         resp.raise_for_status()
         data = resp.json()

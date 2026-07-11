@@ -3,10 +3,11 @@ Unified Notification Engine — Brevo HTTPS Email + Meta WhatsApp Cloud API
 
 Resolution order for each channel:
   1. Environment variables (BREVO_API_KEY, WHATSAPP_ACCESS_TOKEN)
-  2. Console stdout dump (dev fallback when no API key or fallback enabled)
+  2. Admin DB settings (brevo_sender_name, whatsapp_graph_api_version)
+  3. Console stdout dump (dev fallback when no API key or fallback enabled)
 
 All email transmission via HTTPS POST to Brevo v3 endpoint.
-All WhatsApp transmission via Meta Graph API v17.0 (free-form messages within 24h window).
+All WhatsApp transmission via Meta Graph API (configurable version).
 """
 import os
 import sys
@@ -16,12 +17,24 @@ import logging
 logger = logging.getLogger("app.notifications")
 
 
+def _get_db_setting(key: str, default: str = "") -> str:
+    """Fetch a single setting value from DB."""
+    try:
+        from app.config import get_db_setting
+        return get_db_setting(key, default)
+    except Exception:
+        return default
+
+
 # ─── Brevo Email ──────────────────────────────────────────────────
 
 async def send_platform_email(to_email: str, subject: str, html_content: str):
     """Asynchronously transmits transactional notifications via Brevo API v3 endpoints."""
-    api_key = os.getenv("BREVO_API_KEY", "").strip()
-    from_email = os.getenv("MAIL_FROM_EMAIL", "ggraphixc@gmail.com").strip()
+    from app.config import get_settings
+    _cfg = get_settings()
+    api_key = _cfg.brevo_api_key.strip() if _cfg.brevo_api_key else os.getenv("BREVO_API_KEY", "").strip()
+    from_email = _cfg.mail_from_email.strip() if _cfg.mail_from_email else os.getenv("MAIL_FROM_EMAIL", "noreply@forgestore.com").strip()
+    sender_name = _get_db_setting("brevo_sender_name", "ForgeStore Support")
     console_fallback = os.getenv("MAIL_CONSOLE_FALLBACK", "False").lower() in ("true", "1", "t")
 
     if console_fallback or not api_key:
@@ -36,7 +49,7 @@ async def send_platform_email(to_email: str, subject: str, html_content: str):
         "Accept": "application/json",
     }
     payload = {
-        "sender": {"name": "ForgeStore Support", "email": from_email},
+        "sender": {"name": sender_name, "email": from_email},
         "to": [{"email": to_email}],
         "subject": subject,
         "htmlContent": html_content,
@@ -61,8 +74,11 @@ async def send_whatsapp_message(to_phone: str, body_text: str):
     Works within the 24-hour customer service window.
     Expects recipient phone in international format (e.g., '2348012345678').
     """
-    token = os.getenv("WHATSAPP_ACCESS_TOKEN", "").strip()
-    phone_number_id = os.getenv("WHATSAPP_PHONE_NUMBER_ID", "").strip()
+    from app.config import get_settings
+    _cfg = get_settings()
+    token = (_cfg.whatsapp_access_token or os.getenv("WHATSAPP_ACCESS_TOKEN", "")).strip()
+    phone_number_id = (_cfg.whatsapp_phone_number_id or os.getenv("WHATSAPP_PHONE_NUMBER_ID", "")).strip()
+    api_version = _get_db_setting("whatsapp_graph_api_version", "v17.0")
     console_fallback = os.getenv("WHATSAPP_CONSOLE_FALLBACK", "False").lower() in ("true", "1", "t")
 
     if console_fallback or not token or not phone_number_id:
@@ -70,7 +86,7 @@ async def send_whatsapp_message(to_phone: str, body_text: str):
         sys.stdout.flush()
         return
 
-    url = f"https://graph.facebook.com/v17.0/{phone_number_id}/messages"
+    url = f"https://graph.facebook.com/{api_version}/{phone_number_id}/messages"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
@@ -99,8 +115,11 @@ async def send_whatsapp_interactive_alert(to_phone: str, template_name: str, par
     Asynchronously transmits a template-based notification alert via Meta's WhatsApp Cloud API.
     Expects recipient phone in international format (e.g., '2348012345678').
     """
-    token = os.getenv("WHATSAPP_ACCESS_TOKEN", "").strip()
-    phone_number_id = os.getenv("WHATSAPP_PHONE_NUMBER_ID", "").strip()
+    from app.config import get_settings
+    _cfg = get_settings()
+    token = (_cfg.whatsapp_access_token or os.getenv("WHATSAPP_ACCESS_TOKEN", "")).strip()
+    phone_number_id = (_cfg.whatsapp_phone_number_id or os.getenv("WHATSAPP_PHONE_NUMBER_ID", "")).strip()
+    api_version = _get_db_setting("whatsapp_graph_api_version", "v17.0")
     console_fallback = os.getenv("WHATSAPP_CONSOLE_FALLBACK", "False").lower() in ("true", "1", "t")
 
     if console_fallback or not token or not phone_number_id:
@@ -108,7 +127,7 @@ async def send_whatsapp_interactive_alert(to_phone: str, template_name: str, par
         sys.stdout.flush()
         return
 
-    url = f"https://graph.facebook.com/v17.0/{phone_number_id}/messages"
+    url = f"https://graph.facebook.com/{api_version}/{phone_number_id}/messages"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",

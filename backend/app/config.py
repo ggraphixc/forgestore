@@ -112,6 +112,35 @@ def get_site_settings(db, force_refresh: bool = False) -> Dict[str, str]:
     return _site_settings_cache
 
 
+def get_db_setting(key: str, default: str = "") -> str:
+    """Fetch a single setting value from DB. Uses cached settings dict when possible."""
+    cached = get_site_settings_cached()
+    if cached:
+        return cached.get(key, default)
+    # Fallback: direct DB query (e.g. during startup before cache is populated)
+    try:
+        from app.database import SessionLocal
+        from app.models import Settings as SettingsModel
+        db = SessionLocal()
+        try:
+            setting = db.query(SettingsModel).filter(SettingsModel.key == key).first()
+            return setting.value if setting else default
+        finally:
+            db.close()
+    except Exception as e:
+        logger.warning(f"Failed to get DB setting '{key}': {e}")
+        return default
+
+
+def get_site_settings_cached() -> Dict[str, str]:
+    """Return the cached site settings dict (thread-safe, no DB query if cached)."""
+    global _site_settings_cache, _cache_valid
+    with _cache_lock:
+        if _cache_valid:
+            return _site_settings_cache
+    return {}
+
+
 def invalidate_settings_cache():
     """Invalidate the site settings cache. Call after any settings update."""
     global _cache_valid

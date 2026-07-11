@@ -14,7 +14,14 @@ import httpx
 
 logger = logging.getLogger("app.payments")
 
-PAYSTACK_API_BASE = "https://api.paystack.co"
+
+def _get_paystack_api_base() -> str:
+    """Get Paystack API base URL from DB settings (with hardcoded fallback)."""
+    try:
+        from app.config import get_db_setting
+        return get_db_setting("paystack_api_base", "https://api.paystack.co")
+    except Exception:
+        return "https://api.paystack.co"
 
 
 async def build_paystack_split_payload(
@@ -42,9 +49,11 @@ async def build_paystack_split_payload(
     """
     from sqlalchemy.orm import Session as _Session
     from app.models import Settings as SettingsModel, Retailer
+    from app.config import get_settings
 
-    paystack_secret = os.getenv("PAYSTACK_SECRET_KEY", "").strip()
-    site_base_url = os.getenv("SITE_BASE_URL", "https://forgestore1.onrender.com").rstrip("/")
+    _cfg = get_settings()
+    paystack_secret = _cfg.paystack_secret_key.strip()
+    site_base_url = _cfg.site_base_url.rstrip("/")
 
     # 1. Fetch platform commission percentage (default 10%)
     commission_setting = db.query(SettingsModel).filter(
@@ -81,7 +90,7 @@ async def build_paystack_split_payload(
             )
 
     # 3. Compile the Paystack Transaction initialization dictionary
-    url = f"{PAYSTACK_API_BASE}/transaction/initialize"
+    url = f"{_get_paystack_api_base()}/transaction/initialize"
     headers = {
         "Authorization": f"Bearer {paystack_secret}",
         "Content-Type": "application/json",
@@ -169,7 +178,8 @@ def create_transfer_recipient_sync(
     """Create a Paystack transfer recipient (synchronous)."""
     import requests
 
-    secret = os.getenv("PAYSTACK_SECRET_KEY", "")
+    from app.config import get_settings
+    secret = get_settings().paystack_secret_key.strip()
     if not secret:
         return {"success": False, "message": "Paystack not configured"}
 
@@ -182,7 +192,7 @@ def create_transfer_recipient_sync(
     }
     try:
         resp = requests.post(
-            f"{PAYSTACK_API_BASE}/transferrecipient",
+            f"{_get_paystack_api_base()}/transferrecipient",
             headers={"Authorization": f"Bearer {secret}", "Content-Type": "application/json"},
             json=payload,
             timeout=15,
@@ -205,8 +215,9 @@ def initiate_transfer_sync(
 ) -> dict:
     """Initiate a Paystack transfer (synchronous)."""
     import requests
+    from app.config import get_settings
 
-    secret = os.getenv("PAYSTACK_SECRET_KEY", "")
+    secret = get_settings().paystack_secret_key.strip()
     if not secret:
         return {"success": False, "message": "Paystack not configured"}
 
@@ -219,7 +230,7 @@ def initiate_transfer_sync(
     }
     try:
         resp = requests.post(
-            f"{PAYSTACK_API_BASE}/transfer",
+            f"{_get_paystack_api_base()}/transfer",
             headers={"Authorization": f"Bearer {secret}", "Content-Type": "application/json"},
             json=payload,
             timeout=30,

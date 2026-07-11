@@ -2010,8 +2010,10 @@ def _resolve_bank_account_name(bank_code: str, account_number: str) -> str:
         raise ValueError("Paystack is not configured. Set PAYSTACK_SECRET_KEY in .env")
 
     import requests
+    from app.config import get_db_setting
+    paystack_base = get_db_setting("paystack_api_base", "https://api.paystack.co")
     resp = requests.get(
-        f"https://api.paystack.co/bank/resolve?account_number={account_number}&bank_code={bank_code}",
+        f"{paystack_base}/bank/resolve?account_number={account_number}&bank_code={bank_code}",
         headers={"Authorization": f"Bearer {cfg.paystack_secret_key}"},
         timeout=15,
     )
@@ -3568,8 +3570,10 @@ def process_payout(
         # Attempt Paystack transfer (if configured)
         if cfg.paystack_secret_key and payout.account_number and payout.bank_code:
             import requests as _requests
+            from app.config import get_db_setting as _gds
+            paystack_base = _gds("paystack_api_base", "https://api.paystack.co")
             resp = _requests.post(
-                "https://api.paystack.co/transfer",
+                f"{paystack_base}/transfer",
                 json={
                     "source": "balance",
                     "amount": int(payout.amount * 100),

@@ -35,20 +35,8 @@ PROVIDER_CONFIGS: dict[str, dict[str, Any]] = {
 
 def _get_db_setting(key: str) -> str:
     """Fetch a single setting value from the DB."""
-    try:
-        from app.database import SessionLocal
-        from app.models import Settings as SettingsModel
-        db = SessionLocal()
-        try:
-            setting = db.query(SettingsModel).filter(SettingsModel.key == key).first()
-            val = setting.value if setting else ""
-            logger.info(f"DB setting '{key}' = '{val[:20]}...' " if len(val) > 20 else f"DB setting '{key}' = '{val}'")
-            return val
-        finally:
-            db.close()
-    except Exception as e:
-        logger.warning(f"Failed to get DB setting '{key}': {e}")
-        return ""
+    from app.config import get_db_setting
+    return get_db_setting(key)
 
 
 def get_active_provider() -> str:
@@ -861,6 +849,24 @@ SETTINGS_DEFINITIONS: List[Dict[str, Any]] = [
      "description": "Which payment gateway to use as the primary option.",
      "default": "paystack",
      "options": [{"value": "paystack", "label": "Paystack"}]},
+    {"key": "paystack_secret_key", "category": "developer", "type": "password", "label": "Paystack Secret Key",
+     "description": "Secret key for Paystack API (from Paystack Dashboard > API Keys).", "default": ""},
+    {"key": "paystack_public_key", "category": "developer", "type": "password", "label": "Paystack Public Key",
+     "description": "Public key for Paystack client-side integration.", "default": ""},
+    {"key": "google_client_id", "category": "developer", "type": "text", "label": "Google OAuth Client ID",
+     "description": "Client ID for Google Sign-In (from Google Cloud Console > Credentials).", "default": ""},
+    {"key": "google_client_secret", "category": "developer", "type": "password", "label": "Google OAuth Client Secret",
+     "description": "Client secret for Google Sign-In.", "default": ""},
+    {"key": "whatsapp_access_token", "category": "developer", "type": "password", "label": "WhatsApp Access Token",
+     "description": "Meta Graph API access token for WhatsApp messages.", "default": ""},
+    {"key": "whatsapp_phone_number_id", "category": "developer", "type": "text", "label": "WhatsApp Phone Number ID",
+     "description": "Meta phone number ID for WhatsApp Business API.", "default": ""},
+    {"key": "cloudinary_url", "category": "developer", "type": "password", "label": "Cloudinary URL",
+     "description": "Cloudinary connection URL for image/media uploads (cloudinary://...).", "default": ""},
+    {"key": "redis_url", "category": "developer", "type": "text", "label": "Redis URL",
+     "description": "Redis connection URL for caching and queues.", "default": "redis://localhost:6379/0"},
+    {"key": "site_base_url", "category": "global", "type": "text", "label": "Site Base URL",
+     "description": "Production site URL used in emails, webhooks, and redirects.", "default": "http://127.0.0.1:8000"},
 
     # ── Logistics ──
     {"key": "default_shipping_fee", "category": "logistics", "type": "number", "label": "Default Shipping Fee",
@@ -915,6 +921,67 @@ SETTINGS_DEFINITIONS: List[Dict[str, Any]] = [
      "description": "Link to terms of service page.", "default": ""},
     {"key": "privacy_url", "category": "other", "type": "text", "label": "Privacy Policy URL",
      "description": "Link to privacy policy page.", "default": ""},
+
+    # ── Vendor & Logistics Platforms ──
+    {"key": "paystack_api_base", "category": "logistics", "type": "text", "label": "Paystack API Base URL",
+     "description": "Base URL for Paystack API (production: https://api.paystack.co).", "default": "https://api.paystack.co"},
+    {"key": "three_pl_provider", "category": "logistics", "type": "select", "label": "Default 3PL Provider",
+     "description": "Which logistics provider to use for shipments.",
+     "default": "mock",
+     "options": [{"value": "mock", "label": "Mock (testing)"},
+                 {"value": "gig", "label": "GIG Logistics"},
+                 {"value": "kwik", "label": "Kwik Delivery"},
+                 {"value": "shapshap", "label": "ShapShap"}]},
+    {"key": "three_pl_sandbox", "category": "logistics", "type": "boolean", "label": "3PL Sandbox Mode",
+     "description": "Use sandbox/test environment for logistics providers.", "default": "true"},
+
+    {"key": "gig_api_key", "category": "logistics", "type": "password", "label": "GIG Logistics API Key",
+     "description": "API key for GIG Logistics integration.", "default": ""},
+    {"key": "gig_base_url", "category": "logistics", "type": "text", "label": "GIG Logistics Production URL",
+     "description": "Production API base URL for GIG Logistics.", "default": "https://api.gigl.com/api/v1"},
+    {"key": "gig_sandbox_url", "category": "logistics", "type": "text", "label": "GIG Logistics Sandbox URL",
+     "description": "Sandbox/test API base URL for GIG Logistics.", "default": "https://sandbox.gigl.com/api/v1"},
+
+    {"key": "kwik_api_key", "category": "logistics", "type": "password", "label": "Kwik Delivery API Key",
+     "description": "API key for Kwik Delivery integration.", "default": ""},
+    {"key": "kwik_base_url", "category": "logistics", "type": "text", "label": "Kwik Delivery Production URL",
+     "description": "Production API base URL for Kwik Delivery.", "default": "https://api.kwik.delivery/v1"},
+    {"key": "kwik_sandbox_url", "category": "logistics", "type": "text", "label": "Kwik Delivery Sandbox URL",
+     "description": "Sandbox/test API base URL for Kwik Delivery.", "default": "https://sandbox.kwik.delivery/v1"},
+
+    {"key": "shapshap_api_key", "category": "logistics", "type": "password", "label": "ShapShap API Key",
+     "description": "API key for ShapShap integration.", "default": ""},
+    {"key": "shapshap_base_url", "category": "logistics", "type": "text", "label": "ShapShap Production URL",
+     "description": "Production API base URL for ShapShap.", "default": "https://api.shapshap.com/v1"},
+    {"key": "shapshap_sandbox_url", "category": "logistics", "type": "text", "label": "ShapShap Sandbox URL",
+     "description": "Sandbox/test API base URL for ShapShap.", "default": "https://sandbox.shapshap.com/v1"},
+
+    # ── Delivery Pricing ──
+    {"key": "delivery_zone_rates", "category": "logistics", "type": "json", "label": "Delivery Zone Rates (JSON)",
+     "description": "Zone-based pricing: {same_state, neighboring, regional, interstate} with base, per_km, per_kg, hours.",
+     "default": '{"same_state":{"base":1000,"per_km":50,"per_kg":100,"hours":4},"neighboring":{"base":1500,"per_km":80,"per_kg":150,"hours":24},"regional":{"base":2500,"per_km":120,"per_kg":200,"hours":48},"interstate":{"base":4000,"per_km":150,"per_kg":250,"hours":72}}'},
+    {"key": "delivery_demand_peak_multiplier", "category": "logistics", "type": "number", "label": "Peak Hours Demand Multiplier",
+     "description": "Surcharge multiplier during peak hours (7-10am, 4-7pm).", "default": "1.3"},
+    {"key": "delivery_demand_late_night_multiplier", "category": "logistics", "type": "number", "label": "Late Night Demand Multiplier",
+     "description": "Surcharge multiplier during late night (10pm-6am).", "default": "1.5"},
+    {"key": "delivery_demand_holiday_multiplier", "category": "logistics", "type": "number", "label": "Holiday Demand Multiplier",
+     "description": "Surcharge multiplier during holidays.", "default": "1.4"},
+    {"key": "delivery_demand_weekend_multiplier", "category": "logistics", "type": "number", "label": "Weekend Demand Multiplier",
+     "description": "Surcharge multiplier during weekends.", "default": "1.1"},
+    {"key": "delivery_return_fee_ratio", "category": "logistics", "type": "number", "label": "Return Fee Ratio",
+     "description": "Percentage of original delivery fee charged for returns (0.6 = 60%).", "default": "0.6"},
+    {"key": "delivery_return_flat_fee", "category": "logistics", "type": "number", "label": "Return Flat Fee",
+     "description": "Minimum flat fee for return shipping when no original fee.", "default": "1500"},
+
+    # ── Notifications ──
+    {"key": "whatsapp_graph_api_version", "category": "developer", "type": "text", "label": "WhatsApp Graph API Version",
+     "description": "Meta Graph API version for WhatsApp messages (e.g. v17.0, v18.0).", "default": "v17.0"},
+    {"key": "brevo_sender_name", "category": "developer", "type": "text", "label": "Brevo Sender Name",
+     "description": "Display name for outgoing email sender.", "default": "ForgeStore Support"},
+
+    # ── AI Embedding ──
+    {"key": "ai_embedding_model", "category": "developer", "type": "text", "label": "AI Embedding Model",
+     "description": "Model used for text embeddings (recommendations, search).", "default": "text-embedding-3-small"},
 ]
 
 

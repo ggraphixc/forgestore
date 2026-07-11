@@ -171,10 +171,12 @@ def update_product_embeddings():
                 embedding = VectorSearchService.embed_text(text, api_key)
 
                 # Store embedding
+                from app.config import get_db_setting
+                embedding_model = get_db_setting("ai_embedding_model", "text-embedding-3-small")
                 embedding_record = SearchEmbedding(
                     product_id=product.id,
                     embedding=str(embedding),
-                    model="text-embedding-3-small",
+                    model=embedding_model,
                     chunk_text=text[:500],
                 )
                 db.add(embedding_record)

@@ -835,9 +835,11 @@ def retailer_banking(request: Request, db: Session = Depends(get_db)):
     cfg = gs()
     if cfg.paystack_secret_key:
         import requests
+        from app.config import get_db_setting
+        paystack_base = get_db_setting("paystack_api_base", "https://api.paystack.co")
         try:
             resp = requests.get(
-                "https://api.paystack.co/bank?country=nigeria&perPage=100",
+                f"{paystack_base}/bank?country=nigeria&perPage=100",
                 headers={"Authorization": f"Bearer {cfg.paystack_secret_key}"},
                 timeout=10,
             )

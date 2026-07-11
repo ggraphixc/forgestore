@@ -215,7 +215,11 @@ class _NullRedisAsync:
 import os
 
 # Read the Render private network string, falling back to local machine loop only in development
-redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+try:
+    from app.config import get_settings
+    redis_url = get_settings().redis_url or os.getenv("REDIS_URL", "redis://localhost:6379")
+except Exception:
+    redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
 
 
 @lru_cache()

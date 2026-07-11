@@ -1259,9 +1259,11 @@ class VectorSearchService:
             return [rng.uniform(-1, 1) for _ in range(384)]
 
         import openai
+        from app.config import get_db_setting
+        embedding_model = get_db_setting("ai_embedding_model", "text-embedding-3-small")
         client = openai.OpenAI(api_key=api_key)
         response = client.embeddings.create(
-            model="text-embedding-3-small",
+            model=embedding_model,
             input=text,
         )
         return response.data[0].embedding
