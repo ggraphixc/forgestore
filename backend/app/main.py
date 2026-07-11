@@ -15,6 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from app.database import init_db, get_db
+from app.models import Settings
 from app.routers import auth, admin, admin_api, web, web_api
 from app.routers import vendor_portal, logistics_portal
 from app.auth import get_current_user_from_cookie
@@ -147,6 +148,62 @@ setup_structured_logging()
 app.add_middleware(RequestTimingMiddleware)
 
 
+class MaintenanceModeMiddleware:
+    """Block non-admin access when maintenance_mode setting is enabled."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+
+        from app.database import SessionLocal
+        from app.models import Settings as SettingsModel
+        from app.auth import get_current_user_from_cookie
+        is_maintenance = False
+        try:
+            db = SessionLocal()
+            setting = db.query(SettingsModel).filter(SettingsModel.key == "maintenance_mode").first()
+            is_maintenance = setting and setting.value == "true"
+            db.close()
+        except Exception:
+            pass
+
+        if is_maintenance:
+            admin = None
+            try:
+                from starlette.requests import Request as StarletteRequest
+                request = StarletteRequest(scope, receive)
+                db2 = SessionLocal()
+                admin = get_current_user_from_cookie(request, db2)
+                db2.close()
+            except Exception:
+                pass
+
+            if not admin:
+                from fastapi.responses import HTMLResponse
+                try:
+                    from app.config import get_settings
+                    cfg = get_settings()
+                    from app.templates_shared import render_template
+                    return await render_template("maintenance.html", {
+                        "request": request,
+                        "site_name": cfg.site_name,
+                        "admin": None,
+                    })
+                except Exception:
+                    return await HTMLResponse(
+                        '<html><body style="font-family:sans-serif;text-align:center;padding:4rem;"><h1>Maintenance</h1><p>We\'ll be back soon.</p></body></html>',
+                        status_code=503,
+                    ).__call__(scope, receive, send)
+
+        return await self.app(scope, receive, send)
+
+
+app.add_middleware(MaintenanceModeMiddleware)
+
+
 @app.get("/ws", include_in_schema=False)
 async def websocket_endpoint(request: Request):
     """WebSocket endpoint for real-time updates.
@@ -162,6 +219,7 @@ def on_startup():
     init_db()
     logger.info("Database initialized")
     _run_migrations()
+    _seed_default_settings()
     _cleanup_abandoned_carts()
 
 
@@ -175,6 +233,36 @@ def _run_migrations():
         logger.warning("Migrations module not available: %s", e)
     except Exception as e:
         logger.warning("Migration runner failed (may be harmless): %s", e)
+
+
+def _seed_default_settings():
+    """Seed any missing settings with their default values from SETTINGS_DEFINITIONS."""
+    try:
+        from app.database import SessionLocal
+        from app.services.ai_service import SETTINGS_DEFINITIONS
+        db = SessionLocal()
+        try:
+            existing_keys = {row[0] for row in db.query(Settings.key).all()}
+            to_add = []
+            for sd in SETTINGS_DEFINITIONS:
+                if sd["key"] not in existing_keys:
+                    to_add.append(Settings(
+                        key=sd["key"],
+                        value=sd.get("default", ""),
+                        category=sd["category"],
+                        setting_type=sd["type"],
+                        label=sd["label"],
+                        description=sd.get("description", ""),
+                        options=sd.get("options"),
+                    ))
+            if to_add:
+                db.bulk_save_objects(to_add)
+                db.commit()
+                logger.info("Seeded %d default settings", len(to_add))
+        finally:
+            db.close()
+    except Exception as e:
+        logger.warning("Settings seeding failed (may be harmless): %s", e)
 
 
 def _cleanup_abandoned_carts():

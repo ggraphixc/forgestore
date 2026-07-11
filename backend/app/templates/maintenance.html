@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Maintenance — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--stone-50);padding:2rem;">
+    <div style="max-width:480px;width:100%;text-align:center;">
+        <div style="font-size:3rem;margin-bottom:1rem;">🔧</div>
+        <h1 style="font-size:1.5rem;font-weight:700;color:var(--stone-900);margin:0 0 0.5rem;">We'll be back soon!</h1>
+        <p style="color:var(--stone-500);font-size:0.9375rem;line-height:1.6;margin:0 0 1.5rem;">
+            {{ site_name }} is currently undergoing scheduled maintenance.
+            We apologize for the inconvenience and appreciate your patience.
+        </p>
+        {% if admin %}
+        <a href="/admin/dashboard" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.625rem 1.25rem;background:var(--stone-800);color:#fff;border-radius:8px;text-decoration:none;font-size:0.875rem;font-weight:600;">
+            Go to Admin Dashboard
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

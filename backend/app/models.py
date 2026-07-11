@@ -341,6 +341,17 @@ class Settings(Base):
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
 
+class SettingsHistory(Base):
+    __tablename__ = "settings_history"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    setting_key = Column(String(255), nullable=False, index=True)
+    old_value = Column(Text, nullable=True)
+    new_value = Column(Text, nullable=True)
+    changed_by_admin_id = Column(String, ForeignKey("admin_user.id", ondelete="SET NULL"), nullable=True)
+    changed_at = Column(DateTime, nullable=False, default=utcnow, index=True)
+
+
 # ==============================================================================
 # SYSTEM 1: REAL-TIME ORDER TRACKING
 # ==============================================================================

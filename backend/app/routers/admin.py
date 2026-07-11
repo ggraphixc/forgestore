@@ -513,15 +513,11 @@ def settings_page(request: Request, db: Session = Depends(get_db)):
     categorized = get_categorized_settings(db)
 
     # Determine which categories this admin can edit
-    accessible_categories = {
-        "global": has_permission(admin, "settings"),
-        "design": has_permission(admin, "settings"),
-        "technical": has_permission(admin, "settings"),
-        "optional": has_permission(admin, "settings"),
-        "developer": has_permission(admin, "settings"),
-        "logistics": has_permission(admin, "settings"),
-        "other": has_permission(admin, "settings"),
-    }
+    from app.routers.admin_api import SETTINGS_CATEGORY_PERMISSIONS, SETTINGS_SUPER_PERMISSION
+    accessible_categories = {}
+    for cat in SETTINGS_CATEGORY_PERMISSIONS:
+        perm = SETTINGS_CATEGORY_PERMISSIONS.get(cat, "settings_other")
+        accessible_categories[cat] = has_permission(admin, perm) or has_permission(admin, SETTINGS_SUPER_PERMISSION)
 
     return render_template("admin/settings/index.html", {
         "request": request,

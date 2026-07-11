@@ -603,14 +603,23 @@ def delete_order(
 # --- Settings API ---
 
 SETTINGS_CATEGORY_PERMISSIONS = {
-    "global": "settings",
-    "design": "settings",
-    "technical": "settings",
-    "optional": "settings",
-    "developer": "settings",
-    "logistics": "settings",
-    "other": "settings",
+    "global": "settings_global",
+    "design": "settings_design",
+    "technical": "settings_technical",
+    "optional": "settings_optional",
+    "developer": "settings_developer",
+    "logistics": "settings_logistics",
+    "other": "settings_other",
 }
+SETTINGS_SUPER_PERMISSION = "settings"
+
+
+def _has_setting_permission(admin: AdminUser, category: str) -> bool:
+    """Check if admin has permission for a settings category.
+    Falls back to the super-permission 'settings' for backward compat.
+    """
+    perm = SETTINGS_CATEGORY_PERMISSIONS.get(category, "settings_other")
+    return has_permission(admin, perm) or has_permission(admin, SETTINGS_SUPER_PERMISSION)
 
 
 def _get_setting_def(key: str):
@@ -691,8 +700,7 @@ def update_setting(
         raise HTTPException(status_code=400, detail=f"Unknown setting key: {key}")
 
     # Check category permission
-    cat_perm = SETTINGS_CATEGORY_PERMISSIONS.get(sd["category"], "settings")
-    if not has_permission(admin, cat_perm):
+    if not _has_setting_permission(admin, sd["category"]):
         raise HTTPException(status_code=403, detail=f"You don't have permission to modify {sd['category']} settings")
 
     # Validate value
@@ -713,6 +721,17 @@ def update_setting(
         )
         db.add(setting)
     db.commit()
+
+    # Record history
+    if old_value is not None and old_value != value:
+        from app.models import SettingsHistory
+        db.add(SettingsHistory(
+            setting_key=key,
+            old_value=old_value,
+            new_value=value,
+            changed_by_admin_id=admin.id,
+        ))
+        db.commit()
 
     log_admin_action(db, admin, "update", "setting", key, f"Updated setting '{key}': '{old_value}' → '{value}'")
     from app.config import invalidate_settings_cache
@@ -737,8 +756,7 @@ def bulk_update_settings(
         sd = _get_setting_def(key)
         if not sd:
             continue
-        cat_perm = SETTINGS_CATEGORY_PERMISSIONS.get(sd["category"], "settings")
-        if not has_permission(admin, cat_perm):
+        if not _has_setting_permission(admin, sd["category"]):
             continue
 
         # Validate value
@@ -770,11 +788,228 @@ def bulk_update_settings(
         updated += 1
     db.commit()
 
+    # Record history for changed settings
+    from app.models import SettingsHistory
+    for key, value in data.items():
+        sd = _get_setting_def(key)
+        if not sd:
+            continue
+        cat_perm = SETTINGS_CATEGORY_PERMISSIONS.get(sd["category"], "settings")
+        if not has_permission(admin, cat_perm):
+            continue
+        str_value = str(value)
+        existing = db.query(SettingsModel).filter(SettingsModel.key == key).first()
+        if existing and existing.value != str_value:
+            db.add(SettingsHistory(
+                setting_key=key,
+                old_value=existing.value,
+                new_value=str_value,
+                changed_by_admin_id=admin.id,
+            ))
+    db.commit()
+
     diff_summary = "; ".join(diffs) if diffs else "no changes"
     log_admin_action(db, admin, "update", "settings_bulk", "", f"Bulk updated {updated} settings: {diff_summary}")
     from app.config import invalidate_settings_cache
     invalidate_settings_cache()
     return {"success": True, "updated": updated}
+
+
+# --- Settings History & Revert ---
+
+@router.get("/settings/history/{key}")
+def get_setting_history(
+    key: str,
+    limit: int = 50,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """Get change history for a specific setting."""
+    from app.models import SettingsHistory as SH
+    from app.services.ai_service import SETTINGS_DEFINITIONS
+
+    sd = _get_setting_def(key)
+    if not sd:
+        raise HTTPException(status_code=404, detail="Setting not found")
+
+    cat_perm = SETTINGS_CATEGORY_PERMISSIONS.get(sd["category"], "settings_other")
+    if not _has_setting_permission(admin, sd["category"]):
+        raise HTTPException(status_code=403, detail="You don't have permission to view this setting's history")
+
+    entries = db.query(SH).filter(SH.setting_key == key).order_by(SH.changed_at.desc()).limit(limit).all()
+
+    admin_ids = list({e.changed_by_admin_id for e in entries if e.changed_by_admin_id})
+    admins = {a.id: a.name for a in db.query(AdminUser).filter(AdminUser.id.in_(admin_ids)).all()} if admin_ids else {}
+
+    return {
+        "key": key,
+        "label": sd["label"],
+        "history": [
+            {
+                "id": e.id,
+                "old_value": e.old_value,
+                "new_value": e.new_value,
+                "changed_by": admins.get(e.changed_by_admin_id, "System"),
+                "changed_at": e.changed_at.isoformat() if e.changed_at else None,
+            }
+            for e in entries
+        ],
+    }
+
+
+@router.post("/settings/{key}/revert")
+def revert_setting(
+    key: str,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """Revert a setting to its previous value (the most recent history entry)."""
+    from app.models import SettingsHistory as SH
+    from app.models import Settings as SettingsModel
+    from app.services.ai_service import SETTINGS_DEFINITIONS
+
+    sd = _get_setting_def(key)
+    if not sd:
+        raise HTTPException(status_code=404, detail="Setting not found")
+
+    cat_perm = SETTINGS_CATEGORY_PERMISSIONS.get(sd["category"], "settings_other")
+    if not _has_setting_permission(admin, sd["category"]):
+        raise HTTPException(status_code=403, detail="You don't have permission to modify this setting")
+
+    current = db.query(SettingsModel).filter(SettingsModel.key == key).first()
+    if not current:
+        raise HTTPException(status_code=404, detail="Setting has no current value to revert")
+
+    last_history = db.query(SH).filter(SH.setting_key == key).order_by(SH.changed_at.desc()).first()
+    if not last_history or last_history.old_value is None:
+        raise HTTPException(status_code=400, detail="No previous value available to revert to")
+
+    old_value = current.value
+    current.value = last_history.old_value
+    db.commit()
+
+    # Record the revert as a new history entry
+    db.add(SH(
+        setting_key=key,
+        old_value=old_value,
+        new_value=last_history.old_value,
+        changed_by_admin_id=admin.id,
+    ))
+    db.commit()
+
+    log_admin_action(db, admin, "revert", "setting", key,
+                     f"Reverted '{key}' from '{old_value}' to '{last_history.old_value}'")
+    from app.config import invalidate_settings_cache
+    invalidate_settings_cache()
+    return {"success": True, "key": key, "reverted_to": last_history.old_value}
+
+
+# --- Settings Import/Export ---
+
+@router.get("/settings/export")
+def export_settings(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """Export all current settings as JSON."""
+    from app.models import Settings as SettingsModel
+    from app.services.ai_service import SETTINGS_DEFINITIONS
+
+    db_settings = {s.key: s for s in db.query(SettingsModel).all()}
+    exported = []
+    for sd in SETTINGS_DEFINITIONS:
+        key = sd["key"]
+        setting = db_settings.get(key)
+        exported.append({
+            "key": key,
+            "value": setting.value if setting else sd.get("default", ""),
+            "category": sd["category"],
+            "type": sd["type"],
+            "label": sd["label"],
+            "description": sd.get("description", ""),
+        })
+    return {"settings": exported, "exported_at": utcnow().isoformat(), "count": len(exported)}
+
+
+@router.post("/settings/import")
+def import_settings(
+    data: dict,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("settings")),
+):
+    """Import settings from a JSON object. Keys are setting keys, values are new values."""
+    from app.models import Settings as SettingsModel
+    from app.services.ai_service import SETTINGS_DEFINITIONS
+
+    settings_data = data.get("settings", data)
+    if not isinstance(settings_data, dict):
+        raise HTTPException(status_code=400, detail="Expected a settings object or {'settings': {...}}")
+
+    updated = 0
+    skipped = 0
+    errors = []
+    for key, value in settings_data.items():
+        sd = _get_setting_def(key)
+        if not sd:
+            skipped += 1
+            continue
+        cat_perm = SETTINGS_CATEGORY_PERMISSIONS.get(sd["category"], "settings")
+        if not has_permission(admin, cat_perm):
+            skipped += 1
+            continue
+        str_value = str(value)
+        try:
+            _validate_setting_value(sd, str_value)
+        except HTTPException as e:
+            errors.append(f"{key}: {e.detail}")
+            skipped += 1
+            continue
+
+        setting = db.query(SettingsModel).filter(SettingsModel.key == key).first()
+        old_value = setting.value if setting else None
+        if setting:
+            if setting.value != str_value:
+                setting.value = str_value
+            else:
+                continue
+        else:
+            setting = SettingsModel(
+                key=key, value=str_value,
+                category=sd["category"],
+                setting_type=sd["type"],
+                label=sd["label"],
+                description=sd.get("description", ""),
+                options=sd.get("options"),
+            )
+            db.add(setting)
+        updated += 1
+    db.commit()
+
+    for key, value in settings_data.items():
+        sd = _get_setting_def(key)
+        if not sd:
+            continue
+        str_value = str(value)
+        existing = db.query(SettingsModel).filter(SettingsModel.key == key).first()
+        if existing and existing.value != str_value:
+            from app.models import SettingsHistory
+            db.add(SettingsHistory(
+                setting_key=key,
+                old_value=existing.value,
+                new_value=str_value,
+                changed_by_admin_id=admin.id,
+            ))
+    db.commit()
+
+    log_admin_action(db, admin, "import", "settings", "", f"Imported {updated} settings ({skipped} skipped, {len(errors)} errors)")
+    from app.config import invalidate_settings_cache
+    invalidate_settings_cache()
+    return {
+        "success": True,
+        "updated": updated,
+        "skipped": skipped,
+        "errors": errors[:20],
+    }
 
 
 # --- AI Integration API ---

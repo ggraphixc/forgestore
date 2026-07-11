@@ -838,8 +838,6 @@ SETTINGS_DEFINITIONS: List[Dict[str, Any]] = [
      "description": "Brevo SMTP API v3 key for transactional emails (Brevo > SMTP & API > API Keys).", "default": ""},
     {"key": "mail_from_email", "category": "developer", "type": "text", "label": "Sender Email Address",
      "description": "Email address used as the 'From' field for all outgoing emails via Brevo.", "default": "noreply@forgestore.com"},
-    {"key": "mail_console_fallback", "category": "developer", "type": "boolean", "label": "Console Fallback Mode",
-     "description": "When enabled, all emails are printed to terminal instead of sending via API (useful for development).", "default": "true"},
     {"key": "ai_provider", "category": "developer", "type": "select", "label": "AI Provider",
      "description": "Which AI provider to use for product descriptions, search, and recommendations.",
      "default": "opencode_zen",
@@ -923,12 +921,20 @@ SETTINGS_DEFINITIONS: List[Dict[str, Any]] = [
 # ─── Settings Permission Map ────────────────────────────────────────
 
 # Maps setting categories to the permission string required to view/edit them.
+# Per-category permissions allow granular RBAC (e.g. a designer can edit
+# Design settings but not Developer settings).
 SETTINGS_PERMISSIONS = {
-    "global": "settings",
-    "design": "settings",
-    "technical": "settings",
-    "optional": "settings",
-    "developer": "settings",
-    "logistics": "settings",
-    "other": "settings",
+    "global": "settings_global",
+    "design": "settings_design",
+    "technical": "settings_technical",
+    "optional": "settings_optional",
+    "developer": "settings_developer",
+    "logistics": "settings_logistics",
+    "other": "settings_other",
 }
+
+# Backward-compat alias used by admin_api.py
+SETTINGS_CATEGORY_PERMISSIONS = SETTINGS_PERMISSIONS
+
+# Super-permission that grants access to all categories
+SETTINGS_SUPER_PERMISSION = "settings"
