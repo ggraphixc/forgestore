@@ -56,10 +56,13 @@ def _require_retailer(request: Request, db: Session):
 def vendor_apply_page(request: Request, db: Session = Depends(get_db)):
     """Public page for vendor applications."""
     from app.config import get_site_settings
+    from app.models import AdminUser, AdminRole
     site_settings = get_site_settings(db)
+    vendor_count = db.query(AdminUser).filter(AdminUser.role == AdminRole.RETAILER).count()
     return render_template("web/apply-vendor.html", {
         "request": request,
         "settings": site_settings,
+        "vendor_count": vendor_count,
     })
 
 

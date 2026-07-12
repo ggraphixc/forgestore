@@ -118,7 +118,7 @@
   color: #fff;
   font-weight: 700;
   font-size: 1.125rem;
-  font-family: 'Montserrat', sans-serif;
+  font-family: {{ settings.font_heading|default("'Montserrat',sans-serif") }}
 }
 .auth-brand-tag {
   display: block;
@@ -133,7 +133,7 @@
   color: #fff;
   line-height: 1.1;
   margin-bottom: 1rem;
-  font-family: 'Montserrat', sans-serif;
+  font-family: {{ settings.font_heading|default("'Montserrat',sans-serif") }}
 }
 .auth-hero h1 span {
   background: linear-gradient(to right, var(--auth-amber-300), var(--auth-amber-500));
@@ -272,7 +272,7 @@
   font-size: 1.875rem;
   font-weight: 900;
   color: var(--auth-stone-900);
-  font-family: 'Montserrat', sans-serif;
+  font-family: {{ settings.font_heading|default("'Montserrat',sans-serif") }}
 }
 .auth-header h1 span {
   background: linear-gradient(to right, var(--auth-amber-600), var(--auth-amber-500));

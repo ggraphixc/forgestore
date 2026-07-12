@@ -46,7 +46,7 @@
   color: var(--ck-stone-900);
   line-height: 1.1;
   margin-bottom: 2rem;
-  font-family: 'Montserrat', sans-serif;
+  font-family: {{ settings.font_heading|default("'Montserrat',sans-serif") }}
 }
 @media (min-width: 640px) { .ck-header h1 { font-size: 2.25rem; } }
 .ck-header h1 span {
