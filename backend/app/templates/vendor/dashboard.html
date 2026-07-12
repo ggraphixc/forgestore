@@ -1,15 +1,15 @@
 {% extends "admin/sidebar.html" %}
-{% block title %}Vendor Dashboard &mdash; ForgeStore{% endblock %}
+{% block title %}Vendor Dashboard &mdash; {{ settings.site_name|default('ForgeStore') }}{% endblock %}
 {% block content %}
 <style>
   :root {
-    --vs-primary: #f59e0b;
-    --vs-primary-hover: #d97706;
+    --vs-primary: {{ settings.primary_color|default('#f59e0b') }};
+    --vs-primary-hover: {{ settings.secondary_color|default('#d97706') }};
     --vs-primary-light: #fef3c7;
     --vs-primary-bg: #fffbeb;
     --vs-primary-ring: rgba(245, 158, 11, 0.25);
-    --vs-text: #78716c;
-    --vs-text-dark: #1c1917;
+    --vs-text: {{ settings.text_color|default('#78716c') }};
+    --vs-text-dark: {{ settings.dark_color|default('#1c1917') }};
     --vs-text-muted: #a8a29e;
     --vs-border: #e7e5e4;
     --vs-border-light: #f5f5f4;

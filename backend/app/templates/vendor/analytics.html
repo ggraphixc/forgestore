@@ -1,13 +1,13 @@
 {% extends "admin/sidebar.html" %}
-{% block title %}Analytics &mdash; ForgeStore{% endblock %}
+{% block title %}Analytics &mdash; {{ settings.site_name|default('ForgeStore') }}{% endblock %}
 {% block content %}
 <style>
   :root {
-    --va-primary: #f59e0b;
-    --va-primary-hover: #d97706;
+    --va-primary: {{ settings.primary_color|default('#f59e0b') }};
+    --va-primary-hover: {{ settings.secondary_color|default('#d97706') }};
     --va-primary-light: #fef3c7;
-    --va-text: #78716c;
-    --va-text-dark: #1c1917;
+    --va-text: {{ settings.text_color|default('#78716c') }};
+    --va-text-dark: {{ settings.dark_color|default('#1c1917') }};
     --va-text-muted: #a8a29e;
     --va-border: #e7e5e4;
     --va-border-light: #f5f5f4;

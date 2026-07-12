@@ -1,5 +1,5 @@
 {% extends "admin/sidebar.html" %}
-{% block title %}Return {{ rr.return_number }} — ForgeStore Logistics{% endblock %}
+{% block title %}Return {{ rr.return_number }} — {{ settings.site_name|default('ForgeStore') }} Logistics{% endblock %}
 {% block content %}
 <link rel="stylesheet" href="/static/css/logistics.css">
 <style>

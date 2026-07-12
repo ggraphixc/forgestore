@@ -1,16 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}{{ title|default("Admin") }} &mdash; ForgeStore{% endblock %}
+{% block title %}{{ title|default("Admin") }} &mdash; {{ settings.site_name|default('ForgeStore') }}{% endblock %}
 
 {% block body %}
 <style>
 :root {
-  --color-primary: #f59e0b;
-  --color-dark: #1c1917;
-  --color-muted: #78716c;
+  --color-primary: {{ settings.primary_color|default('#f59e0b') }};
+  --color-primary-hover: {{ settings.secondary_color|default('#d97706') }};
+  --color-dark: {{ settings.dark_color|default('#1c1917') }};
+  --color-muted: {{ settings.text_color|default('#78716c') }};
   --color-border: #e7e5e4;
   --color-bg: #fafaf9;
   --color-surface: #ffffff;
+  --admin-font: {{ settings.font_heading|default("system-ui, sans-serif") }};
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -534,7 +536,7 @@
     <div class="admin-sidebar-header">
       <div class="admin-sidebar-logo"><span>FS</span></div>
       <div class="admin-sidebar-brand">
-        <span class="admin-sidebar-brand-name">ForgeStore</span>
+        <span class="admin-sidebar-brand-name">{{ settings.site_name|default('ForgeStore') }}</span>
         <span class="admin-sidebar-brand-sub">Admin Panel</span>
       </div>
     </div>
@@ -879,7 +881,7 @@
         </div>
         <div class="admin-header-center">
           <div class="admin-header-logo"><span>FS</span></div>
-          <span class="admin-header-title">ForgeStore<span class="accent"> Admin</span></span>
+          <span class="admin-header-title">{{ settings.site_name|default('ForgeStore') }}<span class="accent"> Admin</span></span>
         </div>
         <div class="admin-header-right">
           <a href="/admin/notifications" class="admin-header-notif" aria-label="Notifications">

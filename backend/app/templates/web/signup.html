@@ -1,5 +1,5 @@
 {% extends "web/base.html" %}
-{% block title %}Create Account — ForgeStore{% endblock %}
+{% block title %}Create Account — {{ settings.site_name|default('ForgeStore') }}{% endblock %}
 {% block footer %}{% endblock %}
 {% block content %}
 {% if user %}
@@ -13,19 +13,19 @@
   --auth-amber-200: #fde68a;
   --auth-amber-300: #fcd34d;
   --auth-amber-400: #fbbf24;
-  --auth-amber-500: #f59e0b;
-  --auth-amber-600: #d97706;
+  --auth-amber-500: {{ settings.primary_color|default('#f59e0b') }};
+  --auth-amber-600: {{ settings.secondary_color|default('#d97706') }};
   --auth-amber-700: #b45309;
   --auth-stone-50: #fafaf9;
   --auth-stone-100: #f5f5f4;
   --auth-stone-200: #e7e5e4;
   --auth-stone-300: #d6d3d1;
   --auth-stone-400: #a8a29e;
-  --auth-stone-500: #78716c;
+  --auth-stone-500: {{ settings.text_color|default('#78716c') }};
   --auth-stone-600: #57534e;
   --auth-stone-700: #44403c;
   --auth-stone-800: #292524;
-  --auth-stone-900: #1c1917;
+  --auth-stone-900: {{ settings.dark_color|default('#1c1917') }};
 }
 
 .auth-page {
@@ -489,7 +489,7 @@
           <span style="color:#fff;font-size:1.25rem;font-weight:900;">FS</span>
         </div>
         <div>
-          <span class="auth-brand-name">ForgeStore</span>
+          <span class="auth-brand-name">{{ settings.site_name|default('ForgeStore') }}</span>
           <span class="auth-brand-tag">where the workshop meets the world</span>
         </div>
       </div>
@@ -552,7 +552,7 @@
         </div>
       </div>
 
-      <p class="auth-footer-text">&copy; 2026 ForgeStore &mdash; Empowering Artisans Worldwide</p>
+      <p class="auth-footer-text">{{ settings.copyright_text|default('© 2026 ' ~ (settings.site_name|default('ForgeStore')) ~ '. All rights reserved.')|replace('{year}', now().year if now is defined else '2026')|replace('{site_name}', settings.site_name|default('ForgeStore')) }} &mdash; Empowering Artisans Worldwide</p>
     </div>
   </div>
 
@@ -562,12 +562,12 @@
         <div class="auth-mobile-icon">
           <span style="color:#fff;font-size:0.875rem;font-weight:900;">FS</span>
         </div>
-        <span style="font-size:1.125rem;font-weight:700;color:var(--auth-stone-900);font-family:'Montserrat',sans-serif;">ForgeStore</span>
+        <span style="font-size:1.125rem;font-weight:700;color:var(--auth-stone-900);font-family:{{ settings.font_heading|default("'Montserrat',sans-serif") }};">{{ settings.site_name|default('ForgeStore') }}</span>
       </div>
 
       <div class="auth-header">
         <h1>Create your <span>account</span></h1>
-        <p>Join the ForgeStore community of artisans and collectors</p>
+        <p>Join the {{ settings.site_name|default('ForgeStore') }} community of artisans and collectors</p>
       </div>
 
       <a href="/api/auth/google/login" class="auth-social-btn">

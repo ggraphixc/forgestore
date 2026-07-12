@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>{{ heading|default('ForgeStore') }}</title>
+  <title>{{ heading|default(site_name|default('ForgeStore')) }}</title>
 </head>
 <body style="margin:0;padding:0;background:#faf9f7;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
 
@@ -27,7 +27,7 @@
       </td>
     </tr></table>
     <!-- Accent bar -->
-    <div style="margin:20px auto 0;width:48px;height:3px;background:linear-gradient(90deg,#f59e0b,#d97706);border-radius:2px;"></div>
+    <div style="margin:20px auto 0;width:48px;height:3px;background:linear-gradient(90deg,{{ primary_color|default('#f59e0b') }},{{ secondary_color|default('#d97706') }});border-radius:2px;"></div>
   </td></tr>
 
   <!-- ═══ Status Banner (optional) ═══ -->
@@ -139,7 +139,7 @@
   <!-- ═══ Footer ═══ -->
   <tr><td style="padding:28px 40px 36px;text-align:center;">
     <p style="font-size:12px;color:#a8a29e;margin:0 0 8px;line-height:1.6;">{{ footer_text|default('Thank you for shopping at ' ~ (site_name|default('ForgeStore')) ~ '.') }}</p>
-    <p style="font-size:11px;color:#d6d3d1;margin:0;">&copy; 2026 {{ site_name|default('ForgeStore') }}. All rights reserved.</p>
+    <p style="font-size:11px;color:#d6d3d1;margin:0;">{{ copyright_text|default('© 2026 ' ~ (site_name|default('ForgeStore')) ~ '. All rights reserved.') }}</p>
   </td></tr>
 
 </table>

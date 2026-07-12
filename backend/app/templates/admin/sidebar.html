@@ -1,9 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}{{ title|default("Admin") }} &mdash; ForgeStore{% endblock %}
+{% block title %}{{ title|default("Admin") }} &mdash; {{ settings.site_name|default('ForgeStore') }}{% endblock %}
 
 {% block body %}
 <style>
+:root {
+  --admin-primary: {{ settings.primary_color|default('#f59e0b') }};
+  --admin-primary-hover: {{ settings.secondary_color|default('#d97706') }};
+  --admin-dark: {{ settings.dark_color|default('#1c1917') }};
+  --admin-text: {{ settings.text_color|default('#78716c') }};
+  --admin-font: {{ settings.font_heading|default("system-ui, sans-serif") }};
+}
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 .admin-layout {
@@ -131,8 +138,8 @@
 }
 .admin-sidebar-logo span { color: #fff; font-size: 12px; font-weight: 900; font-family: system-ui, sans-serif; }
 .admin-sidebar-brand { display: flex; flex-direction: column; min-width: 0; }
-.admin-sidebar-brand-name { font-size: 14px; font-weight: 900; color: #1c1917; white-space: nowrap; font-family: system-ui, sans-serif; }
-.admin-sidebar-brand-sub { font-size: 10px; font-weight: 600; color: #f59e0b; text-transform: uppercase; letter-spacing: 0.15em; }
+.admin-sidebar-brand-name { font-size: 14px; font-weight: 900; color: var(--admin-dark); white-space: nowrap; font-family: var(--admin-font); }
+.admin-sidebar-brand-sub { font-size: 10px; font-weight: 600; color: var(--admin-primary); text-transform: uppercase; letter-spacing: 0.15em; }
 
 .admin-sidebar-profile {
   display: block;
@@ -434,7 +441,7 @@
     <div class="admin-sidebar-header">
       <div class="admin-sidebar-logo"><span>FS</span></div>
       <div class="admin-sidebar-brand">
-        <span class="admin-sidebar-brand-name">ForgeStore</span>
+        <span class="admin-sidebar-brand-name">{{ settings.site_name|default('ForgeStore') }}</span>
         <span class="admin-sidebar-brand-sub">Vendor Panel</span>
       </div>
     </div>
@@ -734,11 +741,11 @@
           <div class="admin-header-logo"><span>FS</span></div>
           <span class="admin-header-title">
             {% if admin and (admin.role.value == 'RETAILER' or admin.role == 'RETAILER') %}
-            ForgeStore<span class="accent"> Vendor</span>
+            {{ settings.site_name|default('ForgeStore') }}<span class="accent"> Vendor</span>
             {% elif admin and (admin.role.value == 'LOGISTICS' or admin.role == 'LOGISTICS') %}
-            ForgeStore<span class="accent"> Logistics</span>
+            {{ settings.site_name|default('ForgeStore') }}<span class="accent"> Logistics</span>
             {% else %}
-            ForgeStore<span class="accent"> Admin</span>
+            {{ settings.site_name|default('ForgeStore') }}<span class="accent"> Admin</span>
             {% endif %}
           </span>
         </div>

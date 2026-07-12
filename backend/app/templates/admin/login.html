@@ -1,6 +1,6 @@
 {% extends "admin/base.html" %}
 
-{% block title %}Login — ForgeStore{% endblock %}
+{% block title %}Login — {{ settings.site_name|default('ForgeStore') }}{% endblock %}
 
 {% block body %}
 <style>
@@ -82,7 +82,7 @@
 
 <div class="admin-login-logo">
     <div class="admin-login-logo-icon">FS</div>
-    <h1>ForgeStore</h1>
+    <h1>{{ settings.site_name|default('ForgeStore') }}</h1>
     <p>Admin Panel — Sign in to continue</p>
 </div>
 
@@ -140,7 +140,7 @@
     </form>
 </div>
 
-<p class="admin-login-footer">&copy; 2025 ForgeStore. All rights reserved.</p>
+<p class="admin-login-footer">{{ settings.copyright_text|default('© 2026 ' ~ (settings.site_name|default('ForgeStore')) ~ '. All rights reserved.')|replace('{year}', now().year if now is defined else '2026')|replace('{site_name}', settings.site_name|default('ForgeStore')) }}</p>
 
 <script>
 function togglePasswordVisibility(inputId, btn) {
