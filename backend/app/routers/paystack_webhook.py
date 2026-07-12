@@ -34,13 +34,17 @@ def _get_setting_value(db: Session, key: str, default: str = "") -> str:
 def _settle_vendor_commission(db: Session, order_id: str, retailer_id: str, item_total: float, reference: str):
     """Compute platform commission, credit vendor wallet, record settlement."""
     from app.utils import utcnow
+
+    # Check auto-settlement setting
+    auto_settle = _get_setting_value(db, "auto_settlement_enabled", "true").lower() == "true"
+
     commission_pct = float(_get_setting_value(db, "market_commission_percentage", "10.0"))
     commission = round(item_total * commission_pct / 100, 2)
     net = round(item_total - commission, 2)
 
-    # Credit vendor wallet
+    # Credit vendor wallet (only if auto-settlement enabled)
     wallet = db.query(VendorWallet).filter(VendorWallet.retailer_id == retailer_id).first()
-    if wallet:
+    if wallet and auto_settle:
         bal_before = wallet.balance
         wallet.balance += net
         tx = VendorWalletTransaction(
@@ -64,8 +68,8 @@ def _settle_vendor_commission(db: Session, order_id: str, retailer_id: str, item
         platform_commission_fee=commission,
         net_vendor_payout=net,
         commission_percentage=commission_pct,
-        is_settled=True,
-        settled_at=utcnow(),
+        is_settled=auto_settle,
+        settled_at=utcnow() if auto_settle else None,
         payment_reference=reference,
         provider="paystack",
     )
@@ -270,11 +274,16 @@ async def paystack_webhook(request: Request, background_tasks: BackgroundTasks =
         db.rollback()
         # Mark webhook as FAILED for retry
         try:
+            retry_enabled = _get_setting_value(db, "payment_retry_enabled", "true").lower() == "true"
+            max_attempts = int(_get_setting_value(db, "payment_retry_attempts", "3"))
             wl = db.query(WebhookPayloadLog).filter(WebhookPayloadLog.event_id == str(event_id)).first()
             if wl:
                 wl.processed_status = "FAILED"
                 wl.error_message = str(Exception)[:500]
-                wl.retry_count += 1
+                if retry_enabled and wl.retry_count < max_attempts:
+                    wl.retry_count += 1
+                elif not retry_enabled:
+                    wl.processed_status = "FAILED_PERMANENT"
                 db.commit()
         except Exception:
             pass

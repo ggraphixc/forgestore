@@ -81,25 +81,24 @@ def send_order_confirmation_email(
     vendor_sections: Optional[list] = None,
     items_table: Optional[list] = None,
     summary_lines: Optional[list] = None,
+    invoice_number: Optional[str] = None,
 ) -> bool:
     """Send order confirmation email (async background dispatch)."""
-    return _dispatch(
-        to_email,
-        f"Order Confirmed — {order_number}",
-        "order_confirmation.html",
-        {
-            "heading": "Order Confirmed!",
-            "subtitle": f"Thank you, {customer_name}. Your order has been placed successfully.",
-            "icon": {"emoji": "✅", "bg": "#f0fdf4"},
-            "cta_url": f"{settings.site_base_url.rstrip('/')}/shop/account/orders",
-            "cta_label": "View My Orders",
-            "customer_name": customer_name,
-            "order_number": order_number,
-            "vendor_sections": vendor_sections or [],
-            "items_table": items_table or [],
-            "summary_lines": summary_lines or [],
-        },
-    )
+    ctx = {
+        "heading": "Order Confirmed!",
+        "subtitle": f"Thank you, {customer_name}. Your order has been placed successfully.",
+        "icon": {"emoji": "✅", "bg": "#f0fdf4"},
+        "cta_url": f"{settings.site_base_url.rstrip('/')}/shop/account/orders",
+        "cta_label": "View My Orders",
+        "customer_name": customer_name,
+        "order_number": order_number,
+        "vendor_sections": vendor_sections or [],
+        "items_table": items_table or [],
+        "summary_lines": summary_lines or [],
+    }
+    if invoice_number:
+        ctx["invoice_number"] = invoice_number
+    return _dispatch(to_email, f"Order Confirmed — {order_number}", "order_confirmation.html", ctx)
 
 
 def send_vendor_new_order_email(

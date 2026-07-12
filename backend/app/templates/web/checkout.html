@@ -402,6 +402,16 @@
           </div>
           <svg class="ck-pay-btn-arrow" style="width:1.25rem;height:1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         </button>
+        {% if settings.cod_enabled != 'false' %}
+        <button onclick="initializePayment('cod')" id="cod-btn" class="ck-pay-btn" style="margin-top:0.75rem;">
+          <div class="ck-pay-btn-icon" style="background:#f59e0b;">C</div>
+          <div>
+            <p class="ck-pay-btn-text">Cash on Delivery</p>
+            <p class="ck-pay-btn-desc">Pay when your order arrives</p>
+          </div>
+          <svg class="ck-pay-btn-arrow" style="width:1.25rem;height:1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+        {% endif %}
         <div id="payment-error" class="ck-error" style="display:none;"></div>
       </div>
 
@@ -471,6 +481,32 @@ function initializePayment(provider) {
       err.style.display = 'block';
       payBtn.disabled = false;
       payBtn.innerHTML = '<div class="ck-pay-btn-icon">P</div><div><p class="ck-pay-btn-text">Paystack</p><p class="ck-pay-btn-desc">Pay with card, bank transfer, or USSD</p></div><svg class="ck-pay-btn-arrow" style="width:1.25rem;height:1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
+    });
+  } else if (provider === 'cod') {
+    const codBtn = document.getElementById('cod-btn');
+    codBtn.disabled = true;
+    codBtn.innerHTML = '<div class="ck-spinner"></div>';
+    fetch('/api/payments/initialize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order_id: '{{ order.id }}', provider: 'cod' }),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.cod) {
+        window.location.href = '/shop/order-success?order_id={{ order.id }}';
+      } else {
+        err.textContent = data.detail || 'COD order failed';
+        err.style.display = 'block';
+        codBtn.disabled = false;
+        codBtn.innerHTML = '<div class="ck-pay-btn-icon" style="background:#f59e0b;">C</div><div><p class="ck-pay-btn-text">Cash on Delivery</p><p class="ck-pay-btn-desc">Pay when your order arrives</p></div><svg class="ck-pay-btn-arrow" style="width:1.25rem;height:1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
+      }
+    })
+    .catch(() => {
+      err.textContent = 'Network error. Please try again.';
+      err.style.display = 'block';
+      codBtn.disabled = false;
+      codBtn.innerHTML = '<div class="ck-pay-btn-icon" style="background:#f59e0b;">C</div><div><p class="ck-pay-btn-text">Cash on Delivery</p><p class="ck-pay-btn-desc">Pay when your order arrives</p></div><svg class="ck-pay-btn-arrow" style="width:1.25rem;height:1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
     });
   }
   {% endif %}

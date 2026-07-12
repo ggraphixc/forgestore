@@ -122,6 +122,12 @@ async def checkout_mixed_cart(
     free_threshold = float(free_threshold_setting.value) if free_threshold_setting else 0.0
     tax_setting = db.query(SettingsModel).filter(SettingsModel.key == "tax_percentage").first()
     tax_pct = float(tax_setting.value) if tax_setting else 0.0
+    # Respect tax_enabled toggle
+    tax_enabled_setting = db.query(SettingsModel).filter(SettingsModel.key == "tax_enabled").first()
+    if tax_enabled_setting and tax_enabled_setting.value.lower() == "false":
+        tax_pct = 0.0
+    tax_name_setting = db.query(SettingsModel).filter(SettingsModel.key == "tax_name").first()
+    tax_name = tax_name_setting.value if tax_name_setting else "Tax"
 
     grand_subtotal = 0.0
     total_shipping = 0.0
@@ -163,6 +169,12 @@ async def checkout_mixed_cart(
 
     total_naira = grand_subtotal + total_shipping + total_tax
     total_kobo = int(round(total_naira * 100))
+
+    # Validate max order amount
+    max_order_setting = db.query(SettingsModel).filter(SettingsModel.key == "max_order_amount").first()
+    max_order_amount = float(max_order_setting.value) if max_order_setting else 0.0
+    if max_order_amount > 0 and total_naira > max_order_amount:
+        raise HTTPException(status_code=400, detail=f"Order total ₦{total_naira:,.2f} exceeds maximum allowed ₦{max_order_amount:,.2f}")
 
     # 4. Create parent Order
     order_reference = f"FS-ORD-{uuid.uuid4().hex[:8].upper()}"

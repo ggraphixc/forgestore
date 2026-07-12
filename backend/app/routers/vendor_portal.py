@@ -760,6 +760,13 @@ def vendor_request_payout(
     if amount <= 0:
         raise HTTPException(status_code=400, detail="Amount must be positive")
 
+    # Validate minimum payout amount
+    from app.models import Settings as SettingsModel
+    min_payout_setting = db.query(SettingsModel).filter(SettingsModel.key == "minimum_payout_amount").first()
+    min_payout = float(min_payout_setting.value) if min_payout_setting else 0.0
+    if min_payout > 0 and amount < min_payout:
+        raise HTTPException(status_code=400, detail=f"Minimum payout is ₦{min_payout:,.2f}")
+
     wallet = db.query(VendorWallet).filter(VendorWallet.retailer_id == admin.vendor_id).first()
     if not wallet:
         raise HTTPException(status_code=400, detail="Vendor wallet not found")

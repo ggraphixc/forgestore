@@ -402,8 +402,16 @@ def checkout_page(request: Request, db: Session = Depends(get_db)):
     order_id = request.query_params.get("order_id", "")
     reference = request.query_params.get("reference", "")
 
-    # Allow guest checkout — no login required
+    # Check guest checkout setting
+    from app.models import Settings as SettingsModel
+    guest_setting = db.query(SettingsModel).filter(SettingsModel.key == "guest_checkout").first()
+    guest_checkout_enabled = not guest_setting or guest_setting.value.lower() != "false"
+
+    # Allow guest checkout — no login required (unless disabled)
     customer = get_current_customer_from_cookie(request, db)
+    if not customer and not guest_checkout_enabled:
+        from starlette.responses import RedirectResponse
+        return RedirectResponse(url="/shop/login?next=/shop/checkout", status_code=302)
 
     order = None
     items = []

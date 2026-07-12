@@ -66,6 +66,17 @@ def create_dispute(
     if order.customer_id != user_id:
         raise HTTPException(status_code=403, detail="Not your order")
 
+    # Check refund window
+    from app.models import Settings as SettingsModel
+    from app.utils import utcnow as _utcnow
+    from datetime import timedelta
+    refund_window_setting = db.query(SettingsModel).filter(SettingsModel.key == "refund_window_days").first()
+    refund_window_days = int(refund_window_setting.value) if refund_window_setting else 30
+    if order.created_at:
+        days_since = (_utcnow() - order.created_at).days
+        if days_since > refund_window_days:
+            raise HTTPException(status_code=400, detail=f"Refund window of {refund_window_days} days has expired ({days_since} days since order)")
+
     # Get vendor_fulfillment info for retailer_id
     retailer_id = None
     if vendor_fulfillment_id:
@@ -239,6 +250,14 @@ def approve_refund(
         raise HTTPException(status_code=404, detail="Order not found")
 
     refund_amount = data.get("refund_amount", order.total_amount)
+
+    # Check partial refund setting
+    from app.models import Settings as SettingsModel
+    partial_setting = db.query(SettingsModel).filter(SettingsModel.key == "partial_refund_enabled").first()
+    partial_enabled = partial_setting and partial_setting.value.lower() != "false"
+    if not partial_enabled and refund_amount < order.total_amount:
+        raise HTTPException(status_code=400, detail="Partial refunds are disabled. Full refund required.")
+
     dispute.status = "RESOLVED_REFUNDED"
     dispute.refund_amount = refund_amount
     dispute.resolution_notes = data.get("notes", "Refund approved by admin")

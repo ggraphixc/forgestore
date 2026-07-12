@@ -930,6 +930,12 @@ def checkout(
     free_threshold = float(free_threshold_setting.value) if free_threshold_setting else 0.0
     tax_setting = db.query(SettingsModel).filter(SettingsModel.key == "tax_percentage").first()
     tax_pct = float(tax_setting.value) if tax_setting else 0.0
+    # Respect tax_enabled toggle
+    tax_enabled_setting = db.query(SettingsModel).filter(SettingsModel.key == "tax_enabled").first()
+    if tax_enabled_setting and tax_enabled_setting.value.lower() == "false":
+        tax_pct = 0.0
+    tax_name_setting = db.query(SettingsModel).filter(SettingsModel.key == "tax_name").first()
+    tax_name = tax_name_setting.value if tax_name_setting else "Tax"
 
     # ── Compute totals ──
     grand_subtotal = 0.0
@@ -980,6 +986,12 @@ def checkout(
         points_discount = min(points_discount, grand_subtotal)
 
     total = grand_subtotal + total_shipping + total_tax - points_discount
+
+    # ── Validate max order amount ──
+    max_order_setting = db.query(SettingsModel).filter(SettingsModel.key == "max_order_amount").first()
+    max_order_amount = float(max_order_setting.value) if max_order_setting else 0.0
+    if max_order_amount > 0 and total > max_order_amount:
+        raise HTTPException(status_code=400, detail=f"Order total ₦{total:,.2f} exceeds maximum allowed ₦{max_order_amount:,.2f}")
 
     # ── Create parent Order ──
     order = Order(
@@ -1158,17 +1170,27 @@ def checkout(
     summary_lines_for_email = [
         {"label": "Subtotal", "value": f"₦{grand_subtotal:,.2f}"},
         {"label": "Shipping", "value": f"₦{total_shipping:,.2f}"},
-        {"label": "Tax", "value": f"₦{total_tax:,.2f}"},
     ]
+    if tax_enabled:
+        summary_lines_for_email.append({"label": tax_name, "value": f"₦{total_tax:,.2f}"})
     if points_discount > 0:
         summary_lines_for_email.append({"label": "Points Discount", "value": f"-₦{points_discount:,.2f}"})
     summary_lines_for_email.append({"label": "Total", "value": f"₦{total:,.2f}"})
+
+    # Generate invoice number if auto-invoice enabled
+    invoice_number = ""
+    auto_invoice_setting = db.query(SettingsModel).filter(SettingsModel.key == "auto_invoice_enabled").first()
+    if auto_invoice_setting and auto_invoice_setting.value.lower() != "false":
+        prefix_setting = db.query(SettingsModel).filter(SettingsModel.key == "invoice_prefix").first()
+        prefix = prefix_setting.value if prefix_setting else "INV"
+        invoice_number = f"{prefix}-{order.order_number}"
 
     send_order_confirmation_email(
         shipping.email, order.order_number, shipping.name,
         vendor_sections=vendor_sections_for_email,
         items_table=items_table_for_email,
         summary_lines=summary_lines_for_email,
+        invoice_number=invoice_number,
     )
 
     # Per-vendor new-order notification emails (async, non-blocking)
@@ -1331,6 +1353,15 @@ async def payments_initialize(
     order = db.query(Order).filter(Order.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+
+    # Handle Cash on Delivery
+    if provider_name == "cod":
+        from app.models import Settings as SettingsModel
+        cod_setting = db.query(SettingsModel).filter(SettingsModel.key == "cod_enabled").first()
+        if cod_setting and cod_setting.value.lower() == "false":
+            raise HTTPException(status_code=400, detail="Cash on Delivery is not available")
+        # Mark order as PENDING COD — no payment gateway call
+        return {"authorization_url": "", "access_code": "", "cod": True, "message": "Order placed. Pay on delivery."}
 
     from app.config import get_settings
     _settings = get_settings()

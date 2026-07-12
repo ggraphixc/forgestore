@@ -2964,6 +2964,15 @@ def request_earnings_payout(
         return {"success": True, "marked": 0, "message": "No pending earnings to request payout for"}
 
     now = utcnow()
+    total_net = sum(e.net_amount for e in earnings)
+
+    # Validate minimum payout amount
+    from app.models import Settings as SettingsModel
+    min_payout_setting = db.query(SettingsModel).filter(SettingsModel.key == "minimum_payout_amount").first()
+    min_payout = float(min_payout_setting.value) if min_payout_setting else 0.0
+    if min_payout > 0 and total_net < min_payout:
+        raise HTTPException(status_code=400, detail=f"Minimum payout is ₦{min_payout:,.2f}. Current: ₦{total_net:,.2f}")
+
     for e in earnings:
         e.status = "PAID"
         e.paid_at = now
@@ -3235,6 +3244,63 @@ def moderate_chat_message(
     return {"success": True}
 
 
+def _auto_approve_vendor(application, db: Session) -> dict:
+    """Auto-approve a vendor application. Creates Retailer + AdminUser + Wallet."""
+    import re
+    from app.models import VendorApplication, Retailer as RetailerModel, AdminUser as AdminUserModel
+
+    app = db.query(VendorApplication).filter(VendorApplication.id == application.id).first()
+    if not app:
+        return {"success": False}
+
+    app.status = "APPROVED"
+    app.reviewed_at = utcnow()
+
+    slug = re.sub(r'[^a-z0-9]+', '-', app.business_name.lower().strip()).strip('-')
+    existing_slug = db.query(RetailerModel).filter(RetailerModel.slug == slug).first()
+    if existing_slug:
+        slug = f"{slug}-{uuid.uuid4().hex[:6]}"
+
+    retailer = RetailerModel(
+        name=app.business_name,
+        slug=slug,
+        bio=app.description,
+        location=app.phone,
+        status="ACTIVE",
+        bank_name=app.bank_name,
+        account_number=app.account_number,
+        bank_code=app.bank_code,
+    )
+    db.add(retailer)
+    db.commit()
+    db.refresh(retailer)
+
+    temp_password = f"vendor-{uuid.uuid4().hex[:8]}"
+    new_admin = AdminUserModel(
+        email=app.email,
+        password=hash_password(temp_password),
+        name=app.full_name or app.business_name,
+        role=AdminRole.RETAILER,
+        vendor_id=retailer.id,
+    )
+    db.add(new_admin)
+    db.commit()
+
+    from app.models import VendorWallet
+    wallet = VendorWallet(retailer_id=retailer.id, balance=0, locked_escrow_balance=0)
+    db.add(wallet)
+    db.commit()
+
+    # Send approval email
+    try:
+        from app.services.email_service import send_welcome_email
+        send_welcome_email(app.email, app.full_name or app.business_name, temp_password)
+    except Exception:
+        pass
+
+    return {"success": True, "retailer_id": retailer.id}
+
+
 # ==============================================================================
 # PUBLIC VENDOR APPLICATION FUNNEL
 # ==============================================================================
@@ -3265,6 +3331,18 @@ def vendor_apply(data: dict, db: Session = Depends(get_db)):
     db.add(application)
     db.commit()
     db.refresh(application)
+
+    # Auto-approve if vendor_auto_approval_policy is enabled
+    from app.models import Settings as SettingsModel
+    auto_approve_setting = db.query(SettingsModel).filter(SettingsModel.key == "vendor_auto_approval_policy").first()
+    if auto_approve_setting and auto_approve_setting.value.lower() == "true":
+        # Auto-approve: create Retailer + AdminUser inline
+        try:
+            approve_result = _auto_approve_vendor(application, db)
+            if approve_result.get("success"):
+                return {"success": True, "application_id": application.id, "auto_approved": True, "message": "Application auto-approved"}
+        except Exception as e:
+            logger.warning("Auto-approval failed for %s: %s", email, e)
 
     # Notify admin
     from app.models import AdminNotification
