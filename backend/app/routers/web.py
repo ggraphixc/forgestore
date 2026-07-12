@@ -115,10 +115,31 @@ def log_ad_impressions_background(ad_ids: list[str]):
         db.close()
 
 
-def format_price(amount: float, currency: str = "NGN") -> str:
+def format_price(amount: float, currency: str = "NGN", db=None) -> str:
+    """Format price with full i18n support from settings."""
     symbols = {"NGN": "₦", "USD": "$", "GBP": "£", "EUR": "€"}
     symbol = symbols.get(currency, "₦")
-    return f"{symbol}{amount:,.2f}"
+    position = "before"
+    decimal_places = 2
+    thousand_sep = ","
+    decimal_sep = "."
+    if db:
+        try:
+            from app.services.ai_service import get_setting
+            symbol = get_setting(db, "currency_symbol", symbol)
+            position = get_setting(db, "currency_symbol_position", "before")
+            decimal_places = int(get_setting(db, "currency_decimal_places", "2"))
+            thousand_sep = get_setting(db, "currency_thousand_separator", ",")
+            decimal_sep = get_setting(db, "currency_decimal_separator", ".")
+        except Exception:
+            pass
+    formatted = f"{amount:,.{decimal_places}f}"
+    if thousand_sep != "," or decimal_sep != ".":
+        formatted = f"{amount:,.{decimal_places}f}".replace(",", "T").replace(".", "D")
+        formatted = formatted.replace("T", thousand_sep).replace("D", decimal_sep)
+    if position == "after":
+        return f"{formatted}{symbol}"
+    return f"{symbol}{formatted}"
 
 
 # --- Homepage ---

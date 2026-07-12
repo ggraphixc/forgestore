@@ -69,6 +69,37 @@ def _get_full_settings_from_db(db):
 env.globals["site_settings_fallback"] = _get_fallback_settings
 
 
+def _format_price_global(amount: float, currency: str = "NGN") -> str:
+    """Jinja2 global: format price with full i18n support from DB settings."""
+    symbols = {"NGN": "₦", "USD": "$", "GBP": "£", "EUR": "€"}
+    symbol = symbols.get(currency, "₦")
+    position = "before"
+    decimal_places = 2
+    thousand_sep = ","
+    decimal_sep = "."
+    db = get_current_db()
+    if db is not None:
+        try:
+            from app.services.ai_service import get_setting
+            symbol = get_setting(db, "currency_symbol", symbol)
+            position = get_setting(db, "currency_symbol_position", "before")
+            decimal_places = int(get_setting(db, "currency_decimal_places", "2"))
+            thousand_sep = get_setting(db, "currency_thousand_separator", ",")
+            decimal_sep = get_setting(db, "currency_decimal_separator", ".")
+        except Exception:
+            pass
+    formatted = f"{amount:,.{decimal_places}f}"
+    if thousand_sep != "," or decimal_sep != ".":
+        formatted = formatted.replace(",", "T").replace(".", "D")
+        formatted = formatted.replace("T", thousand_sep).replace("D", decimal_sep)
+    if position == "after":
+        return f"{formatted}{symbol}"
+    return f"{symbol}{formatted}"
+
+
+env.globals["format_price"] = _format_price_global
+
+
 def render_template(template_name: str, context: Optional[Dict[str, Any]] = None, status_code: int = 200, **kwargs):
     """Render a Jinja2 template and return an HTMLResponse.
 
