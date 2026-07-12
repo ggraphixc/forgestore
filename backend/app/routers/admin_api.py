@@ -655,7 +655,7 @@ def _validate_setting_value(sd: dict, value: str):
             )
     elif setting_type == "select":
         options = sd.get("options", [])
-        valid_values = [opt["value"] for opt in options]
+        valid_values = [opt["value"] if isinstance(opt, dict) else opt for opt in options]
         if value and value not in valid_values:
             raise HTTPException(
                 status_code=400,
