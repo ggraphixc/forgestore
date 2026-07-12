@@ -171,6 +171,12 @@ def get_categorized_settings(db) -> Dict[str, List]:
             categories[cat] = []
         entry = dict(sd)
         entry["value"] = db_settings.get(sd["key"], sd.get("default", ""))
+        # Normalize options to dicts so template can always use opt.value / opt.label
+        if "options" in entry and entry["options"]:
+            entry["options"] = [
+                opt if isinstance(opt, dict) else {"value": opt, "label": opt.replace("_", " ").title()}
+                for opt in entry["options"]
+            ]
         categories[cat].append(entry)
 
     return categories
