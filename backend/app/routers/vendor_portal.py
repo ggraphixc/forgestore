@@ -1359,8 +1359,10 @@ async def vendor_profile_update(request: Request, db: Session = Depends(get_db))
         if not verify_password(current_password, admin.password):
             ctx["error"] = "Current password is incorrect."
             return render_template("vendor/profile.html", ctx)
-        if len(new_password) < 6:
-            ctx["error"] = "New password must be at least 6 characters."
+        from app.services.ai_service import get_setting
+        min_len = int(get_setting(db, "password_min_length", "6"))
+        if len(new_password) < min_len:
+            ctx["error"] = f"New password must be at least {min_len} characters."
             return render_template("vendor/profile.html", ctx)
         if new_password != confirm_password:
             ctx["error"] = "New passwords do not match."

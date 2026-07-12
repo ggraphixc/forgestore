@@ -19,7 +19,7 @@ from app.models import Settings
 from app.routers import auth, admin, admin_api, web, web_api
 from app.routers import vendor_portal, logistics_portal
 from app.auth import get_current_user_from_cookie
-from app.templates_shared import render_template
+from app.templates_shared import render_template, set_current_db
 
 # ─── Logging Configuration ───────────────────────────────────────────
 
@@ -146,6 +146,28 @@ app.include_router(support_router)
 from app.core.logger import RequestTimingMiddleware, setup_structured_logging
 setup_structured_logging()
 app.add_middleware(RequestTimingMiddleware)
+
+
+class DBContextMiddleware:
+    """Set the DB session in contextvars so render_template can access it automatically."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+        from app.database import SessionLocal
+        db = SessionLocal()
+        try:
+            set_current_db(db)
+            await self.app(scope, receive, send)
+        finally:
+            set_current_db(None)
+            db.close()
+
+
+app.add_middleware(DBContextMiddleware)
 
 
 class MaintenanceModeMiddleware:

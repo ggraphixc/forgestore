@@ -24,13 +24,36 @@ def _render_email_template(template_name: str, context: dict) -> str:
 
 
 def _base_context(**kwargs) -> dict:
-    """Build base template context with site-wide defaults."""
-    return {
+    """Build base template context with site-wide defaults and email branding."""
+    ctx = {
         "site_name": settings.site_name or "ForgeStore",
         "site_tagline": settings.site_tagline or "",
         "base_url": settings.site_base_url.rstrip("/"),
+        # Email branding defaults
+        "email_header_color": "#f59e0b",
+        "email_button_color": "#f59e0b",
+        "email_footer_text": "",
+        "email_logo_url": "",
         **kwargs,
     }
+    # Override with DB settings if available
+    try:
+        from app.database import SessionLocal
+        from app.models import Settings as SettingsModel
+        db = SessionLocal()
+        db_keys = [
+            "email_header_color", "email_button_color",
+            "email_footer_text", "email_logo_url",
+            "site_name", "site_tagline",
+        ]
+        for key in db_keys:
+            setting = db.query(SettingsModel).filter(SettingsModel.key == key).first()
+            if setting and setting.value:
+                ctx[key] = setting.value
+        db.close()
+    except Exception:
+        pass
+    return ctx
 
 
 def _dispatch(to_email: str, subject: str, template_name: str, context: dict) -> bool:

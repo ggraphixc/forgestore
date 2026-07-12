@@ -3,12 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-    <title>{% block title %}ForgeStore{% endblock %}</title>
-    <meta name="description" content="{% block meta_description %}Where the Workshop Meets the World — Discover handcrafted treasures from master artisans.{% endblock %}">
+    <title>{% block title %}{{ settings.meta_title|default('ForgeStore') }}{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}{{ settings.meta_description|default('Where the Workshop Meets the World — Discover handcrafted treasures from master artisans.') }}{% endblock %}">
+    {% if settings.og_image_url|default('') %}
+    <meta property="og:title" content="{% block og_title %}{{ settings.site_name|default('ForgeStore') }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ settings.meta_description|default('') }}{% endblock %}">
+    <meta property="og:image" content="{{ settings.og_image_url }}">
+    <meta property="og:type" content="website">
+    {% endif %}
+    {% if settings.canonical_url_enabled|default('true') == 'true' %}
+    <link rel="canonical" href="{% block canonical_url %}{{ settings.site_base_url|default('') }}{{ request.url.path }}{% endblock %}">
+    {% endif %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Alex+Brush&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/output.css">
+    {% if settings.favicon_url|default('') %}
+    <link rel="icon" href="{{ settings.favicon_url }}">
+    {% endif %}
     {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-stone-50 text-stone-900 font-sans antialiased selection:bg-amber-500/20 selection:text-stone-900">
@@ -20,5 +32,9 @@
 
     <script src="/static/js/main.js"></script>
     {% block extra_scripts %}{% endblock %}
+    {% if settings.google_analytics_id|default('') %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ settings.google_analytics_id }}"></script>
+    <script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', '{{ settings.google_analytics_id }}');</script>
+    {% endif %}
 </body>
 </html>

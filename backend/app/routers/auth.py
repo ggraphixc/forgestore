@@ -197,8 +197,26 @@ def reset_password(data: dict, db: Session = Depends(get_db)):
     token_str = data.get("token", "")
     new_password = data.get("password", "")
 
-    if not token_str or len(new_password) < 6:
-        raise HTTPException(status_code=400, detail="Invalid token or password too short")
+    # Get password rules from settings
+    from app.services.ai_service import get_setting
+    min_len = int(get_setting(db, "password_min_length", "6"))
+    require_upper = get_setting(db, "password_require_uppercase", "false").lower() == "true"
+    require_number = get_setting(db, "password_require_number", "false").lower() == "true"
+    require_special = get_setting(db, "password_require_special", "false").lower() == "true"
+
+    errors = []
+    if len(new_password) < min_len:
+        errors.append(f"Password must be at least {min_len} characters")
+    if require_upper and not any(c.isupper() for c in new_password):
+        errors.append("Password must contain an uppercase letter")
+    if require_number and not any(c.isdigit() for c in new_password):
+        errors.append("Password must contain a number")
+    if require_special and not any(c in "!@#$%^&*()_+-=[]{}|;':\",./<>?" for c in new_password):
+        errors.append("Password must contain a special character")
+
+    if not token_str or errors:
+        detail = "; ".join(errors) if errors else "Invalid token"
+        raise HTTPException(status_code=400, detail=detail)
 
     reset_token = db.query(PasswordResetToken).filter(
         PasswordResetToken.token == token_str,

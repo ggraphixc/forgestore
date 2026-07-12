@@ -595,8 +595,9 @@
   <a href="/shop/faq" class="web-guarantee-side g-right">
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
     <span>FAQs & Help Center</span>
-  </a>
-</div>
+      </a>
+      {% endif %}
+    </div>
 <script>
 (function(){
   var slides = document.querySelectorAll('.web-guarantee-slide');
@@ -654,7 +655,9 @@
           <a href="/shop/marketplace" class="web-cats-viewall">View All Categories →</a>
         </div>
       </div>
+      {% if settings.wishlist_enabled|default('true') == 'true' %}
       <a href="/shop/wishlist" class="web-nav-link {% if request.url.path.startswith('/shop/wishlist') %}web-nav-link--active{% endif %}">Wishlist</a>
+      {% endif %}
     </nav>
 
     <!-- Desktop Search -->
@@ -860,6 +863,7 @@
           <small class="cart-count-mobile-inline">0 items</small>
         </div>
       </a>
+      {% if settings.wishlist_enabled|default('true') == 'true' %}
       <a href="/shop/wishlist" class="web-mobile-quick-card">
         <div class="web-mobile-quick-card-icon web-mobile-quick-card-icon--rose">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -871,6 +875,7 @@
           <small>Saved items</small>
         </div>
       </a>
+      {% endif %}
     </div>
   </div>
 
@@ -955,6 +960,7 @@ document.addEventListener('scroll', function() {
 <footer class="web-footer">
   <div class="web-footer-inner">
     <!-- Newsletter -->
+    {% if settings.newsletter_enabled|default('true') == 'true' %}
     <div class="web-footer-newsletter">
       <div class="web-footer-newsletter-inner">
         <h3>Stay in the Loop</h3>
@@ -966,6 +972,7 @@ document.addEventListener('scroll', function() {
         <p id="newsletter-msg" class="web-footer-newsletter-msg" style="display:none;"></p>
       </div>
     </div>
+    {% endif %}
 
     <!-- Grid -->
     <div class="web-footer-grid">
@@ -1009,7 +1016,9 @@ document.addEventListener('scroll', function() {
         <ul>
           <li><a href="/shop/marketplace">Marketplace</a></li>
           <li><a href="/shop/marketplace">All Products</a></li>
+          {% if settings.wishlist_enabled|default('true') == 'true' %}
           <li><a href="/shop/wishlist">Wishlist</a></li>
+          {% endif %}
         </ul>
       </div>
       <!-- Support -->
@@ -1048,7 +1057,9 @@ document.addEventListener('scroll', function() {
 {% endblock %}
 
 <!-- AI Shopping Assistant Chat Widget -->
+{% if settings.ai_assistant_enabled|default('true') == 'true' %}
 {% include "web/ai_chat_widget.html" %}
+{% endif %}
 
 <!-- Cookie Consent Banner -->
 {% include "web/cookie_banner.html" %}

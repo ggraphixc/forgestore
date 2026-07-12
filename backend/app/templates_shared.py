@@ -1,4 +1,5 @@
 from typing import Optional, Dict, Any
+from contextvars import ContextVar
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from fastapi.responses import HTMLResponse
 
@@ -8,6 +9,19 @@ env = Environment(
     autoescape=select_autoescape(["html", "xml"]),
     enable_async=False,
 )
+
+# Context variable for automatic DB session injection into templates
+_current_db: ContextVar = ContextVar('_current_db', default=None)
+
+
+def set_current_db(db):
+    """Set the current DB session for template rendering. Called per-request."""
+    _current_db.set(db)
+
+
+def get_current_db():
+    """Get the current DB session from context."""
+    return _current_db.get()
 
 
 def _escapejs(value):
@@ -43,25 +57,24 @@ def _get_fallback_settings():
     }
 
 
-def _get_global_context(db_session):
-    """Ensures baseline layout context dependencies are consistently satisfied."""
+def _get_full_settings_from_db(db):
+    """Get full site settings from the database."""
     try:
         from app.config import get_site_settings
-        return get_site_settings(db_session)
+        return get_site_settings(db)
     except Exception:
         return _get_fallback_settings()
 
 
 env.globals["site_settings_fallback"] = _get_fallback_settings
-env.globals["get_global_context"] = _get_global_context
 
 
 def render_template(template_name: str, context: Optional[Dict[str, Any]] = None, status_code: int = 200, **kwargs):
     """Render a Jinja2 template and return an HTMLResponse.
 
-    Supports both dict context (legacy) and keyword arguments.
-    Automatically injects site_settings_fallback into every render
-    so templates never crash from missing `settings` variable.
+    Automatically injects full site settings from DB into every render.
+    DB session is obtained from contextvars (set per-request by middleware).
+    Templates always have access to settings.* for branding, features, etc.
     """
     ctx = {}
     if context:
@@ -69,9 +82,13 @@ def render_template(template_name: str, context: Optional[Dict[str, Any]] = None
     if kwargs:
         ctx.update(kwargs)
 
-    # Auto-inject fallback settings if `settings` not already provided
+    # Auto-inject settings if `settings` not already provided
     if "settings" not in ctx:
-        ctx["settings"] = _get_fallback_settings()
+        db = get_current_db()
+        if db is not None:
+            ctx["settings"] = _get_full_settings_from_db(db)
+        else:
+            ctx["settings"] = _get_fallback_settings()
 
     template = env.get_template(template_name)
     html = template.render(**ctx)
