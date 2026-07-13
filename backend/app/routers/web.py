@@ -225,7 +225,7 @@ def homepage(request: Request, background_tasks: BackgroundTasks, db: Session = 
     ).order_by(desc(AdCampaign.impressions), desc(AdCampaign.created_at)).limit(5).all()
 
     # Active promo ads (admin-created flash sales, holiday deals, etc.)
-    flash_setting = db.query(SettingsModel).filter(SettingsModel.key == "flash_sales_enabled").first()
+    flash_setting = db.query(Settings).filter(Settings.key == "flash_sales_enabled").first()
     flash_enabled = not flash_setting or flash_setting.value.lower() != "false"
     active_promo_ads = []
     if flash_enabled:
@@ -284,7 +284,7 @@ def marketplace(request: Request, background_tasks: BackgroundTasks, db: Session
     ).order_by(desc(AdCampaign.created_at)).limit(4).all()
 
     # Active promo ads (admin-created flash sales, holiday deals, etc.)
-    flash_setting2 = db.query(SettingsModel).filter(SettingsModel.key == "flash_sales_enabled").first()
+    flash_setting2 = db.query(Settings).filter(Settings.key == "flash_sales_enabled").first()
     flash_enabled2 = not flash_setting2 or flash_setting2.value.lower() != "false"
     active_promo_ads = []
     if flash_enabled2:
