@@ -198,8 +198,6 @@ def init_db():
         SupportMessage,
         PickupPoint,
         PickupInventory,
-        VendorApplication,
-        AffiliateApplication,
-        PromoAd,
+        BulkOrder,
     )
     Base.metadata.create_all(bind=get_engine())

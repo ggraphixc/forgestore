@@ -255,6 +255,7 @@ def get_current_customer_from_cookie(
 # ==============================================================================
 
 _DEFAULT_COOKIE_MAX_AGE_DAYS = 30
+COOKIE_MAX_AGE_DAYS = _DEFAULT_COOKIE_MAX_AGE_DAYS  # backward-compat alias
 
 
 def _get_cookie_max_age_days() -> int:
