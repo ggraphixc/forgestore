@@ -3125,7 +3125,7 @@ async def upload_file(files: List[UploadFile] = File(...)):
         try:
             raw = await file.read()
             from app.core.image_compressor import get_max_upload_size_bytes
-            max_bytes = get_max_upload_size_bytes(db)
+            max_bytes = get_max_upload_size_bytes()
             if len(raw) > max_bytes:
                 raise HTTPException(status_code=400, detail=f"File too large. Maximum size is {max_bytes // (1024*1024)}MB.")
             if use_cloudinary:
