@@ -632,7 +632,7 @@
       {% if settings.logo_url|default('') %}
       <img src="{{ settings.logo_url }}" alt="{{ settings.site_name|default('ForgeStore') }}" style="height:40px;width:auto;">
       {% else %}
-      <div class="web-logo-box"><span>{{ settings.site_initials|default("FS") }}</span></div>
+      <div class="web-logo-box">{% set _si = settings.site_initials|default("FS") %}{% if _si and ("/" in _si or _si.startswith("http")) %}<img src="{{ _si }}" alt="Logo" style="height:100%;width:100%;object-fit:contain;">{% else %}<span>{{ _si }}</span>{% endif %}</div>
       {% endif %}
       <div>
         <span class="web-logo-text">{{ settings.site_name|default('ForgeStore') }}</span>
@@ -982,7 +982,7 @@ document.addEventListener('scroll', function() {
       <!-- Brand -->
       <div class="web-footer-brand">
         <div class="web-footer-brand-header">
-          <div class="web-footer-brand-box"><span>{{ settings.site_initials|default("FS") }}</span></div>
+           <div class="web-footer-brand-box">{% set _si = settings.site_initials|default("FS") %}{% if _si and ("/" in _si or _si.startswith("http")) %}<img src="{{ _si }}" alt="Logo" style="height:100%;width:100%;object-fit:contain;">{% else %}<span>{{ _si }}</span>{% endif %}</div>
           <div>
             <span class="web-footer-brand-name">{{ settings.site_name|default('ForgeStore') }}</span>
             <span class="web-footer-brand-tagline">{{ settings.site_tagline|default('Where the Workshop Meets the World') }}</span>

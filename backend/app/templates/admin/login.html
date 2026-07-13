@@ -81,7 +81,7 @@
 </style>
 
 <div class="admin-login-logo">
-    <div class="admin-login-logo-icon">{{ settings.site_initials|default("FS") }}</div>
+    <div class="admin-login-logo-icon">{% set _si = settings.site_initials|default("FS") %}{% if _si and ("/" in _si or _si.startswith("http")) %}<img src="{{ _si }}" alt="Logo" style="height:100%;width:100%;object-fit:contain;">{% else %}{{ _si }}{% endif %}</div>
     <h1>{{ settings.site_name|default('ForgeStore') }}</h1>
     <p>Admin Panel — Sign in to continue</p>
 </div>

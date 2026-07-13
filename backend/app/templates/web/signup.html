@@ -486,7 +486,7 @@
     <div class="auth-showcase-content">
       <div class="auth-brand">
         <div class="auth-brand-icon">
-          <span style="color:#fff;font-size:1.25rem;font-weight:900;">{{ settings.site_initials|default("FS") }}</span>
+          {% set _si = settings.site_initials|default("FS") %}{% if _si and ("/" in _si or _si.startswith("http")) %}<img src="{{ _si }}" alt="Logo" style="height:24px;object-fit:contain;">{% else %}<span style="color:#fff;font-size:1.25rem;font-weight:900;">{{ _si }}</span>{% endif %}
         </div>
         <div>
           <span class="auth-brand-name">{{ settings.site_name|default('ForgeStore') }}</span>
@@ -560,7 +560,7 @@
     <div class="auth-card">
       <div class="auth-mobile-logo">
         <div class="auth-mobile-icon">
-          <span style="color:#fff;font-size:0.875rem;font-weight:900;">{{ settings.site_initials|default("FS") }}</span>
+          {% set _si = settings.site_initials|default("FS") %}{% if _si and ("/" in _si or _si.startswith("http")) %}<img src="{{ _si }}" alt="Logo" style="height:18px;object-fit:contain;">{% else %}<span style="color:#fff;font-size:0.875rem;font-weight:900;">{{ _si }}</span>{% endif %}
         </div>
         <span style="font-size:1.125rem;font-weight:700;color:var(--auth-stone-900);font-family:{{ settings.font_heading|default("'Montserrat',sans-serif") }};">{{ settings.site_name|default('ForgeStore') }}</span>
       </div>
