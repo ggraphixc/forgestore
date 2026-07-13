@@ -896,8 +896,11 @@ def checkout(
     # ── Point Redemption (optional) ──
     points_redeemed = int(request.query_params.get("points", 0)) if hasattr(request.query_params, 'get') else 0
     points_discount = 0.0
-    if points_redeemed > 0 and customer and customer.attribute_points > 0:
-        from app.models import Settings as SettingsModel
+    # Check loyalty_points_enabled setting
+    from app.models import Settings as SettingsModel
+    loyalty_setting = db.query(SettingsModel).filter(SettingsModel.key == "loyalty_points_enabled").first()
+    loyalty_enabled = not loyalty_setting or loyalty_setting.value.lower() != "false"
+    if loyalty_enabled and points_redeemed > 0 and customer and customer.attribute_points > 0:
         ratio_setting = db.query(SettingsModel).filter(SettingsModel.key == "points_to_currency_ratio").first()
         ratio = float(ratio_setting.value) if ratio_setting else 100.0
         if ratio > 0:

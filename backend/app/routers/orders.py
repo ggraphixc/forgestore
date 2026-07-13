@@ -85,7 +85,11 @@ async def checkout_mixed_cart(
         ).first()
         if not product:
             raise HTTPException(status_code=404, detail=f"Product {product_id} not found")
-        if product.inventory < quantity:
+        # Check inventory if tracking enabled
+        from app.models import Settings as SettingsModel
+        inv_setting = db.query(SettingsModel).filter(SettingsModel.key == "inventory_tracking_enabled").first()
+        inv_enabled = not inv_setting or inv_setting.value.lower() != "false"
+        if inv_enabled and product.inventory < quantity:
             raise HTTPException(status_code=400, detail=f"Insufficient stock for '{product.name}'")
 
         effective_price = product.discount_price if product.discount_price and product.discount_price < product.price else product.price

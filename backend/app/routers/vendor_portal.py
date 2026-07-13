@@ -1432,6 +1432,11 @@ async def vendor_ai_generate_tags(request: Request, db: Session = Depends(get_db
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return JSONResponse({"success": False, "message": "Unauthorized"}, status_code=401)
+    # Check product_tags_enabled setting
+    from app.models import Settings as SettingsModel
+    tags_setting = db.query(SettingsModel).filter(SettingsModel.key == "product_tags_enabled").first()
+    if tags_setting and tags_setting.value.lower() == "false":
+        return JSONResponse({"success": False, "message": "Product tags are disabled"}, status_code=400)
     from app.services.ai_service import generate_product_tags
     data = await request.json()
     tags = await asyncio.to_thread(

@@ -596,7 +596,6 @@
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
     <span>FAQs & Help Center</span>
       </a>
-      {% endif %}
     </div>
 <script>
 (function(){
@@ -630,7 +629,11 @@
   <div class="web-header-inner">
     <!-- Logo -->
     <a href="/shop" class="web-logo">
+      {% if settings.logo_url|default('') %}
+      <img src="{{ settings.logo_url }}" alt="{{ settings.site_name|default('ForgeStore') }}" style="height:40px;width:auto;">
+      {% else %}
       <div class="web-logo-box"><span>FS</span></div>
+      {% endif %}
       <div>
         <span class="web-logo-text">{{ settings.site_name|default('ForgeStore') }}</span>
         <span class="web-logo-tagline">{{ settings.site_tagline|default('Your One-Stop Marketplace') }}</span>
@@ -1027,6 +1030,12 @@ document.addEventListener('scroll', function() {
         <ul>
           <li><a href="/shop/support">Support Center</a></li>
           <li><a href="/shop/contact">Contact Us</a></li>
+          {% if settings.contact_phone|default('') %}
+          <li>Phone: {{ settings.contact_phone }}</li>
+          {% endif %}
+          {% if settings.business_hours|default('') %}
+          <li>Hours: {{ settings.business_hours }}</li>
+          {% endif %}
           <li><a href="/shop/shipping">Shipping Info</a></li>
           <li><a href="/shop/returns">Returns Policy</a></li>
           <li><a href="/shop/faq">FAQ</a></li>
@@ -1047,8 +1056,8 @@ document.addEventListener('scroll', function() {
     <div class="web-footer-bottom">
       <p>{{ settings.copyright_text|default('© 2026 ' ~ (settings.site_name|default('ForgeStore')) ~ '. All rights reserved.')|replace('{year}', now().year if now is defined else '2026')|replace('{site_name}', settings.site_name|default('ForgeStore')) }}</p>
       <div class="web-footer-bottom-links">
-        <a href="#">Privacy Policy</a>
-        <a href="#">Terms of Service</a>
+        <a href="{{ settings.privacy_url|default('#') }}">Privacy Policy</a>
+        <a href="{{ settings.terms_url|default('#') }}">Terms of Service</a>
         <a href="/vendor/apply" class="a--highlight" style="color:var(--c-amber-400);font-weight:700;">Become a Vendor</a>
       </div>
     </div>

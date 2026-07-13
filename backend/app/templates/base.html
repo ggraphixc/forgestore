@@ -21,6 +21,12 @@
     {% if settings.favicon_url|default('') %}
     <link rel="icon" href="{{ settings.favicon_url }}">
     {% endif %}
+    {% if settings.custom_css|default('') %}
+    <style>{{ settings.custom_css }}</style>
+    {% endif %}
+    {% if settings.theme_mode|default('') == 'dark' %}
+    <script>document.documentElement.classList.add('dark');</script>
+    {% endif %}
     {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-stone-50 text-stone-900 font-sans antialiased selection:bg-amber-500/20 selection:text-stone-900">
@@ -32,9 +38,13 @@
 
     <script src="/static/js/main.js"></script>
     {% block extra_scripts %}{% endblock %}
-    {% if settings.google_analytics_id|default('') %}
-    <script async src="https://www.googletagmanager.com/gtag/js?id={{ settings.google_analytics_id }}"></script>
-    <script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', '{{ settings.google_analytics_id }}');</script>
+    {% if settings.custom_js|default('') %}
+    <script>{{ settings.custom_js }}</script>
+    {% endif %}
+    {% set ga_id = settings.google_analytics_id|default(settings.analytics_id|default('')) %}
+    {% if ga_id %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_id }}"></script>
+    <script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', '{{ ga_id }}');</script>
     {% endif %}
 </body>
 </html>

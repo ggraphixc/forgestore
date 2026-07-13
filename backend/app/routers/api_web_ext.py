@@ -94,6 +94,11 @@ def create_referral(
     db: Session = Depends(get_db),
 ):
     """Create an affiliate/referral account using the current user."""
+    # Check referral_program_enabled setting
+    from app.models import Settings as SettingsModel
+    ref_setting = db.query(SettingsModel).filter(SettingsModel.key == "referral_program_enabled").first()
+    if ref_setting and ref_setting.value.lower() == "false":
+        raise HTTPException(status_code=404, detail="Referral program is disabled")
     customer = get_current_customer_from_cookie(request, db)
     user_id = customer.id if customer else None
     if not user_id:

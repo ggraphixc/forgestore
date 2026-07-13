@@ -22,7 +22,7 @@ RESIZE_FACTOR = 0.75  # reduce dimensions by 25% each resize pass
 MAX_DIMENSION = 2048  # cap longest side
 
 
-def compress_image(raw_bytes: bytes) -> tuple[bytes, str]:
+def compress_image(raw_bytes: bytes, quality: int = None) -> tuple[bytes, str]:
     """Compress *raw_bytes* to the target size range.
 
     Returns ``(compressed_bytes, file_extension)`` where extension is
@@ -30,14 +30,17 @@ def compress_image(raw_bytes: bytes) -> tuple[bytes, str]:
 
     If the image is already under TARGET_MAX_KB it is returned unchanged
     (unless it's PNG/WebP with alpha, in which case it's converted to JPEG).
+
+    Optional *quality* parameter overrides START_QUALITY (1-100).
     """
+    start_quality = quality if quality and 1 <= quality <= 100 else START_QUALITY
     if len(raw_bytes) <= TARGET_MAX_KB * 1024:
         try:
             img = Image.open(io.BytesIO(raw_bytes))
             if img.mode in ("RGBA", "LA", "P"):
                 img = img.convert("RGB")
                 buf = io.BytesIO()
-                img.save(buf, format="JPEG", quality=START_QUALITY)
+                img.save(buf, format="JPEG", quality=start_quality)
                 return buf.getvalue(), "jpg"
         except Exception:
             pass
@@ -64,7 +67,7 @@ def compress_image(raw_bytes: bytes) -> tuple[bytes, str]:
         img.thumbnail((MAX_DIMENSION, MAX_DIMENSION), Image.LANCZOS)
 
     # Iterative quality reduction
-    quality = START_QUALITY
+    quality = start_quality
     best_buf = None
 
     while quality >= MIN_QUALITY:
@@ -87,7 +90,7 @@ def compress_image(raw_bytes: bytes) -> tuple[bytes, str]:
             resized = img.resize(new_size, Image.LANCZOS)
             current_size = max(new_size)
 
-            quality = START_QUALITY
+            quality = start_quality
             while quality >= MIN_QUALITY:
                 buf = io.BytesIO()
                 resized.save(buf, format="JPEG", quality=quality, optimize=True)

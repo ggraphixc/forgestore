@@ -225,10 +225,14 @@ def homepage(request: Request, background_tasks: BackgroundTasks, db: Session = 
     ).order_by(desc(AdCampaign.impressions), desc(AdCampaign.created_at)).limit(5).all()
 
     # Active promo ads (admin-created flash sales, holiday deals, etc.)
-    active_promo_ads = db.query(PromoAd).filter(
-        PromoAd.status == "ACTIVE",
-        (PromoAd.end_date == None) | (PromoAd.end_date > utcnow())
-    ).order_by(desc(PromoAd.created_at)).limit(6).all()
+    flash_setting = db.query(SettingsModel).filter(SettingsModel.key == "flash_sales_enabled").first()
+    flash_enabled = not flash_setting or flash_setting.value.lower() != "false"
+    active_promo_ads = []
+    if flash_enabled:
+        active_promo_ads = db.query(PromoAd).filter(
+            PromoAd.status == "ACTIVE",
+            (PromoAd.end_date == None) | (PromoAd.end_date > utcnow())
+        ).order_by(desc(PromoAd.created_at)).limit(6).all()
 
     # Track impressions asynchronously — avoids blocking page load
     if active_ads:
@@ -280,10 +284,14 @@ def marketplace(request: Request, background_tasks: BackgroundTasks, db: Session
     ).order_by(desc(AdCampaign.created_at)).limit(4).all()
 
     # Active promo ads (admin-created flash sales, holiday deals, etc.)
-    active_promo_ads = db.query(PromoAd).filter(
-        PromoAd.status == "ACTIVE",
-        (PromoAd.end_date == None) | (PromoAd.end_date > utcnow())
-    ).order_by(desc(PromoAd.created_at)).limit(6).all()
+    flash_setting2 = db.query(SettingsModel).filter(SettingsModel.key == "flash_sales_enabled").first()
+    flash_enabled2 = not flash_setting2 or flash_setting2.value.lower() != "false"
+    active_promo_ads = []
+    if flash_enabled2:
+        active_promo_ads = db.query(PromoAd).filter(
+            PromoAd.status == "ACTIVE",
+            (PromoAd.end_date == None) | (PromoAd.end_date > utcnow())
+        ).order_by(desc(PromoAd.created_at)).limit(6).all()
 
     # Track impressions asynchronously — avoids blocking page load
     if active_ad_campaigns:
@@ -691,3 +699,38 @@ def wishlist_page(request: Request, db: Session = Depends(get_db)):
     if isinstance(customer, RedirectResponse):
         return customer
     return _render_page("web/wishlist.html", request, db)
+
+
+# --- Sitemap ---
+@router.get("/sitemap.xml", response_class=HTMLResponse)
+def sitemap(request: Request, db: Session = Depends(get_db)):
+    from fastapi.responses import Response
+    from app.models import Settings as SettingsModel
+    setting = db.query(SettingsModel).filter(SettingsModel.key == "sitemap_enabled").first()
+    if setting and setting.value.lower() == "false":
+        raise HTTPException(status_code=404, detail="Sitemap disabled")
+    base = _site_settings(db).get("site_base_url", "").rstrip("/")
+    products = db.query(Product).order_by(Product.created_at.desc()).limit(500).all()
+    categories = db.query(Category).order_by(Category.name).all()
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    xml += f'  <url><loc>{base}/shop</loc><changefreq>daily</changefreq><priority>1.0</priority></url>\n'
+    xml += f'  <url><loc>{base}/shop/marketplace</loc><changefreq>daily</changefreq><priority>0.9</priority></url>\n'
+    for p in products:
+        xml += f'  <url><loc>{base}/shop/product/{p.slug or p.id}</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n'
+    for c in categories:
+        xml += f'  <url><loc>{base}/shop/marketplace?category={c.slug or c.id}</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>\n'
+    xml += '</urlset>'
+    return Response(content=xml, media_type="application/xml")
+
+
+# --- Robots.txt ---
+@router.get("/robots.txt")
+def robots_txt(request: Request, db: Session = Depends(get_db)):
+    from fastapi.responses import PlainTextResponse
+    from app.models import Settings as SettingsModel
+    setting = db.query(SettingsModel).filter(SettingsModel.key == "robots_txt_enabled").first()
+    if setting and setting.value.lower() == "false":
+        raise HTTPException(status_code=404, detail="Robots.txt disabled")
+    base = _site_settings(db).get("site_base_url", "").rstrip("/")
+    content = f"User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /vendor/\nDisallow: /logistics/\nSitemap: {base}/sitemap.xml\n"
+    return PlainTextResponse(content)

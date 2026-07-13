@@ -227,6 +227,11 @@ def ai_compare_products(
     Compare 2-3 products using AI analysis.
     Returns a structured comparison with pros, cons, and recommendation.
     """
+    # Check comparison_enabled setting
+    from app.models import Settings as SettingsModel
+    comp_setting = db.query(SettingsModel).filter(SettingsModel.key == "comparison_enabled").first()
+    if comp_setting and comp_setting.value.lower() == "false":
+        raise HTTPException(status_code=404, detail="Product comparison is disabled")
     if len(product_ids) < 2:
         raise HTTPException(status_code=400, detail="At least 2 product IDs required")
     if len(product_ids) > 3:

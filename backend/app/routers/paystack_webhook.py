@@ -194,10 +194,12 @@ async def paystack_webhook(request: Request, background_tasks: BackgroundTasks =
         db.flush()
 
         # Process items: inventory, earnings, commission settlement, low-stock alerts
+        inv_setting = db.query(Settings).filter(Settings.key == "inventory_tracking_enabled").first()
+        inv_enabled = not inv_setting or inv_setting.value.lower() != "false"
         items = db.query(OrderItem).filter(OrderItem.order_id == order_id).all()
         for item in items:
             product = db.query(Product).filter(Product.id == item.product_id).first()
-            if product:
+            if product and inv_enabled:
                 product.inventory = max(0, product.inventory - item.quantity)
                 # Low-stock alert
                 if product.retailer_id:
