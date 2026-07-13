@@ -24,6 +24,9 @@ MIGRATIONS = {
     "008": "migrations.008_add_support_tables",
     "009": "migrations.009_add_ai_chat_tables",
     "010": "migrations.010_add_product_views_sold",
+    "011": "migrations.011_add_product_video_url",
+    "012": "migrations.012_add_bulk_order",
+    "013": "migrations.013_add_logistics_columns_tables",
 }
 
 
