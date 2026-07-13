@@ -605,6 +605,7 @@ def delete_order(
 SETTINGS_CATEGORY_PERMISSIONS = {
     "global": "settings_global",
     "design": "settings_design",
+    "financial": "settings_financial",
     "technical": "settings_technical",
     "optional": "settings_optional",
     "developer": "settings_developer",
