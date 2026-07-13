@@ -34,6 +34,7 @@ def _base_context(**kwargs) -> dict:
         "email_button_color": "#f59e0b",
         "email_footer_text": "",
         "email_logo_url": "",
+        "email_template_style": "professional",
         **kwargs,
     }
     # Override with DB settings if available
@@ -44,12 +45,32 @@ def _base_context(**kwargs) -> dict:
         db_keys = [
             "email_header_color", "email_button_color",
             "email_footer_text", "email_logo_url",
+            "email_template_style",
             "site_name", "site_tagline",
         ]
         for key in db_keys:
             setting = db.query(SettingsModel).filter(SettingsModel.key == key).first()
             if setting and setting.value:
                 ctx[key] = setting.value
+
+        # Derive style-specific color overrides
+        style = ctx.get("email_template_style", "professional")
+        style_presets = {
+            "minimal":    {"email_header_color": "#374151", "email_button_color": "#374151"},
+            "professional": {"email_header_color": "#f59e0b", "email_button_color": "#f59e0b"},
+            "vibrant":    {"email_header_color": "#7c3aed", "email_button_color": "#7c3aed"},
+            "ocean":      {"email_header_color": "#0891b2", "email_button_color": "#0891b2"},
+            "forest":     {"email_header_color": "#059669", "email_button_color": "#059669"},
+            "sunset":     {"email_header_color": "#ea580c", "email_button_color": "#ea580c"},
+        }
+        if style in style_presets:
+            for k, v in style_presets[style].items():
+                # Only apply preset if user hasn't explicitly overridden it
+                if k not in kwargs and not any(
+                    s.key == k for s in db.query(SettingsModel).filter(SettingsModel.key == k).all()
+                ):
+                    ctx[k] = v
+
         db.close()
     except Exception:
         pass

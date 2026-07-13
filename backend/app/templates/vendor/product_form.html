@@ -69,6 +69,17 @@
       <input type="hidden" id="images-input" name="images" value='{{ product.images|tojson if product and product.images else "[]" }}'>
     </div>
 
+    {% if settings.product_video_enabled|default('true') != 'false' %}
+    <div class="vp-card">
+      <div class="vp-card-title">Product Video</div>
+      <div class="vp-form-group">
+        <label class="vp-form-label">Video URL (YouTube, Vimeo, or direct MP4 link)</label>
+        <input type="url" name="video_url" class="vp-form-input" placeholder="https://youtube.com/watch?v=..." value="{{ product.video_url if product and product.video_url else '' }}">
+        <p style="font-size:0.8rem;color:var(--vp-text-sec);margin-top:4px;">Optional. Supports YouTube, Vimeo, or direct video file URLs.</p>
+      </div>
+    </div>
+    {% endif %}
+
     <div class="vp-card">
       <div class="vp-card-title">Basic Information</div>
       <div class="vp-form-group">

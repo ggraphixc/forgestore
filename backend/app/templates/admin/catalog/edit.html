@@ -509,6 +509,19 @@
                     <input type="hidden" id="images-input" name="images" value="{% if product.images %}{{ product.images|join('\n') }}{% endif %}">
                 </div>
 
+                {% if settings.product_video_enabled|default('true') != 'false' %}
+                <div class="admin-card">
+                    <div class="admin-card-title">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        <h2>Product Video</h2>
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Video URL (YouTube, Vimeo, or MP4)</label>
+                        <input type="url" name="video_url" class="admin-form-input" placeholder="https://youtube.com/watch?v=..." value="{{ product.video_url if product.video_url else '' }}">
+                    </div>
+                </div>
+                {% endif %}
+
                 {% include "admin/catalog/ai_widget.html" %}
 
                 <div class="admin-btn-group">

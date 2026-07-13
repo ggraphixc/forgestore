@@ -1,5 +1,40 @@
 {% extends "web/base.html" %}
 {% block title %}{{ product.name }} — ForgeStore{% endblock %}
+{% block meta_description %}{{ product.description|striptags|truncate(160) }}{% endblock %}
+{% block extra_head %}
+{% if settings.structured_data_enabled|default('true') != 'false' %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "{{ product.name|e }}",
+  "description": "{{ product.description|striptags|e|truncate(500) }}",
+  "image": {% if product.images %}{{ product.images|tojson }}{% else %}[]{% endif %},
+  "sku": "{{ product.id }}",
+  "brand": {
+    "@type": "Brand",
+    "name": "{{ (product.brand or 'ForgeStore')|e }}"
+  },
+  "offers": {
+    "@type": "Offer",
+    "url": "{{ settings.site_base_url }}/shop/product/{{ product.slug }}",
+    "priceCurrency": "NGN",
+    "price": "{{ product.discount_price or product.price }}",
+    "availability": "{% if product.inventory and product.inventory > 0 %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
+    "seller": {
+      "@type": "Organization",
+      "name": "{{ (retailer.name if retailer else 'ForgeStore')|e }}"
+    }
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "{{ product.rating|default(0) }}",
+    "reviewCount": "{{ product.review_count|default(0) }}"
+  }
+}
+</script>
+{% endif %}
+{% endblock %}
 {% block content %}
 <style>
   :root {
@@ -1307,6 +1342,24 @@
       </div>
     </div>
 
+    <!-- Product Video (if enabled and video_url set) -->
+    {% if settings.product_video_enabled|default('true') != 'false' and product.video_url %}
+    <div class="pd-video-section" style="margin-top:16px;">
+      <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:var(--pd-radius-md);box-shadow:var(--pd-shadow-sm);">
+        {% if 'youtube.com' in product.video_url or 'youtu.be' in product.video_url %}
+        <iframe src="{{ product.video_url }}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen loading="lazy"></iframe>
+        {% elif 'vimeo.com' in product.video_url %}
+        <iframe src="{{ product.video_url.replace('vimeo.com','player.vimeo.com/video') }}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen loading="lazy"></iframe>
+        {% else %}
+        <video controls preload="metadata" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;">
+          <source src="{{ product.video_url }}" type="video/mp4">
+          Your browser does not support video.
+        </video>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
     <!-- Horizontal thumbnails (mobile) -->
     {% if product.images and product.images|length > 1 %}
     <div class="pd-thumbs-horiz" id="thumbs-horiz">
@@ -1408,6 +1461,13 @@
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
           <span>Free shipping on orders over &#8358;50,000</span>
         </div>
+
+        {% if settings.bulk_order_enabled|default('true') != 'false' %}
+        <div class="pd-ship-row" style="cursor:pointer;" onclick="document.getElementById('bulk-order-modal').style.display='flex'">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          <span style="color:var(--pd-accent);font-weight:600;">Request Bulk Order (10+ units)</span>
+        </div>
+        {% endif %}
         <div class="pd-ship-row">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           <span>Arrives <strong style="color:var(--pd-text);">Jul 8 - Jul 14</strong></span>
@@ -2005,4 +2065,73 @@
     </div>
   </div>
 </div>
+
+{% if settings.bulk_order_enabled|default('true') != 'false' %}
+<div id="bulk-order-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:#fff;border-radius:16px;padding:2rem;max-width:480px;width:90%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <h3 style="font-size:1.25rem;font-weight:700;margin-bottom:0.5rem;">Request Bulk Order</h3>
+    <p style="font-size:0.85rem;color:var(--stone-500);margin-bottom:1.5rem;">Minimum 10 units. Volume discounts: 5% off 50+, 10% off 100+, 15% off 500+.</p>
+    <form id="bulk-order-form" onsubmit="boSubmit(event)">
+      <input type="hidden" name="product_id" value="{{ product.id }}">
+      <div style="margin-bottom:1rem;">
+        <label style="font-size:0.85rem;font-weight:600;display:block;margin-bottom:4px;">Quantity *</label>
+        <input type="number" name="quantity" min="10" required value="10" style="width:100%;padding:10px;border:1px solid var(--stone-200);border-radius:8px;min-height:44px;">
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label style="font-size:0.85rem;font-weight:600;display:block;margin-bottom:4px;">Your Name *</label>
+        <input type="text" name="name" required style="width:100%;padding:10px;border:1px solid var(--stone-200);border-radius:8px;min-height:44px;" value="{{ user.name if user else '' }}">
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label style="font-size:0.85rem;font-weight:600;display:block;margin-bottom:4px;">Email *</label>
+        <input type="email" name="email" required style="width:100%;padding:10px;border:1px solid var(--stone-200);border-radius:8px;min-height:44px;" value="{{ user.email if user else '' }}">
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label style="font-size:0.85rem;font-weight:600;display:block;margin-bottom:4px;">Phone</label>
+        <input type="tel" name="phone" style="width:100%;padding:10px;border:1px solid var(--stone-200);border-radius:8px;min-height:44px;" value="{{ user.phone if user and user.phone else '' }}">
+      </div>
+      <div style="margin-bottom:1.5rem;">
+        <label style="font-size:0.85rem;font-weight:600;display:block;margin-bottom:4px;">Notes</label>
+        <textarea name="notes" rows="3" style="width:100%;padding:10px;border:1px solid var(--stone-200);border-radius:8px;resize:vertical;" placeholder="Any special requirements..."></textarea>
+      </div>
+      <div style="display:flex;gap:0.5rem;">
+        <button type="submit" style="flex:1;padding:12px;background:#f59e0b;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;min-height:44px;">Submit Request</button>
+        <button type="button" onclick="document.getElementById('bulk-order-modal').style.display='none'" style="padding:12px;background:var(--stone-100);border:none;border-radius:8px;font-weight:600;cursor:pointer;min-height:44px;">Cancel</button>
+      </div>
+    </form>
+    <div id="bo-result" style="display:none;margin-top:1rem;padding:1rem;border-radius:8px;font-size:0.9rem;"></div>
+  </div>
+</div>
+<script>
+async function boSubmit(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = Object.fromEntries(new FormData(form));
+  data.quantity = parseInt(data.quantity);
+  const btn = form.querySelector('button[type="submit"]');
+  btn.disabled = true; btn.textContent = 'Submitting...';
+  try {
+    const res = await fetch('/api/bulk-order/request', {
+      method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+    });
+    const d = await res.json();
+    const result = document.getElementById('bo-result');
+    if (d.success) {
+      result.style.display = 'block';
+      result.style.background = '#d1fae5';
+      result.style.color = '#065f46';
+      result.textContent = 'Request submitted! The vendor will review and respond. Total: ₦' + (d.total_price || 0).toLocaleString();
+      form.reset();
+    } else {
+      result.style.display = 'block';
+      result.style.background = '#fee2e2';
+      result.style.color = '#991b1b';
+      result.textContent = d.detail || d.message || 'Error submitting request';
+    }
+  } catch(err) {
+    alert('Network error. Please try again.');
+  }
+  btn.disabled = false; btn.textContent = 'Submit Request';
+}
+</script>
+{% endif %}
 {% endblock %}

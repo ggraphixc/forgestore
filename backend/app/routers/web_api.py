@@ -1069,6 +1069,13 @@ def checkout(
 
     db.commit()
 
+    # Dispatch outbound webhook for new order
+    try:
+        from app.core.webhooks import notify_order_created
+        notify_order_created(order)
+    except Exception:
+        pass
+
     # Create admin notification for the new order
     notif = AdminNotification(
         type="new_order",
@@ -1197,6 +1204,15 @@ def checkout(
         summary_lines=summary_lines_for_email,
         invoice_number=invoice_number,
     )
+
+    # SMS order confirmation
+    try:
+        from app.core.sms import send_order_confirmation_sms
+        phone = shipping.phone or getattr(customer, "phone", None)
+        if phone:
+            send_order_confirmation_sms(phone, order.order_number, order.total_amount)
+    except Exception:
+        pass
 
     # Per-vendor new-order notification emails (async, non-blocking)
     from app.models import AdminUser as AdminUserModel
@@ -1808,3 +1824,87 @@ def request_return(
     db.commit()
 
     return {"ok": True, "return_number": rr.return_number, "return_fee": return_fee}
+
+
+# ===== Bulk Order =====
+
+@router.post("/bulk-order/request")
+async def request_bulk_order(request: Request, db: Session = Depends(get_db)):
+    """Submit a bulk order request for a product."""
+    from app.models import Settings as SettingsModel, BulkOrder, Product, Retailer
+    from app.core.notifications import send_whatsapp_message
+
+    # Check bulk_order_enabled
+    bulk_setting = db.query(SettingsModel).filter(SettingsModel.key == "bulk_order_enabled").first()
+    if bulk_setting and bulk_setting.value.lower() == "false":
+        raise HTTPException(status_code=400, detail="Bulk ordering is currently disabled")
+
+    data = await request.json()
+    product_id = data.get("product_id")
+    quantity = data.get("quantity", 1)
+    customer_name = data.get("name", "")
+    customer_email = data.get("email", "")
+    customer_phone = data.get("phone", "")
+    notes = data.get("notes", "")
+
+    if not product_id:
+        raise HTTPException(status_code=400, detail="Product ID is required")
+    if quantity < 10:
+        raise HTTPException(status_code=400, detail="Minimum bulk order quantity is 10")
+
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    unit_price = product.discount_price or product.price
+    # Volume discount: 5% off for 50+, 10% off for 100+, 15% off for 500+
+    if quantity >= 500:
+        unit_price *= 0.85
+    elif quantity >= 100:
+        unit_price *= 0.90
+    elif quantity >= 50:
+        unit_price *= 0.95
+
+    customer = None
+    from app.core.security import decode_token
+    token = request.cookies.get("customer_token")
+    if token:
+        payload = decode_token(token)
+        if payload:
+            customer = db.query(User).filter(User.id == payload.get("sub")).first()
+
+    bulk_order = BulkOrder(
+        customer_id=customer.id if customer else None,
+        product_id=product_id,
+        retailer_id=product.retailer_id,
+        quantity=quantity,
+        unit_price=unit_price,
+        total_price=unit_price * quantity,
+        status="PENDING",
+        customer_name=customer_name or (customer.name if customer else ""),
+        customer_email=customer_email or (customer.email if customer else ""),
+        customer_phone=customer_phone,
+        notes=notes,
+    )
+    db.add(bulk_order)
+    db.commit()
+    db.refresh(bulk_order)
+
+    # Notify vendor via WhatsApp
+    retailer = db.query(Retailer).filter(Retailer.id == product.retailer_id).first() if product.retailer_id else None
+    if retailer and retailer.phone:
+        try:
+            send_whatsapp_message(
+                retailer.phone,
+                f"New bulk order request!\n\n"
+                f"Product: {product.name}\n"
+                f"Quantity: {quantity}\n"
+                f"Unit Price: ₦{unit_price:,.2f}\n"
+                f"Total: ₦{bulk_order.total_price:,.2f}\n"
+                f"Customer: {customer_name}\n\n"
+                f"Log in to approve or reject."
+            )
+        except Exception:
+            pass
+
+    return {"success": True, "order_id": bulk_order.id, "total_price": bulk_order.total_price}

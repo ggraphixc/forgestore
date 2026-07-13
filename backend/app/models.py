@@ -89,6 +89,7 @@ class Product(Base):
     price = Column(Float, nullable=False)
     discount_price = Column(Float, nullable=True)
     images = Column(JSON, nullable=True)
+    video_url = Column(String(500), nullable=True)
     category_id = Column(String, ForeignKey("category.id", ondelete="SET NULL"), nullable=True)
     retailer_id = Column(String, ForeignKey("retailer.id", ondelete="SET NULL"), nullable=True)
     sub_category = Column(String(255), nullable=True)
@@ -1745,3 +1746,28 @@ class PickupInventory(Base):
 
     pickup_point: "PickupPoint" = relationship("PickupPoint", back_populates="inventory")
     product: "Product" = relationship("Product")
+
+
+class BulkOrder(Base):
+    """Customer request to purchase large quantities of a product."""
+    __tablename__ = "bulk_order"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    customer_id = Column(String, ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
+    product_id = Column(String, ForeignKey("product.id", ondelete="CASCADE"), nullable=False)
+    retailer_id = Column(String, ForeignKey("retailer.id", ondelete="SET NULL"), nullable=True)
+    quantity = Column(Integer, nullable=False)
+    unit_price = Column(Float, nullable=True)
+    total_price = Column(Float, nullable=True)
+    status = Column(String(20), nullable=False, default="PENDING")  # PENDING, APPROVED, REJECTED, FULFILLED
+    customer_name = Column(String(255), nullable=True)
+    customer_email = Column(String(255), nullable=True)
+    customer_phone = Column(String(50), nullable=True)
+    notes = Column(Text, nullable=True)
+    vendor_notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+    customer: "User | None" = relationship("User")
+    product: "Product" = relationship("Product")
+    retailer: "Retailer | None" = relationship("Retailer")

@@ -141,6 +141,15 @@ class ShipmentService:
         except Exception:
             logger.warning("Failed to send status notifications", exc_info=True)
 
+        # Dispatch outbound webhook for status change
+        try:
+            from app.core.webhooks import notify_order_status_changed
+            order = self.db.query(Order).filter(Order.id == shipment.order_id).first()
+            if order:
+                notify_order_status_changed(order, old_status, status)
+        except Exception:
+            pass
+
         return shipment
 
     async def _send_status_notifications(self, shipment, old_status: str, new_status: str):
@@ -190,6 +199,14 @@ class ShipmentService:
                 )
             except Exception:
                 logger.warning("Failed to send email to customer %s", customer_email)
+
+        # SMS to customer
+        if msg and customer_phone:
+            try:
+                from app.core.sms import send_sms
+                send_sms(customer_phone, msg)
+            except Exception:
+                pass
 
         # Notify vendor (WhatsApp + email)
         items = self.db.query(OrderItem).filter(OrderItem.order_id == order.id).all()

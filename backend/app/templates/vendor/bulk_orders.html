@@ -1,0 +1,108 @@
+{% extends "admin/base.html" %}
+{% block title %}Bulk Orders — Vendor{% endblock %}
+{% block content %}
+<style>
+  .bo-page { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+  .bo-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--stone-900); }
+  .bo-card { background: var(--white, #fff); border-radius: 12px; border: 1px solid var(--stone-200, #e7e5e3); padding: 1.25rem; margin-bottom: 1rem; transition: box-shadow 0.2s; }
+  .bo-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .bo-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem; }
+  .bo-product { font-weight: 600; font-size: 1rem; color: var(--stone-900); }
+  .bo-customer { font-size: 0.85rem; color: var(--stone-500); }
+  .bo-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem; margin: 0.75rem 0; }
+  .bo-detail { text-align: center; }
+  .bo-detail-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--stone-400); margin-bottom: 2px; }
+  .bo-detail-value { font-weight: 600; font-size: 1rem; color: var(--stone-900); }
+  .bo-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+  .bo-pending { background: #fef3c7; color: #92400e; }
+  .bo-approved { background: #d1fae5; color: #065f46; }
+  .bo-rejected { background: #fee2e2; color: #991b1b; }
+  .bo-fulfilled { background: #dbeafe; color: #1e40af; }
+  .bo-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+  .bo-btn { padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; min-height: 44px; }
+  .bo-btn-approve { background: #059669; color: #fff; }
+  .bo-btn-approve:hover { background: #047857; }
+  .bo-btn-reject { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+  .bo-btn-reject:hover { background: #fecaca; }
+  .bo-empty { text-align: center; padding: 3rem; color: var(--stone-400); }
+  .bo-notes { font-size: 0.85rem; color: var(--stone-600); background: var(--stone-50, #fafaf9); padding: 0.5rem 0.75rem; border-radius: 8px; margin-top: 0.5rem; }
+</style>
+
+<div class="bo-page">
+  <h1 class="bo-title">Bulk Orders</h1>
+
+  {% if orders %}
+    {% for order in orders %}
+    <div class="bo-card" id="bo-{{ order.id }}">
+      <div class="bo-header">
+        <div>
+          <div class="bo-product">{{ order.product.name if order.product else 'Unknown Product' }}</div>
+          <div class="bo-customer">{{ order.customer_name }} — {{ order.customer_email }}</div>
+        </div>
+        <span class="bo-badge bo-{{ order.status|lower }}">{{ order.status }}</span>
+      </div>
+      <div class="bo-details">
+        <div class="bo-detail">
+          <div class="bo-detail-label">Quantity</div>
+          <div class="bo-detail-value">{{ order.quantity }}</div>
+        </div>
+        <div class="bo-detail">
+          <div class="bo-detail-label">Unit Price</div>
+          <div class="bo-detail-value">₦{{ "%.2f"|format(order.unit_price or 0) }}</div>
+        </div>
+        <div class="bo-detail">
+          <div class="bo-detail-label">Total</div>
+          <div class="bo-detail-value">₦{{ "%.2f"|format(order.total_price or 0) }}</div>
+        </div>
+        <div class="bo-detail">
+          <div class="bo-detail-label">Date</div>
+          <div class="bo-detail-value">{{ order.created_at.strftime('%b %d, %Y') }}</div>
+        </div>
+      </div>
+      {% if order.notes %}
+      <div class="bo-notes">Customer notes: {{ order.notes }}</div>
+      {% endif %}
+      {% if order.status == 'PENDING' %}
+      <div class="bo-actions">
+        <input type="number" id="price-{{ order.id }}" value="{{ order.unit_price or '' }}" placeholder="Set unit price" style="padding:8px;border:1px solid var(--stone-200);border-radius:8px;width:150px;min-height:44px;">
+        <button class="bo-btn bo-btn-approve" onclick="boApprove('{{ order.id }}')">Approve</button>
+        <button class="bo-btn bo-btn-reject" onclick="boReject('{{ order.id }}')">Reject</button>
+      </div>
+      {% endif %}
+      {% if order.vendor_notes %}
+      <div class="bo-notes">Your notes: {{ order.vendor_notes }}</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="bo-empty">
+      <svg style="width:48px;height:48px;margin:0 auto 1rem;display:block;opacity:0.3;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      <p>No bulk order requests yet.</p>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+async function boApprove(id) {
+  const price = parseFloat(document.getElementById('price-' + id).value);
+  if (!price || price <= 0) { alert('Please set a unit price'); return; }
+  const res = await fetch('/vendor/api/vendor/bulk-orders/' + id + '/approve', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({unit_price: price, notes: ''})
+  });
+  const d = await res.json();
+  if (d.success) { location.reload(); } else { alert(d.message || 'Error'); }
+}
+async function boReject(id) {
+  const reason = prompt('Reason for rejection (optional):');
+  const res = await fetch('/vendor/api/vendor/bulk-orders/' + id + '/reject', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({reason: reason || ''})
+  });
+  const d = await res.json();
+  if (d.success) { location.reload(); } else { alert(d.message || 'Error'); }
+}
+</script>
+{% endblock %}

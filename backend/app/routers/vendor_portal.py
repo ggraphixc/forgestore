@@ -1203,6 +1203,7 @@ async def vendor_product_create(request: Request, db: Session = Depends(get_db),
         name=name, slug=slug, brand=form.get("brand"),
         description=form.get("description"), price=price,
         discount_price=discount_price, images=images,
+        video_url=form.get("video_url") or None,
         category_id=form.get("category_id"),
         retailer_id=admin.vendor_id, inventory=inventory,
         is_new_arrival=form.get("is_new_arrival") == "true",
@@ -1283,6 +1284,7 @@ async def vendor_product_update(request: Request, product_id: str,
     product.category_id = form.get("category_id", product.category_id)
     product.is_new_arrival = form.get("is_new_arrival") == "true"
     product.is_flagship = form.get("is_flagship") == "true"
+    product.video_url = form.get("video_url") or product.video_url
     specs_raw = form.get("specifications")
     if specs_raw:
         try:
@@ -1545,3 +1547,54 @@ async def vendor_ai_batch_generate(request: Request, db: Session = Depends(get_d
     results = await asyncio.to_thread(_do_batch)
     log_admin_action(db, admin, "ai_generate", "batch", "", f"Batch generate for '{name}'")
     return {"success": True, "results": results}
+
+
+# ===== Bulk Orders =====
+
+@router.get("/vendor/bulk-orders", response_class=HTMLResponse)
+def vendor_bulk_orders(request: Request, db: Session = Depends(get_db)):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return redirect
+    from app.models import BulkOrder, Product
+    orders = db.query(BulkOrder).filter(BulkOrder.retailer_id == admin.vendor_id).order_by(BulkOrder.created_at.desc()).all()
+    return render_template("vendor/bulk_orders.html", {
+        "request": request, "admin": admin, "retailer": retailer,
+        "orders": orders, "format_price": format_price,
+    })
+
+
+@router.post("/api/vendor/bulk-orders/{order_id}/approve")
+async def vendor_approve_bulk_order(order_id: str, request: Request, db: Session = Depends(get_db)):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return JSONResponse({"success": False, "message": "Unauthorized"}, status_code=401)
+    from app.models import BulkOrder
+    order = db.query(BulkOrder).filter(BulkOrder.id == order_id, BulkOrder.retailer_id == admin.vendor_id).first()
+    if not order:
+        return JSONResponse({"success": False, "message": "Not found"}, status_code=404)
+    data = await request.json()
+    order.status = "APPROVED"
+    order.vendor_notes = data.get("notes", "")
+    order.unit_price = data.get("unit_price", order.unit_price)
+    order.total_price = order.unit_price * order.quantity
+    db.commit()
+    log_admin_action(db, admin, "update", "bulk_order", order.id, f"Approved bulk order for {order.quantity} units")
+    return {"success": True}
+
+
+@router.post("/api/vendor/bulk-orders/{order_id}/reject")
+async def vendor_reject_bulk_order(order_id: str, request: Request, db: Session = Depends(get_db)):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return JSONResponse({"success": False, "message": "Unauthorized"}, status_code=401)
+    from app.models import BulkOrder
+    order = db.query(BulkOrder).filter(BulkOrder.id == order_id, BulkOrder.retailer_id == admin.vendor_id).first()
+    if not order:
+        return JSONResponse({"success": False, "message": "Not found"}, status_code=404)
+    data = await request.json()
+    order.status = "REJECTED"
+    order.vendor_notes = data.get("reason", "")
+    db.commit()
+    log_admin_action(db, admin, "update", "bulk_order", order.id, f"Rejected bulk order")
+    return {"success": True}

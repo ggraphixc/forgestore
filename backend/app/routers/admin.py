@@ -217,6 +217,7 @@ async def product_create(
         price=price,
         discount_price=discount_price,
         images=images,
+        video_url=form.get("video_url") or None,
         category_id=form.get("category_id", None),
         retailer_id=retailer_id,
         inventory=inventory,

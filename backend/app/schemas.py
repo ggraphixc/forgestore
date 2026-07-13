@@ -140,6 +140,7 @@ class ProductUpdate(BaseModel):
     price: Optional[float] = None
     discount_price: Optional[float] = None
     images: Optional[List[str]] = None
+    video_url: Optional[str] = None
     category_id: Optional[str] = None
     retailer_id: Optional[str] = None
     sub_category: Optional[str] = None

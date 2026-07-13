@@ -89,6 +89,21 @@ origins = [
     for origin in _settings.cors_origins.split(",")
     if origin.strip()
 ]
+
+# Override cors_origins from DB settings if configured
+try:
+    from app.database import SessionLocal
+    from app.models import Settings as SettingsModel
+    _db = SessionLocal()
+    _cors_setting = _db.query(SettingsModel).filter(SettingsModel.key == "cors_origins").first()
+    if _cors_setting and _cors_setting.value:
+        db_origins = [o.strip() for o in _cors_setting.value.split(",") if o.strip()]
+        if db_origins:
+            origins = db_origins
+    _db.close()
+except Exception:
+    pass
+
 # Always allow the site_base_url
 if _settings.site_base_url and _settings.site_base_url not in origins:
     origins.append(_settings.site_base_url.rstrip("/"))
@@ -104,8 +119,50 @@ app.add_middleware(
 
 logger.info(f"CORS allowed origins: {origins if origins else ['*']}")
 
+# ─── Debug Mode ──────────────────────────────────────────────────
+try:
+    from app.database import SessionLocal
+    from app.models import Settings as SettingsModel
+    _db = SessionLocal()
+    _debug_setting = _db.query(SettingsModel).filter(SettingsModel.key == "debug_mode").first()
+    if _debug_setting and _debug_setting.value.lower() == "true":
+        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getLogger("forgestore").setLevel(logging.DEBUG)
+        logging.getLogger("uvicorn").setLevel(logging.DEBUG)
+        logger.debug("Debug mode enabled via admin settings — verbose logging active")
+    _db.close()
+except Exception:
+    pass
+
 # Mount static files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+# ─── Debug Error Handler ─────────────────────────────────────────
+import traceback as _traceback
+from fastapi.responses import JSONResponse as _JSONResponse
+
+@app.exception_handler(Exception)
+async def debug_exception_handler(request: Request, exc: Exception):
+    """In debug mode, return full traceback; otherwise generic 500."""
+    try:
+        from app.database import SessionLocal
+        from app.models import Settings as SettingsModel
+        _db = SessionLocal()
+        _ds = _db.query(SettingsModel).filter(SettingsModel.key == "debug_mode").first()
+        _is_debug = _ds and _ds.value.lower() == "true"
+        _db.close()
+    except Exception:
+        _is_debug = False
+    if _is_debug:
+        return _JSONResponse(
+            status_code=500,
+            content={
+                "error": str(exc),
+                "type": type(exc).__name__,
+                "traceback": _traceback.format_exc(),
+            },
+        )
+    return _JSONResponse(status_code=500, content={"error": "Internal server error"})
 
 # Include routers
 app.include_router(auth.router)
