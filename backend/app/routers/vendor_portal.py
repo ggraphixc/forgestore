@@ -495,6 +495,10 @@ async def vendor_bulk_import_products(
         raise HTTPException(status_code=400, detail="Only .csv files are accepted")
 
     content = await file.read()
+    from app.core.image_compressor import get_max_upload_size_bytes
+    max_bytes = get_max_upload_size_bytes(db)
+    if len(content) > max_bytes:
+        raise HTTPException(status_code=400, detail=f"File too large. Maximum size is {max_bytes // (1024*1024)}MB.")
     try:
         decoded = content.decode("utf-8-sig")
     except UnicodeDecodeError:
@@ -1179,6 +1183,10 @@ async def vendor_product_create(request: Request, db: Session = Depends(get_db),
         os.makedirs(upload_dir, exist_ok=True)
         for file in files:
             raw = await file.read()
+            from app.core.image_compressor import get_max_upload_size_bytes
+            max_bytes = get_max_upload_size_bytes(db)
+            if len(raw) > max_bytes:
+                raise HTTPException(status_code=400, detail=f"File too large. Maximum size is {max_bytes // (1024*1024)}MB.")
             if use_cloudinary:
                 url = upload_to_cloudinary(raw, folder="forgestore/products")
                 if url:
@@ -1297,6 +1305,10 @@ async def vendor_product_update(request: Request, product_id: str,
         existing = product.images or []
         for file in files:
             raw = await file.read()
+            from app.core.image_compressor import get_max_upload_size_bytes
+            max_bytes = get_max_upload_size_bytes(db)
+            if len(raw) > max_bytes:
+                raise HTTPException(status_code=400, detail=f"File too large. Maximum size is {max_bytes // (1024*1024)}MB.")
             if use_cloudinary:
                 url = upload_to_cloudinary(raw, folder="forgestore/products")
                 if url:

@@ -420,7 +420,7 @@ async def logistics_upload_proof(shipment_id: str, request: Request, db: Session
         from app.core.image_compressor import compress_image
 
         contents = await photo.read()
-        compressed = compress_image(contents, max_size_bytes=200000)
+        compressed, ext = compress_image(contents)
 
         if is_cloudinary_configured():
             url = upload_to_cloudinary(compressed, folder="forgestore/proofs")

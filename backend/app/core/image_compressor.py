@@ -124,3 +124,23 @@ def _guess_ext(raw_bytes: bytes) -> str:
     if raw_bytes[:4] == b"RIFF" and raw_bytes[8:12] == b"WEBP":
         return "webp"
     return "jpg"
+
+
+def get_max_upload_size_bytes(db=None) -> int:
+    """Return the max upload size in bytes from the admin settings.
+
+    Falls back to 10 MB if the setting is not configured or db is None.
+    """
+    default_bytes = 10 * 1024 * 1024  # 10 MB
+    if db is None:
+        return default_bytes
+    try:
+        from app.models import Settings as SettingsModel
+        setting = db.query(SettingsModel).filter(SettingsModel.key == "max_upload_size_mb").first()
+        if setting and setting.value:
+            mb = float(setting.value)
+            if 0.1 <= mb <= 100:
+                return int(mb * 1024 * 1024)
+    except Exception:
+        pass
+    return default_bytes

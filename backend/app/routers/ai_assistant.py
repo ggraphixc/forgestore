@@ -112,8 +112,10 @@ async def ai_assistant_upload(
         raise HTTPException(400, f"File type {file.content_type} not supported. Allowed: images, PDF, text, CSV, DOCX, XLSX.")
 
     contents = await file.read()
-    if len(contents) > 10 * 1024 * 1024:  # 10MB limit
-        raise HTTPException(400, "File too large. Maximum size is 10MB.")
+    from app.core.image_compressor import get_max_upload_size_bytes
+    max_bytes = get_max_upload_size_bytes(db)
+    if len(contents) > max_bytes:
+        raise HTTPException(400, f"File too large. Maximum size is {max_bytes // (1024*1024)}MB.")
 
     if file.content_type.startswith("image/"):
         compressed = compress_image(contents, file.filename)

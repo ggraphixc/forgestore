@@ -254,15 +254,39 @@ def get_current_customer_from_cookie(
 # COOKIE HELPERS
 # ==============================================================================
 
-COOKIE_MAX_AGE_DAYS = 30
-"""Unified cookie lifetime — 30 days for both admin and customer tokens."""
+_DEFAULT_COOKIE_MAX_AGE_DAYS = 30
+
+
+def _get_cookie_max_age_days() -> int:
+    """Return cookie max age in days from admin settings.
+
+    Reads ``session_timeout_minutes`` from the Settings table.
+    Falls back to 30 days if not configured or on any error.
+    """
+    try:
+        from app.database import SessionLocal
+        from app.models import Settings as SettingsModel
+        db = SessionLocal()
+        try:
+            setting = db.query(SettingsModel).filter(
+                SettingsModel.key == "session_timeout_minutes"
+            ).first()
+            if setting and setting.value:
+                minutes = int(setting.value)
+                if 5 <= minutes <= 43200:  # 5 min to 30 days
+                    return max(1, minutes // 1440)  # convert to days, min 1 day
+        finally:
+            db.close()
+    except Exception:
+        pass
+    return _DEFAULT_COOKIE_MAX_AGE_DAYS
 
 
 def set_auth_cookie(
     response: Response,
     token: str,
     cookie_name: str = "access_token",
-    max_age_days: int = COOKIE_MAX_AGE_DAYS,
+    max_age_days: int = None,
 ) -> None:
     """Set an httpOnly JWT cookie with secure production defaults.
 
@@ -270,6 +294,8 @@ def set_auth_cookie(
     automatically ``True`` in production (when HTTPS is active) and ``False``
     for local development over plain HTTP.
     """
+    if max_age_days is None:
+        max_age_days = _get_cookie_max_age_days()
     response.set_cookie(
         key=cookie_name,
         value=token,

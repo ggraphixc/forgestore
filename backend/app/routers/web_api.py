@@ -798,8 +798,10 @@ async def post_product_chat_message(
             if ext not in ("jpg", "jpeg", "png", "gif", "webp"):
                 raise HTTPException(status_code=400, detail="Image must be jpg, png, gif, or webp")
             raw = await upload_file.read()
-            if len(raw) > 5 * 1024 * 1024:
-                raise HTTPException(status_code=400, detail="Image must be under 5MB")
+            from app.core.image_compressor import get_max_upload_size_bytes
+            max_bytes = get_max_upload_size_bytes(db)
+            if len(raw) > max_bytes:
+                raise HTTPException(status_code=400, detail=f"File too large. Maximum size is {max_bytes // (1024*1024)}MB.")
             from app.core.cloudinary_upload import is_cloudinary_configured, upload_to_cloudinary
             if is_cloudinary_configured():
                 image_url = upload_to_cloudinary(raw, folder="forgestore/chat")
