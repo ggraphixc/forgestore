@@ -231,7 +231,7 @@ def send_password_reset_email(to_email: str, reset_link: str) -> bool:
     """Send password reset email (async background dispatch)."""
     return _dispatch(
         to_email,
-        "Reset Your ForgeStore Password",
+        f"Reset Your {settings.site_name or 'ForgeStore'} Password",
         "password_reset.html",
         {
             "heading": "Reset Your Password",

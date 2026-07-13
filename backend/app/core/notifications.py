@@ -182,8 +182,9 @@ async def send_order_placed_whatsapp(phone: str, order_number: str, total: float
     phone = _normalize_phone(phone)
     if not phone:
         return
+    sn = _get_db_setting("site_name", "ForgeStore")
     body = (
-        f"Hi! Your ForgeStore order *{order_number}* has been placed successfully.\n\n"
+        f"Hi! Your {sn} order *{order_number}* has been placed successfully.\n\n"
         f"Items: {items_summary}\n"
         f"Total: *₦{total:,.2f}*\n\n"
         f"We'll notify you once your order is confirmed. Thank you for shopping with us!"
@@ -196,9 +197,10 @@ async def send_order_confirmed_whatsapp(phone: str, order_number: str, vendor_na
     phone = _normalize_phone(phone)
     if not phone:
         return
+    sn = _get_db_setting("site_name", "ForgeStore")
     vendor_text = f" by {vendor_name}" if vendor_name else ""
     body = (
-        f"Great news! Your ForgeStore order *{order_number}* has been confirmed{vendor_text}.\n\n"
+        f"Great news! Your {sn} order *{order_number}* has been confirmed{vendor_text}.\n\n"
         f"Your order is now being prepared for shipment. We'll notify you when it ships."
     )
     await send_whatsapp_message(phone, body)
@@ -209,10 +211,11 @@ async def send_order_shipped_whatsapp(phone: str, order_number: str, carrier: st
     phone = _normalize_phone(phone)
     if not phone:
         return
+    sn = _get_db_setting("site_name", "ForgeStore")
     carrier_text = f" via {carrier}" if carrier else ""
     tracking_text = f"\nTrack your order: {tracking_url}" if tracking_url else ""
     body = (
-        f"Your ForgeStore order *{order_number}* has been shipped{carrier_text}!\n\n"
+        f"Your {sn} order *{order_number}* has been shipped{carrier_text}!\n\n"
         f"You'll receive it soon.{tracking_text}"
     )
     await send_whatsapp_message(phone, body)
@@ -223,8 +226,9 @@ async def send_order_delivered_whatsapp(phone: str, order_number: str):
     phone = _normalize_phone(phone)
     if not phone:
         return
+    sn = _get_db_setting("site_name", "ForgeStore")
     body = (
-        f"Your ForgeStore order *{order_number}* has been delivered! 🎉\n\n"
+        f"Your {sn} order *{order_number}* has been delivered! 🎉\n\n"
         f"We hope you love your purchase. Rate your experience in the app to help other buyers."
     )
     await send_whatsapp_message(phone, body)
@@ -235,9 +239,10 @@ async def send_order_cancelled_whatsapp(phone: str, order_number: str, reason: s
     phone = _normalize_phone(phone)
     if not phone:
         return
+    sn = _get_db_setting("site_name", "ForgeStore")
     reason_text = f"\nReason: {reason}" if reason else ""
     body = (
-        f"Your ForgeStore order *{order_number}* has been cancelled.{reason_text}\n\n"
+        f"Your {sn} order *{order_number}* has been cancelled.{reason_text}\n\n"
         f"If you have any questions, please contact our support team."
     )
     await send_whatsapp_message(phone, body)

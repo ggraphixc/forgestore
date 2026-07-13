@@ -15,7 +15,7 @@ from app.utils import utcnow
 logger = logging.getLogger("forgestore.admin")
 
 from app.database import get_db
-from app.models import Product, Category, Retailer, Order, OrderItem, OrderStatus, User, WishlistItem, Review
+from app.models import Product, Category, Retailer, Order, OrderItem, OrderStatus, User, WishlistItem, Review, Settings
 from app.schemas import (
     ProductCreate, ProductUpdate, ProductResponse,
     CategoryCreate, CategoryUpdate, CategoryResponse,
@@ -3004,7 +3004,9 @@ def request_earnings_payout(
                 customer_name=retailer_name,
                 show_divider=False,
             ))
-            dispatch_email_background(admin.email, f"Payout Processed — ForgeStore", html)
+            _sn = db.query(Settings).filter(Settings.key == "site_name").first()
+            _sn_val = _sn.value if _sn else "ForgeStore"
+            dispatch_email_background(admin.email, f"Payout Processed — {_sn_val}", html)
         except Exception:
             pass  # Email failure should not block payout
 
@@ -3098,7 +3100,7 @@ def batch_mark_earnings_paid(
                     customer_name=retailer_name,
                     show_divider=False,
                 ))
-                dispatch_email_background(r_admin.email, f"Payout Processed — ForgeStore", html)
+                dispatch_email_background(r_admin.email, f"Payout Processed — {_sn_val}", html)
             except Exception:
                 pass
 
@@ -3701,6 +3703,12 @@ def process_payout(
                      f"Processed payout ₦{payout.amount:.2f} — status: {payout.status}")
 
     # Send payout success receipt email via BackgroundTasks (non-blocking)
+    _sn_val = "ForgeStore"
+    try:
+        _sn = db.query(Settings).filter(Settings.key == "site_name").first()
+        _sn_val = _sn.value if _sn else "ForgeStore"
+    except Exception:
+        pass
     if payout.status == "SUCCESSFUL" and payout.retailer_id:
         try:
             from app.core.email import dispatch_email_background
@@ -3721,7 +3729,7 @@ def process_payout(
                     customer_name=r_name,
                     show_divider=False,
                 ))
-                background_tasks.add_task(dispatch_email_background, r_admin.email, f"Payout Processed — ForgeStore", html)
+                background_tasks.add_task(dispatch_email_background, r_admin.email, f"Payout Processed — {_sn_val}", html)
         except Exception:
             pass
 
@@ -3834,7 +3842,7 @@ def approve_payout_automated(
                     customer_name=r_name,
                     show_divider=False,
                 ))
-                background_tasks.add_task(dispatch_email_background, r_admin.email, "Payout Processed — ForgeStore", html)
+                background_tasks.add_task(dispatch_email_background, r_admin.email, f"Payout Processed — {_sn_val}", html)
         except Exception:
             pass
 

@@ -173,7 +173,7 @@ class ShipmentService:
             "PICKED_UP": f"Hi! Your order #{order.order_number} has been picked up for delivery. Tracking: {shipment.tracking_number}",
             "IN_TRANSIT": f"Your order #{order.order_number} is on its way! Tracking: {shipment.tracking_number}. Estimated delivery: {shipment.estimated_delivery or 'within 2-3 days'}.",
             "OUT_FOR_DELIVERY": f"Great news! Your order #{order.order_number} is out for delivery today. Please keep your phone handy.",
-            "DELIVERED": f"Your order #{order.order_number} has been delivered successfully! Thank you for shopping with ForgeStore.",
+            "DELIVERED": f"Your order #{order.order_number} has been delivered successfully! Thank you for shopping with us.",
             "RETURNED": f"Your order #{order.order_number} return has been initiated. Our logistics team will contact you shortly.",
             "CANCELLED": f"Your order #{order.order_number} has been cancelled. If you have questions, please contact support.",
         }

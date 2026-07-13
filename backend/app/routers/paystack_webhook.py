@@ -243,16 +243,17 @@ async def paystack_webhook(request: Request, background_tasks: BackgroundTasks =
             <p>Your transaction reference <strong>{reference}</strong> has been successfully verified.</p>
             <p>Our vendors have been notified and are currently preparing your goods for dispatch.</p>
             """
+            _sn = _get_setting_value(db, "site_name", "ForgeStore")
             if background_tasks:
                 background_tasks.add_task(
                     send_platform_email,
                     to_email=customer_email,
-                    subject=f"ForgeStore Order Confirmed — {reference}",
+                    subject=f"{_sn} Order Confirmed — {reference}",
                     html_content=email_body,
                 )
             else:
                 try:
-                    await send_platform_email(customer_email, f"ForgeStore Order Confirmed — {reference}", email_body)
+                    await send_platform_email(customer_email, f"{_sn} Order Confirmed — {reference}", email_body)
                 except Exception:
                     logger.exception("Failed to send payment email")
 

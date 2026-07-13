@@ -672,13 +672,14 @@ class AIChatService:
         is_logistics = session_id.startswith("logistics-")
         is_management = session_id.startswith("management-")
         is_tech = session_id.startswith("tech-")
+        site_name = context.get("site_name", "ForgeStore")
 
         catalog = self._get_catalog_context()
 
         # ── Dir-Admin (full access) ──
         if is_admin:
             admin_ctx = self._get_admin_context()
-            return f"""You are ForgeAI Admin Assistant — an AI analytics and operations assistant for the ForgeStore admin team.
+            return f"""You are the AI Admin Assistant — an AI analytics and operations assistant for the {site_name} admin team.
 
 CRITICAL RULES:
 - You are a TEXT-ONLY assistant. NEVER output code, XML, JSON, tool_call tags, or any markup.
@@ -715,7 +716,7 @@ Guidelines:
         if is_vendor:
             vendor_id = context.get("vendor_id")
             vendor_ctx = self._get_vendor_context(vendor_id) if vendor_id else "{}"
-            return f"""You are ForgeAI Vendor Assistant — an AI business assistant for vendors on ForgeStore.
+            return f"""You are the AI Vendor Assistant — an AI business assistant for vendors on {site_name}.
 
 CRITICAL RULES:
 - You are a TEXT-ONLY assistant. NEVER output code, XML, JSON, tool_call tags, or any markup.
@@ -747,7 +748,7 @@ Guidelines:
         # ── Logistics ──
         if is_logistics:
             logistics_ctx = self._get_logistics_context()
-            return f"""You are ForgeAI Logistics Assistant — an AI operations assistant for the ForgeStore logistics team.
+            return f"""You are the AI Logistics Assistant — an AI operations assistant for the {site_name} logistics team.
 
 CRITICAL RULES:
 - You are a TEXT-ONLY assistant. NEVER output code, XML, JSON, tool_call tags, or any markup.
@@ -774,7 +775,7 @@ Guidelines:
         # ── Management ──
         if is_management:
             mgmt_ctx = self._get_management_context()
-            return f"""You are ForgeAI Management Assistant — an AI business intelligence assistant for ForgeStore management.
+            return f"""You are the AI Management Assistant — an AI business intelligence assistant for {site_name} management.
 
 CRITICAL RULES:
 - You are a TEXT-ONLY assistant. NEVER output code, XML, JSON, tool_call tags, or any markup.
@@ -802,7 +803,7 @@ Guidelines:
         # ── Tech Admin ──
         if is_tech:
             tech_ctx = self._get_tech_context()
-            return f"""You are ForgeAI Tech Assistant — an AI system administration assistant for ForgeStore technical team.
+            return f"""You are the AI Tech Assistant — an AI system administration assistant for {site_name} technical team.
 
 CRITICAL RULES:
 - You are a TEXT-ONLY assistant. NEVER output code, XML, JSON, tool_call tags, or any markup.
@@ -828,7 +829,7 @@ Guidelines:
 
         # ── Default: Customer ──
         user_ctx = self._get_user_context(context.get("user_id"))
-        return f"""You are ForgeAI, the intelligent shopping assistant for ForgeStore — a multi-vendor e-commerce marketplace.
+        return f"""You are the intelligent shopping assistant for {site_name} — a multi-vendor e-commerce marketplace.
 
 CRITICAL RULES:
 - You are a TEXT-ONLY assistant. NEVER output code, XML, JSON, tool_call tags, function calls, or any markup.
@@ -892,6 +893,14 @@ Guidelines:
                 "session_id": session_id,
                 "last_query": message,
             })
+
+            # Inject site name for dynamic branding in prompts
+            try:
+                from app.models import Settings
+                sn = self.db.query(Settings).filter(Settings.key == "site_name").first()
+                context["site_name"] = sn.value if sn else "ForgeStore"
+            except Exception:
+                context["site_name"] = "ForgeStore"
 
             # For vendor sessions, extract vendor_id from session (format: "vendor-{vendor_id}-{timestamp}")
             if session_id.startswith("vendor-"):
@@ -1190,7 +1199,13 @@ class RecommendationService:
             Product.inventory > 0
         ).order_by(Product.rating.desc(), Product.review_count.desc()).limit(limit).all()
 
-        return [self._product_to_dict(p, "Popular on ForgeStore") for p in popular]
+        try:
+            from app.models import Settings
+            sn = self.db.query(Settings).filter(Settings.key == "site_name").first()
+            sn_val = sn.value if sn else "our store"
+        except Exception:
+            sn_val = "our store"
+        return [self._product_to_dict(p, f"Popular on {sn_val}") for p in popular]
 
     def _product_to_dict(self, product: Product, reason: str) -> dict:
         """Convert a Product model to a recommendation dict."""

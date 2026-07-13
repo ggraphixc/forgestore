@@ -223,7 +223,8 @@ def reject_dispute(
                 status="REVIEWED",
                 tracking_number="",
             ))
-            dispatch_email_background(customer.email, "Dispute Update — ForgeStore", html)
+            _sn = _get_setting_value(db, "site_name", "ForgeStore")
+            dispatch_email_background(customer.email, f"Dispute Update — {_sn}", html)
     except Exception:
         pass
 
@@ -341,7 +342,8 @@ def approve_refund(
                 status="REFUNDED",
                 tracking_number="",
             ))
-            dispatch_email_background(customer.email, "Refund Processed — ForgeStore", html)
+            _sn = _get_setting_value(db, "site_name", "ForgeStore")
+            dispatch_email_background(customer.email, f"Refund Processed — {_sn}", html)
     except Exception:
         pass
 

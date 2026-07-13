@@ -460,21 +460,23 @@ def newsletter_confirm(email: str = "", token: str = "", db: Session = Depends(g
     except Exception:
         pass
 
-    return HTMLResponse("""
+    _sn = db.query(Settings).filter(Settings.key == "site_name").first()
+    _sn_val = _sn.value if _sn else "ForgeStore"
+    return HTMLResponse(f"""
     <!DOCTYPE html>
     <html><head><meta charset="utf-8"><title>Subscribed!</title>
     <style>
-        body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 80vh; margin: 0; background: #fafaf9; }
-        .card { text-align: center; background: white; padding: 48px 32px; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); max-width: 400px; }
-        h1 { font-size: 24px; color: #1c1917; margin-bottom: 8px; }
-        p { color: #57534e; font-size: 14px; line-height: 1.6; }
-        .check { font-size: 48px; margin-bottom: 16px; }
+        body {{ font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 80vh; margin: 0; background: #fafaf9; }}
+        .card {{ text-align: center; background: white; padding: 48px 32px; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); max-width: 400px; }}
+        h1 {{ font-size: 24px; color: #1c1917; margin-bottom: 8px; }}
+        p {{ color: #57534e; font-size: 14px; line-height: 1.6; }}
+        .check {{ font-size: 48px; margin-bottom: 16px; }}
     </style>
     </head><body>
     <div class="card">
         <div class="check">&#10003;</div>
         <h1>You're subscribed!</h1>
-        <p>Thank you for joining the ForgeStore newsletter. You'll hear from us soon.</p>
+        <p>Thank you for joining the {_sn_val} newsletter. You'll hear from us soon.</p>
     </div>
     </body></html>
     """)
@@ -626,21 +628,23 @@ def newsletter_unsubscribe(email: str = "", token: str = "", db: Session = Depen
     db.delete(subscriber)
     db.commit()
 
-    return HTMLResponse("""
+    _sn = db.query(Settings).filter(Settings.key == "site_name").first()
+    _sn_val = _sn.value if _sn else "ForgeStore"
+    return HTMLResponse(f"""
     <!DOCTYPE html>
     <html><head><meta charset="utf-8"><title>Unsubscribed</title>
     <style>
-        body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 80vh; margin: 0; background: #fafaf9; }
-        .card { text-align: center; background: white; padding: 48px 32px; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); max-width: 400px; }
-        h1 { font-size: 24px; color: #1c1917; margin-bottom: 8px; }
-        p { color: #57534e; font-size: 14px; line-height: 1.6; }
-        .check { font-size: 48px; margin-bottom: 16px; }
+        body {{ font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 80vh; margin: 0; background: #fafaf9; }}
+        .card {{ text-align: center; background: white; padding: 48px 32px; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); max-width: 400px; }}
+        h1 {{ font-size: 24px; color: #1c1917; margin-bottom: 8px; }}
+        p {{ color: #57534e; font-size: 14px; line-height: 1.6; }}
+        .check {{ font-size: 48px; margin-bottom: 16px; }}
     </style>
     </head><body>
     <div class="card">
         <div class="check">&#10003;</div>
         <h1>You've been unsubscribed</h1>
-        <p>You will no longer receive marketing emails from ForgeStore.</p>
+        <p>You will no longer receive marketing emails from {_sn_val}.</p>
     </div>
     </body></html>
     """)

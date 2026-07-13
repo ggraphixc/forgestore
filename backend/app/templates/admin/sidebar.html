@@ -777,7 +777,7 @@
 
 {% if admin and admin.role.value != 'DIR_ADMIN' %}
 {% if admin.role.value == 'RETAILER' %}
-{% set ai_title = "ForgeAI Vendor" %}
+{% set ai_title = (settings.site_name|default('ForgeStore')) ~ " AI Vendor" %}
 {% set ai_subtitle = "Your business assistant" %}
 {% set ai_session_prefix = "vendor-" ~ admin.vendor_id %}
 {% set ai_greeting = "Hello! I'm your vendor AI assistant. I can help you analyze product performance, track orders, monitor earnings, and optimize your store. What would you like to know?" %}
@@ -789,7 +789,7 @@
     {"label": "Stock Check", "query": "Which products are low on stock?"}
 ] %}
 {% elif admin.role.value == 'LOGISTICS' %}
-{% set ai_title = "ForgeAI Logistics" %}
+{% set ai_title = (settings.site_name|default('ForgeStore')) ~ " AI Logistics" %}
 {% set ai_subtitle = "Delivery operations assistant" %}
 {% set ai_session_prefix = "logistics" %}
 {% set ai_greeting = "Hello! I'm your logistics AI assistant. I can help you track shipments, monitor driver availability, and optimize delivery operations. What would you like to know?" %}
@@ -801,7 +801,7 @@
     {"label": "Delivery Issues", "query": "Are there any delivery issues?"}
 ] %}
 {% elif admin.role.value == 'MANAGEMENT' %}
-{% set ai_title = "ForgeAI Management" %}
+{% set ai_title = (settings.site_name|default('ForgeStore')) ~ " AI Management" %}
 {% set ai_subtitle = "Business intelligence assistant" %}
 {% set ai_session_prefix = "management" %}
 {% set ai_greeting = "Hello! I'm your management AI assistant. I can help you analyze business metrics, vendor performance, customer growth, and strategic insights. What would you like to know?" %}
@@ -813,7 +813,7 @@
     {"label": "Key Metrics", "query": "Give me a summary of key metrics"}
 ] %}
 {% elif admin.role.value == 'TECH_ADMIN' %}
-{% set ai_title = "ForgeAI Tech" %}
+{% set ai_title = (settings.site_name|default('ForgeStore')) ~ " AI Tech" %}
 {% set ai_subtitle = "System administration assistant" %}
 {% set ai_session_prefix = "tech" %}
 {% set ai_greeting = "Hello! I'm your tech AI assistant. I can help you monitor system health, check database stats, and verify configurations. What would you like to know?" %}
