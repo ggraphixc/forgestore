@@ -1,5 +1,5 @@
 {% extends "admin/base.html" %}
-{% block title %}Ad Analytics — ForgeStore{% endblock %}
+{% block title %}Ad Analytics — {{ settings.site_name|default('ForgeStore') }}{% endblock %}
 {% block content %}
 <style>
   :root {

@@ -1,5 +1,5 @@
 {% extends "admin/base.html" %}
-{% block title %}Banking Setup — ForgeStore{% endblock %}
+{% block title %}Banking Setup — {{ settings.site_name|default("ForgeStore") }}{% endblock %}
 {% block content %}
 <style>
 :root {

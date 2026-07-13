@@ -481,15 +481,15 @@
 
       <div class="auth-stats">
         <div>
-          <p class="auth-stat-value">500+</p>
+          <p class="auth-stat-value">{{ settings.stat_shops|default('500+') }}</p>
           <p class="auth-stat-label">Artisan Shops</p>
         </div>
         <div>
-          <p class="auth-stat-value">10K+</p>
+          <p class="auth-stat-value">{{ settings.stat_items|default('10K+') }}</p>
           <p class="auth-stat-label">Unique Items</p>
         </div>
         <div>
-          <p class="auth-stat-value">50K+</p>
+          <p class="auth-stat-value">{{ settings.stat_buyers|default('50K+') }}</p>
           <p class="auth-stat-label">Happy Buyers</p>
         </div>
       </div>

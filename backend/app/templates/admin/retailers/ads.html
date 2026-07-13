@@ -1,5 +1,5 @@
 {% extends "admin/base.html" %}
-{% block title %}Ad Campaigns — ForgeStore{% endblock %}
+{% block title %}Ad Campaigns — {{ settings.site_name|default("ForgeStore") }}{% endblock %}
 {% block content %}
 <style>
 :root {

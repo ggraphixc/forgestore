@@ -210,7 +210,7 @@ function shareReferral() {
   if (!code || code === '—') return;
   const url = window.location.origin + '/shop/signup?ref=' + code;
   if (navigator.share) {
-    navigator.share({ title: 'Join ForgeStore', text: `Use my referral code ${code} to join ForgeStore!`, url }).catch(() => {});
+    navigator.share({ title: 'Join {{ settings.site_name|default("ForgeStore") }}', text: `Use my referral code ${code} to join {{ settings.site_name|default("ForgeStore") }}!`, url }).catch(() => {});
   } else {
     navigator.clipboard.writeText(url).then(() => {
       showToast('Referral link copied to clipboard!', 'success');

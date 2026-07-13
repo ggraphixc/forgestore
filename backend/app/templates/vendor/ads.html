@@ -1,5 +1,5 @@
 {% extends "admin/sidebar.html" %}
-{% block title %}My Ads & Campaigns — ForgeStore{% endblock %}
+{% block title %}My Ads & Campaigns — {{ settings.site_name|default("ForgeStore") }}{% endblock %}
 {% block content %}
 <style>
   :root{--va-primary:#f59e0b;--va-primary-dark:#d97706;--va-bg:#fafaf9;--va-card:#fff;--va-border:#e7e5e4;--va-text:#1c1917;--va-muted:#78716c;--va-green:#16a34a;--va-red:#dc2626;--va-blue:#2563eb;--va-purple:#7c3aed;--va-radius:12px;}
