@@ -1,5 +1,5 @@
 {% extends "web/base.html" %}
-{% block title %}Page Not Found — ForgeStore{% endblock %}
+{% block title %}Page Not Found — {{ settings.site_name|default("ForgeStore") }}{% endblock %}
 {% block content %}
 <style>
   :root {

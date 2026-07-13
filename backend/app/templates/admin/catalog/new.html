@@ -1,6 +1,6 @@
 {% extends "admin/base.html" %}
 
-{% block title %}New Product — ForgeStore Admin{% endblock %}
+{% block title %}New Product — {{ settings.site_name|default("ForgeStore") }} Admin{% endblock %}
 
 {% block content %}
 <style>

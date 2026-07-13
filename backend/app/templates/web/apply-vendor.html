@@ -1,5 +1,5 @@
 {% extends "web/base.html" %}
-{% block title %}Become a Vendor — ForgeStore{% endblock %}
+{% block title %}Become a Vendor — {{ settings.site_name|default("ForgeStore") }}{% endblock %}
 {% block footer %}{% endblock %}
 {% block content %}
 <style>
@@ -108,10 +108,10 @@
     <div class="ws-split-grid-overlay"></div>
     <div class="ws-split-left-content">
       <div class="ws-brand">
-        <div class="ws-brand-icon"><span>FS</span></div>
+        <div class="ws-brand-icon"><span>{{ settings.site_initials|default("FS") }}</span></div>
         <div class="ws-brand-text">
-          <span>ForgeStore</span>
-          <span>where the workshop meets the world</span>
+          <span>{{ settings.site_name|default('ForgeStore') }}</span>
+          <span>{{ settings.site_tagline|default('where the workshop meets the world') }}</span>
         </div>
       </div>
       <h1>Grow Your<br><em>Artisan Business</em></h1>
@@ -140,7 +140,7 @@
       </div>
       <div class="ws-testimonial">
         <svg fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10H14.017zM0 21v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151C7.563 6.068 6 8.789 6 11h4v10H0z"/></svg>
-        <p>"Since joining ForgeStore, my ceramic studio's revenue tripled. The vendor dashboard makes inventory and payouts effortless."</p>
+        <p>"Since joining {{ settings.site_name|default('ForgeStore') }}, my ceramic studio's revenue tripled. The vendor dashboard makes inventory and payouts effortless."</p>
         <div class="ws-testimonial-author">
           <div class="ws-testimonial-avatar">NK</div>
           <div>
@@ -149,15 +149,15 @@
           </div>
         </div>
       </div>
-      <p class="ws-split-left-footer">&copy; 2026 ForgeStore &mdash; Empowering Artisans Worldwide</p>
+      <p class="ws-split-left-footer">&copy; {{ now().year if now is defined else '2026' }} {{ settings.site_name|default('ForgeStore') }} &mdash; {{ settings.site_tagline|default('Empowering Artisans Worldwide') }}</p>
     </div>
   </div>
 
   <div class="ws-split-right">
     <div class="ws-form-wrap">
       <div class="ws-mobile-logo">
-        <div class="ws-mobile-logo-icon"><span>FS</span></div>
-        <span class="ws-mobile-logo-text">ForgeStore</span>
+        <div class="ws-mobile-logo-icon"><span>{{ settings.site_initials|default("FS") }}</span></div>
+        <span class="ws-mobile-logo-text">{{ settings.site_name|default('ForgeStore') }}</span>
       </div>
       <div class="ws-form-header">
         <h1>Become a <em>Vendor</em></h1>

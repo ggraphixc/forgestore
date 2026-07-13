@@ -71,7 +71,7 @@
                 </div>
                 <div class="admin-form-group">
                     <label class="admin-form-label" for="email">Email Address</label>
-                    <input id="email" name="email" type="email" class="admin-form-input" placeholder="admin@forgestore.com" required>
+                    <input id="email" name="email" type="email" class="admin-form-input" placeholder="{{ settings.contact_email|default('admin@forgestore.com') }}" required>
                 </div>
             </div>
 

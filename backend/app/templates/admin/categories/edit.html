@@ -1,5 +1,5 @@
 {% extends "admin/base.html" %}
-{% block title %}Edit {{ category.name }} — ForgeStore Admin{% endblock %}
+{% block title %}Edit {{ category.name }} — {{ settings.site_name|default("ForgeStore") }} Admin{% endblock %}
 {% block content %}
 <style>
 /* ─── admin-category-edit design system ─── */

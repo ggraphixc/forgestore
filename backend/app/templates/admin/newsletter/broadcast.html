@@ -1,5 +1,5 @@
 {% extends "admin/base.html" %}
-{% block title %}Send Newsletter — ForgeStore Admin{% endblock %}
+{% block title %}Send Newsletter — {{ settings.site_name|default("ForgeStore") }} Admin{% endblock %}
 {% block content %}
 <style>
   :root {

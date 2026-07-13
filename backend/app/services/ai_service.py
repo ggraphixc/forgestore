@@ -745,6 +745,8 @@ SETTINGS_DEFINITIONS: List[Dict[str, Any]] = [
      "description": "The name displayed throughout the storefront.", "default": "ForgeStore"},
     {"key": "site_tagline", "category": "global", "type": "text", "label": "Site Tagline",
      "description": "A short tagline shown in the header.", "default": "Your One-Stop Marketplace"},
+    {"key": "site_initials", "category": "global", "type": "text", "label": "Site Initials",
+     "description": "2-letter monogram shown in logos and icons (e.g. 'FS' for ForgeStore).", "default": "FS"},
     {"key": "contact_phone", "category": "global", "type": "text", "label": "Contact Phone Number",
      "description": "Phone number displayed on the storefront and support pages.", "default": ""},
     {"key": "business_hours", "category": "global", "type": "text", "label": "Business Hours",

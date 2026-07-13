@@ -466,11 +466,11 @@
     <div class="auth-showcase-content">
       <div class="auth-brand">
         <div class="auth-brand-icon">
-          <span style="color:#fff;font-size:1.25rem;font-weight:900;">FS</span>
+          <span style="color:#fff;font-size:1.25rem;font-weight:900;">{{ settings.site_initials|default("FS") }}</span>
         </div>
         <div>
           <span class="auth-brand-name">{{ settings.site_name|default('ForgeStore') }}</span>
-          <span class="auth-brand-tag">where the workshop meets the world</span>
+          <span class="auth-brand-tag">{{ settings.site_tagline|default('where the workshop meets the world') }}</span>
         </div>
       </div>
 
@@ -498,7 +498,7 @@
         <svg style="width:2rem;height:2rem;color:rgba(245,158,11,0.3);margin-bottom:0.75rem;" fill="currentColor" viewBox="0 0 24 24">
           <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10H14.017zM0 21v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151C7.563 6.068 6 8.789 6 11h4v10H0z"/>
         </svg>
-        <p class="auth-testimonial-text">"ForgeStore gave my ceramic studio a global storefront. I went from selling at local markets to shipping internationally. Truly transformative."</p>
+        <p class="auth-testimonial-text">"{{ settings.site_name|default('ForgeStore') }} gave my ceramic studio a global storefront. I went from selling at local markets to shipping internationally. Truly transformative."</p>
         <div class="auth-testimonial-author">
           <div class="auth-testimonial-avatar">AK</div>
           <div>
@@ -508,7 +508,7 @@
         </div>
       </div>
 
-      <p class="auth-footer-text">{{ settings.copyright_text|default('© 2026 ' ~ (settings.site_name|default('ForgeStore')) ~ '. All rights reserved.')|replace('{year}', now().year if now is defined else '2026')|replace('{site_name}', settings.site_name|default('ForgeStore')) }} &mdash; Empowering Artisans Worldwide</p>
+      <p class="auth-footer-text">{{ settings.copyright_text|default('© 2026 ' ~ (settings.site_name|default('ForgeStore')) ~ '. All rights reserved.')|replace('{year}', now().year if now is defined else '2026')|replace('{site_name}', settings.site_name|default('ForgeStore')) }} &mdash; {{ settings.site_tagline|default('Empowering Artisans Worldwide') }}</p>
     </div>
   </div>
 
@@ -516,7 +516,7 @@
     <div class="auth-card">
       <div class="auth-mobile-logo">
         <div class="auth-mobile-icon">
-          <span style="color:#fff;font-size:0.875rem;font-weight:900;">FS</span>
+          <span style="color:#fff;font-size:0.875rem;font-weight:900;">{{ settings.site_initials|default("FS") }}</span>
         </div>
         <span style="font-size:1.125rem;font-weight:700;color:var(--auth-stone-900);font-family:{{ settings.font_heading|default("'Montserrat',sans-serif") }};">{{ settings.site_name|default('ForgeStore') }}</span>
       </div>

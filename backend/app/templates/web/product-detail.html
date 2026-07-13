@@ -1,5 +1,5 @@
 {% extends "web/base.html" %}
-{% block title %}{{ product.name }} — ForgeStore{% endblock %}
+{% block title %}{{ product.name }} — {{ settings.site_name|default("ForgeStore") }}{% endblock %}
 {% block meta_description %}{{ product.description|striptags|truncate(160) }}{% endblock %}
 {% block extra_head %}
 {% if settings.structured_data_enabled|default('true') != 'false' %}
@@ -13,7 +13,7 @@
   "sku": "{{ product.id }}",
   "brand": {
     "@type": "Brand",
-    "name": "{{ (product.brand or 'ForgeStore')|e }}"
+    "name": "{{ (product.brand or settings.site_name|default('ForgeStore'))|e }}"
   },
   "offers": {
     "@type": "Offer",
@@ -23,7 +23,7 @@
     "availability": "{% if product.inventory and product.inventory > 0 %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
     "seller": {
       "@type": "Organization",
-      "name": "{{ (retailer.name if retailer else 'ForgeStore')|e }}"
+      "name": "{{ (retailer.name if retailer else settings.site_name|default('ForgeStore'))|e }}"
     }
   },
   "aggregateRating": {

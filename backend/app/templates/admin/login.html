@@ -81,7 +81,7 @@
 </style>
 
 <div class="admin-login-logo">
-    <div class="admin-login-logo-icon">FS</div>
+    <div class="admin-login-logo-icon">{{ settings.site_initials|default("FS") }}</div>
     <h1>{{ settings.site_name|default('ForgeStore') }}</h1>
     <p>Admin Panel — Sign in to continue</p>
 </div>
@@ -99,10 +99,10 @@
                     type="email"
                     id="email"
                     name="email"
-                    value="admin@forgestore.com"
+                    value="{{ settings.contact_email|default('admin@forgestore.com') }}"
                     required
                     class="admin-field-input"
-                    placeholder="admin@forgestore.com"
+                    placeholder="{{ settings.contact_email|default('admin@forgestore.com') }}"
                     autocomplete="email"
                 >
             </div>

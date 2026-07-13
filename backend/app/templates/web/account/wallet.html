@@ -1,5 +1,5 @@
 {% extends "web/base.html" %}
-{% block title %}Wallet — ForgeStore{% endblock %}
+{% block title %}Wallet — {{ settings.site_name|default("ForgeStore") }}{% endblock %}
 {% block content %}
 <style>
   .acct-page{padding:2rem 1rem;max-width:72rem;margin:0 auto}

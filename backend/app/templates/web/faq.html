@@ -1,5 +1,5 @@
 {% extends "web/base.html" %}
-{% block title %}FAQ — ForgeStore{% endblock %}
+{% block title %}FAQ — {{ settings.site_name|default("ForgeStore") }}{% endblock %}
 {% block content %}
 <style>
 :root {
@@ -324,11 +324,11 @@
 
     <div class="support-faq-item" data-category="vendor">
       <button class="support-faq-question" onclick="toggleFaq(this)" aria-expanded="false">
-        <span>What commission does ForgeStore charge?</span>
+        <span>What commission does {{ settings.site_name|default('ForgeStore') }} charge?</span>
         <svg class="support-faq-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
       </button>
       <div class="support-faq-answer">
-        <p>ForgeStore charges a small commission on each sale. The exact rate depends on your vendor tier and is detailed in your vendor agreement. There are no monthly fees or listing charges.</p>
+        <p>{{ settings.site_name|default('ForgeStore') }} charges a small commission on each sale. The exact rate depends on your vendor tier and is detailed in your vendor agreement. There are no monthly fees or listing charges.</p>
       </div>
     </div>
 

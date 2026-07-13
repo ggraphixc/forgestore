@@ -1,5 +1,5 @@
 {% extends "web/base.html" %}
-{% block title %}Shipping Information — ForgeStore{% endblock %}
+{% block title %}Shipping Information — {{ settings.site_name|default("ForgeStore") }}{% endblock %}
 {% block content %}
 <style>
 :root {
@@ -284,7 +284,7 @@
         How to Track Your Order
       </h3>
       <ol class="support-steps-list">
-        <li><span class="support-step-num">1</span><span>Log in to your ForgeStore account and go to <strong style="color:var(--sp-text);">My Orders</strong></span></li>
+        <li><span class="support-step-num">1</span><span>Log in to your {{ settings.site_name|default('ForgeStore') }} account and go to <strong style="color:var(--sp-text);">My Orders</strong></span></li>
         <li><span class="support-step-num">2</span><span>Select the order you want to track</span></li>
         <li><span class="support-step-num">3</span><span>Click <strong style="color:var(--sp-text);">Track Shipment</strong> for real-time updates</span></li>
         <li><span class="support-step-num">4</span><span>You'll also receive SMS and email notifications at each stage</span></li>

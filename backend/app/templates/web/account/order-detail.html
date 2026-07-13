@@ -1,5 +1,5 @@
 {% extends "web/base.html" %}
-{% block title %}Order {{ order.order_number }} — ForgeStore{% endblock %}
+{% block title %}Order {{ order.order_number }} — {{ settings.site_name|default("ForgeStore") }}{% endblock %}
 {% block content %}
 <style>
   .acct-page{padding:2rem 1rem;max-width:72rem;margin:0 auto}

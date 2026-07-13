@@ -1,5 +1,5 @@
 {% extends "web/base.html" %}
-{% block title %}My Wishlist — ForgeStore{% endblock %}
+{% block title %}My Wishlist — {{ settings.site_name|default("ForgeStore") }}{% endblock %}
 {% block content %}
 <style>
   :root {

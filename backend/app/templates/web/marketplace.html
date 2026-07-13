@@ -1,5 +1,5 @@
 {% extends "web/base.html" %}
-{% block title %}Marketplace — ForgeStore{% endblock %}
+{% block title %}Marketplace — {{ settings.site_name|default("ForgeStore") }}{% endblock %}
 {% block content %}
 <style>
 :root {

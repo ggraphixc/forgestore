@@ -1,5 +1,5 @@
 {% extends "web/base.html" %}
-{% block title %}ForgeStore — Where the Workshop Meets the World{% endblock %}
+{% block title %}{{ settings.site_name|default('ForgeStore') }} — {{ settings.site_tagline|default('Where the Workshop Meets the World') }}{% endblock %}
 {% block content %}
 
 <style>
@@ -1359,7 +1359,7 @@
 <section class="home-section" style="background: var(--color-surface);">
   <div class="container">
     <div style="text-align: center; margin-bottom: 3rem;">
-      <span class="home-section-label">Why ForgeStore</span>
+      <span class="home-section-label">Why {{ settings.site_name|default('ForgeStore') }}</span>
       <h2 class="home-section-title">Built for <span class="accent">Real Commerce</span></h2>
     </div>
     <div class="home-features-grid">
