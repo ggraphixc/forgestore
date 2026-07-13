@@ -403,6 +403,57 @@
   }
   .admin-settings-eye-hint.set { color: #16a34a; }
 
+  .admin-settings-color-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .admin-settings-color-swatch {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    border: 2px solid #e7e5e4;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    flex-shrink: 0;
+  }
+  .admin-settings-color-swatch:hover {
+    border-color: var(--amber-500);
+    box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+  }
+  .admin-settings-color-native {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .admin-settings-color-text {
+    width: 100px !important;
+    flex-shrink: 0;
+    font-size: 0.8125rem !important;
+  }
+  .admin-settings-color-presets {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+  .admin-settings-color-preset {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(0,0,0,0.08);
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.15s;
+    padding: 0;
+  }
+  .admin-settings-color-preset:hover {
+    transform: scale(1.25);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  }
+
   .admin-settings-save-section {
     padding: 0.875rem 1.5rem;
     background: var(--stone-50);
@@ -656,6 +707,22 @@
                             <textarea id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" rows="2" class="admin-settings-textarea admin-settings-input">{{ s.value }}</textarea>
                             {% elif s.type == 'number' %}
                             <input type="number" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="admin-settings-input mono">
+                            {% elif s.type == 'color' %}
+                            <div class="admin-settings-color-wrap">
+                                <div class="admin-settings-color-swatch" id="swatch-{{ s.key }}" style="background:{{ s.value }};" onclick="document.getElementById('colorpick-{{ s.key }}').click()"></div>
+                                <input type="color" id="colorpick-{{ s.key }}" value="{{ s.value }}" class="admin-settings-color-native" onchange="syncColorInput('{{ s.key }}', this.value)">
+                                <input type="text" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="admin-settings-input mono admin-settings-color-text" maxlength="7" oninput="syncColorSwatch('{{ s.key }}', this.value)" placeholder="#000000">
+                                <div class="admin-settings-color-presets" id="presets-{{ s.key }}">
+                                    <button type="button" class="admin-settings-color-preset" style="background:#f59e0b" onclick="applyColorPreset('{{ s.key }}','#f59e0b')" title="#f59e0b"></button>
+                                    <button type="button" class="admin-settings-color-preset" style="background:#3b82f6" onclick="applyColorPreset('{{ s.key }}','#3b82f6')" title="#3b82f6"></button>
+                                    <button type="button" class="admin-settings-color-preset" style="background:#10b981" onclick="applyColorPreset('{{ s.key }}','#10b981')" title="#10b981"></button>
+                                    <button type="button" class="admin-settings-color-preset" style="background:#8b5cf6" onclick="applyColorPreset('{{ s.key }}','#8b5cf6')" title="#8b5cf6"></button>
+                                    <button type="button" class="admin-settings-color-preset" style="background:#ef4444" onclick="applyColorPreset('{{ s.key }}','#ef4444')" title="#ef4444"></button>
+                                    <button type="button" class="admin-settings-color-preset" style="background:#1c1917" onclick="applyColorPreset('{{ s.key }}','#1c1917')" title="#1c1917"></button>
+                                    <button type="button" class="admin-settings-color-preset" style="background:#78716c" onclick="applyColorPreset('{{ s.key }}','#78716c')" title="#78716c"></button>
+                                    <button type="button" class="admin-settings-color-preset" style="background:#ffffff;border:1px solid #e7e5e4" onclick="applyColorPreset('{{ s.key }}','#ffffff')" title="#ffffff"></button>
+                                </div>
+                            </div>
                             {% elif s.type == 'file' %}
                             <div style="display:flex;flex-direction:column;gap:8px;width:100%;">
                                 {% if s.value %}
@@ -699,6 +766,22 @@ function togglePasswordVisibility(id, btn) {
     const closedEye = btn.querySelector('.eye-closed');
     if (openEye) openEye.style.display = isOpen ? '' : 'none';
     if (closedEye) closedEye.style.display = isOpen ? 'none' : '';
+}
+
+function syncColorSwatch(key, val) {
+    if (/^#[0-9a-f]{6}$/i.test(val)) {
+        document.getElementById('swatch-' + key).style.background = val;
+        document.getElementById('colorpick-' + key).value = val;
+    }
+}
+function syncColorInput(key, val) {
+    document.getElementById('setting-' + key).value = val;
+    document.getElementById('swatch-' + key).style.background = val;
+}
+function applyColorPreset(key, val) {
+    document.getElementById('setting-' + key).value = val;
+    document.getElementById('colorpick-' + key).value = val;
+    document.getElementById('swatch-' + key).style.background = val;
 }
 
 async function handleSettingFileUpload(key, input) {

@@ -670,6 +670,13 @@ def _validate_setting_value(sd: dict, value: str):
                     status_code=400,
                     detail=f"Setting '{sd['label']}' must be valid JSON: {e}"
                 )
+    elif setting_type == "color":
+        import re as _re
+        if value and not _re.match(r'^#[0-9a-fA-F]{6}$', value):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Setting '{sd['label']}' must be a valid hex color (e.g. #f59e0b), got '{value}'"
+            )
     return value
 
 
