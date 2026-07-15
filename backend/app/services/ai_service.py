@@ -597,7 +597,7 @@ def generate_product_bundle_suggestions(
     if all_products:
         parts.append(f"Also available: {', '.join(all_products[:20])}")
     user_prompt = "\n".join(parts)
-    result = _call_llm(system_prompt, user_prompt, temperature=0.5, max_tokens=400)
+    result = _call_llm(system_prompt, user_prompt, temperature=0.5, max_tokens=2000)
     if result:
         import json
         try:
@@ -719,7 +719,7 @@ def ai_search_assistant(
         ),
         user_prompt=f"Query: {query}\nProducts: {json.dumps(product_list)}",
         temperature=0.3,
-        max_tokens=400,
+        max_tokens=2000,
     )
 
     if result:
@@ -842,7 +842,7 @@ def generate_ad_copy(
         f"Tone: {tone}\n"
         f"Platform: {platform}"
     )
-    result = _call_llm(system_prompt, user_prompt, temperature=0.7, max_tokens=400)
+    result = _call_llm(system_prompt, user_prompt, temperature=0.7, max_tokens=2000)
     if result:
         try:
             text = result
