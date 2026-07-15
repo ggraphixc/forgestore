@@ -329,21 +329,21 @@
 
 .auth-input {
   width: 100%;
-  padding: 0.625rem 0.75rem;
+  padding: 0.625rem 0.875rem;
   font-size: 0.875rem;
-  border-radius: 0.75rem;
-  border: 1px solid var(--auth-stone-200);
-  background: var(--auth-stone-50);
+  border-radius: 10px;
+  border: 1.5px solid var(--auth-stone-300);
+  background: #fff;
   color: var(--auth-stone-900);
   outline: none;
-  transition: all 0.2s;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
   min-height: 44px;
   box-sizing: border-box;
+  line-height: 1.4;
 }
 .auth-input:focus {
   border-color: var(--auth-amber-500);
   box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
-  background: #fff;
 }
 .auth-input::placeholder { color: var(--auth-stone-400); }
 .auth-input-wrap { position: relative; }

@@ -48,10 +48,11 @@
     letter-spacing:.2em;color:var(--stone-500);margin-bottom:.5rem;
   }
   .admin-field-input{
-    width:100%;padding:.75rem 1rem;background:var(--stone-50);border:1px solid var(--stone-200);
-    border-radius:var(--radius-md);font-size:.875rem;color:var(--stone-900);transition:all var(--transition-fast);
+    width:100%;padding:0.625rem 0.875rem;background:#fff;border:1.5px solid var(--stone-300);
+    border-radius:10px;font-size:.875rem;color:var(--stone-900);transition:border-color 200ms ease,box-shadow 200ms ease;
+    min-height:44px;box-sizing:border-box;line-height:1.4;
   }
-  .admin-field-input:focus{outline:none;border-color:var(--amber-500);box-shadow:0 0 0 3px rgba(245,158,11,.12)}
+  .admin-field-input:focus{outline:none;border-color:var(--amber-600);box-shadow:0 0 0 3px rgba(217,119,6,0.15)}
   .admin-field-input::placeholder{color:var(--stone-400)}
   .admin-pw-wrap{position:relative}
   .admin-pw-toggle{

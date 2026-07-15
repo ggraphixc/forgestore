@@ -1,0 +1,832 @@
+/* ============================================================
+   ForgeStore — Shared Form Design System
+   Modern input styles extracted from admin settings.
+   Include this in every base template.
+   ============================================================ */
+
+:root {
+  /* Color tokens */
+  --fs-50: #fafaf9;
+  --fs-100: #f5f5f4;
+  --fs-200: #e7e5e4;
+  --fs-300: #d6d3d1;
+  --fs-400: #a8a29e;
+  --fs-500: #78716c;
+  --fs-600: #57534e;
+  --fs-700: #44403c;
+  --fs-800: #292524;
+  --fs-900: #1c1917;
+
+  --fs-amber-50: #fffbeb;
+  --fs-amber-100: #fef3c7;
+  --fs-amber-500: #f59e0b;
+  --fs-amber-600: #d97706;
+
+  --fs-red-50: #fef2f2;
+  --fs-red-500: #ef4444;
+  --fs-red-600: #dc2626;
+
+  --fs-green-50: #f0fdf4;
+  --fs-green-500: #22c55e;
+  --fs-green-600: #16a34a;
+
+  --fs-blue-50: #eff6ff;
+  --fs-blue-500: #3b82f6;
+
+  /* Radius */
+  --fs-radius-sm: 6px;
+  --fs-radius-md: 10px;
+  --fs-radius-lg: 14px;
+  --fs-radius-xl: 16px;
+
+  /* Shadows */
+  --fs-shadow-sm: 0 1px 2px rgba(0,0,0,.04);
+  --fs-shadow-md: 0 4px 12px rgba(0,0,0,.06);
+  --fs-shadow-lg: 0 8px 24px rgba(0,0,0,.08);
+
+  /* Transitions */
+  --fs-transition-fast: 150ms ease;
+  --fs-transition-base: 200ms ease;
+}
+
+/* ── Form Group (label + input wrapper) ── */
+.fs-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.fs-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 640px) {
+  .fs-form-row { grid-template-columns: 1fr; }
+}
+
+/* ── Labels ── */
+.fs-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--fs-800);
+  line-height: 1.4;
+}
+.fs-label-required::after {
+  content: " *";
+  color: var(--fs-red-500);
+}
+.fs-label-hint {
+  font-size: 0.75rem;
+  color: var(--fs-400);
+  font-weight: 400;
+  margin-left: 0.25rem;
+}
+
+/* ── Text / Number / Email / Password / Tel / URL inputs ── */
+.fs-input,
+.fs-select,
+.fs-textarea {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  min-height: 44px;
+  background: #fff;
+  border: 1.5px solid var(--fs-300);
+  border-radius: var(--fs-radius-md);
+  font-size: 0.875rem;
+  color: var(--fs-900);
+  outline: none;
+  transition: border-color var(--fs-transition-base), box-shadow var(--fs-transition-base);
+  box-sizing: border-box;
+  line-height: 1.4;
+}
+.fs-input:focus,
+.fs-select:focus,
+.fs-textarea:focus {
+  border-color: var(--fs-amber-600);
+  box-shadow: 0 0 0 3px rgba(217,119,6,0.15);
+}
+.fs-input::placeholder,
+.fs-textarea::placeholder {
+  color: var(--fs-400);
+}
+
+.fs-input-error {
+  border-color: var(--fs-red-500) !important;
+}
+.fs-input-error:focus {
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.15) !important;
+}
+
+.fs-error-text {
+  font-size: 0.75rem;
+  color: var(--fs-red-600);
+  margin-top: 0.125rem;
+}
+
+.fs-hint-text {
+  font-size: 0.75rem;
+  color: var(--fs-400);
+  margin-top: 0.125rem;
+}
+
+/* ── Select ── */
+.fs-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2378716c' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 6l3.5 4 3.5-4z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.25rem;
+}
+
+/* ── Textarea ── */
+.fs-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* ── Password with toggle ── */
+.fs-password-wrap {
+  position: relative;
+}
+.fs-password-wrap .fs-input {
+  padding-right: 2.75rem;
+}
+.fs-password-toggle {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--fs-400);
+  cursor: pointer;
+  border-radius: var(--fs-radius-sm);
+  transition: color var(--fs-transition-fast), background var(--fs-transition-fast);
+}
+.fs-password-toggle:hover {
+  color: var(--fs-600);
+  background: var(--fs-100);
+}
+.fs-password-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── Checkbox / Radio ── */
+.fs-check-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  cursor: pointer;
+}
+.fs-check-group input[type="checkbox"],
+.fs-check-group input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--fs-amber-600);
+  cursor: pointer;
+}
+.fs-check-label {
+  font-size: 0.8125rem;
+  color: var(--fs-700);
+  cursor: pointer;
+}
+
+/* ── Toggle Switch ── */
+.fs-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: flex-end;
+}
+.fs-toggle input { display: none; }
+.fs-toggle-track {
+  width: 40px;
+  height: 22px;
+  background: var(--fs-300);
+  border-radius: 11px;
+  position: relative;
+  transition: background var(--fs-transition-fast);
+}
+.fs-toggle input:checked + .fs-toggle-track {
+  background: var(--fs-amber-600);
+}
+.fs-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+  transition: transform var(--fs-transition-fast);
+}
+.fs-toggle input:checked + .fs-toggle-track .fs-toggle-knob {
+  transform: translateX(18px);
+}
+
+/* ── File Upload ── */
+.fs-file-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+.fs-file-input {
+  font-size: 0.8125rem;
+  padding: 0.5rem;
+  border: 1.5px dashed var(--fs-300);
+  border-radius: var(--fs-radius-md);
+  background: var(--fs-50);
+  cursor: pointer;
+  transition: border-color var(--fs-transition-fast);
+}
+.fs-file-input:hover {
+  border-color: var(--fs-amber-500);
+}
+.fs-file-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.fs-file-preview img {
+  max-width: 80px;
+  max-height: 40px;
+  border-radius: var(--fs-radius-sm);
+  border: 1px solid var(--fs-200);
+  object-fit: cover;
+}
+
+/* ── Color Picker ── */
+.fs-color-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+.fs-color-swatch {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--fs-radius-md);
+  border: 2px solid var(--fs-200);
+  cursor: pointer;
+  transition: border-color var(--fs-transition-fast), box-shadow var(--fs-transition-fast);
+  flex-shrink: 0;
+}
+.fs-color-swatch:hover {
+  border-color: var(--fs-amber-500);
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+}
+.fs-color-text {
+  width: 100px !important;
+  flex-shrink: 0;
+  font-size: 0.8125rem !important;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+
+/* ── Buttons ── */
+.fs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  min-height: 44px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: var(--fs-radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all var(--fs-transition-fast);
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.fs-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.fs-btn-primary {
+  background: var(--fs-900);
+  color: #fff;
+  box-shadow: var(--fs-shadow-md);
+}
+.fs-btn-primary:hover:not(:disabled) {
+  background: var(--fs-800);
+  box-shadow: var(--fs-shadow-lg);
+  transform: translateY(-1px);
+}
+.fs-btn-secondary {
+  background: #fff;
+  color: var(--fs-700);
+  border: 1.5px solid var(--fs-200);
+  box-shadow: var(--fs-shadow-sm);
+}
+.fs-btn-secondary:hover:not(:disabled) {
+  background: var(--fs-50);
+  border-color: var(--fs-300);
+}
+.fs-btn-danger {
+  background: var(--fs-red-600);
+  color: #fff;
+}
+.fs-btn-danger:hover:not(:disabled) {
+  background: var(--fs-red-500);
+}
+.fs-btn-success {
+  background: var(--fs-green-600);
+  color: #fff;
+}
+.fs-btn-success:hover:not(:disabled) {
+  background: var(--fs-green-500);
+}
+.fs-btn-amber {
+  background: var(--fs-amber-600);
+  color: #fff;
+}
+.fs-btn-amber:hover:not(:disabled) {
+  background: var(--fs-amber-500);
+}
+.fs-btn-sm {
+  padding: 0.375rem 0.75rem;
+  min-height: 34px;
+  font-size: 0.8125rem;
+}
+.fs-btn-lg {
+  padding: 0.75rem 1.5rem;
+  min-height: 48px;
+  font-size: 0.9375rem;
+}
+.fs-btn-block {
+  width: 100%;
+}
+
+/* ── Card (form container) ── */
+.fs-card {
+  background: #fff;
+  border-radius: var(--fs-radius-xl);
+  border: 1px solid var(--fs-200);
+  overflow: hidden;
+  box-shadow: var(--fs-shadow-sm);
+  transition: box-shadow var(--fs-transition-base);
+}
+.fs-card:hover {
+  box-shadow: var(--fs-shadow-md);
+}
+.fs-card-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--fs-100);
+  background: var(--fs-50);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.fs-card-header h2 {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--fs-900);
+  margin: 0;
+}
+.fs-card-header p {
+  font-size: 0.75rem;
+  color: var(--fs-400);
+  margin: 0.125rem 0 0;
+}
+.fs-card-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.fs-card-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--fs-100);
+  background: var(--fs-50);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* ── Divider ── */
+.fs-divider {
+  height: 1px;
+  background: var(--fs-200);
+  margin: 0.5rem 0;
+}
+
+/* ── Helper: form layout ── */
+.fs-form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ============================================================
+   GLOBAL ELEMENT SELECTORS
+   Automatically modernizes all existing form elements
+   across web, admin, vendor, and logistics portals.
+   ============================================================ */
+
+/* ── All text-like inputs (text, email, password, tel, url, number, search, date) ── */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="url"],
+input[type="number"],
+input[type="search"],
+input[type="date"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"],
+input[type="time"] {
+  padding: 0.625rem 0.875rem;
+  min-height: 44px;
+  background: #fff;
+  border: 1.5px solid var(--fs-300);
+  border-radius: var(--fs-radius-md);
+  font-size: 0.875rem;
+  color: var(--fs-900);
+  outline: none;
+  transition: border-color var(--fs-transition-base), box-shadow var(--fs-transition-base);
+  box-sizing: border-box;
+  line-height: 1.4;
+}
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="tel"]:focus,
+input[type="url"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+input[type="date"]:focus,
+input[type="datetime-local"]:focus,
+input[type="month"]:focus,
+input[type="week"]:focus,
+input[type="time"]:focus {
+  border-color: var(--fs-amber-600);
+  box-shadow: 0 0 0 3px rgba(217,119,6,0.15);
+}
+input[type="text"]::placeholder,
+input[type="email"]::placeholder,
+input[type="password"]::placeholder,
+input[type="tel"]::placeholder,
+input[type="url"]::placeholder,
+input[type="number"]::placeholder,
+input[type="search"]::placeholder {
+  color: var(--fs-400);
+}
+
+/* ── Selects ── */
+select {
+  padding: 0.625rem 2.25rem 0.625rem 0.875rem;
+  min-height: 44px;
+  background: #fff;
+  border: 1.5px solid var(--fs-300);
+  border-radius: var(--fs-radius-md);
+  font-size: 0.875rem;
+  color: var(--fs-900);
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2378716c' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 6l3.5 4 3.5-4z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  transition: border-color var(--fs-transition-base), box-shadow var(--fs-transition-base);
+  box-sizing: border-box;
+  line-height: 1.4;
+}
+select:focus {
+  border-color: var(--fs-amber-600);
+  box-shadow: 0 0 0 3px rgba(217,119,6,0.15);
+}
+
+/* ── Textareas ── */
+textarea {
+  padding: 0.625rem 0.875rem;
+  min-height: 80px;
+  background: #fff;
+  border: 1.5px solid var(--fs-300);
+  border-radius: var(--fs-radius-md);
+  font-size: 0.875rem;
+  color: var(--fs-900);
+  outline: none;
+  resize: vertical;
+  transition: border-color var(--fs-transition-base), box-shadow var(--fs-transition-base);
+  box-sizing: border-box;
+  line-height: 1.5;
+}
+textarea:focus {
+  border-color: var(--fs-amber-600);
+  box-shadow: 0 0 0 3px rgba(217,119,6,0.15);
+}
+textarea::placeholder {
+  color: var(--fs-400);
+}
+
+/* ── Buttons ── */
+button,
+input[type="submit"],
+input[type="button"],
+input[type="reset"] {
+  min-height: 44px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: var(--fs-radius-md);
+  cursor: pointer;
+  transition: all var(--fs-transition-fast);
+  line-height: 1.4;
+}
+input[type="submit"] {
+  background: var(--fs-900);
+  color: #fff;
+  border: none;
+  padding: 0.625rem 1.5rem;
+}
+input[type="submit"]:hover {
+  background: var(--fs-800);
+  transform: translateY(-1px);
+  box-shadow: var(--fs-shadow-md);
+}
+
+/* ── Checkboxes & Radios ── */
+input[type="checkbox"],
+input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--fs-amber-600);
+  cursor: pointer;
+}
+
+/* ── File inputs ── */
+input[type="file"] {
+  font-size: 0.8125rem;
+  padding: 0.5rem;
+  border: 1.5px dashed var(--fs-300);
+  border-radius: var(--fs-radius-md);
+  background: var(--fs-50);
+  cursor: pointer;
+  transition: border-color var(--fs-transition-fast);
+  min-height: 44px;
+  box-sizing: border-box;
+}
+input[type="file"]:hover {
+  border-color: var(--fs-amber-500);
+}
+
+/* ── Color inputs ── */
+input[type="color"] {
+  width: 44px;
+  height: 44px;
+  padding: 2px;
+  border: 2px solid var(--fs-200);
+  border-radius: var(--fs-radius-md);
+  cursor: pointer;
+  background: none;
+}
+input[type="color"]:hover {
+  border-color: var(--fs-amber-500);
+}
+
+/* ── Labels in forms ── */
+label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--fs-800);
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+/* ── Fieldset / Legend ── */
+fieldset {
+  border: 1.5px solid var(--fs-200);
+  border-radius: var(--fs-radius-lg);
+  padding: 1.25rem;
+}
+legend {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--fs-900);
+  padding: 0 0.5rem;
+}
+
+/* ── Disabled state ── */
+input:disabled,
+select:disabled,
+textarea:disabled,
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--fs-100);
+}
+
+/* ── Exempt: elements inside settings page (they have their own scoped styles) ── */
+.admin-settings-input,
+.admin-settings-select,
+.admin-settings-textarea,
+.admin-settings-search {
+  /* settings has its own scoped styles — do not override */
+}
+
+/* ── Centralized admin form classes (override per-template duplicates) ── */
+.admin-form-input,
+.admin-form-select,
+.admin-form-textarea {
+  width: 100% !important;
+  padding: 0.625rem 0.875rem !important;
+  min-height: 44px !important;
+  background: #fff !important;
+  border: 1.5px solid var(--fs-300) !important;
+  border-radius: var(--fs-radius-md) !important;
+  font-size: 0.875rem !important;
+  color: var(--fs-900) !important;
+  outline: none !important;
+  transition: border-color var(--fs-transition-base), box-shadow var(--fs-transition-base) !important;
+  box-sizing: border-box !important;
+  line-height: 1.4 !important;
+}
+.admin-form-input:focus,
+.admin-form-select:focus,
+.admin-form-textarea:focus {
+  border-color: var(--fs-amber-600) !important;
+  box-shadow: 0 0 0 3px rgba(217,119,6,0.15) !important;
+}
+.admin-form-input::placeholder,
+.admin-form-textarea::placeholder {
+  color: var(--fs-400) !important;
+}
+.admin-form-label {
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+  color: var(--fs-800) !important;
+  line-height: 1.4 !important;
+}
+.admin-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+/* ── Other common admin input classes ── */
+.admin-input,
+.banking-input,
+.ra-input,
+.pa-input,
+.sp-input,
+.ads-form-input,
+.admin-tm-input,
+.admin-bc-input,
+.admin-nl-input,
+.admin-ai-widget-input,
+.admin-search-input {
+  padding: 0.625rem 0.875rem !important;
+  min-height: 44px !important;
+  background: #fff !important;
+  border: 1.5px solid var(--fs-300) !important;
+  border-radius: var(--fs-radius-md) !important;
+  font-size: 0.875rem !important;
+  color: var(--fs-900) !important;
+  outline: none !important;
+  transition: border-color var(--fs-transition-base), box-shadow var(--fs-transition-base) !important;
+  box-sizing: border-box !important;
+  line-height: 1.4 !important;
+}
+.admin-input:focus,
+.banking-input:focus,
+.ra-input:focus,
+.pa-input:focus,
+.sp-input:focus,
+.ads-form-input:focus,
+.admin-tm-input:focus,
+.admin-bc-input:focus,
+.admin-nl-input:focus,
+.admin-ai-widget-input:focus,
+.admin-search-input:focus {
+  border-color: var(--fs-amber-600) !important;
+  box-shadow: 0 0 0 3px rgba(217,119,6,0.15) !important;
+}
+
+/* ── Logistics form classes ── */
+.lg-input,
+.lg-select,
+.lg-textarea {
+  padding: 0.625rem 0.875rem !important;
+  min-height: 44px !important;
+  background: #fff !important;
+  border: 1.5px solid var(--fs-300) !important;
+  border-radius: var(--fs-radius-md) !important;
+  font-size: 0.875rem !important;
+  color: var(--fs-900) !important;
+  outline: none !important;
+  transition: border-color var(--fs-transition-base), box-shadow var(--fs-transition-base) !important;
+  box-sizing: border-box !important;
+  line-height: 1.4 !important;
+}
+.lg-input:focus,
+.lg-select:focus,
+.lg-textarea:focus {
+  border-color: var(--fs-amber-600) !important;
+  box-shadow: 0 0 0 3px rgba(217,119,6,0.15) !important;
+}
+
+/* ── Vendor form classes ── */
+.vendor-input,
+.vendor-select,
+.vendor-textarea {
+  padding: 0.625rem 0.875rem !important;
+  min-height: 44px !important;
+  background: #fff !important;
+  border: 1.5px solid var(--fs-300) !important;
+  border-radius: var(--fs-radius-md) !important;
+  font-size: 0.875rem !important;
+  color: var(--fs-900) !important;
+  outline: none !important;
+  transition: border-color var(--fs-transition-base), box-shadow var(--fs-transition-base) !important;
+  box-sizing: border-box !important;
+  line-height: 1.4 !important;
+}
+.vendor-input:focus,
+.vendor-select:focus,
+.vendor-textarea:focus {
+  border-color: var(--fs-amber-600) !important;
+  box-shadow: 0 0 0 3px rgba(217,119,6,0.15) !important;
+}
+
+/* ── Vendor form group class ── */
+.vendor-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+.vendor-form-input,
+.vendor-form-select,
+.vendor-form-textarea {
+  padding: 0.625rem 0.875rem !important;
+  min-height: 44px !important;
+  background: #fff !important;
+  border: 1.5px solid var(--fs-300) !important;
+  border-radius: var(--fs-radius-md) !important;
+  font-size: 0.875rem !important;
+  color: var(--fs-900) !important;
+  outline: none !important;
+  transition: border-color var(--fs-transition-base), box-shadow var(--fs-transition-base) !important;
+  box-sizing: border-box !important;
+  line-height: 1.4 !important;
+}
+.vendor-form-input:focus,
+.vendor-form-select:focus,
+.vendor-form-textarea:focus {
+  border-color: var(--fs-amber-600) !important;
+  box-shadow: 0 0 0 3px rgba(217,119,6,0.15) !important;
+}
+
+/* ── Logistics form group class ── */
+.lg-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+.lg-form-input,
+.lg-form-select,
+.lg-form-textarea {
+  padding: 0.625rem 0.875rem !important;
+  min-height: 44px !important;
+  background: #fff !important;
+  border: 1.5px solid var(--fs-300) !important;
+  border-radius: var(--fs-radius-md) !important;
+  font-size: 0.875rem !important;
+  color: var(--fs-900) !important;
+  outline: none !important;
+  transition: border-color var(--fs-transition-base), box-shadow var(--fs-transition-base) !important;
+  box-sizing: border-box !important;
+  line-height: 1.4 !important;
+}
+.lg-form-input:focus,
+.lg-form-select:focus,
+.lg-form-textarea:focus {
+  border-color: var(--fs-amber-600) !important;
+  box-shadow: 0 0 0 3px rgba(217,119,6,0.15) !important;
+}
+
+/* ── Exempt: elements that explicitly opt out ── */
+.no-fs-style,
+.no-fs-style input,
+.no-fs-style select,
+.no-fs-style textarea {
+  /* reset global styles for exempt containers */
+  all: unset;
+}

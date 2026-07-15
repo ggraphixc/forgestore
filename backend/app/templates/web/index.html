@@ -160,7 +160,7 @@
   @media (min-width: 640px) { .hero-search-btn { padding: 0.875rem 2rem; font-size: 0.875rem; border-radius: 14px; } }
   .hero-search-btn:hover { background: var(--color-primary-dark); transform: translateY(-1px); }
   .hero-search-btn svg { width: 16px; height: 16px; }
-  .dark .hero-search-btn { background: var(--color-primary); color: var(--color-dark); }
+  .dark .hero-search-btn { background: var(--color-primary); color: #fff; }
 
   .hero-trust {
     display: flex;
@@ -205,6 +205,8 @@
   }
   .home-hero-cta svg { width: 1rem; height: 1rem; transition: transform var(--transition-fast); }
   .home-hero-cta:hover svg { transform: translateX(3px); }
+  .dark .home-hero-cta { background: var(--color-primary); color: #fff; }
+  .dark .home-hero-cta:hover { background: var(--color-primary-light); }
 
   .home-hero-cta-secondary {
     display: inline-flex;
@@ -221,8 +223,25 @@
     transition: all var(--transition-fast);
   }
   .home-hero-cta-secondary:hover { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.12); }
-  .dark .home-hero-cta-secondary { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); color: #fff; }
-  .dark .home-hero-cta-secondary:hover { background: rgba(255,255,255,0.08); }
+  .dark .home-hero-cta-secondary { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); color: #fff; }
+  .dark .home-hero-cta-secondary:hover { background: rgba(255,255,255,0.14); }
+
+  /* CTA section buttons — always on dark bg, ensure visibility */
+  .home-cta-actions .home-hero-cta {
+    background: var(--color-primary, #f59e0b);
+    color: #1c1917;
+  }
+  .home-cta-actions .home-hero-cta:hover {
+    background: var(--color-primary-light, #fbbf24);
+  }
+  .home-cta-actions .home-hero-cta-secondary {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+  }
+  .home-cta-actions .home-hero-cta-secondary:hover {
+    background: rgba(255,255,255,0.14);
+  }
 
   /* ===== SECTIONS ===== */
   .home-section {
