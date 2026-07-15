@@ -736,6 +736,126 @@ def ai_search_assistant(
     return None
 
 
+# ─── ADMIN AI: Business Intelligence ────────────────────────────────
+
+
+def generate_sales_insight(
+    revenue_data: dict,
+    order_data: dict,
+    product_data: dict,
+    vendor_data: dict,
+) -> Optional[Dict[str, Any]]:
+    """
+    Generate AI-powered business insights from dashboard data.
+    Returns {summary, opportunities, risks, actions}.
+    """
+    system_prompt = (
+        "You are a business intelligence analyst for an e-commerce marketplace. "
+        "Analyze the provided business data and return actionable insights.\n\n"
+        "Return a JSON object with:\n"
+        '- "summary": 1-2 sentence business health summary\n'
+        '- "opportunities": array of 2-3 growth opportunities (each with "title" and "detail")\n'
+        '- "risks": array of 1-2 risks or concerns (each with "title" and "detail")\n'
+        '- "actions": array of 2-3 recommended actions (each with "action" and "priority" [high/medium/low])\n\n'
+        "Return ONLY valid JSON, no other text."
+    )
+    user_prompt = (
+        f"Revenue: {json.dumps(revenue_data)}\n"
+        f"Orders: {json.dumps(order_data)}\n"
+        f"Products: {json.dumps(product_data)}\n"
+        f"Vendors: {json.dumps(vendor_data)}"
+    )
+    result = _call_llm(system_prompt, user_prompt, temperature=0.4, max_tokens=600)
+    if result:
+        try:
+            text = result
+            if "```" in text:
+                text = text.split("```")[1].strip()
+                if text.startswith("json"):
+                    text = text[4:].strip()
+            return json.loads(text)
+        except Exception as e:
+            logger.warning(f"Failed to parse sales insight: {e}")
+    return None
+
+
+def generate_review_summary(reviews: list[dict]) -> Optional[Dict[str, Any]]:
+    """
+    Summarize product reviews into key pros, cons, and verdict.
+    Returns {pros, cons, verdict, rating_breakdown}.
+    """
+    if not reviews:
+        return None
+    system_prompt = (
+        "You are a product review analyst. Summarize the following customer reviews "
+        "into a concise, helpful summary.\n\n"
+        "Return a JSON object with:\n"
+        '- "pros": array of top 3-5 positive points mentioned\n'
+        '- "cons": array of top 2-3 concerns or negatives\n'
+        '- "verdict": 1-2 sentence overall verdict\n'
+        '- "rating_breakdown": object with "positive" (4-5 star %), "neutral" (3 star %), "negative" (1-2 star %) as numbers\n\n'
+        "Return ONLY valid JSON, no other text."
+    )
+    review_text = "\n".join([
+        f"- Rating: {r.get('rating', 'N/A')}/5 — {r.get('comment', r.get('text', ''))[:200]}"
+        for r in reviews[:30]
+    ])
+    result = _call_llm(system_prompt, f"Reviews:\n{review_text}", temperature=0.3, max_tokens=500)
+    if result:
+        try:
+            text = result
+            if "```" in text:
+                text = text.split("```")[1].strip()
+                if text.startswith("json"):
+                    text = text[4:].strip()
+            return json.loads(text)
+        except Exception as e:
+            logger.warning(f"Failed to parse review summary: {e}")
+    return None
+
+
+def generate_ad_copy(
+    product_name: str,
+    product_description: str,
+    audience: str = "general",
+    tone: str = "professional",
+    platform: str = "social",
+) -> Optional[Dict[str, Any]]:
+    """
+    Generate AI ad copy for a product.
+    Returns {headlines, body, hashtags, cta}.
+    """
+    system_prompt = (
+        "You are a copywriting expert for e-commerce ads. "
+        "Generate compelling ad copy for the given product.\n\n"
+        "Return a JSON object with:\n"
+        '- "headlines": array of 3 short catchy headlines (max 10 words each)\n'
+        '- "body": 2-3 sentence ad body\n'
+        '- "hashtags": array of 5 relevant hashtags\n'
+        '- "cta": 1 call-to-action phrase\n\n'
+        "Return ONLY valid JSON, no other text."
+    )
+    user_prompt = (
+        f"Product: {product_name}\n"
+        f"Description: {product_description[:300]}\n"
+        f"Target audience: {audience}\n"
+        f"Tone: {tone}\n"
+        f"Platform: {platform}"
+    )
+    result = _call_llm(system_prompt, user_prompt, temperature=0.7, max_tokens=400)
+    if result:
+        try:
+            text = result
+            if "```" in text:
+                text = text.split("```")[1].strip()
+                if text.startswith("json"):
+                    text = text[4:].strip()
+            return json.loads(text)
+        except Exception as e:
+            logger.warning(f"Failed to parse ad copy: {e}")
+    return None
+
+
 # ─── Known Settings Definitions ─────────────────────────────────────
 
 

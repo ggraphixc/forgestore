@@ -333,3 +333,96 @@ def get_ai_recommendations(
     recommendations = service.get_recommendations(user_id, product_id, context_type, limit)
 
     return {"recommendations": recommendations}
+
+
+# ─── CUSTOMER AI: Review Summary ────────────────────────────────────
+
+
+@router.get("/review-summary/{product_id}")
+def get_review_summary(product_id: str, db: Session = Depends(get_db)):
+    """AI-generated review summary for a product."""
+    from app.models import Review
+    from app.services.ai_service import generate_review_summary
+
+    try:
+        reviews = db.query(Review).filter(Review.product_id == product_id).order_by(
+            Review.created_at.desc()
+        ).limit(30).all()
+
+        if not reviews:
+            return {"ok": True, "summary": None, "review_count": 0}
+
+        review_list = [
+            {"rating": r.rating, "comment": r.comment or r.text or ""}
+            for r in reviews
+        ]
+
+        summary = generate_review_summary(review_list)
+        if summary:
+            return {"ok": True, "summary": summary, "review_count": len(reviews)}
+        return {"ok": False, "error": "AI could not generate summary"}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+# ─── CUSTOMER AI: Bundle Suggestions ────────────────────────────────
+
+
+@router.get("/bundle-suggestions/{product_id}")
+def get_bundle_suggestions(product_id: str, db: Session = Depends(get_db)):
+    """AI bundle/complement suggestions for a product page."""
+    from app.models import Product
+    from app.services.ai_service import generate_product_bundle_suggestions
+
+    try:
+        product = db.query(Product).filter(Product.id == product_id).first()
+        if not product:
+            return {"ok": False, "error": "Product not found"}
+
+        all_products = db.query(Product.name).filter(Product.id != product_id).limit(50).all()
+        product_names = [p[0] for p in all_products if p[0]]
+
+        suggestions = generate_product_bundle_suggestions(
+            product_name=product.name,
+            category=product.category or "",
+            all_products=product_names,
+        )
+        if suggestions:
+            return {"ok": True, "suggestions": suggestions, "product_name": product.name}
+        return {"ok": False, "error": "AI could not generate suggestions"}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+# ─── CUSTOMER AI: Natural Language Search ────────────────────────────
+
+
+@router.post("/nl-search")
+def natural_language_search(
+    query: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    """AI-powered natural language product search."""
+    from app.models import Product
+    from app.services.ai_service import ai_search_assistant
+
+    try:
+        products = db.query(Product).all()
+        product_list = [
+            {
+                "id": p.id,
+                "name": p.name,
+                "category": p.category or "",
+                "brand": getattr(p, "brand", "") or "",
+                "price": float(p.price),
+                "description": (p.description or "")[:150],
+            }
+            for p in products
+        ]
+
+        result = ai_search_assistant(query, product_list)
+        if result:
+            return {"ok": True, **result}
+        return {"ok": False, "error": "AI could not process search"}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}

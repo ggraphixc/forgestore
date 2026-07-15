@@ -3918,3 +3918,213 @@ async def get_ai_chat_messages(session_id: str, db: Session = Depends(get_db)):
     except Exception as e:
         return {"messages": [], "error": str(e)}
 
+
+# ─── ADMIN AI: Smart Tools ─────────────────────────────────────────
+
+
+@router.post("/ai/sales-insight")
+async def admin_ai_sales_insight(db: Session = Depends(get_db)):
+    """AI-generated business insights from dashboard data."""
+    from app.services.ai_service import generate_sales_insight
+    from app.models import Order, Product, Retailer, Customer
+    from datetime import datetime, timedelta
+
+    try:
+        now = datetime.utcnow()
+        thirty_days_ago = now - timedelta(days=30)
+        seven_days_ago = now - timedelta(days=7)
+
+        # Revenue data
+        total_revenue = db.query(func.coalesce(func.sum(Order.total), 0)).filter(
+            Order.status.in_(["DELIVERED", "COMPLETED", "PAID"])
+        ).scalar() or 0
+        recent_revenue = db.query(func.coalesce(func.sum(Order.total), 0)).filter(
+            Order.created_at >= thirty_days_ago,
+            Order.status.in_(["DELIVERED", "COMPLETED", "PAID"])
+        ).scalar() or 0
+        prev_revenue = db.query(func.coalesce(func.sum(Order.total), 0)).filter(
+            Order.created_at >= thirty_days_ago - timedelta(days=30),
+            Order.created_at < thirty_days_ago,
+            Order.status.in_(["DELIVERED", "COMPLETED", "PAID"])
+        ).scalar() or 0
+
+        # Order data
+        total_orders = db.query(func.count(Order.id)).scalar() or 0
+        recent_orders = db.query(func.count(Order.id)).filter(
+            Order.created_at >= thirty_days_ago
+        ).scalar() or 0
+        pending_orders = db.query(func.count(Order.id)).filter(
+            Order.status.in_(["PENDING", "PENDING_PAYMENT", "PROCESSING"])
+        ).scalar() or 0
+
+        # Product data
+        total_products = db.query(func.count(Product.id)).scalar() or 0
+        low_stock = db.query(func.count(Product.id)).filter(
+            Product.stock <= 5, Product.stock > 0
+        ).scalar() or 0
+        out_of_stock = db.query(func.count(Product.id)).filter(
+            Product.stock == 0
+        ).scalar() or 0
+
+        # Vendor data
+        total_vendors = db.query(func.count(Retailer.id)).scalar() or 0
+        active_vendors = db.query(func.count(Retailer.id)).filter(
+            Retailer.is_active == True
+        ).scalar() or 0
+
+        # Customer data
+        total_customers = db.query(func.count(Customer.id)).scalar() or 0
+        new_customers = db.query(func.count(Customer.id)).filter(
+            Customer.created_at >= thirty_days_ago
+        ).scalar() or 0
+
+        insight = generate_sales_insight(
+            revenue_data={
+                "total": float(total_revenue),
+                "last_30_days": float(recent_revenue),
+                "prev_30_days": float(prev_revenue),
+                "growth_pct": round(((recent_revenue - prev_revenue) / max(prev_revenue, 1)) * 100, 1),
+            },
+            order_data={
+                "total": total_orders,
+                "last_30_days": recent_orders,
+                "pending": pending_orders,
+                "avg_order_value": round(float(recent_revenue / max(recent_orders, 1)), 2),
+            },
+            product_data={
+                "total": total_products,
+                "low_stock": low_stock,
+                "out_of_stock": out_of_stock,
+            },
+            vendor_data={
+                "total": total_vendors,
+                "active": active_vendors,
+            },
+        )
+
+        if insight:
+            return {"ok": True, "insight": insight}
+        return {"ok": False, "error": "AI could not generate insights"}
+    except Exception as e:
+        logger.exception("AI sales insight failed")
+        return {"ok": False, "error": str(e)}
+
+
+@router.post("/ai/bundle-suggestions")
+async def admin_ai_bundle_suggestions(
+    product_id: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    """AI bundle/cross-sell suggestions for a product."""
+    from app.services.ai_service import generate_product_bundle_suggestions
+    from app.models import Product
+
+    try:
+        product = db.query(Product).filter(Product.id == product_id).first()
+        if not product:
+            return {"ok": False, "error": "Product not found"}
+
+        all_products = db.query(Product.name).filter(Product.id != product_id).limit(50).all()
+        product_names = [p[0] for p in all_products if p[0]]
+
+        suggestions = generate_product_bundle_suggestions(
+            product_name=product.name,
+            category=product.category or "",
+            all_products=product_names,
+        )
+        if suggestions:
+            return {"ok": True, "suggestions": suggestions}
+        return {"ok": False, "error": "AI could not generate suggestions"}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+@router.post("/ai/ad-copy")
+async def admin_ai_ad_copy(
+    product_id: str = Form(...),
+    audience: str = Form("general"),
+    tone: str = Form("professional"),
+    platform: str = Form("social"),
+    db: Session = Depends(get_db),
+):
+    """AI ad copy generator for products."""
+    from app.services.ai_service import generate_ad_copy
+    from app.models import Product
+
+    try:
+        product = db.query(Product).filter(Product.id == product_id).first()
+        if not product:
+            return {"ok": False, "error": "Product not found"}
+
+        copy = generate_ad_copy(
+            product_name=product.name,
+            product_description=product.description or "",
+            audience=audience,
+            tone=tone,
+            platform=platform,
+        )
+        if copy:
+            return {"ok": True, "copy": copy}
+        return {"ok": False, "error": "AI could not generate ad copy"}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+@router.post("/ai/review-sentiment")
+async def admin_ai_review_sentiment(
+    product_id: str = Form(None),
+    db: Session = Depends(get_db),
+):
+    """AI sentiment analysis on customer reviews."""
+    from app.models import Review
+    from app.services.ai_service import _call_llm
+
+    try:
+        query = db.query(Review)
+        if product_id:
+            query = query.filter(Review.product_id == product_id)
+        reviews = query.order_by(Review.created_at.desc()).limit(50).all()
+
+        if not reviews:
+            return {"ok": True, "sentiment": {"overall": "no_reviews", "summary": "No reviews to analyze."}}
+
+        review_text = "\n".join([
+            f"- Rating: {r.rating}/5 — {(r.comment or r.text or '')[:200]}"
+            for r in reviews
+        ])
+
+        result = _call_llm(
+            system_prompt=(
+                "You are a sentiment analysis expert. Analyze the following customer reviews "
+                "and return a sentiment breakdown.\n\n"
+                "Return a JSON object with:\n"
+                '- "overall": "positive" | "mixed" | "negative"\n'
+                '- "positive_pct": number (0-100)\n'
+                '- "neutral_pct": number (0-100)\n'
+                '- "negative_pct": number (0-100)\n'
+                '- "top_praise": array of top 3 things customers love\n'
+                '- "top_complaints": array of top 3 things customers complain about\n'
+                '- "recommendation": 1 sentence actionable recommendation\n\n'
+                "Return ONLY valid JSON, no other text."
+            ),
+            user_prompt=f"Reviews ({len(reviews)} total):\n{review_text}",
+            temperature=0.3,
+            max_tokens=500,
+        )
+
+        if result:
+            import json as _json
+            text = result
+            if "```" in text:
+                text = text.split("```")[1].strip()
+                if text.startswith("json"):
+                    text = text[4:].strip()
+            try:
+                sentiment = _json.loads(text)
+                return {"ok": True, "sentiment": sentiment, "review_count": len(reviews)}
+            except:
+                pass
+        return {"ok": False, "error": "AI could not analyze sentiment"}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+

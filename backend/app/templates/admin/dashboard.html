@@ -565,6 +565,53 @@
         </a>
     </div>
 
+    <!-- AI Business Insights -->
+    <div id="ai-insights-card" class="admin-card" style="border:1px solid rgba(245,158,11,0.2);background:linear-gradient(135deg,#fffbeb 0%,#fff 100%);">
+        <div class="admin-card-header">
+            <h2 class="admin-card-header__title" style="display:flex;align-items:center;gap:8px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                AI Business Insights
+            </h2>
+            <button onclick="loadAIInsights()" style="background:none;border:1px solid #d97706;color:#92400e;padding:6px 14px;border-radius:8px;font-size:0.75rem;font-weight:600;cursor:pointer;min-height:32px;">Refresh</button>
+        </div>
+        <div id="ai-insights-content" style="padding:0 1.5rem 1.5rem;">
+            <div style="text-align:center;padding:2rem;color:#a8a29e;font-size:0.875rem;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 8px;display:block;color:#d97706;"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                Click <strong>Refresh</strong> to generate AI insights
+            </div>
+        </div>
+    </div>
+    <script>
+    async function loadAIInsights() {
+        const el = document.getElementById('ai-insights-content');
+        el.innerHTML = '<div style="text-align:center;padding:1.5rem;"><div style="width:24px;height:24px;border:3px solid #d97706;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;margin:0 auto;"></div><p style="color:#92400e;font-size:0.8125rem;margin-top:8px;">Analyzing your business data...</p></div>';
+        try {
+            const res = await fetch('/api/admin/ai/sales-insight', {method:'POST'});
+            const data = await res.json();
+            if (!data.ok) { el.innerHTML = '<p style="color:#ef4444;font-size:0.8125rem;">' + (data.error || 'Failed to generate insights') + '</p>'; return; }
+            const ins = data.insight;
+            let html = '';
+            if (ins.summary) html += '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:0.875rem;margin-bottom:1rem;"><p style="color:#166534;font-size:0.875rem;font-weight:500;">' + ins.summary + '</p></div>';
+            if (ins.opportunities && ins.opportunities.length) {
+                html += '<div style="margin-bottom:1rem;"><p style="font-size:0.75rem;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">Growth Opportunities</p>';
+                ins.opportunities.forEach(o => { html += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:0.625rem 0.875rem;margin-bottom:0.5rem;"><p style="font-size:0.8125rem;font-weight:600;color:#1c1917;">' + o.title + '</p><p style="font-size:0.75rem;color:#78716c;margin-top:2px;">' + o.detail + '</p></div>'; });
+                html += '</div>';
+            }
+            if (ins.risks && ins.risks.length) {
+                html += '<div style="margin-bottom:1rem;"><p style="font-size:0.75rem;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">Risks</p>';
+                ins.risks.forEach(r => { html += '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:0.625rem 0.875rem;margin-bottom:0.5rem;"><p style="font-size:0.8125rem;font-weight:600;color:#991b1b;">' + r.title + '</p><p style="font-size:0.75rem;color:#78716c;margin-top:2px;">' + r.detail + '</p></div>'; });
+                html += '</div>';
+            }
+            if (ins.actions && ins.actions.length) {
+                html += '<div><p style="font-size:0.75rem;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">Recommended Actions</p>';
+                ins.actions.forEach(a => { const c = a.priority === 'high' ? '#dc2626' : a.priority === 'medium' ? '#d97706' : '#65a30d'; html += '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:0.625rem 0.875rem;margin-bottom:0.5rem;display:flex;align-items:center;justify-content:space-between;"><p style="font-size:0.8125rem;color:#1e40af;font-weight:500;">' + a.action + '</p><span style="font-size:0.625rem;font-weight:700;color:' + c + ';text-transform:uppercase;background:' + c + '15;padding:2px 8px;border-radius:999px;">' + a.priority + '</span></div>'; });
+                html += '</div>';
+            }
+            el.innerHTML = html || '<p style="color:#78716c;font-size:0.875rem;">No insights available yet.</p>';
+        } catch(e) { el.innerHTML = '<p style="color:#ef4444;font-size:0.8125rem;">Error loading insights</p>'; }
+    }
+    </script>
+
     <!-- Recent Orders -->
     <div class="admin-card">
         <div class="admin-card-header">
