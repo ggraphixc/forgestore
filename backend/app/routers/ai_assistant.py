@@ -407,13 +407,13 @@ def natural_language_search(
     from app.services.ai_service import ai_search_assistant
 
     try:
-        products = db.query(Product).all()
+        products = db.query(Product).filter(Product.inventory > 0).limit(200).all()
         product_list = [
             {
                 "id": p.id,
                 "name": p.name,
-                "category": p.category or "",
-                "brand": getattr(p, "brand", "") or "",
+                "category": p.category.name if p.category else "",
+                "brand": p.brand or "",
                 "price": float(p.price),
                 "description": (p.description or "")[:150],
             }
