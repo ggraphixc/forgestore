@@ -175,29 +175,7 @@ def reject_review(review_id: str, reason: str, notes: Optional[str] = None, db: 
     return {"status": "rejected"}
 
 
-# ===== System 9: Notifications =====
-
-@router.get("/notifications")
-def list_notifications(unread_only: bool = False, db: Session = Depends(get_db), admin: AdminUser = admin_dep):
-    """Get admin notifications."""
-    service = NotificationService(db)
-    notifications = service.get_user_notifications(admin.id, "admin", unread_only=unread_only)
-    return {
-        "notifications": [
-            {"id": n.id, "type": n.notification_type, "title": n.title,
-             "message": n.message, "priority": n.priority,
-             "read": n.read_at is not None, "created_at": n.created_at.isoformat()}
-            for n in notifications
-        ],
-    }
-
-
-@router.post("/notifications/{notification_id}/read")
-def mark_notification_read(notification_id: str, db: Session = Depends(get_db), admin: AdminUser = admin_dep):
-    """Mark notification as read."""
-    service = NotificationService(db)
-    service.mark_read(notification_id)
-    return {"status": "read"}
+# ===== System 9: Notifications (handled by admin_api.py) =====
 
 
 # ===== System 10: Enterprise Analytics =====

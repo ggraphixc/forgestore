@@ -34,19 +34,7 @@ def ai_chat(
     return service.chat(session_id, message, user_id)
 
 
-@router.get("/ai/recommendations")
-def get_recommendations(
-    request: Request,
-    context_type: str = "home",
-    product_id: Optional[str] = None,
-    limit: int = 12,
-    db: Session = Depends(get_db),
-):
-    """Get AI-powered product recommendations."""
-    customer = get_current_customer_from_cookie(request, db)
-    user_id = customer.id if customer else None
-    service = RecommendationService(db)
-    return {"recommendations": service.get_recommendations(user_id, product_id, context_type, limit)}
+# ai/recommendations handled by ai_assistant.py
 
 
 # ===== System 7: Smart Search =====
@@ -77,13 +65,7 @@ def get_trending_searches(limit: int = 10, db: Session = Depends(get_db)):
     return {"trending": service.get_trending_searches(limit)}
 
 
-@router.get("/search/suggestions")
-def get_search_suggestions(q: str = "", limit: int = 5, db: Session = Depends(get_db)):
-    """Get autocomplete suggestions."""
-    if not q:
-        return {"suggestions": []}
-    service = SearchService(db)
-    return {"suggestions": service.get_suggestions(q, limit)}
+# search/suggestions handled by web_api.py
 
 
 # ===== System 4: Affiliate & Referral =====

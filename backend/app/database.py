@@ -100,6 +100,7 @@ def init_db():
         Retailer,
         Settings,
         SettingsCategory,
+        SettingsHistory,
         AdminAuditLog,
         PasswordResetToken,
         AdminNotification,

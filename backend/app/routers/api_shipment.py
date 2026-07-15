@@ -8,17 +8,7 @@ from app.services.shipment_service import ShipmentService, TrackingService, Deli
 router = APIRouter(prefix="/api/orders", tags=["tracking"])
 
 
-@router.get("/{order_id}/tracking")
-def get_order_tracking(order_id: str, db: Session = Depends(get_db)):
-    """Get tracking information for all shipments in an order."""
-    # Check order_tracking_enabled setting
-    from app.models import Settings as SettingsModel
-    tracking_setting = db.query(SettingsModel).filter(SettingsModel.key == "order_tracking_enabled").first()
-    if tracking_setting and tracking_setting.value.lower() == "false":
-        raise HTTPException(status_code=404, detail="Order tracking is disabled")
-    shipment_service = ShipmentService(db)
-    shipments = shipment_service.get_order_shipments(order_id)
-    return {"shipments": [s.id for s in shipments], "count": len(shipments)}
+# order tracking handled by api_web_ext.py
 
 
 @router.get("/tracking/{tracking_number}")

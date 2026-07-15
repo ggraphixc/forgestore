@@ -1590,30 +1590,7 @@ def submit_review(
     return {"success": True, "review_id": review.id}
 
 
-# --- GET USER ORDERS (for web account) ---
-
-@router.get("/orders")
-def get_user_orders(request: Request, db: Session = Depends(get_db)):
-    customer = get_current_customer_from_cookie(request, db)
-    if not customer:
-        raise HTTPException(status_code=401, detail="Not logged in")
-
-    orders = db.query(Order).filter(
-        Order.customer_id == customer.id
-    ).order_by(Order.created_at.desc()).all()
-
-    return {
-        "orders": [
-            {
-                "id": o.id,
-                "order_number": o.order_number,
-                "status": o.status.value if hasattr(o.status, 'value') else o.status,
-                "total_amount": o.total_amount,
-                "created_at": o.created_at.isoformat() if o.created_at else None,
-            }
-            for o in orders
-        ],
-    }
+# --- GET USER ORDERS (handled by get_customer_orders at top of file) ---
 
 
 @router.get("/orders/{order_id}")
