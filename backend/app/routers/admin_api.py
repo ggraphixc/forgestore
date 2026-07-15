@@ -3954,22 +3954,22 @@ async def admin_ai_sales_insight(db: Session = Depends(get_db)):
             Order.created_at >= thirty_days_ago
         ).scalar() or 0
         pending_orders = db.query(func.count(Order.id)).filter(
-            Order.status.in_(["PENDING", "PENDING_PAYMENT", "PROCESSING"])
+            Order.status.in_(["PENDING", "PROCESSING"])
         ).scalar() or 0
 
         # Product data
         total_products = db.query(func.count(Product.id)).scalar() or 0
         low_stock = db.query(func.count(Product.id)).filter(
-            Product.stock <= 5, Product.stock > 0
+            Product.inventory <= 5, Product.inventory > 0
         ).scalar() or 0
         out_of_stock = db.query(func.count(Product.id)).filter(
-            Product.stock == 0
+            Product.inventory == 0
         ).scalar() or 0
 
         # Vendor data
         total_vendors = db.query(func.count(Retailer.id)).scalar() or 0
         active_vendors = db.query(func.count(Retailer.id)).filter(
-            Retailer.is_active == True
+            Retailer.status == "ACTIVE"
         ).scalar() or 0
 
         # Customer data
