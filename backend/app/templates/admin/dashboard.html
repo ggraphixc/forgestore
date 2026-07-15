@@ -612,6 +612,140 @@
     }
     </script>
 
+    <!-- AI Smart Tools -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1rem;">
+
+        <!-- Bundle Suggestions -->
+        <div class="admin-card" style="border:1px solid rgba(59,130,246,0.2);background:linear-gradient(135deg,#eff6ff 0%,#fff 100%);">
+            <div class="admin-card-header">
+                <h2 class="admin-card-header__title" style="display:flex;align-items:center;gap:8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a4 4 0 00-8 0v2"/></svg>
+                    Bundle Suggestions
+                </h2>
+            </div>
+            <div style="padding:0 1.5rem 1.5rem;">
+                <p style="font-size:0.8125rem;color:#6b7280;margin-bottom:0.75rem;">Cross-sell product combos for any product</p>
+                <div style="display:flex;gap:8px;">
+                    <input id="ai-bundle-pid" type="text" placeholder="Product ID" style="flex:1;padding:8px 12px;border:1.5px solid #d1d5db;border-radius:10px;font-size:0.8125rem;min-height:40px;outline:none;">
+                    <button onclick="loadAdminBundles()" style="background:#2563eb;color:#fff;border:none;border-radius:10px;padding:0 16px;font-size:0.8125rem;font-weight:600;cursor:pointer;min-height:40px;white-space:nowrap;">Get Combos</button>
+                </div>
+                <div id="ai-bundle-result" style="margin-top:0.75rem;"></div>
+            </div>
+        </div>
+
+        <!-- Ad Copy Generator -->
+        <div class="admin-card" style="border:1px solid rgba(168,85,247,0.2);background:linear-gradient(135deg,#faf5ff 0%,#fff 100%);">
+            <div class="admin-card-header">
+                <h2 class="admin-card-header__title" style="display:flex;align-items:center;gap:8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9333ea" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Ad Copy Generator
+                </h2>
+            </div>
+            <div style="padding:0 1.5rem 1.5rem;">
+                <p style="font-size:0.8125rem;color:#6b7280;margin-bottom:0.75rem;">Generate headlines, body copy, hashtags & CTA</p>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    <input id="ai-ad-pid" type="text" placeholder="Product ID" style="padding:8px 12px;border:1.5px solid #d1d5db;border-radius:10px;font-size:0.8125rem;min-height:40px;outline:none;">
+                    <div style="display:flex;gap:8px;">
+                        <select id="ai-ad-audience" style="flex:1;padding:8px 12px;border:1.5px solid #d1d5db;border-radius:10px;font-size:0.8125rem;min-height:40px;background:#fff;">
+                            <option value="general">General</option>
+                            <option value="young_adults">Young Adults</option>
+                            <option value="professionals">Professionals</option>
+                            <option value="parents">Parents</option>
+                            <option value="budget">Budget Shoppers</option>
+                        </select>
+                        <select id="ai-ad-platform" style="flex:1;padding:8px 12px;border:1.5px solid #d1d5db;border-radius:10px;font-size:0.8125rem;min-height:40px;background:#fff;">
+                            <option value="instagram">Instagram</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="twitter">Twitter/X</option>
+                            <option value="tiktok">TikTok</option>
+                        </select>
+                    </div>
+                    <button onclick="loadAdminAdCopy()" style="background:#9333ea;color:#fff;border:none;border-radius:10px;padding:0 16px;font-size:0.8125rem;font-weight:600;cursor:pointer;min-height:40px;">Generate Ad Copy</button>
+                </div>
+                <div id="ai-ad-result" style="margin-top:0.75rem;"></div>
+            </div>
+        </div>
+
+        <!-- Review Sentiment -->
+        <div class="admin-card" style="border:1px solid rgba(239,68,68,0.2);background:linear-gradient(135deg,#fef2f2 0%,#fff 100%);">
+            <div class="admin-card-header">
+                <h2 class="admin-card-header__title" style="display:flex;align-items:center;gap:8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                    Review Sentiment
+                </h2>
+            </div>
+            <div style="padding:0 1.5rem 1.5rem;">
+                <p style="font-size:0.8125rem;color:#6b7280;margin-bottom:0.75rem;">Sentiment breakdown, top praise/complaints & actions</p>
+                <div style="display:flex;gap:8px;">
+                    <input id="ai-sent-pid" type="text" placeholder="Product ID (optional)" style="flex:1;padding:8px 12px;border:1.5px solid #d1d5db;border-radius:10px;font-size:0.8125rem;min-height:40px;outline:none;">
+                    <button onclick="loadAdminSentiment()" style="background:#dc2626;color:#fff;border:none;border-radius:10px;padding:0 16px;font-size:0.8125rem;font-weight:600;cursor:pointer;min-height:40px;white-space:nowrap;">Analyze</button>
+                </div>
+                <div id="ai-sent-result" style="margin-top:0.75rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    async function loadAdminBundles() {
+        const pid = document.getElementById('ai-bundle-pid').value.trim();
+        const el = document.getElementById('ai-bundle-result');
+        if (!pid) { el.innerHTML = '<p style="color:#ef4444;font-size:0.8125rem;">Enter a product ID</p>'; return; }
+        el.innerHTML = '<div style="display:flex;align-items:center;gap:6px;padding:8px 0;"><div style="width:14px;height:14px;border:2px solid #2563eb;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;"></div><span style="font-size:0.8125rem;color:#6b7280;">Generating combos...</span></div>';
+        try {
+            const fd = new FormData(); fd.append('product_id', pid);
+            const res = await fetch('/api/admin/ai/bundle-suggestions', {method:'POST', body:fd});
+            const data = await res.json();
+            if (!data.ok || !data.suggestions || !data.suggestions.length) { el.innerHTML = '<p style="color:#78716c;font-size:0.8125rem;">No bundle suggestions found.</p>'; return; }
+            let html = '<div style="display:flex;flex-direction:column;gap:6px;">';
+            data.suggestions.forEach(s => { html += '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;"><p style="font-weight:600;color:#1e40af;font-size:0.8125rem;">' + s.name + '</p><p style="font-size:0.75rem;color:#6b7280;margin-top:2px;">' + (s.reason || '') + '</p></div>'; });
+            html += '</div>';
+            el.innerHTML = html;
+        } catch(e) { el.innerHTML = '<p style="color:#ef4444;font-size:0.8125rem;">Error generating bundles</p>'; }
+    }
+
+    async function loadAdminAdCopy() {
+        const pid = document.getElementById('ai-ad-pid').value.trim();
+        const audience = document.getElementById('ai-ad-audience').value;
+        const platform = document.getElementById('ai-ad-platform').value;
+        const el = document.getElementById('ai-ad-result');
+        if (!pid) { el.innerHTML = '<p style="color:#ef4444;font-size:0.8125rem;">Enter a product ID</p>'; return; }
+        el.innerHTML = '<div style="display:flex;align-items:center;gap:6px;padding:8px 0;"><div style="width:14px;height:14px;border:2px solid #9333ea;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;"></div><span style="font-size:0.8125rem;color:#6b7280;">Generating ad copy...</span></div>';
+        try {
+            const fd = new FormData(); fd.append('product_id', pid); fd.append('audience', audience); fd.append('platform', platform);
+            const res = await fetch('/api/admin/ai/ad-copy', {method:'POST', body:fd});
+            const data = await res.json();
+            if (!data.ok) { el.innerHTML = '<p style="color:#ef4444;font-size:0.8125rem;">' + (data.error || 'Failed') + '</p>'; return; }
+            const ad = data.copy || {};
+            let html = '';
+            if (ad.headlines) { html += '<div style="margin-bottom:8px;"><p style="font-size:0.6875rem;font-weight:700;color:#7c3aed;text-transform:uppercase;margin-bottom:4px;">Headlines</p>'; ad.headlines.forEach(h => { html += '<p style="font-size:0.8125rem;color:#1c1917;background:#f5f3ff;border-radius:6px;padding:6px 10px;margin-bottom:3px;">' + h + '</p>'; }); html += '</div>'; }
+            if (ad.body) { html += '<div style="margin-bottom:8px;"><p style="font-size:0.6875rem;font-weight:700;color:#7c3aed;text-transform:uppercase;margin-bottom:4px;">Body</p><p style="font-size:0.8125rem;color:#1c1917;background:#f5f3ff;border-radius:6px;padding:6px 10px;white-space:pre-wrap;">' + ad.body + '</p></div>'; }
+            if (ad.hashtags) { const tags = Array.isArray(ad.hashtags) ? ad.hashtags.join(' ') : ad.hashtags; html += '<div style="margin-bottom:8px;"><p style="font-size:0.6875rem;font-weight:700;color:#7c3aed;text-transform:uppercase;margin-bottom:4px;">Hashtags</p><p style="font-size:0.8125rem;color:#7c3aed;">' + tags + '</p></div>'; }
+            if (ad.cta) { html += '<div><p style="font-size:0.6875rem;font-weight:700;color:#7c3aed;text-transform:uppercase;margin-bottom:4px;">CTA</p><p style="font-size:0.8125rem;font-weight:600;color:#1c1917;background:#f5f3ff;border-radius:6px;padding:6px 10px;display:inline-block;">' + ad.cta + '</p></div>'; }
+            el.innerHTML = html || '<p style="color:#78716c;font-size:0.8125rem;">No ad copy generated.</p>';
+        } catch(e) { el.innerHTML = '<p style="color:#ef4444;font-size:0.8125rem;">Error generating ad copy</p>'; }
+    }
+
+    async function loadAdminSentiment() {
+        const pid = document.getElementById('ai-sent-pid').value.trim();
+        const el = document.getElementById('ai-sent-result');
+        el.innerHTML = '<div style="display:flex;align-items:center;gap:6px;padding:8px 0;"><div style="width:14px;height:14px;border:2px solid #dc2626;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;"></div><span style="font-size:0.8125rem;color:#6b7280;">Analyzing sentiment...</span></div>';
+        try {
+            const fd = new FormData(); if (pid) fd.append('product_id', pid);
+            const res = await fetch('/api/admin/ai/review-sentiment', {method:'POST', body:fd});
+            const data = await res.json();
+            if (!data.ok) { el.innerHTML = '<p style="color:#ef4444;font-size:0.8125rem;">' + (data.error || 'Failed') + '</p>'; return; }
+            const s = data.sentiment || {};
+            let html = '';
+            if (s.overall) { html += '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 12px;margin-bottom:8px;"><p style="font-weight:600;color:#166534;font-size:0.875rem;">Overall: ' + s.overall + '</p></div>'; }
+            if (s.positive_pct !== undefined || s.neutral_pct !== undefined || s.negative_pct !== undefined) { html += '<div style="display:flex;gap:8px;margin-bottom:8px;">'; if (s.positive_pct !== undefined) html += '<span style="background:#dcfce7;color:#166534;border-radius:6px;padding:4px 10px;font-size:0.75rem;font-weight:600;">Positive ' + s.positive_pct + '%</span>'; if (s.neutral_pct !== undefined) html += '<span style="background:#fef3c7;color:#92400e;border-radius:6px;padding:4px 10px;font-size:0.75rem;font-weight:600;">Neutral ' + s.neutral_pct + '%</span>'; if (s.negative_pct !== undefined) html += '<span style="background:#fecaca;color:#991b1b;border-radius:6px;padding:4px 10px;font-size:0.75rem;font-weight:600;">Negative ' + s.negative_pct + '%</span>'; html += '</div>'; }
+            if (s.top_praise && s.top_praise.length) { html += '<div style="margin-bottom:8px;"><p style="font-size:0.6875rem;font-weight:700;color:#16a34a;text-transform:uppercase;margin-bottom:4px;">Top Praise</p>'; s.top_praise.forEach(p => { html += '<p style="font-size:0.8125rem;color:#166534;background:#f0fdf4;border-radius:6px;padding:6px 10px;margin-bottom:3px;">' + p + '</p>'; }); html += '</div>'; }
+            if (s.top_complaints && s.top_complaints.length) { html += '<div style="margin-bottom:8px;"><p style="font-size:0.6875rem;font-weight:700;color:#dc2626;text-transform:uppercase;margin-bottom:4px;">Top Complaints</p>'; s.top_complaints.forEach(c => { html += '<p style="font-size:0.8125rem;color:#991b1b;background:#fef2f2;border-radius:6px;padding:6px 10px;margin-bottom:3px;">' + c + '</p>'; }); html += '</div>'; }
+            if (s.recommendation) { html += '<div><p style="font-size:0.6875rem;font-weight:700;color:#2563eb;text-transform:uppercase;margin-bottom:4px;">Recommendation</p><p style="font-size:0.8125rem;color:#1e40af;background:#eff6ff;border-radius:6px;padding:6px 10px;">' + s.recommendation + '</p></div>'; }
+            el.innerHTML = html || '<p style="color:#78716c;font-size:0.8125rem;">No sentiment data available.</p>';
+        } catch(e) { el.innerHTML = '<p style="color:#ef4444;font-size:0.8125rem;">Error analyzing sentiment</p>'; }
+    }
+    </script>
+
     <!-- Recent Orders -->
     <div class="admin-card">
         <div class="admin-card-header">

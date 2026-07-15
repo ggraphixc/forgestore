@@ -4029,7 +4029,7 @@ async def admin_ai_bundle_suggestions(
 
         suggestions = generate_product_bundle_suggestions(
             product_name=product.name,
-            category=product.category or "",
+            category=product.category.name if product.category else "",
             all_products=product_names,
         )
         if suggestions:
@@ -4089,7 +4089,7 @@ async def admin_ai_review_sentiment(
             return {"ok": True, "sentiment": {"overall": "no_reviews", "summary": "No reviews to analyze."}}
 
         review_text = "\n".join([
-            f"- Rating: {r.rating}/5 — {(r.comment or r.text or '')[:200]}"
+            f"- Rating: {r.rating}/5 — {(r.content or '')[:200]}"
             for r in reviews
         ])
 
@@ -4109,7 +4109,7 @@ async def admin_ai_review_sentiment(
             ),
             user_prompt=f"Reviews ({len(reviews)} total):\n{review_text}",
             temperature=0.3,
-            max_tokens=500,
+            max_tokens=2000,
         )
 
         if result:

@@ -353,7 +353,7 @@ def get_review_summary(product_id: str, db: Session = Depends(get_db)):
             return {"ok": True, "summary": None, "review_count": 0}
 
         review_list = [
-            {"rating": r.rating, "comment": r.comment or r.text or ""}
+            {"rating": r.rating, "comment": r.content or ""}
             for r in reviews
         ]
 
