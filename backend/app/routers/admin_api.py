@@ -3936,16 +3936,16 @@ async def admin_ai_sales_insight(db: Session = Depends(get_db)):
 
         # Revenue data
         total_revenue = db.query(func.coalesce(func.sum(Order.total_amount), 0)).filter(
-            Order.status.in_(["DELIVERED", "COMPLETED", "PAID"])
+            Order.status.in_(["DELIVERED", "PAID", "SHIPPED", "PROCESSING"])
         ).scalar() or 0
         recent_revenue = db.query(func.coalesce(func.sum(Order.total_amount), 0)).filter(
             Order.created_at >= thirty_days_ago,
-            Order.status.in_(["DELIVERED", "COMPLETED", "PAID"])
+            Order.status.in_(["DELIVERED", "PAID", "SHIPPED", "PROCESSING"])
         ).scalar() or 0
         prev_revenue = db.query(func.coalesce(func.sum(Order.total_amount), 0)).filter(
             Order.created_at >= thirty_days_ago - timedelta(days=30),
             Order.created_at < thirty_days_ago,
-            Order.status.in_(["DELIVERED", "COMPLETED", "PAID"])
+            Order.status.in_(["DELIVERED", "PAID", "SHIPPED", "PROCESSING"])
         ).scalar() or 0
 
         # Order data
