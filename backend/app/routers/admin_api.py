@@ -3926,7 +3926,7 @@ async def get_ai_chat_messages(session_id: str, db: Session = Depends(get_db)):
 async def admin_ai_sales_insight(db: Session = Depends(get_db)):
     """AI-generated business insights from dashboard data."""
     from app.services.ai_service import generate_sales_insight
-    from app.models import Order, Product, Retailer, Customer
+    from app.models import Order, Product, Retailer, User
     from datetime import datetime, timedelta
 
     try:
@@ -3973,9 +3973,9 @@ async def admin_ai_sales_insight(db: Session = Depends(get_db)):
         ).scalar() or 0
 
         # Customer data
-        total_customers = db.query(func.count(Customer.id)).scalar() or 0
-        new_customers = db.query(func.count(Customer.id)).filter(
-            Customer.created_at >= thirty_days_ago
+        total_customers = db.query(func.count(User.id)).scalar() or 0
+        new_customers = db.query(func.count(User.id)).filter(
+            User.created_at >= thirty_days_ago
         ).scalar() or 0
 
         insight = generate_sales_insight(
