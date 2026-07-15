@@ -538,8 +538,8 @@ textarea::placeholder {
   color: var(--fs-400);
 }
 
-/* ── Buttons ── */
-button,
+/* ── Buttons (scoped to form buttons, not icon buttons) ── */
+.fs-btn,
 input[type="submit"],
 input[type="button"],
 input[type="reset"] {

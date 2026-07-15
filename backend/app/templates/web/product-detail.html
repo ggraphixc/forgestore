@@ -1175,7 +1175,7 @@
   .pd-rec-img {
     aspect-ratio: 1;
     overflow: hidden;
-    background: #f8f8f8;
+    background: var(--pd-card-alt);
     position: relative;
   }
   .pd-rec-img img {
@@ -1287,6 +1287,15 @@
 
   /* Hidden file input */
   .hidden { display: none !important; }
+
+  /* ── Dark mode: recommendation cards ── */
+  .dark .pd-rec-card { background: var(--pd-card); border-color: var(--pd-border); }
+  .dark .pd-rec-img { background: var(--pd-card-alt); }
+  .dark .pd-rec-name { color: var(--pd-text); }
+  .dark .pd-rec-price-original { color: var(--pd-text-muted); }
+  .dark .pd-rec-reason { color: var(--pd-text-muted); }
+  .dark .pd-rec-add-btn { background: var(--pd-card-alt); border-color: var(--pd-border); }
+  .dark .pd-rec-add-btn svg { color: var(--pd-text-sec); }
 </style>
 
 <div class="pd-page">

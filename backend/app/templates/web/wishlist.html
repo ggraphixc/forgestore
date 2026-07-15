@@ -51,6 +51,7 @@
   .ws-add-btn { position: absolute; bottom: 0.625rem; right: 0.625rem; width: 34px; height: 34px; background: #fff; border: 1.5px solid #e5e7eb; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center; color: #333; cursor: pointer; transition: all var(--ws-transition); }
   .ws-add-btn:hover { background: #f43f5e; border-color: #f43f5e; color: #fff; }
   .ws-add-btn svg { width: 1rem; height: 1rem; }
+  .ws-sale-badge { position: absolute; top: 0; left: 0; background: #f43f5e; color: #fff; font-size: 0.625rem; font-weight: 700; padding: 0.1875rem 0.5rem; border-radius: 0 0 0.5rem 0; z-index: 5; }
   .ws-empty { grid-column: 1 / -1; text-align: center; padding: 5rem 1rem; }
   .ws-empty-icon { width: 96px; height: 96px; background: linear-gradient(135deg, #fff1f2, var(--ws-amber-50)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; }
   .ws-empty-icon svg { width: 48px; height: 48px; color: #fca5a5; }
@@ -118,6 +119,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 : `<div class="ws-product-placeholder">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                                    </div>`
+                            }
+                            ${p.discount_price && p.discount_price < p.price
+                                ? `<span class="ws-sale-badge">-${Math.round((1 - p.discount_price / p.price) * 100)}%</span>`
+                                : ''
                             }
                         </div>
                         <div class="ws-product-info">
