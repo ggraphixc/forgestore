@@ -627,11 +627,14 @@ legend {
 /* ── Disabled state ── */
 input:disabled,
 select:disabled,
-textarea:disabled,
-button:disabled {
+textarea:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   background: var(--fs-100);
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* ── Exempt: elements inside settings page (they have their own scoped styles) ── */
