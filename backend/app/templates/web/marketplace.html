@@ -321,6 +321,8 @@
 .dark .mp-page-btn { background: var(--c-stone-800); border-color: var(--c-stone-700); color: var(--c-stone-300); }
 .dark .mp-promo-title { color: var(--c-stone-100); }
 .dark .mp-promo-dates { color: var(--c-stone-400); }
+.dark .mp-promo-card { background: var(--c-stone-800); border-color: var(--c-stone-700); }
+.dark .mp-promo-section h2 { color: var(--c-stone-100); }
 .dark #nl-search-box { background: linear-gradient(135deg, rgba(22,163,74,0.08) 0%, var(--c-stone-800) 100%); border-color: rgba(22,163,74,0.25); }
 .dark #nl-search-input { background: var(--c-stone-700); border-color: var(--c-stone-600); color: var(--c-stone-100); }
 .dark #nl-search-input::placeholder { color: var(--c-stone-500); }
@@ -337,13 +339,20 @@
     </div>
   </div>
 
-  {% if active_promo_ads %}
+  {% if active_promo_ads or active_ad_campaigns %}
   <div class="mp-promo-section">
+    <div style="text-align:center;margin-bottom:1.25rem;">
+      <h2 style="font-size:1.25rem;font-weight:800;color:var(--c-stone-900);">Hot <span style="color:var(--c-amber-500);">Promotions</span> & <span style="color:var(--c-amber-500);">Campaigns</span></h2>
+    </div>
     <div class="mp-promo-scroll">
       {% for ad in active_promo_ads %}
       <a href="{{ ad.target_url or '/shop/marketplace' }}" class="mp-promo-card" style="animation: fadeIn 0.4s ease-out {{ (loop.index0 * 80) }}ms both;">
         {% if ad.banner_url %}
         <img loading="lazy" src="{{ ad.banner_url }}" alt="{{ ad.title }}">
+        {% else %}
+        <div style="height:140px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, var(--c-amber-50), #fff);">
+          <svg style="width:2.5rem;height:2.5rem;color:var(--c-amber-300);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+        </div>
         {% endif %}
         <div class="mp-promo-card-body">
           <span class="mp-promo-badge mp-promo-badge--{{ ad.ad_subtype|lower|replace('_sale','')|replace('_','') }}">
@@ -361,63 +370,42 @@
         </div>
       </a>
       {% endfor %}
-    </div>
-  </div>
-  {% endif %}
 
-  {% if active_ad_campaigns %}
-  <div class="mp-ad-grid">
-    {% for ad in active_ad_campaigns %}
-    <div class="mp-ad-card">
-      {% if ad.banner_url %}
-      <div class="mp-ad-banner">
+      {% for ad in active_ad_campaigns %}
+      <a href="{{ ad.target_url or '/shop/marketplace' }}" class="mp-promo-card" style="animation: fadeIn 0.4s ease-out {{ ((active_promo_ads|length + loop.index0) * 80) }}ms both;">
+        {% if ad.banner_url %}
         <img loading="lazy" src="{{ ad.banner_url }}" alt="{{ ad.retailer.name if ad.retailer else 'Promotion' }}">
-      </div>
-      {% else %}
-      <div class="mp-ad-placeholder">
-        <div style="text-align:center;">
-          <svg style="width:2rem;height:2rem;margin:0 auto;color:var(--c-stone-300);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
-          </svg>
-          <p style="font-size:0.625rem;color:var(--c-stone-400);margin-top:0.375rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;">{{ ad.ad_type }} PROMOTION</p>
-        </div>
-      </div>
-      {% endif %}
-
-      <div class="mp-ad-body">
-        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.375rem;">
-          <span class="mp-ad-type {% if ad.ad_type == 'PRODUCT' %}mp-ad-type--product{% elif ad.ad_type == 'SYSTEM_PROMO' %}mp-ad-type--promo{% else %}mp-ad-type--shop{% endif %}">{{ ad.ad_type }}</span>
-          <span class="mp-ad-sponsor">Sponsored</span>
-        </div>
-
-        {% if ad.ad_type == 'PRODUCT' and ad.product %}
-        <a href="/shop/products/{{ ad.product.slug }}" class="mp-ad-link">
-          <div style="min-width:0;flex:1;">
-            <p class="mp-ad-title">{{ ad.product.name }}</p>
-            <p class="mp-ad-desc">{{ ad.product.description|truncate(60) if ad.product.description else 'Featured product' }}</p>
-          </div>
-          <span class="mp-ad-price">{{ format_price(ad.product.discount_price if ad.product.discount_price else ad.product.price, currency) }}</span>
-        </a>
-        {% elif ad.ad_type == 'SYSTEM_PROMO' %}
-        <a href="{{ ad.target_url or '/shop/marketplace' }}" class="mp-ad-link">
-          <div style="min-width:0;flex:1;">
-            <p class="mp-ad-title">Site Promotion</p>
-            <p class="mp-ad-desc">Check our latest offers</p>
-          </div>
-          <span class="mp-ad-arrow">Explore <svg style="width:0.75rem;height:0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></span>
-        </a>
         {% else %}
-        <a href="/shop/shops/{{ ad.retailer.slug if ad.retailer else '#' }}" class="mp-ad-link">
-          <div style="min-width:0;flex:1;">
-            <p class="mp-ad-title">{% if ad.retailer %}{{ ad.retailer.name }}{% else %}Featured Artisan{% endif %}</p>
-            <p class="mp-ad-desc">{% if ad.retailer and ad.retailer.bio %}{{ ad.retailer.bio|truncate(60) }}{% else %}Visit this artisan's shop{% endif %}</p>
-          </div>
-          <span class="mp-ad-arrow">View <svg style="width:0.75rem;height:0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></span>
-        </a>
+        <div style="height:140px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, var(--c-amber-50), #fff);">
+          <svg style="width:2.5rem;height:2.5rem;color:var(--c-amber-300);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+        </div>
         {% endif %}
-      </div>
+        <div class="mp-promo-card-body">
+          <span class="mp-promo-badge {% if ad.ad_type == 'PRODUCT' %}mp-promo-badge--super{% elif ad.ad_type == 'SYSTEM_PROMO' %}mp-promo-badge--festival{% else %}mp-promo-badge--general{% endif %}">
+            {% if ad.ad_type == 'PRODUCT' %}📦 Product
+            {% elif ad.ad_type == 'SYSTEM_PROMO' %}🎉 Promo
+            {% else %}🏪 Shop{% endif %}
+          </span>
+          {% if ad.ad_type == 'PRODUCT' and ad.product %}
+          <a href="/shop/products/{{ ad.product.slug }}" style="display:block;text-decoration:none;color:inherit;">
+            <p class="mp-promo-title">{{ ad.product.name }}</p>
+            {% if ad.product.discount_price %}
+            <p style="font-size:0.75rem;color:var(--c-amber-600);margin-top:0.25rem;">{{ format_price(ad.product.discount_price, currency) }} <span style="text-decoration:line-through;color:var(--c-stone-400);">{{ format_price(ad.product.price, currency) }}</span></p>
+            {% else %}
+            <p style="font-size:0.75rem;color:var(--c-amber-600);margin-top:0.25rem;">{{ format_price(ad.product.price, currency) }}</p>
+            {% endif %}
+          </a>
+          {% elif ad.ad_type == 'SYSTEM_PROMO' %}
+          <p class="mp-promo-title">Site Promotion</p>
+          <p style="font-size:0.6875rem;color:var(--c-stone-400);margin-top:0.25rem;">Explore latest offers</p>
+          {% else %}
+          <p class="mp-promo-title">{% if ad.retailer %}{{ ad.retailer.name }}{% else %}Featured Shop{% endif %}</p>
+          <p style="font-size:0.6875rem;color:var(--c-stone-400);margin-top:0.25rem;">Visit shop</p>
+          {% endif %}
+        </div>
+      </a>
+      {% endfor %}
     </div>
-    {% endfor %}
   </div>
   {% endif %}
 
