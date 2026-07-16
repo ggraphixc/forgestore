@@ -113,7 +113,7 @@
     overflow: hidden;
     transition: all 0.25s ease;
   }
-  @media (min-width: 640px) { .hero-search-bar { max-width: 42rem; margin: 0 auto; border-radius: 20px; } }
+  @media (min-width: 640px) { .hero-search-bar { max-width: 42rem; border-radius: 20px; } }
   .hero-search-bar:focus-within {
     border-color: var(--color-primary);
     box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 12px 40px rgba(0,0,0,0.06), 0 0 0 3px rgba(245,158,11,0.12);
@@ -168,7 +168,6 @@
   .hero-trust {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
     align-items: center;
     gap: 1.25rem;
     margin-top: 2rem;
@@ -1012,8 +1011,8 @@
 
 <!-- ===== HERO SECTION ===== -->
 <section class="home-hero">
-  <div class="container" style="position: relative; z-index: 1; text-align: center;">
-    <div style="max-width: 48rem; margin: 0 auto;">
+  <div class="container" style="position: relative; z-index: 1;">
+    <div style="max-width: 48rem;">
       <h1 class="home-hero-title">
         Discover<br>
         <span class="accent">Handcrafted</span><br>
