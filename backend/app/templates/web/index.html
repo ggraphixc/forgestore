@@ -58,9 +58,7 @@
   @media (min-width: 1024px) { .home-hero { min-height: 68vh; padding: 5rem 0 6rem; } }
 
   .dark .home-hero {
-    background: linear-gradient(180deg, #1c1917 0%, #292524 50%, #441a03 100%);
-    padding-bottom: 0;
-    margin-bottom: 0;
+    background: linear-gradient(165deg, #1c1917 0%, #292524 35%, #1c1917 65%, #0c0a09 100%);
   }
 
   .home-hero::after {
@@ -831,20 +829,6 @@
   .home-feature-card p { font-size: 0.875rem; color: var(--color-text-light); line-height: 1.6; }
 
   /* ===== PROMO SECTION ===== */
-  .home-promo-section {
-    position: relative;
-    background: var(--color-dark);
-    color: #fff;
-    padding: 2.5rem 0;
-    overflow: hidden;
-  }
-  .dark .home-promo-section {
-    margin-top: 0;
-    padding-top: 2.5rem;
-  }
-  @media (min-width: 640px) { .home-promo-section { padding: 3.5rem 0; } }
-  @media (min-width: 640px) { .dark .home-promo-section { margin-top: 0; padding-top: 3.5rem; } }
-
   /* Dark mode for section text */
   .dark .home-section-title { color: #e7e5e3; }
   .dark .home-section-label { color: #78716c; }
@@ -854,25 +838,6 @@
   .dark .home-feature-card { background: #292524; border-color: rgba(255,255,255,0.08); }
   .dark .home-feature-card h3 { color: #e7e5e3; }
   .dark .home-feature-card p { color: #a8a29e; }
-
-  .home-promo-section::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, #1c1917 0%, #292524 50%, #441a03 100%);
-  }
-
-  .home-promo-section::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    opacity: 0.03;
-    background-image:
-      linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-  }
 
   .home-promo-grid {
     display: grid;
@@ -1086,13 +1051,10 @@
       </div>
     </div>
   </div>
-</section>
 
-<!-- ===== PROMO ADS ===== -->
-<!-- ===== COMBINED PROMOTIONS & CAMPAIGNS ===== -->
-{% if active_promo_ads or active_ads %}
-<section class="home-promo-section">
-  <div class="container">
+  <!-- ===== PROMOTIONS & CAMPAIGNS (inside hero) ===== -->
+  {% if active_promo_ads or active_ads %}
+  <div class="container" style="position: relative; z-index: 1; margin-top: 3rem;">
     <div style="text-align: center; margin-bottom: 2rem;">
       <span class="home-section-label" style="color: rgba(251,191,36,0.7);">Deals</span>
       <h2 class="home-section-title" style="color: #fff;">Hot <span class="accent">Promotions</span> & <span class="accent">Campaigns</span></h2>
@@ -1164,8 +1126,8 @@
       {% endfor %}
     </div>
   </div>
+  {% endif %}
 </section>
-{% endif %}
 
 <!-- ===== FLAGSHIP COLLECTION ===== -->
 {% if flagship_products %}
