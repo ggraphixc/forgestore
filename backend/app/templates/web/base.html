@@ -14,6 +14,13 @@
   --c-font-mono: {{ settings.font_mono|default("ui-monospace, SFMono-Regular, monospace") }};
 }
 
+/* ===== Body & Main — Dark Mode ===== */
+.dark body,
+.dark body > main {
+  background-color: var(--c-stone-950);
+  color: var(--c-stone-100);
+}
+
 /* ===== Header — Floating Glass Navbar ===== */
 .web-header {
   position: sticky; top: 0; left: 0; right: 0;
