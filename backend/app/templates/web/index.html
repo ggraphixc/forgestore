@@ -50,6 +50,7 @@
     overflow: hidden;
     min-height: 52vh;
     display: flex;
+    flex-direction: column;
     align-items: center;
     padding: 3rem 0 4rem;
     background: linear-gradient(165deg, #fafaf9 0%, #fef3c7 35%, #fff7ed 65%, #fafaf9 100%);
@@ -112,7 +113,7 @@
     overflow: hidden;
     transition: all 0.25s ease;
   }
-  @media (min-width: 640px) { .hero-search-bar { max-width: 42rem; border-radius: 20px; } }
+  @media (min-width: 640px) { .hero-search-bar { max-width: 42rem; margin: 0 auto; border-radius: 20px; } }
   .hero-search-bar:focus-within {
     border-color: var(--color-primary);
     box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 12px 40px rgba(0,0,0,0.06), 0 0 0 3px rgba(245,158,11,0.12);
@@ -167,6 +168,7 @@
   .hero-trust {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     align-items: center;
     gap: 1.25rem;
     margin-top: 2rem;
@@ -1010,8 +1012,8 @@
 
 <!-- ===== HERO SECTION ===== -->
 <section class="home-hero">
-  <div class="container" style="position: relative; z-index: 1;">
-    <div style="max-width: 48rem;">
+  <div class="container" style="position: relative; z-index: 1; text-align: center;">
+    <div style="max-width: 48rem; margin: 0 auto;">
       <h1 class="home-hero-title">
         Discover<br>
         <span class="accent">Handcrafted</span><br>
@@ -1054,10 +1056,10 @@
 
   <!-- ===== PROMOTIONS & CAMPAIGNS (inside hero) ===== -->
   {% if active_promo_ads or active_ads %}
-  <div class="container" style="position: relative; z-index: 1; margin-top: 3rem;">
+  <div class="container" style="position: relative; z-index: 1; margin-top: 4rem;">
     <div style="text-align: center; margin-bottom: 2rem;">
       <span class="home-section-label" style="color: rgba(251,191,36,0.7);">Deals</span>
-      <h2 class="home-section-title" style="color: #fff;">Hot <span class="accent">Promotions</span> & <span class="accent">Campaigns</span></h2>
+      <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0;">Hot <span class="accent">Promotions</span> & <span class="accent">Campaigns</span></h2>
       <p style="font-size: 0.875rem; color: rgba(255,255,255,0.6); max-width: 36rem; margin: 0.75rem auto 0; line-height: 1.6;">Grab limited-time flash sales, seasonal offers, and exclusive deals from our top vendors. New promotions drop every week.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem;">
