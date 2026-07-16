@@ -57,7 +57,9 @@
   @media (min-width: 640px) { .home-hero { min-height: 60vh; padding: 4rem 0 5rem; } }
   @media (min-width: 1024px) { .home-hero { min-height: 68vh; padding: 5rem 0 6rem; } }
 
-  .dark .home-hero { background: linear-gradient(165deg, #1c1917 0%, #292524 35%, #1c1917 65%, #0c0a09 100%); }
+  .dark .home-hero {
+    background: linear-gradient(180deg, #1c1917 0%, #1c1917 60%, transparent 100%);
+  }
 
   .home-hero::after {
     content: '';
@@ -249,6 +251,11 @@
     overflow: hidden;
   }
   @media (min-width: 640px) { .home-section { padding: 6rem 0; } }
+
+  .home-section-alt { background: var(--color-surface-alt); }
+  .home-section-main { background: var(--color-surface); }
+  .dark .home-section { background: #1c1917 !important; }
+  .dark .home-section-alt { background: #292524 !important; }
 
   .home-section-title {
     font-size: clamp(1.75rem, 4vw, 3rem);
@@ -829,7 +836,22 @@
     padding: 2.5rem 0;
     overflow: hidden;
   }
+  .dark .home-promo-section {
+    margin-top: -4rem;
+    padding-top: 5rem;
+  }
   @media (min-width: 640px) { .home-promo-section { padding: 3.5rem 0; } }
+  @media (min-width: 640px) { .dark .home-promo-section { margin-top: -5rem; padding-top: 6rem; } }
+
+  /* Dark mode for section text */
+  .dark .home-section-title { color: #e7e5e3; }
+  .dark .home-section-label { color: #78716c; }
+  .dark .home-section-desc { color: #a8a29e; }
+  .dark .home-section-link { color: #d6d3d1; }
+  .dark .home-section-link:hover { color: #f59e0b; }
+  .dark .home-feature-card { background: #292524; border-color: rgba(255,255,255,0.08); }
+  .dark .home-feature-card h3 { color: #e7e5e3; }
+  .dark .home-feature-card p { color: #a8a29e; }
 
   .home-promo-section::before {
     content: '';
@@ -1072,6 +1094,7 @@
     <div style="text-align: center; margin-bottom: 2rem;">
       <span class="home-section-label" style="color: rgba(251,191,36,0.7);">Deals</span>
       <h2 class="home-section-title" style="color: #fff;">Hot <span class="accent">Promotions</span> & <span class="accent">Campaigns</span></h2>
+      <p style="font-size: 0.875rem; color: rgba(255,255,255,0.6); max-width: 36rem; margin: 0.75rem auto 0; line-height: 1.6;">Grab limited-time flash sales, seasonal offers, and exclusive deals from our top vendors. New promotions drop every week.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem;">
       {% for ad in active_promo_ads %}
@@ -1144,7 +1167,7 @@
 
 <!-- ===== FLAGSHIP COLLECTION ===== -->
 {% if flagship_products %}
-<section class="home-section" style="background: var(--color-surface-alt);">
+<section class="home-section home-section-alt">
   <div class="container">
     <div style="text-align: center; margin-bottom: 3rem;">
       <span class="home-section-label">Curated Selection</span>
@@ -1225,7 +1248,7 @@
 </section>
 
 <!-- ===== MARKET SECTION ===== -->
-<section class="home-section" style="background: var(--color-surface);">
+<section class="home-section home-section-main">
   <div class="container">
     <div class="home-section-header">
       <div>
@@ -1295,7 +1318,7 @@
 </section>
 
 <!-- ===== WHY FORGESTORE ===== -->
-<section class="home-section" style="background: var(--color-surface);">
+<section class="home-section home-section-main">
   <div class="container">
     <div style="text-align: center; margin-bottom: 3rem;">
       <span class="home-section-label">Why {{ settings.site_name|default('ForgeStore') }}</span>
