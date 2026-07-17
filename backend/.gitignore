@@ -35,6 +35,9 @@ Thumbs.db
 app/static/uploads/products/*
 !app/static/uploads/products/.gitkeep
 
+# AI moderation thresholds (local learning data)
+data/
+
 # Node
 node_modules/
 package-lock.json

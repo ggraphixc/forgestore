@@ -4143,14 +4143,16 @@ def moderation_stats(
     db: Session = Depends(get_db),
     admin: AdminUser = Depends(require_role("catalog")),
 ):
-    """Get moderation dashboard statistics."""
+    """Get moderation dashboard statistics with accuracy metrics."""
     from app.models import ProductFlag, ProductModerationLog
+    from app.services.product_moderation import get_moderation_accuracy
     pending = db.query(Product).filter(Product.status == "PENDING_REVIEW").count()
     approved = db.query(Product).filter(Product.status == "APPROVED").count()
     rejected = db.query(Product).filter(Product.status == "REJECTED").count()
     suspended = db.query(Product).filter(Product.status == "SUSPENDED").count()
     flagged = db.query(ProductFlag).filter(ProductFlag.status == "PENDING").count()
     total = db.query(Product).count()
+    accuracy = get_moderation_accuracy(db)
     return {
         "pending": pending,
         "approved": approved,
@@ -4158,7 +4160,70 @@ def moderation_stats(
         "suspended": suspended,
         "flagged": flagged,
         "total": total,
+        "accuracy": accuracy,
     }
+
+
+@router.get("/moderation/analytics")
+def moderation_analytics(
+    days: int = 30,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """Get detailed moderation analytics for the dashboard."""
+    from app.models import ProductModerationLog, ProductFlag
+    from app.services.product_moderation import get_moderation_accuracy
+    from datetime import timedelta
+
+    cutoff = datetime.utcnow() - timedelta(days=days)
+    logs = db.query(ProductModerationLog).filter(
+        ProductModerationLog.created_at >= cutoff
+    ).order_by(ProductModerationLog.created_at).all()
+
+    # Daily breakdown
+    daily = {}
+    for log in logs:
+        day = log.created_at.strftime("%Y-%m-%d") if log.created_at else "unknown"
+        if day not in daily:
+            daily[day] = {"approved": 0, "rejected": 0, "escalated": 0, "total": 0}
+        daily[day]["total"] += 1
+        if log.action in ("approved", "auto_approve", "bulk_approve"):
+            daily[day]["approved"] += 1
+        elif log.action in ("rejected", "auto_reject", "bulk_reject"):
+            daily[day]["rejected"] += 1
+        elif log.action == "escalated":
+            daily[day]["escalated"] += 1
+
+    # Category breakdown
+    cat_stats = {}
+    for log in logs:
+        product = db.query(Product).filter(Product.id == log.product_id).first() if log.product_id else None
+        cat = product.category.name if product and product.category else "unknown"
+        if cat not in cat_stats:
+            cat_stats[cat] = {"approved": 0, "rejected": 0, "total": 0}
+        cat_stats[cat]["total"] += 1
+        if log.action in ("approved", "auto_approve", "bulk_approve"):
+            cat_stats[cat]["approved"] += 1
+        elif log.action in ("rejected", "auto_reject", "bulk_reject"):
+            cat_stats[cat]["rejected"] += 1
+
+    accuracy = get_moderation_accuracy(db)
+
+    return {
+        "period_days": days,
+        "daily": daily,
+        "category_breakdown": cat_stats,
+        "accuracy": accuracy,
+    }
+
+
+@router.get("/moderation/thresholds")
+def moderation_thresholds(
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """Get current moderation thresholds and correction stats."""
+    from app.services.product_moderation import get_current_thresholds
+    return get_current_thresholds()
 
 
 @router.get("/moderation/queue")
@@ -4265,9 +4330,22 @@ def moderate_approve(
 ):
     """Approve a product."""
     from app.models import ProductModerationLog
+    from app.services.product_moderation import record_admin_correction
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+
+    # Track correction: what did AI decide vs what admin is doing now?
+    ai_decision = product.status
+    admin_action = "APPROVED"
+    if ai_decision in ("REJECTED", "PENDING_REVIEW", "DRAFT"):
+        record_admin_correction(
+            ai_decision=ai_decision,
+            admin_decision=admin_action,
+            ai_confidence=product.ai_confidence_score or 0,
+            category=product.category.name if product.category else "default",
+        )
+
     product.status = "APPROVED"
     product.moderated_by = admin.id
     product.moderated_at = utcnow()
@@ -4295,9 +4373,22 @@ def moderate_reject(
 ):
     """Reject a product."""
     from app.models import ProductModerationLog
+    from app.services.product_moderation import record_admin_correction
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+
+    # Track correction
+    ai_decision = product.status
+    admin_action = "REJECTED"
+    if ai_decision in ("APPROVED", "PENDING_REVIEW", "DRAFT"):
+        record_admin_correction(
+            ai_decision=ai_decision,
+            admin_decision=admin_action,
+            ai_confidence=product.ai_confidence_score or 0,
+            category=product.category.name if product.category else "default",
+        )
+
     product.status = "REJECTED"
     product.moderated_by = admin.id
     product.moderated_at = utcnow()
@@ -4325,11 +4416,24 @@ def moderate_bulk(
 ):
     """Bulk approve or reject products."""
     from app.models import ProductModerationLog
+    from app.services.product_moderation import record_admin_correction
     updated = 0
     for pid in product_ids:
         product = db.query(Product).filter(Product.id == pid).first()
         if not product:
             continue
+
+        # Track correction
+        ai_decision = product.status
+        admin_action = "APPROVED" if action == "approve" else "REJECTED"
+        if ai_decision in ("PENDING_REVIEW", "DRAFT", "REJECTED", "APPROVED"):
+            record_admin_correction(
+                ai_decision=ai_decision,
+                admin_decision=admin_action,
+                ai_confidence=product.ai_confidence_score or 0,
+                category=product.category.name if product.category else "default",
+            )
+
         product.status = "APPROVED" if action == "approve" else "REJECTED"
         product.moderated_by = admin.id
         product.moderated_at = utcnow()
