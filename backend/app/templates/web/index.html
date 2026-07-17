@@ -844,6 +844,29 @@
   .dark .home-promo-card { background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.12); }
   .dark .home-promo-card:hover { border-color: rgba(245,158,11,0.5); background: rgba(0,0,0,0.5); }
 
+  /* Light mode promo section text */
+  .home-promo-section-label { color: rgba(180,130,20,0.8); }
+  .home-promo-section-title { color: #1c1917; }
+  .home-promo-section-desc { color: #57534e; }
+  .home-promo-card-title { color: #1c1917; }
+  .home-promo-card-desc { color: #78716c; }
+  .home-promo-card-price { color: #d97706; }
+  .home-promo-card-link { color: #d97706; }
+  .home-promo-card { background: rgba(255,255,255,0.7); border-color: rgba(0,0,0,0.08); }
+  .home-promo-card:hover { border-color: rgba(217,119,6,0.4); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.15); }
+  .home-promo-tag-product { background: rgba(217,119,6,0.12); color: #b45309; border-color: rgba(217,119,6,0.2); }
+  .home-promo-tag-system { background: rgba(168,85,247,0.12); color: #7c3aed; border-color: rgba(168,85,247,0.2); }
+  .home-promo-tag-shop { background: rgba(59,130,246,0.12); color: #2563eb; border-color: rgba(59,130,246,0.2); }
+
+  /* Dark mode overrides for promo section */
+  .dark .home-promo-section-label { color: rgba(251,191,36,0.7); }
+  .dark .home-promo-section-title { color: #fff; }
+  .dark .home-promo-section-desc { color: rgba(255,255,255,0.6); }
+  .dark .home-promo-card-title { color: #fff; }
+  .dark .home-promo-card-desc { color: #a8a29e; }
+  .dark .home-promo-card-price { color: #fbbf24; }
+  .dark .home-promo-card-link { color: #fbbf24; }
+
   .home-promo-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -1063,11 +1086,11 @@
 
   <!-- ===== PROMOTIONS & CAMPAIGNS (inside hero) ===== -->
   {% if active_promo_ads or active_ads %}
-  <div class="container" style="position: relative; z-index: 1; margin-top: 4rem;">
-    <div style="margin-bottom: 2rem;">
-      <span class="home-section-label" style="color: rgba(251,191,36,0.7);">Deals</span>
-      <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0;">Hot <span class="accent">Promotions</span> & <span class="accent">Campaigns</span></h2>
-      <p style="font-size: 0.875rem; color: rgba(255,255,255,0.6); max-width: 36rem; margin: 0.75rem 0 0; line-height: 1.6;">Grab limited-time flash sales, seasonal offers, and exclusive deals from our top vendors. New promotions drop every week.</p>
+  <div class="container" style="position: relative; z-index: 1; margin-top: 6rem; margin-bottom: 1rem;">
+    <div style="margin-bottom: 1.5rem;">
+      <span class="home-section-label home-promo-section-label">Deals</span>
+      <h2 class="home-promo-section-title" style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0;">Hot <span class="accent">Promotions</span> & <span class="accent">Campaigns</span></h2>
+      <p class="home-promo-section-desc" style="font-size: 0.875rem; max-width: 36rem; margin: 0.75rem 0 0; line-height: 1.6;">Grab limited-time flash sales, seasonal offers, and exclusive deals from our top vendors. New promotions drop every week.</p>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem;">
       {% for ad in active_promo_ads %}
@@ -1126,7 +1149,7 @@
           <a href="/shop/products/{{ ad.product.slug }}" style="display: block; text-decoration: none; color: inherit;">
             <p class="home-promo-card-title">{{ ad.product.name }}</p>
             {% if ad.product.discount_price %}
-            <p class="home-promo-card-price">{{ format_price(ad.product.discount_price, currency) }} <span style="text-decoration:line-through;color:rgba(255,255,255,0.4);font-size:0.75rem;">{{ format_price(ad.product.price, currency) }}</span></p>
+            <p class="home-promo-card-price">{{ format_price(ad.product.discount_price, currency) }} <span style="text-decoration:line-through;font-size:0.75rem;" class="home-promo-card-desc">{{ format_price(ad.product.price, currency) }}</span></p>
             {% else %}
             <p class="home-promo-card-price">{{ format_price(ad.product.price, currency) }}</p>
             {% endif %}
