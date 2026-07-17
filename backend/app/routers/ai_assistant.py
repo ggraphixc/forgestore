@@ -143,7 +143,7 @@ def ai_assistant_products(
     Uses the AI search assistant to understand intent and filter products.
     """
     # Build base query
-    q = db.query(Product).filter(Product.inventory > 0)
+    q = db.query(Product).filter(Product.inventory > 0, Product.status == "APPROVED")
 
     if category:
         cat = db.query(Category).filter(Category.slug == category).first()
@@ -407,7 +407,7 @@ def natural_language_search(
     from app.services.ai_service import ai_search_assistant
 
     try:
-        products = db.query(Product).filter(Product.inventory > 0).limit(200).all()
+        products = db.query(Product).filter(Product.inventory > 0, Product.status == "APPROVED").limit(200).all()
         product_list = [
             {
                 "id": p.id,

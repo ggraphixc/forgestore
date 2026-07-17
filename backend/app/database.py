@@ -200,5 +200,8 @@ def init_db():
         PickupPoint,
         PickupInventory,
         BulkOrder,
+        # Product Moderation
+        ProductFlag,
+        ProductModerationLog,
     )
     Base.metadata.create_all(bind=get_engine())

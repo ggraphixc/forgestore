@@ -180,7 +180,7 @@ def homepage(request: Request, background_tasks: BackgroundTasks, db: Session = 
 
     # DB fallback for any cache misses
     if flagship_products is None:
-        flagship_products = db.query(Product).filter(Product.is_flagship == True).order_by(desc(Product.created_at)).limit(5).all()
+        flagship_products = db.query(Product).filter(Product.is_flagship == True, Product.status == "APPROVED").order_by(desc(Product.created_at)).limit(5).all()
         try:
             from app.core.redis_manager import get_redis
             r = get_redis()
@@ -190,7 +190,7 @@ def homepage(request: Request, background_tasks: BackgroundTasks, db: Session = 
             pass
 
     if new_arrivals is None:
-        new_arrivals = db.query(Product).filter(Product.is_new_arrival == True).order_by(desc(Product.created_at)).limit(8).all()
+        new_arrivals = db.query(Product).filter(Product.is_new_arrival == True, Product.status == "APPROVED").order_by(desc(Product.created_at)).limit(8).all()
         try:
             from app.core.redis_manager import get_redis
             r = get_redis()
@@ -200,7 +200,7 @@ def homepage(request: Request, background_tasks: BackgroundTasks, db: Session = 
             pass
 
     if top_products is None:
-        top_products = db.query(Product).order_by(desc(Product.rating)).limit(8).all()
+        top_products = db.query(Product).filter(Product.status == "APPROVED").order_by(desc(Product.rating)).limit(8).all()
         try:
             from app.core.redis_manager import get_redis
             r = get_redis()
@@ -260,7 +260,7 @@ def marketplace(request: Request, background_tasks: BackgroundTasks, db: Session
     currency = get_currency(db)
     category_slug = request.query_params.get("category")
 
-    query = db.query(Product)
+    query = db.query(Product).filter(Product.status == "APPROVED")
     if category_slug:
         cat = db.query(Category).filter(Category.slug == category_slug).first()
         if cat:
@@ -344,7 +344,7 @@ def shop_detail(request: Request, slug: str, db: Session = Depends(get_db)):
     if not retailer:
         return _render_page("web/404.html", request, db, status_code=404)
 
-    products = db.query(Product).filter(Product.retailer_id == retailer.id).all()
+    products = db.query(Product).filter(Product.retailer_id == retailer.id, Product.status == "APPROVED").all()
     categories = db.query(Category).all()
 
     return _render_page("web/shop-detail.html", request, db, {
@@ -361,7 +361,7 @@ def shop_detail(request: Request, slug: str, db: Session = Depends(get_db)):
 def product_detail(request: Request, slug: str, db: Session = Depends(get_db)):
 
     currency = get_currency(db)
-    product = db.query(Product).filter(Product.slug == slug).first()
+    product = db.query(Product).filter(Product.slug == slug, Product.status == "APPROVED").first()
     if not product:
         return _render_page("web/404.html", request, db, status_code=404)
 
@@ -381,7 +381,8 @@ def product_detail(request: Request, slug: str, db: Session = Depends(get_db)):
     if retailer:
         related = db.query(Product).filter(
             Product.retailer_id == retailer.id,
-            Product.id != product.id
+            Product.id != product.id,
+            Product.status == "APPROVED",
         ).limit(4).all()
 
     return _render_page("web/product-detail.html", request, db, {
@@ -716,7 +717,7 @@ def sitemap(request: Request, db: Session = Depends(get_db)):
     if setting and setting.value.lower() == "false":
         raise HTTPException(status_code=404, detail="Sitemap disabled")
     base = _site_settings(db).get("site_base_url", "").rstrip("/")
-    products = db.query(Product).order_by(Product.created_at.desc()).limit(500).all()
+    products = db.query(Product).filter(Product.status == "APPROVED").order_by(Product.created_at.desc()).limit(500).all()
     categories = db.query(Category).order_by(Category.name).all()
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     xml += f'  <url><loc>{base}/shop</loc><changefreq>daily</changefreq><priority>1.0</priority></url>\n'

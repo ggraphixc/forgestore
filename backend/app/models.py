@@ -19,6 +19,14 @@ class OrderStatus(str, enum.Enum):
     CANCELLED = "CANCELLED"
 
 
+class ProductStatus(str, enum.Enum):
+    DRAFT = "DRAFT"
+    PENDING_REVIEW = "PENDING_REVIEW"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    SUSPENDED = "SUSPENDED"
+
+
 class AdminRole(str, enum.Enum):
     DIR_ADMIN = "DIR_ADMIN"
     MANAGEMENT = "MANAGEMENT"
@@ -102,6 +110,12 @@ class Product(Base):
     is_flagship = Column(Boolean, nullable=False, default=False)
     views_count = Column(Integer, nullable=False, default=0)
     sold_count = Column(Integer, nullable=False, default=0)
+    status = Column(String(20), nullable=False, default="PENDING_REVIEW")
+    ai_confidence_score = Column(Float, nullable=True)
+    ai_moderation_result = Column(JSON, nullable=True)
+    moderated_by = Column(String, ForeignKey("admin_user.id", ondelete="SET NULL"), nullable=True)
+    moderated_at = Column(DateTime, nullable=True)
+    moderation_note = Column(Text, nullable=True)
     created_at = Column(DateTime, nullable=False, default=utcnow)
     updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
@@ -110,6 +124,40 @@ class Product(Base):
     order_items: list["OrderItem"] = relationship("OrderItem", back_populates="product")
     reviews: list["Review"] = relationship("Review", back_populates="product")
     ad_campaigns: list["AdCampaign"] = relationship("AdCampaign", back_populates="product")
+    moderator: "AdminUser | None" = relationship("AdminUser")
+    flags: list["ProductFlag"] = relationship("ProductFlag", back_populates="product")
+
+
+class ProductFlag(Base):
+    __tablename__ = "product_flag"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    product_id = Column(String, ForeignKey("product.id", ondelete="CASCADE"), nullable=False)
+    reported_by = Column(String, ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
+    reason = Column(String(100), nullable=False)  # counterfeit, inappropriate, pricing_error, prohibited, other
+    description = Column(Text, nullable=True)
+    status = Column(String(20), nullable=False, default="PENDING")  # PENDING, REVIEWED, RESOLVED, DISMISSED
+    reviewed_by = Column(String, ForeignKey("admin_user.id", ondelete="SET NULL"), nullable=True)
+    reviewed_at = Column(DateTime, nullable=True)
+    admin_note = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+
+    product: "Product" = relationship("Product", back_populates="flags")
+    reporter: "User | None" = relationship("User")
+    reviewer: "AdminUser | None" = relationship("AdminUser")
+
+
+class ProductModerationLog(Base):
+    __tablename__ = "product_moderation_log"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    product_id = Column(String, ForeignKey("product.id", ondelete="CASCADE"), nullable=False)
+    action = Column(String(50), nullable=False)  # auto_approved, auto_rejected, escalated, approved, rejected, suspended
+    ai_score = Column(Float, nullable=True)
+    ai_reasoning = Column(Text, nullable=True)
+    performed_by = Column(String, ForeignKey("admin_user.id", ondelete="SET NULL"), nullable=True)
+    note = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
 
 
 class User(Base):

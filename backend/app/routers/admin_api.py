@@ -246,7 +246,10 @@ def create_product(
     if not data.slug:
         from app.core.slug import generate_product_slug
         data.slug = generate_product_slug(data.name, db)
-    product = Product(**data.model_dump())
+    product_data = data.model_dump()
+    # Admin-created products are auto-approved (skip moderation)
+    product_data["status"] = "APPROVED"
+    product = Product(**product_data)
     db.add(product)
     db.commit()
     db.refresh(product)
@@ -4130,4 +4133,216 @@ async def admin_ai_review_sentiment(
         return {"ok": False, "error": "AI could not analyze sentiment"}
     except Exception as e:
         return {"ok": False, "error": str(e)}
+
+
+# ─── Product Moderation Endpoints ──────────────────────────────────
+
+
+@router.get("/moderation/stats")
+def moderation_stats(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """Get moderation dashboard statistics."""
+    from app.models import ProductFlag, ProductModerationLog
+    pending = db.query(Product).filter(Product.status == "PENDING_REVIEW").count()
+    approved = db.query(Product).filter(Product.status == "APPROVED").count()
+    rejected = db.query(Product).filter(Product.status == "REJECTED").count()
+    suspended = db.query(Product).filter(Product.status == "SUSPENDED").count()
+    flagged = db.query(ProductFlag).filter(ProductFlag.status == "PENDING").count()
+    total = db.query(Product).count()
+    return {
+        "pending": pending,
+        "approved": approved,
+        "rejected": rejected,
+        "suspended": suspended,
+        "flagged": flagged,
+        "total": total,
+    }
+
+
+@router.get("/moderation/queue")
+def moderation_queue(
+    status: str = "PENDING_REVIEW",
+    page: int = 1,
+    per_page: int = 20,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """Get products in moderation queue."""
+    query = db.query(Product).filter(Product.status == status)
+    total = query.count()
+    products = query.order_by(desc(Product.created_at)).offset((page - 1) * per_page).limit(per_page).all()
+    retailers = {r.id: r.name for r in db.query(Retailer).all()}
+    return {
+        "products": [
+            {
+                "id": p.id,
+                "name": p.name,
+                "brand": p.brand or "",
+                "price": p.price,
+                "images": p.images or [],
+                "retailer": retailers.get(p.retailer_id, "Unknown"),
+                "retailer_id": p.retailer_id,
+                "category": p.category.name if p.category else "",
+                "status": p.status,
+                "ai_confidence": p.ai_confidence_score,
+                "created_at": p.created_at.isoformat() if p.created_at else None,
+            }
+            for p in products
+        ],
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "pages": (total + per_page - 1) // per_page,
+    }
+
+
+@router.get("/moderation/product/{product_id}")
+def moderation_product_detail(
+    product_id: str,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """Get detailed product info for moderation review."""
+    from app.models import ProductModerationLog, ProductFlag
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    retailers = {r.id: r.name for r in db.query(Retailer).all()}
+    logs = db.query(ProductModerationLog).filter(
+        ProductModerationLog.product_id == product_id
+    ).order_by(desc(ProductModerationLog.created_at)).all()
+    flags = db.query(ProductFlag).filter(ProductFlag.product_id == product_id).all()
+    return {
+        "product": {
+            "id": product.id,
+            "name": product.name,
+            "brand": product.brand or "",
+            "description": product.description or "",
+            "price": product.price,
+            "discount_price": product.discount_price,
+            "images": product.images or [],
+            "video_url": product.video_url,
+            "inventory": product.inventory,
+            "category": product.category.name if product.category else "",
+            "sub_category": product.sub_category or "",
+            "retailer": retailers.get(product.retailer_id, "Unknown"),
+            "status": product.status,
+            "ai_confidence": product.ai_confidence_score,
+            "ai_result": product.ai_moderation_result,
+            "moderation_note": product.moderation_note,
+            "created_at": product.created_at.isoformat() if product.created_at else None,
+        },
+        "logs": [
+            {
+                "action": l.action,
+                "ai_score": l.ai_score,
+                "ai_reasoning": l.ai_reasoning,
+                "note": l.note,
+                "created_at": l.created_at.isoformat() if l.created_at else None,
+            }
+            for l in logs
+        ],
+        "flags": [
+            {
+                "reason": f.reason,
+                "description": f.description,
+                "status": f.status,
+                "created_at": f.created_at.isoformat() if f.created_at else None,
+            }
+            for f in flags
+        ],
+    }
+
+
+@router.post("/moderation/product/{product_id}/approve")
+def moderate_approve(
+    product_id: str,
+    note: str = "",
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """Approve a product."""
+    from app.models import ProductModerationLog
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    product.status = "APPROVED"
+    product.moderated_by = admin.id
+    product.moderated_at = utcnow()
+    product.moderation_note = note or "Approved by admin"
+    log = ProductModerationLog(
+        product_id=product_id,
+        action="approved",
+        ai_score=product.ai_confidence_score,
+        ai_reasoning=product.ai_moderation_result.get("reasoning") if product.ai_moderation_result else None,
+        performed_by=admin.id,
+        note=note,
+    )
+    db.add(log)
+    db.commit()
+    log_admin_action(db, admin, "approve", "product", product_id, f"Approved product '{product.name}'")
+    return {"success": True, "status": "APPROVED"}
+
+
+@router.post("/moderation/product/{product_id}/reject")
+def moderate_reject(
+    product_id: str,
+    reason: str = "",
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """Reject a product."""
+    from app.models import ProductModerationLog
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    product.status = "REJECTED"
+    product.moderated_by = admin.id
+    product.moderated_at = utcnow()
+    product.moderation_note = reason or "Rejected by admin"
+    log = ProductModerationLog(
+        product_id=product_id,
+        action="rejected",
+        ai_score=product.ai_confidence_score,
+        ai_reasoning=product.ai_moderation_result.get("reasoning") if product.ai_moderation_result else None,
+        performed_by=admin.id,
+        note=reason,
+    )
+    db.add(log)
+    db.commit()
+    log_admin_action(db, admin, "reject", "product", product_id, f"Rejected product '{product.name}'")
+    return {"success": True, "status": "REJECTED"}
+
+
+@router.post("/moderation/bulk-action")
+def moderate_bulk(
+    product_ids: list[str],
+    action: str = "approve",
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """Bulk approve or reject products."""
+    from app.models import ProductModerationLog
+    updated = 0
+    for pid in product_ids:
+        product = db.query(Product).filter(Product.id == pid).first()
+        if not product:
+            continue
+        product.status = "APPROVED" if action == "approve" else "REJECTED"
+        product.moderated_by = admin.id
+        product.moderated_at = utcnow()
+        product.moderation_note = f"Bulk {action} by admin"
+        log = ProductModerationLog(
+            product_id=pid,
+            action=f"bulk_{action}",
+            ai_score=product.ai_confidence_score,
+            performed_by=admin.id,
+            note=f"Bulk {action}",
+        )
+        db.add(log)
+        updated += 1
+    db.commit()
+    return {"success": True, "updated": updated}
 

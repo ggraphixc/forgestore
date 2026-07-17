@@ -223,6 +223,7 @@ async def product_create(
         inventory=inventory,
         is_new_arrival=form.get("is_new_arrival") == "true",
         is_flagship=form.get("is_flagship") == "true",
+        status="APPROVED",
     )
     db.add(product)
     db.commit()
@@ -1065,6 +1066,18 @@ def chat_moderation_page(request: Request, db: Session = Depends(get_db)):
         "flagged_count": flagged_count,
         "hidden_count": hidden_count,
         "pending_count": pending_count,
+        "has_permission": has_permission,
+    })
+
+
+@router.get("/moderation", response_class=HTMLResponse)
+def moderation_page(request: Request, db: Session = Depends(get_db)):
+    admin = get_current_user_from_cookie(request, db)
+    if not admin or not has_permission(admin, "catalog"):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    return render_template("admin/moderation/dashboard.html", {
+        "request": request,
+        "admin": admin,
         "has_permission": has_permission,
     })
 

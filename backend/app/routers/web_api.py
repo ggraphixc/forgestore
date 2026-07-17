@@ -311,7 +311,7 @@ def ai_recommendations(
     categories = {c.id: c.name for c in db.query(Category).all()}
 
     # Prepare all products as dicts for AI
-    all_products = db.query(Product).all()
+    all_products = db.query(Product).filter(Product.status == "APPROVED").all()
     current_dict = {
         "id": current.id,
         "name": current.name,
@@ -665,7 +665,7 @@ def ai_search(
         raise HTTPException(status_code=400, detail="Query is required")
 
     # Get all products
-    products = db.query(Product).order_by(Product.rating.desc()).all()
+    products = db.query(Product).filter(Product.status == "APPROVED").order_by(Product.rating.desc()).all()
     retailers = {r.id: r.name for r in db.query(Retailer).all()}
     categories = {c.id: c.name for c in db.query(Category).all()}
 
@@ -714,8 +714,8 @@ def ai_search(
     # Fallback: basic search
     search_term = f"%{query}%"
     fallback = db.query(Product).filter(
-        Product.name.ilike(search_term) |
-        Product.description.ilike(search_term)
+        (Product.name.ilike(search_term) | Product.description.ilike(search_term)),
+        Product.status == "APPROVED",
     ).limit(6).all()
 
     return {
@@ -1433,7 +1433,8 @@ def search_suggestions(
         or_(
             Product.name.ilike(search_term),
             Product.brand.ilike(search_term),
-        )
+        ),
+        Product.status == "APPROVED",
     ).order_by(Product.rating.desc()).limit(5).all()
 
     retailers = {r.id: r.name for r in db.query(Retailer).all()}
@@ -1892,3 +1893,44 @@ async def request_bulk_order(request: Request, db: Session = Depends(get_db)):
             pass
 
     return {"success": True, "order_id": bulk_order.id, "total_price": bulk_order.total_price}
+
+
+@router.post("/products/{product_id}/report")
+def report_product(
+    product_id: str,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """Customer reports a product for policy violation."""
+    from app.models import ProductFlag, Product
+    customer = get_current_customer_from_cookie(request, db)
+    data = request.query_params or {}
+    body = asyncio.run(request.json()) if request.headers.get("content-type") == "application/json" else {}
+    reason = body.get("reason", "")
+    description = body.get("description", "")
+
+    if not reason:
+        raise HTTPException(status_code=400, detail="Reason is required")
+
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    # Check if already reported
+    existing = db.query(ProductFlag).filter(
+        ProductFlag.product_id == product_id,
+        ProductFlag.reported_by == (customer.id if customer else None),
+        ProductFlag.status == "PENDING",
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="You have already reported this product")
+
+    flag = ProductFlag(
+        product_id=product_id,
+        reported_by=customer.id if customer else None,
+        reason=reason,
+        description=description,
+    )
+    db.add(flag)
+    db.commit()
+    return {"success": True, "message": "Report submitted. Our team will review it."}

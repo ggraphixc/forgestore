@@ -1512,6 +1512,35 @@
         </div>
       </div>
 
+      <!-- Report product -->
+      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--pd-border);">
+        <button onclick="openReportModal()" style="background:none;border:none;color:var(--pd-muted);font-size:0.75rem;cursor:pointer;display:flex;align-items:center;gap:0.375rem;padding:0;">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2z"/></svg>
+          Report this product
+        </button>
+      </div>
+
+      <!-- Report modal -->
+      <div id="reportModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;justify-content:center;align-items:center;">
+        <div style="background:var(--pd-card);border-radius:16px;padding:2rem;max-width:400px;width:90%;">
+          <h3 style="font-size:1.125rem;font-weight:700;margin-bottom:0.5rem;">Report Product</h3>
+          <p style="font-size:0.8125rem;color:var(--pd-muted);margin-bottom:1rem;">Why are you reporting this product?</p>
+          <select id="reportReason" style="width:100%;padding:0.5rem;border:1px solid var(--pd-border);border-radius:8px;margin-bottom:0.75rem;background:var(--pd-bg);color:var(--pd-text);">
+            <option value="">Select a reason...</option>
+            <option value="counterfeit">Counterfeit / Fake product</option>
+            <option value="inappropriate">Inappropriate content</option>
+            <option value="pricing_error">Pricing error</option>
+            <option value="prohibited">Prohibited item</option>
+            <option value="misleading">Misleading description</option>
+            <option value="other">Other</option>
+          </select>
+          <textarea id="reportDesc" rows="3" placeholder="Additional details (optional)" style="width:100%;padding:0.5rem;border:1px solid var(--pd-border);border-radius:8px;margin-bottom:1rem;font-size:0.8125rem;background:var(--pd-bg);color:var(--pd-text);"></textarea>
+          <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+            <button onclick="closeReportModal()" style="padding:0.5rem 1rem;border-radius:8px;border:1px solid var(--pd-border);background:transparent;cursor:pointer;font-size:0.8125rem;">Cancel</button>
+            <button onclick="submitReport()" style="padding:0.5rem 1rem;border-radius:8px;border:none;background:#ef4444;color:#fff;cursor:pointer;font-size:0.8125rem;font-weight:600;">Submit Report</button>
+          </div>
+        </div>
+      </div>
 
     </div>
   </div>
@@ -2209,6 +2238,35 @@ async function boSubmit(e) {
     alert('Network error. Please try again.');
   }
   btn.disabled = false; btn.textContent = 'Submit Request';
+}
+
+// Report product
+function openReportModal() {
+  document.getElementById('reportModal').style.display = 'flex';
+}
+function closeReportModal() {
+  document.getElementById('reportModal').style.display = 'none';
+  document.getElementById('reportReason').value = '';
+  document.getElementById('reportDesc').value = '';
+}
+async function submitReport() {
+  const reason = document.getElementById('reportReason').value;
+  if (!reason) { alert('Please select a reason'); return; }
+  const desc = document.getElementById('reportDesc').value;
+  try {
+    const r = await fetch('/api/products/{{ product.id }}/report', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ reason, description: desc }),
+    });
+    const d = await r.json();
+    if (d.success) {
+      closeReportModal();
+      alert('Report submitted. Thank you for helping keep our marketplace safe.');
+    } else {
+      alert(d.detail || d.message || 'Error submitting report');
+    }
+  } catch(e) { alert('Network error'); }
 }
 </script>
 {% endif %}

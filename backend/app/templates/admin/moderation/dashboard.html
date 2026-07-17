@@ -1,0 +1,302 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}Product Moderation — {{ settings.site_name|default('ForgeStore') }}{% endblock %}
+{% block content %}
+<style>
+  :root {
+    --primary: {{ settings.primary_color|default('#f59e0b') }};
+    --primary-hover: {{ settings.secondary_color|default('#d97706') }};
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --green: #10b981;
+    --green-bg: #d1fae5;
+    --red: #ef4444;
+    --red-bg: #fee2e2;
+    --yellow: #f59e0b;
+    --yellow-bg: #fef3c7;
+    --blue: #3b82f6;
+    --blue-bg: #dbeafe;
+  }
+  .dark { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --text-muted: #94a3b8; --border: #334155; }
+  .mod-page { max-width: 80rem; margin: 0 auto; padding: 1.5rem; }
+  .mod-page h1 { font-size: 1.75rem; font-weight: 800; color: var(--text); margin-bottom: 0.25rem; }
+  .mod-page .subtitle { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+  .mod-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; text-align: center; }
+  .stat-card .num { font-size: 2rem; font-weight: 800; }
+  .stat-card .label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-top: 0.25rem; }
+  .stat-card.pending .num { color: var(--yellow); }
+  .stat-card.approved .num { color: var(--green); }
+  .stat-card.rejected .num { color: var(--red); }
+  .stat-card.flagged .num { color: var(--blue); }
+  .mod-filters { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .mod-filter-btn { padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text-muted); transition: all 0.15s; }
+  .mod-filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .mod-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  .mod-table th { text-align: left; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 2px solid var(--border); background: var(--bg); }
+  .mod-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+  .mod-table tbody tr:hover { background: rgba(245, 158, 11, 0.04); }
+  .mod-thumb { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: var(--border); }
+  .mod-badge { display: inline-block; font-size: 0.6875rem; font-weight: 700; padding: 0.2rem 0.625rem; border-radius: 9999px; }
+  .mod-badge.pending { background: var(--yellow-bg); color: #92400e; }
+  .mod-badge.approved { background: var(--green-bg); color: #065f46; }
+  .mod-badge.rejected { background: var(--red-bg); color: #991b1b; }
+  .mod-badge.suspended { background: #e2e8f0; color: #475569; }
+  .mod-badge.flagged { background: var(--blue-bg); color: #1e40af; }
+  .mod-confidence { display: flex; align-items: center; gap: 0.5rem; }
+  .mod-conf-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; max-width: 80px; }
+  .mod-conf-fill { height: 100%; border-radius: 3px; }
+  .mod-conf-fill.high { background: var(--green); }
+  .mod-conf-fill.medium { background: var(--yellow); }
+  .mod-conf-fill.low { background: var(--red); }
+  .mod-actions { display: flex; gap: 0.375rem; }
+  .mod-btn { min-height: 36px; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: none; transition: all 0.15s; }
+  .mod-btn-approve { background: var(--green); color: #fff; }
+  .mod-btn-approve:hover { background: #059669; }
+  .mod-btn-reject { background: var(--red); color: #fff; }
+  .mod-btn-reject:hover { background: #dc2626; }
+  .mod-btn-view { background: transparent; color: var(--primary); border: 1px solid var(--border); }
+  .mod-btn-view:hover { background: var(--yellow-bg); }
+  .mod-empty { text-align: center; padding: 4rem 1.5rem; color: var(--text-muted); }
+  .mod-empty svg { width: 3rem; height: 3rem; margin: 0 auto 1rem; opacity: 0.4; }
+  .mod-pagination { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; }
+  .mod-page-btn { min-height: 36px; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); }
+  .mod-page-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .mod-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .mod-bulk { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding: 0.75rem 1rem; background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
+  .mod-bulk label { font-size: 0.8125rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+  .mod-detail-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: flex-start; padding: 2rem; overflow-y: auto; }
+  .mod-detail-overlay.active { display: flex; }
+  .mod-detail-card { background: var(--card); border-radius: 16px; max-width: 700px; width: 100%; padding: 2rem; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+  .mod-detail-card h2 { font-size: 1.25rem; font-weight: 800; margin-bottom: 1rem; color: var(--text); }
+  .mod-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
+  .mod-detail-field { }
+  .mod-detail-field .label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+  .mod-detail-field .value { font-size: 0.875rem; color: var(--text); margin-top: 0.125rem; }
+  .mod-detail-images { display: flex; gap: 0.5rem; overflow-x: auto; margin-bottom: 1rem; }
+  .mod-detail-images img { width: 120px; height: 120px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+  .mod-ai-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+  .mod-ai-box h4 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .mod-ai-box p { font-size: 0.8125rem; color: var(--text); line-height: 1.5; }
+  .mod-detail-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+  .mod-note-input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8125rem; margin-bottom: 0.75rem; background: var(--bg); color: var(--text); }
+  @media (max-width: 640px) {
+    .mod-stats { grid-template-columns: repeat(2, 1fr); }
+    .mod-table th:nth-child(n+5), .mod-table td:nth-child(n+5) { display: none; }
+    .mod-detail-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="mod-page">
+  <h1>Product Moderation</h1>
+  <p class="subtitle">AI-powered product review and approval queue</p>
+
+  <div class="mod-stats" id="modStats"></div>
+
+  <div class="mod-filters" id="modFilters">
+    <button class="mod-filter-btn active" data-status="PENDING_REVIEW">Pending Review</button>
+    <button class="mod-filter-btn" data-status="APPROVED">Approved</button>
+    <button class="mod-filter-btn" data-status="REJECTED">Rejected</button>
+    <button class="mod-filter-btn" data-status="SUSPENDED">Suspended</button>
+  </div>
+
+  <div class="mod-bulk" id="modBulk" style="display:none;">
+    <label><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"> Select All</label>
+    <button class="mod-btn mod-btn-approve" onclick="bulkAction('approve')">Approve Selected</button>
+    <button class="mod-btn mod-btn-reject" onclick="bulkAction('reject')">Reject Selected</button>
+    <span id="selectedCount" style="font-size:0.8125rem;color:var(--text-muted);"></span>
+  </div>
+
+  <div id="modTable"></div>
+  <div class="mod-pagination" id="modPagination"></div>
+</div>
+
+<div class="mod-detail-overlay" id="detailOverlay" onclick="if(event.target===this)closeDetail()">
+  <div class="mod-detail-card" id="detailCard"></div>
+</div>
+
+<script>
+let currentStatus = 'PENDING_REVIEW';
+let currentPage = 1;
+
+async function loadStats() {
+  const r = await fetch('/api/admin/moderation/stats');
+  const d = await r.json();
+  document.getElementById('modStats').innerHTML = `
+    <div class="stat-card pending"><div class="num">${d.pending}</div><div class="label">Pending</div></div>
+    <div class="stat-card approved"><div class="num">${d.approved}</div><div class="label">Approved</div></div>
+    <div class="stat-card rejected"><div class="num">${d.rejected}</div><div class="label">Rejected</div></div>
+    <div class="stat-card flagged"><div class="num">${d.flagged}</div><div class="label">Flagged</div></div>
+  `;
+}
+
+async function loadQueue(page = 1) {
+  currentPage = page;
+  const r = await fetch(`/api/admin/moderation/queue?status=${currentStatus}&page=${page}&per_page=15`);
+  const d = await r.json();
+  const isPending = currentStatus === 'PENDING_REVIEW';
+  document.getElementById('modBulk').style.display = isPending && d.products.length ? 'flex' : 'none';
+
+  if (!d.products.length) {
+    document.getElementById('modTable').innerHTML = `<div class="mod-empty">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p>No products in this queue</p>
+    </div>`;
+    document.getElementById('modPagination').innerHTML = '';
+    return;
+  }
+
+  let html = `<table class="mod-table"><thead><tr>
+    <th style="width:40px;">${isPending ? '<input type="checkbox" id="checkAll" onchange="toggleSelectAll()">' : ''}</th>
+    <th>Product</th><th>Category</th><th>Price</th><th>AI Score</th><th>Status</th><th>Actions</th>
+  </tr></thead><tbody>`;
+  for (const p of d.products) {
+    const conf = p.ai_confidence;
+    const confClass = conf >= 75 ? 'high' : conf >= 50 ? 'medium' : 'low';
+    const thumb = p.images && p.images[0] ? `<img src="${p.images[0]}" class="mod-thumb" alt="">` : `<div class="mod-thumb"></div>`;
+    html += `<tr>
+      <td>${isPending ? `<input type="checkbox" class="row-check" value="${p.id}">` : ''}</td>
+      <td><div style="display:flex;align-items:center;gap:0.75rem;">${thumb}<div><div style="font-weight:600;">${p.name}</div><div style="font-size:0.75rem;color:var(--text-muted);">${p.brand || ''} · ${p.retailer}</div></div></div></td>
+      <td style="font-size:0.8125rem;">${p.category || '—'}</td>
+      <td style="font-weight:600;">₦${p.price.toLocaleString()}</td>
+      <td><div class="mod-confidence"><div class="mod-conf-bar"><div class="mod-conf-fill ${confClass}" style="width:${conf || 0}%"></div></div><span style="font-size:0.75rem;font-weight:600;">${conf != null ? conf + '%' : '—'}</span></div></td>
+      <td><span class="mod-badge ${p.status.toLowerCase()}">${p.status.replace('_', ' ')}</span></td>
+      <td><div class="mod-actions">
+        <button class="mod-btn mod-btn-view" onclick="viewProduct('${p.id}')">View</button>
+        ${isPending ? `<button class="mod-btn mod-btn-approve" onclick="quickApprove('${p.id}')">Approve</button><button class="mod-btn mod-btn-reject" onclick="quickReject('${p.id}')">Reject</button>` : ''}
+      </div></td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  document.getElementById('modTable').innerHTML = html;
+
+  let pag = '';
+  if (d.pages > 1) {
+    for (let i = 1; i <= d.pages; i++) {
+      pag += `<button class="mod-page-btn ${i === page ? 'active' : ''}" onclick="loadQueue(${i})">${i}</button>`;
+    }
+  }
+  document.getElementById('modPagination').innerHTML = pag;
+  updateSelectedCount();
+}
+
+async function viewProduct(id) {
+  const r = await fetch(`/api/admin/moderation/product/${id}`);
+  const d = await r.json();
+  const p = d.product;
+  const images = (p.images || []).map(url => `<img src="${url}" alt="">`).join('');
+  let aiHtml = '';
+  if (p.ai_result) {
+    const a = p.ai_result;
+    aiHtml = `<div class="mod-ai-box"><h4>AI Analysis</h4><p><strong>Confidence:</strong> ${p.ai_confidence}% · <strong>Decision:</strong> ${a.decision}</p><p>${a.reasoning || ''}</p>`;
+    if (a.suggestions && a.suggestions.length) {
+      aiHtml += `<p style="margin-top:0.5rem;"><strong>Suggestions:</strong> ${a.suggestions.join('; ')}</p>`;
+    }
+    aiHtml += '</div>';
+  }
+  let logsHtml = '';
+  if (d.logs.length) {
+    logsHtml = '<div class="mod-ai-box"><h4>Moderation History</h4>';
+    for (const l of d.logs) {
+      logsHtml += `<p style="font-size:0.75rem;">${l.action} — ${l.note || ''} (${l.created_at ? new Date(l.created_at).toLocaleDateString() : ''})</p>`;
+    }
+    logsHtml += '</div>';
+  }
+  document.getElementById('detailCard').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+      <h2>${p.name}</h2>
+      <button onclick="closeDetail()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-muted);">&times;</button>
+    </div>
+    <div class="mod-detail-images">${images || '<div style="padding:2rem;background:var(--border);border-radius:8px;color:var(--text-muted);">No images</div>'}</div>
+    <div class="mod-detail-grid">
+      <div class="mod-detail-field"><div class="label">Brand</div><div class="value">${p.brand || '—'}</div></div>
+      <div class="mod-detail-field"><div class="label">Category</div><div class="value">${p.category || '—'}</div></div>
+      <div class="mod-detail-field"><div class="label">Price</div><div class="value">₦${p.price.toLocaleString()}</div></div>
+      <div class="mod-detail-field"><div class="label">Inventory</div><div class="value">${p.inventory} units</div></div>
+      <div class="mod-detail-field"><div class="label">Retailer</div><div class="value">${p.retailer}</div></div>
+      <div class="mod-detail-field"><div class="label">Status</div><div class="value"><span class="mod-badge ${p.status.toLowerCase()}">${p.status}</span></div></div>
+    </div>
+    ${p.description ? `<div style="margin-bottom:1rem;"><div style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.25rem;">Description</div><p style="font-size:0.8125rem;color:var(--text);line-height:1.5;">${p.description}</p></div>` : ''}
+    ${aiHtml}
+    ${logsHtml}
+    <input type="text" class="mod-note-input" id="modNote" placeholder="Add a note (optional)">
+    <div class="mod-detail-actions">
+      <button class="mod-btn mod-btn-approve" onclick="approveProduct('${p.id}')">Approve</button>
+      <button class="mod-btn mod-btn-reject" onclick="rejectProduct('${p.id}')">Reject</button>
+      <button class="mod-btn mod-btn-view" onclick="closeDetail()">Close</button>
+    </div>
+  `;
+  document.getElementById('detailOverlay').classList.add('active');
+}
+
+function closeDetail() {
+  document.getElementById('detailOverlay').classList.remove('active');
+}
+
+async function approveProduct(id) {
+  const note = document.getElementById('modNote')?.value || '';
+  await fetch(`/api/admin/moderation/product/${id}/approve?note=${encodeURIComponent(note)}`, { method: 'POST' });
+  closeDetail();
+  loadStats();
+  loadQueue(currentPage);
+}
+
+async function rejectProduct(id) {
+  const note = document.getElementById('modNote')?.value || '';
+  await fetch(`/api/admin/moderation/product/${id}/reject?reason=${encodeURIComponent(note)}`, { method: 'POST' });
+  closeDetail();
+  loadStats();
+  loadQueue(currentPage);
+}
+
+async function quickApprove(id) {
+  await fetch(`/api/admin/moderation/product/${id}/approve`, { method: 'POST' });
+  loadStats();
+  loadQueue(currentPage);
+}
+
+async function quickReject(id) {
+  await fetch(`/api/admin/moderation/product/${id}/reject`, { method: 'POST' });
+  loadStats();
+  loadQueue(currentPage);
+}
+
+function toggleSelectAll() {
+  const check = document.getElementById('selectAll') || document.getElementById('checkAll');
+  document.querySelectorAll('.row-check').forEach(cb => cb.checked = check.checked);
+  updateSelectedCount();
+}
+
+function updateSelectedCount() {
+  const checked = document.querySelectorAll('.row-check:checked').length;
+  const el = document.getElementById('selectedCount');
+  if (el) el.textContent = checked ? `${checked} selected` : '';
+}
+
+async function bulkAction(action) {
+  const ids = Array.from(document.querySelectorAll('.row-check:checked')).map(cb => cb.value);
+  if (!ids.length) return;
+  await fetch('/api/admin/moderation/bulk-action', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ product_ids: ids, action: action }),
+  });
+  loadStats();
+  loadQueue(currentPage);
+}
+
+document.querySelectorAll('.mod-filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mod-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentStatus = btn.dataset.status;
+    loadQueue(1);
+  });
+});
+
+loadStats();
+loadQueue();
+</script>
+{% endblock %}

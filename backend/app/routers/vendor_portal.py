@@ -1209,10 +1209,54 @@ async def vendor_product_create(request: Request, db: Session = Depends(get_db),
         is_new_arrival=form.get("is_new_arrival") == "true",
         is_flagship=form.get("is_flagship") == "true",
         specifications=json.loads(form.get("specifications") or "{}"),
+        status="PENDING_REVIEW",
     )
     db.add(product)
     db.commit()
     db.refresh(product)
+
+    # Run AI moderation
+    try:
+        from app.services.product_moderation import run_moderation
+        category_name = ""
+        if product.category_id:
+            cat = db.query(Category).filter(Category.id == product.category_id).first()
+            category_name = cat.name if cat else ""
+        moderation_result = run_moderation({
+            "name": product.name, "brand": product.brand or "",
+            "description": product.description or "",
+            "price": product.price,
+            "discount_price": product.discount_price,
+            "images": product.images or [],
+            "inventory": product.inventory,
+            "category_name": category_name,
+            "sub_category": product.sub_category or "",
+        })
+        product.ai_confidence_score = moderation_result["confidence"]
+        product.ai_moderation_result = moderation_result
+        if moderation_result["decision"] == "APPROVE":
+            product.status = "APPROVED"
+            product.moderated_at = utcnow()
+            product.moderation_note = moderation_result["reasoning"]
+        elif moderation_result["decision"] == "REJECT":
+            product.status = "REJECTED"
+            product.moderated_at = utcnow()
+            product.moderation_note = moderation_result["reasoning"]
+        db.commit()
+        # Log moderation
+        from app.models import ProductModerationLog
+        log = ProductModerationLog(
+            product_id=product.id,
+            action=f"auto_{moderation_result['decision'].lower()}",
+            ai_score=moderation_result["confidence"],
+            ai_reasoning=moderation_result["reasoning"],
+        )
+        db.add(log)
+        db.commit()
+    except Exception as e:
+        import logging
+        logging.getLogger("forgestore.moderation").error(f"Moderation failed for product {product.id}: {e}")
+
     log_admin_action(db, admin, "create", "product", product.id, f"Created product '{product.name}'")
     return RedirectResponse(url=f"/vendor/products/{product.id}", status_code=302)
 
