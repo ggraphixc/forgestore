@@ -240,21 +240,28 @@ def reset_password(data: dict, db: Session = Depends(get_db)):
 
 @router.post("/setup")
 def setup_admin(db: Session = Depends(get_db)):
-    """Setup default admin if not exists (for first-time setup)."""
-    existing = db.query(AdminUser).filter(AdminUser.email == "admin@forgestore.com").first()
+    """Setup default admin if not exists (for first-time setup).
+
+    SECURITY: This endpoint is only usable when no admin exists yet.
+    Once an admin account exists, this endpoint returns 403.
+    """
+    existing = db.query(AdminUser).first()
     if existing:
-        return {"message": "Admin already exists"}
+        raise HTTPException(status_code=403, detail="Admin setup is no longer available. An admin account already exists.")
+
+    import secrets
+    generated_password = secrets.token_urlsafe(12)
 
     admin = AdminUser(
         email="admin@forgestore.com",
-        password=hash_password("admin123"),
+        password=hash_password(generated_password),
         name="Super Admin",
         role="DIR_ADMIN",
     )
     db.add(admin)
     db.commit()
 
-    return {"message": "Default admin created (admin@forgestore.com / admin123)"}
+    return {"message": "Admin created. Use the generated credentials from server logs.", "email": "admin@forgestore.com"}
 
 
 # ===== Google OAuth =====

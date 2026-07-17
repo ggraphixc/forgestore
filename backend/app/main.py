@@ -1,6 +1,7 @@
 import logging
 import logging.config
 import os
+import secrets
 from datetime import timedelta
 from app.utils import utcnow
 
@@ -12,6 +13,7 @@ dotenv.load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".en
 from fastapi import FastAPI, Request, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 from sqlalchemy.orm import Session
 
 from app.database import init_db, get_db
@@ -77,6 +79,95 @@ from app.config import get_settings
 rate_limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(title="ForgeStore", version="1.0.0")
+
+
+# ─── CSRF Protection Middleware ─────────────────────────────────────
+class CSRFMiddleware(BaseHTTPMiddleware):
+    """Validates Origin/Referer headers on state-changing requests from browsers.
+
+    Sets a CSRF token cookie on every response. On POST/PUT/DELETE/PATCH,
+    checks that the Origin or Referer header matches the site base URL.
+    Exempts API endpoints that use Bearer token auth (not CSRF-vulnerable).
+    """
+
+    # Paths exempt from CSRF (API auth endpoints using Bearer tokens)
+    EXEMPT_PATHS = {"/api/auth/login", "/api/auth/signup", "/api/auth/setup"}
+
+    async def dispatch(self, request: Request, call_next):
+        # Set CSRF token cookie on every response
+        response = await call_next(request)
+
+        csrf_token = request.cookies.get("csrf_token")
+        if not csrf_token:
+            csrf_token = secrets.token_hex(32)
+            response.set_cookie(
+                key="csrf_token",
+                value=csrf_token,
+                httponly=False,  # JS needs to read this
+                max_age=86400,
+                secure=_settings.secure_cookies,
+                samesite="strict",
+            )
+
+        # Validate CSRF on state-changing requests from browser clients
+        if request.method in ("POST", "PUT", "DELETE", "PATCH"):
+            # Skip for API endpoints using Bearer token auth
+            if request.url.path in self.EXEMPT_PATHS:
+                return response
+            # Skip for webhook endpoints (external services)
+            if request.url.path.startswith("/webhook"):
+                return response
+            # Skip for API endpoints with Authorization header (Bearer token)
+            auth_header = request.headers.get("authorization", "")
+            if auth_header.startswith("Bearer "):
+                return response
+
+            # Check Origin header first, then Referer
+            origin = request.headers.get("origin")
+            referer = request.headers.get("referer")
+            site_url = _settings.site_base_url.rstrip("/")
+
+            if origin:
+                if not origin.rstrip("/").startswith(site_url):
+                    logger.warning("CSRF blocked: invalid origin %s on %s %s", origin, request.method, request.url.path)
+                    return HTMLResponse(status_code=403, content="CSRF validation failed: invalid origin")
+            elif referer:
+                if not referer.rstrip("/").startswith(site_url):
+                    logger.warning("CSRF blocked: invalid referer %s on %s %s", referer, request.method, request.url.path)
+                    return HTMLResponse(status_code=403, content="CSRF validation failed: invalid referer")
+            else:
+                # No Origin or Referer — likely a non-browser client (OK) or forged request
+                # For form submissions from browsers, require Origin or Referer
+                content_type = request.headers.get("content-type", "")
+                if "application/x-www-form-urlencoded" in content_type or "multipart/form-data" in content_type:
+                    logger.warning("CSRF blocked: missing origin on %s %s (content-type: %s)", request.method, request.url.path, content_type)
+                    return HTMLResponse(status_code=403, content="CSRF validation failed: missing origin")
+
+        return response
+
+
+# ─── Security Headers Middleware ────────────────────────────────────
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Adds Content Security Policy and other security headers."""
+
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        # CSP: restrict script/style sources
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.paystack.co https://cdn.jsdelivr.net https://unpkg.com; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "img-src 'self' data: https: blob:; "
+            "connect-src 'self' https://api.paystack.co; "
+            "frame-ancestors 'none'; "
+            "base-uri 'self'; "
+            "form-action 'self'"
+        )
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        return response
 app.state.limiter = rate_limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
@@ -110,7 +201,7 @@ if _settings.site_base_url and _settings.site_base_url not in origins:
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins if origins else ["*"],
+    allow_origins=origins if origins else [_settings.site_base_url or "http://127.0.0.1:8000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -118,6 +209,10 @@ app.add_middleware(
 )
 
 logger.info(f"CORS allowed origins: {origins if origins else ['*']}")
+
+# ─── CSRF & Security Headers ───────────────────────────────────────
+app.add_middleware(CSRFMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
 
 # ─── Debug Mode ──────────────────────────────────────────────────
 try:
@@ -138,30 +233,12 @@ except Exception:
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # ─── Debug Error Handler ─────────────────────────────────────────
-import traceback as _traceback
 from fastapi.responses import JSONResponse as _JSONResponse
 
 @app.exception_handler(Exception)
 async def debug_exception_handler(request: Request, exc: Exception):
-    """In debug mode, return full traceback; otherwise generic 500."""
-    try:
-        from app.database import SessionLocal
-        from app.models import Settings as SettingsModel
-        _db = SessionLocal()
-        _ds = _db.query(SettingsModel).filter(SettingsModel.key == "debug_mode").first()
-        _is_debug = _ds and _ds.value.lower() == "true"
-        _db.close()
-    except Exception:
-        _is_debug = False
-    if _is_debug:
-        return _JSONResponse(
-            status_code=500,
-            content={
-                "error": str(exc),
-                "type": type(exc).__name__,
-                "traceback": _traceback.format_exc(),
-            },
-        )
+    """Log errors server-side; never expose tracebacks to clients."""
+    logger.error("Unhandled exception: %s: %s", type(exc).__name__, exc, exc_info=True)
     return _JSONResponse(status_code=500, content={"error": "Internal server error"})
 
 # Include routers

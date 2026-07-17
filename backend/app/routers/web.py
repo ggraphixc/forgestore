@@ -492,6 +492,9 @@ def login_page(request: Request, db: Session = Depends(get_db)):
     customer = get_current_customer_from_cookie(request, db)
     if customer:
         redirect_target = request.query_params.get("next", "/shop/account")
+        # SECURITY: Only allow relative paths to prevent open redirect
+        if not redirect_target.startswith("/") or redirect_target.startswith("//"):
+            redirect_target = "/shop/account"
         return RedirectResponse(url=redirect_target, status_code=302)
     return _render_page("web/login.html", request, db)
 
@@ -502,6 +505,9 @@ def signup_page(request: Request, db: Session = Depends(get_db)):
     customer = get_current_customer_from_cookie(request, db)
     if customer:
         redirect_target = request.query_params.get("next", "/shop/account")
+        # SECURITY: Only allow relative paths to prevent open redirect
+        if not redirect_target.startswith("/") or redirect_target.startswith("//"):
+            redirect_target = "/shop/account"
         return RedirectResponse(url=redirect_target, status_code=302)
     return _render_page("web/signup.html", request, db)
 

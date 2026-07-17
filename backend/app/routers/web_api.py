@@ -47,12 +47,14 @@ def get_cart_token(request: Request) -> str:
 
 def set_cart_token_cookie(response: JSONResponse, token: str):
     """Set cart token cookie."""
+    from app.config import get_settings
+    _settings = get_settings()
     response.set_cookie(
         key="cart_token",
         value=token,
         httponly=True,
         max_age=86400 * 30,  # 30 days
-        secure=False,
+        secure=_settings.secure_cookies,
         samesite="lax",
     )
 

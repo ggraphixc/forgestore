@@ -3123,7 +3123,10 @@ def batch_mark_earnings_paid(
 # File Upload
 # ==============================================================================
 @router.post("/upload")
-async def upload_file(files: List[UploadFile] = File(...)):
+async def upload_file(
+    files: List[UploadFile] = File(...),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
     from app.core.cloudinary_upload import is_cloudinary_configured, upload_to_cloudinary
 
     use_cloudinary = is_cloudinary_configured()
