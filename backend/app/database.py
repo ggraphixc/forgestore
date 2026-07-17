@@ -205,3 +205,64 @@ def init_db():
         ProductModerationLog,
     )
     Base.metadata.create_all(bind=get_engine())
+    _apply_pending_migrations()
+
+
+def _apply_pending_migrations():
+    """Apply pending migrations that create_all() can't handle (ALTER TABLE, new tables)."""
+    from sqlalchemy import text, inspect
+    engine = get_engine()
+    with engine.connect() as conn:
+        inspector = inspect(engine)
+        existing_tables = inspector.get_table_names()
+
+        # 014: Product moderation columns + tables
+        if 'product' in existing_tables:
+            product_cols = {c['name'] for c in inspector.get_columns('product')}
+            if 'status' not in product_cols:
+                conn.execute(text("ALTER TABLE product ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'APPROVED'"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_product_status ON product(status)"))
+            if 'ai_confidence_score' not in product_cols:
+                conn.execute(text("ALTER TABLE product ADD COLUMN ai_confidence_score FLOAT"))
+            if 'ai_moderation_result' not in product_cols:
+                conn.execute(text("ALTER TABLE product ADD COLUMN ai_moderation_result JSON"))
+            if 'moderated_by' not in product_cols:
+                conn.execute(text("ALTER TABLE product ADD COLUMN moderated_by VARCHAR"))
+            if 'moderated_at' not in product_cols:
+                conn.execute(text("ALTER TABLE product ADD COLUMN moderated_at TIMESTAMP"))
+            if 'moderation_note' not in product_cols:
+                conn.execute(text("ALTER TABLE product ADD COLUMN moderation_note TEXT"))
+
+        if 'product_flag' not in existing_tables:
+            conn.execute(text("""
+                CREATE TABLE product_flag (
+                    id VARCHAR PRIMARY KEY,
+                    product_id VARCHAR NOT NULL REFERENCES product(id) ON DELETE CASCADE,
+                    reported_by VARCHAR REFERENCES "user"(id) ON DELETE SET NULL,
+                    reason VARCHAR(100) NOT NULL,
+                    description TEXT,
+                    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+                    reviewed_by VARCHAR REFERENCES admin_user(id) ON DELETE SET NULL,
+                    reviewed_at TIMESTAMP,
+                    admin_note TEXT,
+                    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+                )
+            """))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_product_flag_status ON product_flag(status)"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_product_flag_product_id ON product_flag(product_id)"))
+
+        if 'product_moderation_log' not in existing_tables:
+            conn.execute(text("""
+                CREATE TABLE product_moderation_log (
+                    id VARCHAR PRIMARY KEY,
+                    product_id VARCHAR NOT NULL REFERENCES product(id) ON DELETE CASCADE,
+                    action VARCHAR(50) NOT NULL,
+                    ai_score FLOAT,
+                    ai_reasoning TEXT,
+                    performed_by VARCHAR REFERENCES admin_user(id) ON DELETE SET NULL,
+                    note TEXT,
+                    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+                )
+            """))
+
+        conn.commit()
