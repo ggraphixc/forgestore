@@ -1896,7 +1896,7 @@ async def request_bulk_order(request: Request, db: Session = Depends(get_db)):
 
 
 @router.post("/products/{product_id}/report")
-def report_product(
+async def report_product(
     product_id: str,
     request: Request,
     db: Session = Depends(get_db),
@@ -1904,8 +1904,8 @@ def report_product(
     """Customer reports a product for policy violation."""
     from app.models import ProductFlag, Product
     customer = get_current_customer_from_cookie(request, db)
-    data = request.query_params or {}
-    body = asyncio.run(request.json()) if request.headers.get("content-type") == "application/json" else {}
+
+    body = await request.json() if request.headers.get("content-type") == "application/json" else {}
     reason = body.get("reason", "")
     description = body.get("description", "")
 

@@ -2249,10 +2249,20 @@ function closeReportModal() {
   document.getElementById('reportReason').value = '';
   document.getElementById('reportDesc').value = '';
 }
+function showToast(msg, isError) {
+  let t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:1.5rem;right:1.5rem;z-index:9999;padding:0.75rem 1.25rem;border-radius:10px;font-size:0.875rem;font-weight:600;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,0.2);transition:opacity 0.3s;';
+  t.style.background = isError ? '#ef4444' : '#10b981';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+}
 async function submitReport() {
   const reason = document.getElementById('reportReason').value;
-  if (!reason) { alert('Please select a reason'); return; }
+  if (!reason) { showToast('Please select a reason', true); return; }
   const desc = document.getElementById('reportDesc').value;
+  const btn = document.querySelector('#reportModal button[onclick="submitReport()"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
   try {
     const r = await fetch('/api/products/{{ product.id }}/report', {
       method: 'POST',
@@ -2262,11 +2272,12 @@ async function submitReport() {
     const d = await r.json();
     if (d.success) {
       closeReportModal();
-      alert('Report submitted. Thank you for helping keep our marketplace safe.');
+      showToast('Report submitted. Thank you for helping keep our marketplace safe.', false);
     } else {
-      alert(d.detail || d.message || 'Error submitting report');
+      showToast(d.detail || d.message || 'Error submitting report', true);
     }
-  } catch(e) { alert('Network error'); }
+  } catch(e) { showToast('Network error. Please try again.', true); }
+  if (btn) { btn.disabled = false; btn.textContent = 'Submit Report'; }
 }
 </script>
 {% endif %}

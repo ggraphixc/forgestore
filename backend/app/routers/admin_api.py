@@ -4235,6 +4235,7 @@ def moderation_queue(
     admin: AdminUser = Depends(require_role("catalog")),
 ):
     """Get products in moderation queue."""
+    from sqlalchemy import desc
     query = db.query(Product).filter(Product.status == status)
     total = query.count()
     products = query.order_by(desc(Product.created_at)).offset((page - 1) * per_page).limit(per_page).all()
