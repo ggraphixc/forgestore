@@ -286,6 +286,38 @@
     gap: 0.25rem;
   }
 
+  .vendor-btn-danger {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0.5rem 0.75rem;
+    background: transparent;
+    color: var(--color-red);
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.2s, background 0.2s;
+    border-radius: var(--radius-sm);
+  }
+  .vendor-btn-danger:hover {
+    opacity: 0.7;
+    background: var(--color-red-light);
+  }
+
+  /* Delete modal */
+  .vp-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+  .vp-modal-overlay.active{opacity:1;pointer-events:auto;}
+  .vp-modal{background:#fff;border-radius:12px;padding:1.5rem;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+  .dark .vp-modal{background:var(--stone-100);}
+  .vp-modal h3{font-size:1rem;font-weight:700;margin:0 0 0.5rem;color:var(--stone-900);}
+  .vp-modal p{font-size:0.875rem;color:var(--stone-500);margin:0 0 1rem;}
+  .vp-modal-actions{display:flex;gap:0.5rem;justify-content:flex-end;}
+  .vp-modal-actions button{padding:0.5rem 1rem;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;border:none;min-height:40px;}
+  .vp-modal-cancel{background:var(--stone-200);color:var(--stone-700);}
+  .vp-modal-delete{background:var(--color-red);color:#fff;}
+
   @media (max-width: 640px) {
     .vendor-page { padding: 1rem; }
     .vendor-page-header h1 { font-size: 1.25rem; }
@@ -325,6 +357,7 @@
         <thead>
           <tr>
             <th>Product</th>
+            <th class="hide-mobile">Category</th>
             <th>Price</th>
             <th class="hide-mobile">Inventory</th>
             <th>Status</th>
@@ -335,6 +368,7 @@
           {% for p in products %}
           <tr data-search="{{ p.name|lower }}">
             <td class="cell-name">{{ p.name }}</td>
+            <td class="hide-mobile cell-muted">{{ p.category.name if p.category else '—' }}</td>
             <td class="cell-price">₦{{ "{:,.2f}".format(p.price) }}</td>
             <td class="hide-mobile">{{ p.inventory }}</td>
             <td>
@@ -348,6 +382,13 @@
                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                   View
                 </a>
+                <a href="/vendor/products/{{ p.id }}/edit" class="vendor-btn-outline">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                  Edit
+                </a>
+                <button type="button" class="vendor-btn-danger" onclick="openDeleteModal('{{ p.id }}', '{{ p.name }}')">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:1rem;height:1rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
               </div>
             </td>
           </tr>
@@ -374,5 +415,37 @@ function filterProducts() {
     row.style.display = name.includes(query) ? '' : 'none';
   });
 }
+
+let deleteProductId = null;
+function openDeleteModal(id, name) {
+  deleteProductId = id;
+  document.getElementById('deleteProductName').textContent = name;
+  document.getElementById('deleteModal').classList.add('active');
+}
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.remove('active');
+  deleteProductId = null;
+}
+function confirmDelete() {
+  if (!deleteProductId) return;
+  fetch('/api/admin/products/' + deleteProductId, { method: 'DELETE' })
+    .then(r => r.json())
+    .then(d => {
+      if (d.success) { window.location.reload(); }
+      else { alert(d.error || 'Delete failed'); closeDeleteModal(); }
+    })
+    .catch(() => { alert('Network error'); closeDeleteModal(); });
+}
 </script>
+
+<div id="deleteModal" class="vp-modal-overlay" onclick="if(event.target===this)closeDeleteModal()">
+  <div class="vp-modal">
+    <h3>Delete Product</h3>
+    <p>Are you sure you want to delete <strong id="deleteProductName"></strong>? This cannot be undone.</p>
+    <div class="vp-modal-actions">
+      <button class="vp-modal-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <button class="vp-modal-delete" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
 {% endblock %}

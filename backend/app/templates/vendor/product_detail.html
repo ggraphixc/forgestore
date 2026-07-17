@@ -55,6 +55,10 @@
     <div class="vp-card-title">Details</div>
     <div class="vp-grid">
       <div class="vp-field">
+        <div class="vp-field-label">Product ID</div>
+        <div class="vp-field-value" style="font-family:monospace;font-size:0.8125rem;">{{ product.id[:8] }}...</div>
+      </div>
+      <div class="vp-field">
         <div class="vp-field-label">Price</div>
         <div class="vp-field-value">₦{{ "{:,.2f}".format(product.price) }}</div>
       </div>
@@ -78,6 +82,12 @@
         <div class="vp-field-value">{{ product.category.name }}</div>
       </div>
       {% endif %}
+      {% if product.sub_category %}
+      <div class="vp-field">
+        <div class="vp-field-label">Sub-Category</div>
+        <div class="vp-field-value">{{ product.sub_category }}</div>
+      </div>
+      {% endif %}
       {% if product.brand %}
       <div class="vp-field">
         <div class="vp-field-label">Brand</div>
@@ -88,7 +98,23 @@
         <div class="vp-field-label">Slug</div>
         <div class="vp-field-value">{{ product.slug }}</div>
       </div>
+      {% if product.rating %}
+      <div class="vp-field">
+        <div class="vp-field-label">Rating</div>
+        <div class="vp-field-value">{{ product.rating }} / 5</div>
+      </div>
+      {% endif %}
+      <div class="vp-field">
+        <div class="vp-field-label">Created</div>
+        <div class="vp-field-value">{{ product.created_at.strftime('%b %d, %Y') if product.created_at else '—' }}</div>
+      </div>
     </div>
+    {% if product.is_flagship or product.is_new_arrival %}
+    <div style="display:flex;gap:8px;margin-top:0.75rem;flex-wrap:wrap;">
+      {% if product.is_flagship %}<span class="vp-badge" style="background:#fef3c7;color:#92400e;">Flagship</span>{% endif %}
+      {% if product.is_new_arrival %}<span class="vp-badge" style="background:#dcfce7;color:#166534;">New Arrival</span>{% endif %}
+    </div>
+    {% endif %}
     {% if product.description %}
     <div class="vp-field" style="margin-top:0.75rem;">
       <div class="vp-field-label">Description</div>

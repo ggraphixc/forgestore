@@ -1522,9 +1522,10 @@ def submit_review(
         raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
 
     # Enforce review length limits from settings
-    from app.services.ai_service import get_setting
-    min_len = int(get_setting(db, "reviews_min_length", "10"))
-    max_len = int(get_setting(db, "reviews_max_length", "2000"))
+    _min_len_setting = db.query(Settings).filter(Settings.key == "reviews_min_length").first()
+    _max_len_setting = db.query(Settings).filter(Settings.key == "reviews_max_length").first()
+    min_len = int(_min_len_setting.value) if _min_len_setting and _min_len_setting.value else 10
+    max_len = int(_max_len_setting.value) if _max_len_setting and _max_len_setting.value else 2000
     if data.content and len(data.content) < min_len:
         raise HTTPException(status_code=400, detail=f"Review must be at least {min_len} characters")
     if data.content and len(data.content) > max_len:

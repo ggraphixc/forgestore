@@ -4,7 +4,7 @@
 <style>
   :root{--amber-500:#f59e0b;--stone-50:#fafaf9;--stone-100:#f5f5f4;--stone-200:#e7e5e4;--stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#57534e;--stone-900:#1c1917;--emerald-50:#ecfdf5;--emerald-600:#059669;--red-50:#fef2f2;--red-600:#dc2626;}
   .dark{--stone-50:#1c1917;--stone-100:#292524;--stone-200:#44403c;--stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#a8a29e;--stone-900:#fafaf9;--amber-500:#f59e0b;--emerald-50:#052e16;--emerald-600:#22c55e;--red-50:#450a0a;--red-600:#ef4444;}
-  .vp-wrap{max-width:900px;margin:0 auto;padding:1rem;}
+  .vp-wrap{max-width:1100px;margin:0 auto;padding:1rem;}
   .vp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.5rem;}
   .vp-header h1{font-size:1.25rem;font-weight:700;color:var(--stone-900);margin:0;}
   .dark .vp-header h1{color:var(--stone-900);}
@@ -45,6 +45,28 @@
   .vai-field-row{display:flex;align-items:center;gap:8px;}
   .vai-field-row .vp-form-input{flex:1;}
   @keyframes vai-spin{to{transform:rotate(360deg);}}
+
+  /* Two-column edit grid + preview card */
+  .vp-edit-grid{display:grid;grid-template-columns:1fr;gap:1.5rem;}
+  @media(min-width:1024px){.vp-edit-grid{grid-template-columns:2fr 1fr;}}
+  .vp-preview-card{background:var(--stone-50);border:1px solid var(--stone-200);border-radius:12px;overflow:hidden;max-width:260px;}
+  .dark .vp-preview-card{background:var(--stone-100);border-color:var(--stone-200);}
+  .vp-preview-card-img{aspect-ratio:1;background:#f8f8f8;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+  .dark .vp-preview-card-img{background:var(--stone-200);}
+  .vp-preview-card-img img{width:100%;height:100%;object-fit:cover;}
+  .vp-preview-card-placeholder{display:flex;align-items:center;justify-content:center;color:var(--stone-400);}
+  .vp-preview-card-placeholder svg{width:3rem;height:3rem;}
+  .vp-preview-card-body{padding:0.625rem;display:flex;flex-direction:column;gap:0.1875rem;}
+  .vp-preview-card-name{font-size:0.75rem;font-weight:500;color:var(--stone-900);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .vp-preview-card-brand{font-size:0.6875rem;color:var(--stone-500);}
+  .vp-preview-card-prices{display:flex;align-items:baseline;gap:0.375rem;flex-wrap:wrap;}
+  .vp-preview-card-price{font-size:1rem;font-weight:800;color:#f43f5e;}
+  .vp-preview-card-original{font-size:0.75rem;color:var(--stone-400);text-decoration:line-through;}
+  .vp-preview-card-discount{display:inline-flex;align-self:flex-start;background:#f43f5e;color:#fff;font-size:0.5625rem;font-weight:700;padding:0.1875rem 0.375rem;border-radius:0.25rem;margin-top:0.25rem;}
+  .vp-preview-card-cart{position:absolute;bottom:0.625rem;right:0.625rem;width:36px;height:36px;border-radius:50%;background:#fff;border:1.5px solid var(--stone-200);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+  .vp-preview-card-cart svg{width:1rem;height:1rem;color:var(--stone-900);}
+  .vp-preview-card-flag{position:absolute;top:0.5rem;left:0.5rem;background:var(--amber-500);color:#fff;font-size:0.5625rem;font-weight:700;padding:0.125rem 0.375rem;border-radius:0.25rem;text-transform:uppercase;}
+
   @media(max-width:640px){.vp-grid{grid-template-columns:1fr;}.vp-wrap{padding:0.75rem;}}
 </style>
 
@@ -59,6 +81,8 @@
   </div>
 
   <form id="product-form" method="POST" action="/vendor/products{{ '/' + product.id + '/edit' if product else '/new' }}" enctype="multipart/form-data">
+    <div class="vp-edit-grid">
+      <div>
     <div class="vp-card">
       <div class="vp-card-title">Product Images</div>
       <div class="vp-dropzone" onclick="document.getElementById('image-input').click()">
@@ -75,7 +99,7 @@
       <div class="vp-form-group">
         <label class="vp-form-label">Video URL (YouTube, Vimeo, or direct MP4 link)</label>
         <input type="url" name="video_url" class="vp-form-input" placeholder="https://youtube.com/watch?v=..." value="{{ product.video_url if product and product.video_url else '' }}">
-        <p style="font-size:0.8rem;color:var(--vp-text-sec);margin-top:4px;">Optional. Supports YouTube, Vimeo, or direct video file URLs.</p>
+        <p style="font-size:0.8rem;color:var(--stone-400);margin-top:4px;">Optional. Supports YouTube, Vimeo, or direct video file URLs.</p>
       </div>
     </div>
     {% endif %}
@@ -85,7 +109,7 @@
       <div class="vp-form-group">
         <label class="vp-form-label">Product Name *</label>
         <div class="vai-field-row">
-          <input type="text" name="name" required class="vp-form-input" placeholder="Product name" value="{{ product.name if product else '' }}">
+          <input type="text" name="name" required class="vp-form-input" placeholder="Product name" value="{{ product.name if product else '' }}" oninput="updateVpPreview()">
           <button type="button" class="vai-inline-btn" onclick="vaiInlineOptimizeTitle()" id="vai-inline-title">
             <span class="vai-spin-sm"></span>AI Optimize
           </button>
@@ -95,15 +119,15 @@
         <div class="vp-form-group">
           <label class="vp-form-label">URL Slug</label>
           <div style="display:flex;align-items:center;gap:8px;">
-            <div id="slug-preview" style="flex:1;padding:10px 12px;background:var(--bg-secondary,#f3f4f6);border:1px solid var(--border,#e5e7eb);border-radius:8px;font-size:0.85rem;color:var(--text-secondary,#6b7280);min-height:44px;display:flex;align-items:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            <div id="slug-preview" style="flex:1;padding:10px 12px;background:var(--stone-100,#f3f4f6);border:1px solid var(--stone-200,#e5e7eb);border-radius:8px;font-size:0.85rem;color:var(--stone-500,#6b7280);min-height:44px;display:flex;align-items:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
               {% if product and product.slug %}/products/{{ product.slug }}{% else %}/products/...{% endif %}
             </div>
           </div>
-          <p style="margin-top:4px;font-size:0.75rem;color:var(--text-muted,#9ca3af);">Auto-generated from product name</p>
+          <p style="margin-top:4px;font-size:0.75rem;color:var(--stone-400,#9ca3af);">Auto-generated from product name</p>
         </div>
         <div class="vp-form-group">
           <label class="vp-form-label">Brand</label>
-          <input type="text" name="brand" class="vp-form-input" placeholder="Brand name" value="{{ product.brand if product and product.brand else '' }}">
+          <input type="text" name="brand" class="vp-form-input" placeholder="Brand name" value="{{ product.brand if product and product.brand else '' }}" oninput="updateVpPreview()">
         </div>
       </div>
       <div class="vp-form-group">
@@ -131,7 +155,7 @@
         <div class="vp-form-group">
           <label class="vp-form-label">Price (₦) *</label>
           <div class="vai-field-row">
-            <input type="number" name="price" required step="0.01" min="0" class="vp-form-input" placeholder="0.00" value="{{ product.price if product else '' }}">
+            <input type="number" name="price" required step="0.01" min="0" class="vp-form-input" placeholder="0.00" value="{{ product.price if product else '' }}" oninput="updateVpPreview()">
             <button type="button" class="vai-inline-btn" onclick="vaiInlinePricingAdvisor()" id="vai-inline-price" style="border-color:#ef4444;color:#ef4444;background:rgba(239,68,68,0.08);">
               <span class="vai-spin-sm"></span>AI Price
             </button>
@@ -139,7 +163,7 @@
         </div>
         <div class="vp-form-group">
           <label class="vp-form-label">Discount Price (₦)</label>
-          <input type="number" name="discount_price" step="0.01" min="0" class="vp-form-input" placeholder="Optional" value="{{ product.discount_price if product and product.discount_price else '' }}">
+          <input type="number" name="discount_price" step="0.01" min="0" class="vp-form-input" placeholder="Optional" value="{{ product.discount_price if product and product.discount_price else '' }}" oninput="updateVpPreview()">
         </div>
       </div>
       <div id="vai-pricing-result"></div>
@@ -158,6 +182,17 @@
           </select>
         </div>
       </div>
+      <div class="vp-grid">
+        <div class="vp-form-group">
+          <label class="vp-form-label">Sub-Category</label>
+          <input type="text" name="sub_category" class="vp-form-input" placeholder="e.g. Oak Furniture" value="{{ product.sub_category if product and product.sub_category else '' }}">
+        </div>
+        <div class="vp-form-group">
+          <label class="vp-form-label">Specifications</label>
+          <input type="text" name="specifications" class="vp-form-input" placeholder="e.g. Weight: 2kg, Color: Blue" value="{{ product.specifications if product and product.specifications else '' }}">
+        </div>
+      </div>
+      <p style="font-size:0.75rem;color:var(--stone-400);margin-top:2px;">Specifications: comma-separated key-value pairs.</p>
     </div>
 
     <div class="vp-card">
@@ -176,6 +211,50 @@
       <button type="submit" class="vp-btn vp-btn-primary">{{ 'Update Product' if product else 'Create Product' }}</button>
       <a href="/vendor/products" class="vp-btn vp-btn-ghost">Cancel</a>
     </div>
+      </div>
+
+      <!-- Live Preview -->
+      <div>
+        <div class="vp-card" style="padding:1rem;position:sticky;top:1rem;">
+          <div class="vp-card-title">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            Card Preview
+          </div>
+          <div class="vp-preview-card">
+            <div class="vp-preview-card-img" id="vp-preview-img" style="position:relative;">
+              {% if product and product.images and product.images|length > 0 %}
+              <img src="{{ product.images[0] }}" alt="{{ product.name }}">
+              {% else %}
+              <div class="vp-preview-card-placeholder">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              </div>
+              {% endif %}
+              {% if product and product.is_flagship %}<span class="vp-preview-card-flag">Flagship</span>{% elif product and product.is_new_arrival %}<span class="vp-preview-card-flag" style="background:#059669;">New</span>{% endif %}
+              <div class="vp-preview-card-cart">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+              </div>
+            </div>
+            <div class="vp-preview-card-body">
+              <span class="vp-preview-card-name" id="vp-preview-name">{{ product.name if product else 'Product Name' }}</span>
+              <span class="vp-preview-card-brand" id="vp-preview-brand">{% if product and product.brand %}{{ product.brand }}{% endif %}</span>
+              <div class="vp-preview-card-prices">
+                <span class="vp-preview-card-price" id="vp-preview-price">₦{{ "{:,.0f}".format(product.discount_price if product and product.discount_price and product.discount_price < product.price else (product.price if product else 0)) }}</span>
+                {% if product and product.discount_price and product.discount_price < product.price %}
+                <span class="vp-preview-card-original" id="vp-preview-original">₦{{ "{:,.0f}".format(product.price) }}</span>
+                {% else %}
+                <span class="vp-preview-card-original" id="vp-preview-original" style="display:none;"></span>
+                {% endif %}
+              </div>
+              {% if product and product.discount_price and product.discount_price < product.price %}
+              <div class="vp-preview-card-discount" id="vp-preview-discount">-{{ ((1 - product.discount_price / product.price) * 100)|int }}%</div>
+              {% else %}
+              <div class="vp-preview-card-discount" id="vp-preview-discount" style="display:none;"></div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </form>
 </div>
 
@@ -188,6 +267,31 @@ let images = JSON.parse(imagesInput.value || '[]');
 function renderPreviews() {
   const el = document.getElementById('image-preview');
   el.innerHTML = images.map((url, i) => '<div class="vp-preview-item"><img src="'+url+'" alt="Image '+(i+1)+'"><button type="button" class="remove" onclick="removeImage('+i+')">&times;</button></div>').join('');
+  // Update preview card image
+  const prevImg = document.getElementById('vp-preview-img');
+  if (prevImg) {
+    if (images.length > 0) {
+      const existing = prevImg.querySelector('img');
+      if (existing) { existing.src = images[0]; }
+      else {
+        const placeholder = prevImg.querySelector('.vp-preview-card-placeholder');
+        if (placeholder) placeholder.remove();
+        const img = document.createElement('img');
+        img.src = images[0];
+        img.alt = 'Preview';
+        prevImg.insertBefore(img, prevImg.firstChild);
+      }
+    } else {
+      const existing = prevImg.querySelector('img');
+      if (existing) existing.remove();
+      if (!prevImg.querySelector('.vp-preview-card-placeholder')) {
+        const ph = document.createElement('div');
+        ph.className = 'vp-preview-card-placeholder';
+        ph.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>';
+        prevImg.appendChild(ph);
+      }
+    }
+  }
 }
 function removeImage(i) { images.splice(i, 1); imagesInput.value = JSON.stringify(images); renderPreviews(); }
 document.getElementById('image-input').addEventListener('change', async function() {
@@ -216,6 +320,37 @@ if (nameInput && slugPreview) {
       .substring(0, 80);
     slugPreview.textContent = slug ? '/products/' + slug : '/products/...';
   });
+}
+
+// Live preview card updater
+function updateVpPreview() {
+  const name = document.querySelector('input[name="name"]')?.value || '';
+  const brand = document.querySelector('input[name="brand"]')?.value || '';
+  const price = parseFloat(document.querySelector('input[name="price"]')?.value) || 0;
+  const discount = parseFloat(document.querySelector('input[name="discount_price"]')?.value) || 0;
+  const hasDiscount = discount > 0 && discount < price;
+
+  const prevName = document.getElementById('vp-preview-name');
+  const prevBrand = document.getElementById('vp-preview-brand');
+  const prevPrice = document.getElementById('vp-preview-price');
+  const prevOriginal = document.getElementById('vp-preview-original');
+  const prevDiscount = document.getElementById('vp-preview-discount');
+
+  if (prevName) prevName.textContent = name || 'Product Name';
+  if (prevBrand) prevBrand.textContent = brand || '';
+  if (prevPrice) prevPrice.textContent = '₦' + (hasDiscount ? discount.toLocaleString('en-NG',{minimumFractionDigits:0,maximumFractionDigits:0}) : price.toLocaleString('en-NG',{minimumFractionDigits:0,maximumFractionDigits:0}));
+  if (prevOriginal) {
+    prevOriginal.style.display = hasDiscount ? '' : 'none';
+    prevOriginal.textContent = '₦' + price.toLocaleString('en-NG',{minimumFractionDigits:0,maximumFractionDigits:0});
+  }
+  if (prevDiscount) {
+    if (hasDiscount) {
+      prevDiscount.textContent = '-' + Math.round((1 - discount / price) * 100) + '%';
+      prevDiscount.style.display = '';
+    } else {
+      prevDiscount.style.display = 'none';
+    }
+  }
 }
 
 // AI inline helpers
