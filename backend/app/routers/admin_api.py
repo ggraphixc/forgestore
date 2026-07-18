@@ -4272,6 +4272,7 @@ def moderation_product_detail(
 ):
     """Get detailed product info for moderation review."""
     from app.models import ProductModerationLog, ProductFlag
+    from sqlalchemy import desc
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
