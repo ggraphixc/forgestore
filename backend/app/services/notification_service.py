@@ -206,6 +206,7 @@ class RealtimeEventService:
             "timestamp": utcnow().isoformat(),
         }
         await ws_manager.broadcast(f"shipment:{shipment_id}", event)
+        await ws_manager.broadcast(f"shipment:{tracking_number}", event)
         await ws_manager.broadcast("admin:shipments", event)
 
     @staticmethod

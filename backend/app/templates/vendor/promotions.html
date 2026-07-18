@@ -1,0 +1,178 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}Promotions — {{ settings.site_name|default('ForgeStore') }}{% endblock %}
+{% block content %}
+<style>
+  :root {
+    --primary: {{ settings.primary_color|default('#f59e0b') }};
+    --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
+    --green: #10b981; --red: #ef4444; --yellow: #f59e0b; --blue: #3b82f6;
+  }
+  .dark { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --muted: #94a3b8; --border: #334155; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; }
+  .vp-page { max-width: 80rem; margin: 0 auto; padding: 1.5rem; }
+  .vp-page h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.25rem; }
+  .vp-sub { font-size: 0.875rem; color: var(--muted); margin-bottom: 1.5rem; }
+  .vp-ai-box { background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: #fff; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; }
+  .vp-ai-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; opacity: 0.8; margin-bottom: 0.75rem; }
+  .vp-ai-card { background: rgba(255,255,255,0.15); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.5rem; }
+  .vp-ai-card .title { font-weight: 700; font-size: 0.875rem; }
+  .vp-ai-card .reason { font-size: 0.75rem; opacity: 0.85; }
+  .vp-ai-card .discount { font-size: 1.125rem; font-weight: 900; }
+  .vp-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .vp-create-btn { min-height: 44px; padding: 0 1.25rem; border-radius: 10px; font-weight: 700; font-size: 0.875rem; cursor: pointer; border: none; background: var(--primary); color: #fff; }
+  .vp-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+  .vp-info { flex: 1; }
+  .vp-title { font-weight: 700; font-size: 0.9375rem; }
+  .vp-code { font-size: 0.75rem; font-weight: 700; color: var(--primary); background: var(--bg); padding: 2px 8px; border-radius: 4px; display: inline-block; margin-top: 0.25rem; }
+  .vp-meta { font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; }
+  .vp-actions { display: flex; gap: 0.5rem; align-items: center; }
+  .vp-toggle { min-height: 36px; padding: 0 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); }
+  .vp-delete { min-height: 36px; padding: 0 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid var(--red); background: transparent; color: var(--red); }
+  .vp-badge { font-size: 0.6875rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+  .vp-badge.active { background: #d1fae5; color: #065f46; }
+  .vp-badge.inactive { background: #fee2e2; color: #991b1b; }
+  .vp-empty { text-align: center; padding: 3rem; color: var(--muted); }
+  .vp-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; }
+  .vp-modal { background: var(--card); border-radius: 12px; padding: 1.5rem; max-width: 28rem; width: 90%; max-height: 80vh; overflow-y: auto; }
+  .vp-modal h3 { margin: 0 0 1rem; font-size: 1.125rem; }
+  .vp-modal label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--muted); margin-bottom: 0.25rem; }
+  .vp-modal input, .vp-modal select, .vp-modal textarea { width: 100%; min-height: 40px; border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem; font-size: 0.8125rem; background: var(--bg); color: var(--text); box-sizing: border-box; margin-bottom: 0.75rem; }
+  .vp-modal textarea { min-height: 60px; resize: vertical; }
+  .vp-modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .vp-modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem; }
+  .vp-modal-actions button { min-height: 40px; padding: 0 1rem; border-radius: 8px; font-weight: 600; font-size: 0.8125rem; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); }
+  .vp-modal-actions .primary { background: var(--primary); color: #fff; border: none; }
+</style>
+
+<div class="vp-page">
+  <h1>Promotions & Discounts</h1>
+  <p class="vp-sub">Create coupon codes and discount campaigns</p>
+
+  <div class="vp-ai-box" id="vpAI">
+    <div class="vp-ai-title">AI Promotion Suggestions</div>
+    <div style="font-size:0.8125rem;opacity:0.8;">Loading suggestions...</div>
+  </div>
+
+  <div class="vp-top">
+    <span style="font-size:0.8125rem;color:var(--muted);" id="vpCount"></span>
+    <button class="vp-create-btn" onclick="vpShowModal()">+ New Promotion</button>
+  </div>
+
+  <div id="vpList"></div>
+
+  <div class="vp-modal-overlay" id="vpModalOverlay" onclick="if(event.target===this)vpHideModal()">
+    <div class="vp-modal">
+      <h3>Create Promotion</h3>
+      <label>Title</label>
+      <input id="vpFTitle" placeholder="e.g. Summer Sale 20% Off">
+      <label>Description</label>
+      <textarea id="vpFDesc" placeholder="Optional description"></textarea>
+      <div class="vp-modal-row">
+        <div><label>Discount Type</label>
+          <select id="vpFType"><option value="percentage">Percentage (%)</option><option value="fixed">Fixed Amount</option><option value="bogo">Buy One Get One</option></select>
+        </div>
+        <div><label>Discount Value</label><input id="vpFValue" type="number" placeholder="10"></div>
+      </div>
+      <div class="vp-modal-row">
+        <div><label>Promo Code</label><input id="vpFCode" placeholder="e.g. SUMMER20"></div>
+        <div><label>Min Purchase</label><input id="vpFMin" type="number" placeholder="0"></div>
+      </div>
+      <div class="vp-modal-row">
+        <div><label>Start Date</label><input id="vpFStart" type="date"></div>
+        <div><label>End Date</label><input id="vpFEnd" type="date"></div>
+      </div>
+      <label>Usage Limit (0 = unlimited)</label>
+      <input id="vpFLimit" type="number" placeholder="0">
+      <div class="vp-modal-actions">
+        <button onclick="vpHideModal()">Cancel</button>
+        <button class="primary" onclick="vpCreate()">Create</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function vpShowModal() { document.getElementById('vpModalOverlay').style.display = 'flex'; }
+function vpHideModal() { document.getElementById('vpModalOverlay').style.display = 'none'; }
+
+async function vpLoad() {
+  const r = await fetch('/api/vendor/promotions');
+  const d = await r.json();
+  const el = document.getElementById('vpList');
+  document.getElementById('vpCount').textContent = `${d.promotions.length} promotions`;
+  if (!d.promotions.length) {
+    el.innerHTML = '<div class="vp-empty">No promotions yet. Create one to get started.</div>';
+    return;
+  }
+  el.innerHTML = d.promotions.map(p => `
+    <div class="vp-card">
+      <div class="vp-info">
+        <div class="vp-title">${p.title}</div>
+        ${p.promo_code ? `<span class="vp-code">${p.promo_code}</span>` : ''}
+        <div class="vp-meta">${p.discount_type === 'percentage' ? p.discount_value + '% off' : p.discount_type === 'fixed' ? '$' + p.discount_value + ' off' : 'BOGO'} · ${p.usage_count}/${p.usage_limit || '∞'} used · ${p.end_date ? 'Expires ' + p.end_date : 'No expiry'}</div>
+      </div>
+      <div class="vp-actions">
+        <span class="vp-badge ${p.is_active ? 'active' : 'inactive'}">${p.is_active ? 'Active' : 'Inactive'}</span>
+        <button class="vp-toggle" onclick="vpToggle('${p.id}', ${!p.is_active})">${p.is_active ? 'Pause' : 'Activate'}</button>
+        <button class="vp-delete" onclick="vpDelete('${p.id}')">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function vpCreate() {
+  const data = {
+    title: document.getElementById('vpFTitle').value,
+    description: document.getElementById('vpFDesc').value,
+    discount_type: document.getElementById('vpFType').value,
+    discount_value: parseFloat(document.getElementById('vpFValue').value) || 0,
+    promo_code: document.getElementById('vpFCode').value,
+    min_purchase: parseFloat(document.getElementById('vpFMin').value) || 0,
+    start_date: document.getElementById('vpFStart').value,
+    end_date: document.getElementById('vpFEnd').value,
+    usage_limit: parseInt(document.getElementById('vpFLimit').value) || 0,
+  };
+  await fetch('/api/vendor/promotions/create', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
+  vpHideModal();
+  vpLoad();
+}
+
+async function vpToggle(id, isActive) {
+  await fetch(`/api/vendor/promotions/${id}/toggle`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({is_active: isActive})});
+  vpLoad();
+}
+
+async function vpDelete(id) {
+  await fetch(`/api/vendor/promotions/${id}`, {method:'DELETE'});
+  vpLoad();
+}
+
+async function vpLoadAI() {
+  const r = await fetch('/api/vendor/promotions/ai-suggestions');
+  const d = await r.json();
+  const el = document.getElementById('vpAI');
+  if (!d.suggestions.length) {
+    el.innerHTML = '<div class="vp-ai-title">AI Promotion Suggestions</div><div style="font-size:0.8125rem;opacity:0.8;">Add products to get AI promotion suggestions</div>';
+    return;
+  }
+  el.innerHTML = '<div class="vp-ai-title">AI Promotion Suggestions</div>' + d.suggestions.slice(0,3).map(s => `
+    <div class="vp-ai-card" style="cursor:pointer;" onclick="vpApplySuggestion('${(s.title||'').replace(/'/g,"\\'")}', ${s.suggested_discount || 15}, '${(s.promo_code||'').replace(/'/g,"\\'")}')">
+      <div class="title">${s.title}</div>
+      <div class="reason">${s.reason}</div>
+      <div class="discount">${s.suggested_discount}% off</div>
+    </div>
+  `).join('');
+}
+
+function vpApplySuggestion(title, discount, code) {
+  document.getElementById('vpFTitle').value = title;
+  document.getElementById('vpFType').value = 'percentage';
+  document.getElementById('vpFValue').value = discount;
+  document.getElementById('vpFCode').value = code;
+  vpShowModal();
+}
+
+vpLoad();
+vpLoadAI();
+</script>
+{% endblock %}

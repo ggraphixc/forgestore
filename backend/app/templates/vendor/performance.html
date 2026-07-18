@@ -1,0 +1,132 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}Performance — {{ settings.site_name|default('ForgeStore') }}{% endblock %}
+{% block content %}
+<style>
+  :root {
+    --primary: {{ settings.primary_color|default('#f59e0b') }};
+    --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
+    --green: #10b981; --red: #ef4444; --yellow: #f59e0b; --blue: #3b82f6;
+  }
+  .dark { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --muted: #94a3b8; --border: #334155; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; }
+  .vpr-page { max-width: 80rem; margin: 0 auto; padding: 1.5rem; }
+  .vpr-page h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.25rem; }
+  .vpr-sub { font-size: 0.875rem; color: var(--muted); margin-bottom: 1.5rem; }
+  .vpr-score-hero { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; text-align: center; margin-bottom: 1.5rem; }
+  .vpr-score-num { font-size: 4rem; font-weight: 900; line-height: 1; }
+  .vpr-score-label { font-size: 0.875rem; color: var(--muted); margin-top: 0.25rem; }
+  .vpr-score-grade { font-size: 1rem; font-weight: 700; margin-top: 0.5rem; padding: 4px 16px; border-radius: 20px; display: inline-block; }
+  .vpr-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .vpr-metric { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+  .vpr-metric-label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+  .vpr-metric-value { font-size: 1.75rem; font-weight: 900; }
+  .vpr-metric-bar { height: 6px; background: var(--border); border-radius: 3px; margin-top: 0.5rem; overflow: hidden; }
+  .vpr-metric-fill { height: 100%; border-radius: 3px; }
+  .vpr-bench { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; }
+  .vpr-bench h3 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--muted); margin: 0 0 0.75rem; }
+  .vpr-bench-row { display: flex; justify-content: space-between; align-items: center; padding: 0.375rem 0; font-size: 0.8125rem; }
+  .vpr-bench-label { color: var(--muted); }
+  .vpr-bench-val { font-weight: 700; }
+  .vpr-bench-bar { height: 8px; background: var(--border); border-radius: 4px; margin-top: 0.5rem; position: relative; }
+  .vpr-bench-marker { position: absolute; top: -4px; width: 16px; height: 16px; border-radius: 50%; background: var(--primary); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+  .vpr-ai-box { background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%); color: #fff; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; }
+  .vpr-ai-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; opacity: 0.8; margin-bottom: 0.75rem; }
+  .vpr-rec { background: rgba(255,255,255,0.15); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.5rem; }
+  .vpr-rec .area { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; opacity: 0.7; }
+  .vpr-rec .text { font-size: 0.8125rem; }
+  .vpr-rec .action { font-size: 0.75rem; font-weight: 600; text-decoration: underline; cursor: pointer; }
+  @media (max-width: 640px) {
+    .vpr-metrics { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="vpr-page">
+  <h1>Vendor Performance</h1>
+  <p class="vpr-sub">Your store performance scorecard and AI recommendations</p>
+
+  <div class="vpr-score-hero">
+    <div class="vpr-score-num" id="vprScore" style="color:var(--muted);">—</div>
+    <div class="vpr-score-label">Performance Score</div>
+    <div class="vpr-score-grade" id="vprGrade" style="background:var(--border);color:var(--muted);">Loading...</div>
+  </div>
+
+  <div class="vpr-metrics" id="vprMetrics"></div>
+
+  <div class="vpr-bench" id="vprBench" style="display:none;">
+    <h3>Platform Benchmark</h3>
+    <div id="vprBenchContent"></div>
+  </div>
+
+  <div class="vpr-ai-box" id="vprAI">
+    <div class="vpr-ai-title">AI Recommendations</div>
+    <div style="font-size:0.8125rem;opacity:0.8;">Loading...</div>
+  </div>
+</div>
+
+<script>
+async function vprLoad() {
+  const r = await fetch('/api/vendor/performance');
+  const d = await r.json();
+
+  const score = d.score || 0;
+  const el = document.getElementById('vprScore');
+  el.textContent = score;
+  const gradeEl = document.getElementById('vprGrade');
+
+  if (score >= 90) { el.style.color = '#10b981'; gradeEl.textContent = 'Excellent'; gradeEl.style.background = '#d1fae5'; gradeEl.style.color = '#065f46'; }
+  else if (score >= 75) { el.style.color = '#3b82f6'; gradeEl.textContent = 'Good'; gradeEl.style.background = '#dbeafe'; gradeEl.style.color = '#1e40af'; }
+  else if (score >= 50) { el.style.color = '#f59e0b'; gradeEl.textContent = 'Needs Improvement'; gradeEl.style.background = '#fef3c7'; gradeEl.style.color = '#92400e'; }
+  else { el.style.color = '#ef4444'; gradeEl.textContent = 'Critical'; gradeEl.style.background = '#fee2e2'; gradeEl.style.color = '#991b1b'; }
+
+  const metrics = [
+    { label: 'Fulfillment Rate', value: d.fulfillment_rate + '%', pct: d.fulfillment_rate, color: '#10b981' },
+    { label: 'On-Time Delivery', value: d.on_time_rate + '%', pct: d.on_time_rate, color: '#3b82f6' },
+    { label: 'Avg Rating', value: d.avg_rating + '/5', pct: d.avg_rating * 20, color: '#f59e0b' },
+    { label: 'Positive Reviews', value: d.positive_rate + '%', pct: d.positive_rate, color: '#8b5cf6' },
+    { label: 'Stock Rate', value: d.stock_rate + '%', pct: d.stock_rate, color: '#06b6d4' },
+    { label: 'Revenue', value: '₦' + d.total_revenue.toLocaleString(), pct: Math.min(d.total_revenue / 100, 100), color: '#10b981' },
+  ];
+
+  document.getElementById('vprMetrics').innerHTML = metrics.map(m => `
+    <div class="vpr-metric">
+      <div class="vpr-metric-label">${m.label}</div>
+      <div class="vpr-metric-value">${m.value}</div>
+      <div class="vpr-metric-bar"><div class="vpr-metric-fill" style="width:${m.pct}%;background:${m.color}"></div></div>
+    </div>
+  `).join('');
+
+  // Render benchmark
+  if (d.benchmark && d.benchmark.vendor_count > 0) {
+    document.getElementById('vprBench').style.display = 'block';
+    const b = d.benchmark;
+    document.getElementById('vprBenchContent').innerHTML = `
+      <div class="vpr-bench-row"><span class="vpr-bench-label">Your Score</span><span class="vpr-bench-val">${b.my_score}</span></div>
+      <div class="vpr-bench-row"><span class="vpr-bench-label">Platform Average</span><span class="vpr-bench-val">${b.platform_avg_score}</span></div>
+      <div class="vpr-bench-row"><span class="vpr-bench-label">Percentile</span><span class="vpr-bench-val">Top ${100 - b.percentile}%</span></div>
+      <div class="vpr-bench-row"><span class="vpr-bench-label">Vendors Compared</span><span class="vpr-bench-val">${b.vendor_count}</span></div>
+      <div class="vpr-bench-bar"><div class="vpr-bench-marker" style="left:${Math.min(b.my_score, 100)}%"></div></div>
+    `;
+  }
+}
+
+async function vprLoadAI() {
+  const r = await fetch('/api/vendor/performance/ai-recommendations');
+  const d = await r.json();
+  const el = document.getElementById('vprAI');
+  if (!d.recommendations.length) {
+    el.innerHTML = '<div class="vpr-ai-title">AI Recommendations</div><div style="font-size:0.8125rem;opacity:0.8;">Great job! Keep up the good work.</div>';
+    return;
+  }
+  el.innerHTML = '<div class="vpr-ai-title">AI Recommendations</div>' + d.recommendations.slice(0,5).map(r => `
+    <div class="vpr-rec">
+      <div class="area">${r.area}</div>
+      <div class="text">${r.text}</div>
+      <div class="action">${r.action}</div>
+    </div>
+  `).join('');
+}
+
+vprLoad();
+vprLoadAI();
+</script>
+{% endblock %}

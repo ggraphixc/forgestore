@@ -1,0 +1,242 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}Inventory — {{ settings.site_name|default('ForgeStore') }}{% endblock %}
+{% block content %}
+<style>
+  :root {
+    --primary: {{ settings.primary_color|default('#f59e0b') }};
+    --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
+    --green: #10b981; --red: #ef4444; --yellow: #f59e0b; --blue: #3b82f6;
+  }
+  .dark { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --muted: #94a3b8; --border: #334155; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; }
+  .vi-page { max-width: 80rem; margin: 0 auto; padding: 1.5rem; }
+  .vi-page h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.25rem; }
+  .vi-sub { font-size: 0.875rem; color: var(--muted); margin-bottom: 1.5rem; }
+  .vi-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; }
+  .vi-stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; text-align: center; cursor: pointer; transition: all 0.15s; }
+  .vi-stat:hover { border-color: var(--primary); }
+  .vi-stat.active { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 8%, transparent); }
+  .vi-stat .num { font-size: 1.75rem; font-weight: 800; }
+  .vi-stat .lbl { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-top: 0.25rem; }
+  .vi-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .vi-sort { padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.8125rem; background: var(--card); color: var(--text); }
+  .vi-table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; }
+  .vi-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+  .vi-table th { padding: 0.75rem 1rem; text-align: left; font-weight: 700; font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .vi-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .vi-table tr:last-child td { border-bottom: none; }
+  .vi-table tr:hover td { background: color-mix(in srgb, var(--primary) 4%, transparent); }
+  .vi-product { display: flex; align-items: center; gap: 0.75rem; }
+  .vi-thumb { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: var(--border); flex-shrink: 0; }
+  .vi-name { font-weight: 600; }
+  .vi-cat { font-size: 0.75rem; color: var(--muted); }
+  .vi-stock { display: inline-flex; align-items: center; gap: 0.375rem; }
+  .vi-stock-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .vi-stock.out .vi-stock-dot { background: var(--red); }
+  .vi-stock.low .vi-stock-dot { background: var(--yellow); }
+  .vi-stock.ok .vi-stock-dot { background: var(--green); }
+  .vi-days { font-weight: 700; }
+  .vi-days.out { color: var(--red); }
+  .vi-days.urgent { color: var(--yellow); }
+  .vi-days.ok { color: var(--green); }
+  .vi-restock { font-size: 0.6875rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 9999px; }
+  .vi-restock.yes { background: #fee2e2; color: #991b1b; }
+  .vi-restock.no { background: #d1fae5; color: #065f46; }
+  .vi-edit { display: flex; align-items: center; gap: 0.375rem; }
+  .vi-edit input { width: 70px; padding: 0.375rem 0.5rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8125rem; text-align: center; background: var(--bg); color: var(--text); }
+  .vi-edit input:focus { outline: none; border-color: var(--primary); }
+  .vi-edit-btn { min-height: 32px; padding: 0.375rem 0.625rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: none; background: var(--primary); color: #fff; transition: all 0.15s; }
+  .vi-edit-btn:hover { opacity: 0.9; }
+  .vi-empty { text-align: center; padding: 4rem 1.5rem; color: var(--muted); }
+  .vi-pagination { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; }
+  .vi-page-btn { min-height: 36px; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); }
+  .vi-page-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .vi-toast { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 9999; padding: 0.75rem 1.25rem; border-radius: 10px; font-size: 0.875rem; font-weight: 600; color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.2); transition: opacity 0.3s; }
+  .vi-toast.success { background: var(--green); }
+  .vi-toast.error { background: var(--red); }
+  @media (max-width: 640px) {
+    .vi-stats { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+
+<div class="vi-page">
+  <h1>Inventory Intelligence</h1>
+  <p class="vi-sub">AI-powered restock predictions based on sales velocity</p>
+
+  <div class="vi-stats" id="viStats"></div>
+
+  <div class="vi-toolbar">
+    <select class="vi-sort" id="viSort" onchange="viLoadList()">
+      <option value="urgency">Sort: Most Urgent</option>
+      <option value="name">Sort: Name</option>
+      <option value="inventory">Sort: Stock Level</option>
+      <option value="daily_rate">Sort: Sales Rate</option>
+    </select>
+    <div style="display:flex;gap:0.5rem;">
+      <button onclick="viExportCSV()" style="min-height:36px;padding:0.5rem 1rem;border-radius:8px;font-size:0.8125rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--text);">Export CSV</button>
+      <button onclick="viBulkUpdate()" id="viBulkBtn" style="min-height:36px;padding:0.5rem 1rem;border-radius:8px;font-size:0.8125rem;font-weight:600;cursor:pointer;border:1px solid var(--primary);background:var(--primary);color:#fff;display:none;">Bulk Update</button>
+    </div>
+  </div>
+
+  <div class="vi-table-wrap">
+    <table class="vi-table">
+      <thead>
+        <tr>
+          <th><input type="checkbox" id="viCheckAll" onchange="viToggleAll(this)"></th>
+          <th>Product</th>
+          <th>Stock</th>
+          <th>Daily Rate</th>
+          <th>Days Left</th>
+          <th>Restock?</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="viBody"></tbody>
+    </table>
+  </div>
+  <div id="viEmpty" style="display:none;"></div>
+  <div class="vi-pagination" id="viPagination"></div>
+</div>
+
+<script>
+let viFilter = '';
+let viPage = 1;
+
+async function viLoadStats() {
+  const r = await fetch('/api/vendor/inventory?per_page=1');
+  const d = await r.json();
+  const s = d.summary;
+  document.getElementById('viStats').innerHTML = `
+    <div class="vi-stat ${!viFilter ? 'active' : ''}" onclick="viSetFilter('')">
+      <div class="num">${s.total_products}</div><div class="lbl">Total Products</div>
+    </div>
+    <div class="vi-stat ${viFilter==='out_of_stock' ? 'active' : ''}" onclick="viSetFilter('out_of_stock')">
+      <div class="num" style="color:var(--red)">${s.out_of_stock}</div><div class="lbl">Out of Stock</div>
+    </div>
+    <div class="vi-stat ${viFilter==='low_stock' ? 'active' : ''}" onclick="viSetFilter('low_stock')">
+      <div class="num" style="color:var(--yellow)">${s.low_stock}</div><div class="lbl">Low Stock</div>
+    </div>
+    <div class="vi-stat ${viFilter==='in_stock' ? 'active' : ''}" onclick="viSetFilter('in_stock')">
+      <div class="num" style="color:var(--green)">${s.in_stock}</div><div class="lbl">In Stock</div>
+    </div>
+  `;
+}
+
+function viSetFilter(f) {
+  viFilter = f;
+  viPage = 1;
+  viLoadStats();
+  viLoadList();
+}
+
+async function viLoadList(page = 1) {
+  viPage = page;
+  const sort = document.getElementById('viSort').value;
+  const r = await fetch(`/api/vendor/inventory?filter=${viFilter}&sort=${sort}&page=${page}&per_page=20`);
+  const d = await r.json();
+
+  if (!d.items.length) {
+    document.getElementById('viBody').innerHTML = '';
+    document.getElementById('viEmpty').innerHTML = `<div class="vi-empty"><p>No products match this filter</p></div>`;
+    document.getElementById('viEmpty').style.display = 'block';
+    document.getElementById('viPagination').innerHTML = '';
+    return;
+  }
+  document.getElementById('viEmpty').style.display = 'none';
+
+  let html = '';
+  for (const item of d.items) {
+    const stockClass = item.inventory === 0 ? 'out' : item.days_until_out <= 14 ? 'low' : 'ok';
+    const daysClass = item.inventory === 0 ? 'out' : item.days_until_out <= 7 ? 'urgent' : 'ok';
+    const thumb = item.image ? `<img src="${item.image}" class="vi-thumb" alt="">` : `<div class="vi-thumb"></div>`;
+
+    html += `<tr>
+      <td><input type="checkbox" class="vi-check" data-id="${item.id}" onchange="viCheckChanged()"></td>
+      <td><div class="vi-product">${thumb}<div><div class="vi-name">${item.name}</div><div class="vi-cat">${item.category}</div></div></div></td>
+      <td><div class="vi-stock ${stockClass}"><span class="vi-stock-dot"></span>${item.inventory}</div></td>
+      <td>${item.daily_rate}/day</td>
+      <td><span class="vi-days ${daysClass}">${item.inventory === 0 ? '—' : item.days_until_out + 'd'}</span></td>
+      <td><span class="vi-restock ${item.restock_recommended ? 'yes' : 'no'}">${item.restock_recommended ? 'YES' : 'No'}</span></td>
+      <td><div class="vi-edit">
+        <input type="number" id="inv-${item.id}" value="${item.inventory}" min="0">
+        <button class="vi-edit-btn" onclick="viUpdate('${item.id}')">Save</button>
+      </div></td>
+    </tr>`;
+  }
+  document.getElementById('viBody').innerHTML = html;
+
+  let pag = '';
+  if (d.pages > 1) {
+    for (let i = 1; i <= d.pages; i++) {
+      pag += `<button class="vi-page-btn ${i === page ? 'active' : ''}" onclick="viLoadList(${i})">${i}</button>`;
+    }
+  }
+  document.getElementById('viPagination').innerHTML = pag;
+}
+
+async function viUpdate(id) {
+  const val = document.getElementById('inv-' + id).value;
+  const r = await fetch('/api/vendor/inventory/update', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ product_id: id, inventory: parseInt(val) }),
+  });
+  const d = await r.json();
+  if (d.success) {
+    viToast('Stock updated', false);
+    viLoadStats();
+  } else {
+    viToast(d.detail || 'Error', true);
+  }
+}
+
+function viToast(msg, isError) {
+  const t = document.createElement('div');
+  t.className = `vi-toast ${isError ? 'error' : 'success'}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+function viExportCSV() {
+  const sort = document.getElementById('viSort').value;
+  window.location.href = `/api/vendor/inventory/export?filter=${viFilter}&sort=${sort}`;
+}
+
+function viCheckChanged() {
+  const checked = document.querySelectorAll('.vi-check:checked').length;
+  document.getElementById('viBulkBtn').style.display = checked > 0 ? 'block' : 'none';
+}
+
+function viToggleAll(el) {
+  document.querySelectorAll('.vi-check').forEach(c => c.checked = el.checked);
+  viCheckChanged();
+}
+
+async function viBulkUpdate() {
+  const updates = [];
+  document.querySelectorAll('.vi-check:checked').forEach(c => {
+    const id = c.dataset.id;
+    const val = document.getElementById('inv-' + id)?.value;
+    if (val !== undefined) updates.push({product_id: id, inventory: parseInt(val)});
+  });
+  if (!updates.length) return;
+  const r = await fetch('/api/vendor/inventory/bulk-update', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({updates}),
+  });
+  const d = await r.json();
+  if (d.success) {
+    viToast(`${updates.length} items updated`, false);
+    viLoadStats();
+    viLoadList();
+  } else {
+    viToast(d.detail || 'Error', true);
+  }
+}
+
+viLoadStats();
+viLoadList();
+</script>
+{% endblock %}

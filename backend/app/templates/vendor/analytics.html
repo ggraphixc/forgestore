@@ -80,10 +80,30 @@
       <h1>Analytics</h1>
       <p class="sub">Sales performance, revenue insights, and top products</p>
     </div>
-    <div class="va-filters">
-      <button class="va-filter-btn active" onclick="setPeriod('daily',this)">Daily</button>
-      <button class="va-filter-btn" onclick="setPeriod('weekly',this)">Weekly</button>
-      <button class="va-filter-btn" onclick="setPeriod('monthly',this)">Monthly</button>
+    <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+      <div style="display:flex;gap:.375rem;align-items:center;">
+        <input type="date" id="va-start-date" style="padding:.375rem .5rem;border:1px solid var(--va-border);border-radius:.5rem;font-size:.75rem;background:var(--va-bg-alt);color:var(--va-text-dark);">
+        <span style="color:var(--va-text-muted);font-size:.75rem;">to</span>
+        <input type="date" id="va-end-date" style="padding:.375rem .5rem;border:1px solid var(--va-border);border-radius:.5rem;font-size:.75rem;background:var(--va-bg-alt);color:var(--va-text-dark);">
+        <button onclick="vaApplyDateRange()" style="padding:.375rem .75rem;border:1px solid var(--va-border);border-radius:.5rem;font-size:.75rem;font-weight:600;cursor:pointer;background:var(--va-primary);color:#fff;">Apply</button>
+      </div>
+      <button onclick="vaExportCSV()" style="padding:.375rem .75rem;border:1px solid var(--va-border);border-radius:.5rem;font-size:.75rem;font-weight:600;cursor:pointer;background:var(--va-bg-alt);color:var(--va-text-dark);display:flex;align-items:center;gap:.375rem;">
+        <svg style="width:.875rem;height:.875rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Export CSV
+      </button>
+      <button onclick="vaExportPDF()" style="padding:.375rem .75rem;border:1px solid var(--va-border);border-radius:.5rem;font-size:.75rem;font-weight:600;cursor:pointer;background:var(--va-bg-alt);color:var(--va-text-dark);">Export PDF</button>
+      <div class="va-filters">
+        <button class="va-filter-btn active" onclick="setPeriod('daily',this)">Daily</button>
+        <button class="va-filter-btn" onclick="setPeriod('weekly',this)">Weekly</button>
+        <button class="va-filter-btn" onclick="setPeriod('monthly',this)">Monthly</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="va-ai-insights" style="margin-bottom:1.5rem;display:none;">
+    <div class="va-card">
+      <div class="va-card-hdr"><h2>AI Insights</h2><span style="font-size:.6875rem;color:var(--va-text-muted)">Powered by AI</span></div>
+      <div class="va-card-body" id="va-insights-body" style="display:flex;flex-direction:column;gap:.75rem;"></div>
     </div>
   </div>
 
@@ -146,7 +166,7 @@ function setPeriod(p, el) {
 
 async function loadAnalytics(period) {
   try {
-    const res = await fetch('/vendor/api/vendor/analytics?period=' + period + '&days=30');
+    const res = await fetch('/vendor/api/vendor/analytics?period=' + period + '&days=' + currentDays);
     if (!res.ok) throw new Error('Failed');
     const d = await res.json();
     renderStats(d);
@@ -304,6 +324,54 @@ function renderOrders(orders) {
   }).join('');
 }
 
-document.addEventListener('DOMContentLoaded', () => loadAnalytics('daily'));
+// Date range, CSV export, AI insights
+let currentDays = 30;
+
+function vaApplyDateRange() {
+  const start = document.getElementById('va-start-date').value;
+  const end = document.getElementById('va-end-date').value;
+  if (!start || !end) return;
+  const days = Math.ceil((new Date(end) - new Date(start)) / (1000 * 60 * 60 * 24));
+  currentDays = Math.max(1, days);
+  loadAnalytics('daily');
+}
+
+function vaExportCSV() {
+  const start = document.getElementById('va-start-date').value || new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+  const end = document.getElementById('va-end-date').value || new Date().toISOString().split('T')[0];
+  window.location.href = `/api/vendor/analytics/export?start_date=${start}&end_date=${end}`;
+}
+
+function vaExportPDF() {
+  const start = document.getElementById('va-start-date').value || new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+  const end = document.getElementById('va-end-date').value || new Date().toISOString().split('T')[0];
+  window.location.href = `/api/vendor/analytics/pdf-export?start_date=${start}&end_date=${end}`;
+}
+
+async function vaLoadInsights() {
+  try {
+    const r = await fetch(`/api/vendor/analytics/ai-insights?days=${currentDays}`);
+    const d = await r.json();
+    if (d.success && d.insights.length) {
+      const impactColors = { high: 'var(--va-red)', medium: 'var(--va-amber)', low: 'var(--va-emerald)' };
+      const body = document.getElementById('va-insights-body');
+      body.innerHTML = d.insights.map(i => `
+        <div style="display:flex;gap:.75rem;align-items:flex-start;padding:.75rem;border:1px solid var(--va-border);border-radius:.75rem;">
+          <div style="width:8px;height:8px;border-radius:50%;background:${impactColors[i.impact] || 'var(--va-text-muted)'};flex-shrink:0;margin-top:.375rem;"></div>
+          <div>
+            <div style="font-weight:700;font-size:.8125rem;color:var(--va-text-dark)">${i.title}</div>
+            <div style="font-size:.75rem;color:var(--va-text-muted);margin-top:.125rem;line-height:1.4">${i.detail}</div>
+          </div>
+        </div>
+      `).join('');
+      document.getElementById('va-ai-insights').style.display = 'block';
+    }
+  } catch {}
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadAnalytics('daily');
+  vaLoadInsights();
+});
 </script>
 {% endblock %}

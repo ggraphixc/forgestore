@@ -291,6 +291,7 @@ class TrackingService:
 
         return {
             "tracking_number": shipment.tracking_number,
+            "shipment_id": shipment.id,
             "carrier": shipment.carrier,
             "status": shipment.status,
             "estimated_delivery": shipment.estimated_delivery.isoformat() if shipment.estimated_delivery else None,
@@ -298,6 +299,7 @@ class TrackingService:
             "origin": shipment.origin,
             "destination": shipment.destination,
             "weight_kg": shipment.weight_kg,
+            "proof_photo_url": shipment.proof_photo_url,
             "timeline": [
                 {
                     "status": e.status,
@@ -312,7 +314,9 @@ class TrackingService:
             "delivery_agent": {
                 "name": agent.name if agent else None,
                 "phone": agent.phone if agent else None,
-                "photo": None,  # Could add agent photo later
+                "vehicle_type": agent.vehicle_type if agent else None,
+                "vehicle_number": agent.vehicle_number if agent else None,
+                "photo": None,
             } if agent else None,
         }
 

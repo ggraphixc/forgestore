@@ -1,0 +1,216 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}Reviews — {{ settings.site_name|default('ForgeStore') }}{% endblock %}
+{% block content %}
+<style>
+  :root {
+    --primary: {{ settings.primary_color|default('#f59e0b') }};
+    --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
+    --green: #10b981; --red: #ef4444; --yellow: #f59e0b; --blue: #3b82f6;
+  }
+  .dark { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --muted: #94a3b8; --border: #334155; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; }
+  .vr-page { max-width: 80rem; margin: 0 auto; padding: 1.5rem; }
+  .vr-page h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.25rem; }
+  .vr-sub { font-size: 0.875rem; color: var(--muted); margin-bottom: 1.5rem; }
+  .vr-top { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+  .vr-summary { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+  .vr-summary h3 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 0 0 0.75rem; }
+  .vr-avg { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.75rem; }
+  .vr-avg .num { font-size: 2.5rem; font-weight: 900; }
+  .vr-avg .stars { color: var(--yellow); font-size: 1.25rem; }
+  .vr-avg .count { font-size: 0.8125rem; color: var(--muted); }
+  .vr-bar-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; margin-bottom: 0.25rem; }
+  .vr-bar-row .lbl { width: 1rem; text-align: right; color: var(--muted); font-weight: 600; }
+  .vr-bar { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .vr-bar-fill { height: 100%; background: var(--yellow); border-radius: 3px; }
+  .vr-bar-row .cnt { width: 2rem; text-align: right; color: var(--muted); }
+  .vr-ai-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+  .vr-ai-label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+  .vr-ai-item { font-size: 0.8125rem; color: var(--text); padding: 0.25rem 0; display: flex; gap: 0.375rem; }
+  .vr-ai-item::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 0.375rem; }
+  .vr-ai-pro::before { background: var(--green); }
+  .vr-ai-con::before { background: var(--red); }
+  .vr-ai-verdict { font-size: 0.8125rem; color: var(--text); font-style: italic; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border); }
+  .vr-filters { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .vr-filter { padding: 0.375rem 0.75rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--muted); transition: all 0.15s; }
+  .vr-filter.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .vr-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-bottom: 0.75rem; }
+  .vr-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.5rem; }
+  .vr-stars { color: var(--yellow); font-size: 0.875rem; }
+  .vr-author { font-weight: 700; font-size: 0.875rem; }
+  .vr-product { font-size: 0.75rem; color: var(--muted); display: flex; align-items: center; gap: 0.5rem; }
+  .vr-product img { width: 32px; height: 32px; border-radius: 6px; object-fit: cover; }
+  .vr-title { font-weight: 700; font-size: 0.875rem; margin-bottom: 0.25rem; }
+  .vr-content { font-size: 0.8125rem; color: var(--muted); line-height: 1.5; }
+  .vr-meta { font-size: 0.6875rem; color: var(--muted); margin-top: 0.5rem; }
+  .vr-empty { text-align: center; padding: 4rem 1.5rem; color: var(--muted); }
+  .vr-pagination { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; }
+  .vr-page-btn { min-height: 36px; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); }
+  .vr-page-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  @media (max-width: 640px) {
+    .vr-top { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="vr-page">
+  <h1>Customer Reviews</h1>
+  <p class="vr-sub">AI-powered review insights and customer feedback</p>
+
+  <div class="vr-top">
+    <div class="vr-summary" id="vrSummary">
+      <h3>Rating Overview</h3>
+      <div class="vr-avg"><span class="num" id="vr-avg-num">—</span><span class="stars" id="vr-avg-stars"></span><span class="count" id="vr-avg-count"></span></div>
+      <div id="vr-dist"></div>
+    </div>
+    <div class="vr-summary">
+      <h3>AI Review Summary</h3>
+      <div class="vr-ai-box" id="vrAI">
+        <div style="text-align:center;padding:1rem;color:var(--muted);font-size:0.8125rem;">Loading AI summary...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="vr-summary" style="margin-bottom:1.5rem;">
+    <h3>Sentiment Trend</h3>
+    <div id="vrSentiment" style="display:flex;gap:0.5rem;align-items:flex-end;height:80px;"></div>
+    <div style="display:flex;gap:1rem;margin-top:0.5rem;font-size:0.6875rem;">
+      <span style="color:var(--green);">● Positive</span>
+      <span style="color:var(--yellow);">● Neutral</span>
+      <span style="color:var(--red);">● Negative</span>
+    </div>
+  </div>
+
+  <div class="vr-filters" id="vrFilters">
+    <button class="vr-filter active" data-rating="">All</button>
+    <button class="vr-filter" data-rating="5">5 Stars</button>
+    <button class="vr-filter" data-rating="4">4 Stars</button>
+    <button class="vr-filter" data-rating="3">3 Stars</button>
+    <button class="vr-filter" data-rating="2">2 Stars</button>
+    <button class="vr-filter" data-rating="1">1 Star</button>
+  </div>
+
+  <div id="vrList"></div>
+  <div class="vr-pagination" id="vrPagination"></div>
+</div>
+
+<script>
+let vrRating = '';
+let vrPage = 1;
+
+async function vrLoadStats() {
+  const r = await fetch('/api/vendor/reviews/stats');
+  const d = await r.json();
+  document.getElementById('vr-avg-num').textContent = d.avg_rating || '—';
+  document.getElementById('vr-avg-count').textContent = `from ${d.total} reviews`;
+  const stars = Math.round(d.avg_rating || 0);
+  document.getElementById('vr-avg-stars').textContent = '★'.repeat(stars) + '☆'.repeat(5 - stars);
+
+  let distHtml = '';
+  for (let i = 5; i >= 1; i--) {
+    const cnt = d.distribution[i] || 0;
+    const pct = d.total > 0 ? (cnt / d.total * 100) : 0;
+    distHtml += `<div class="vr-bar-row"><span class="lbl">${i}</span><div class="vr-bar"><div class="vr-bar-fill" style="width:${pct}%"></div></div><span class="cnt">${cnt}</span></div>`;
+  }
+  document.getElementById('vr-dist').innerHTML = distHtml;
+}
+
+async function vrLoadAI() {
+  const r = await fetch('/api/vendor/reviews/ai-summary');
+  const d = await r.json();
+  if (!d.success) return;
+  const s = d.summary;
+  let html = '';
+  if (s.pros && s.pros.length) {
+    html += s.pros.map(p => `<div class="vr-ai-item vr-ai-pro">${p}</div>`).join('');
+  }
+  if (s.cons && s.cons.length) {
+    html += s.cons.map(c => `<div class="vr-ai-item vr-ai-con">${c}</div>`).join('');
+  }
+  if (s.verdict) {
+    html += `<div class="vr-ai-verdict">${s.verdict}</div>`;
+  }
+  document.getElementById('vrAI').innerHTML = html || '<div style="padding:0.5rem;color:var(--muted);font-size:0.8125rem;">No summary available</div>';
+}
+
+async function vrLoadSentiment() {
+  const r = await fetch('/api/vendor/reviews/sentiment');
+  const d = await r.json();
+  const el = document.getElementById('vrSentiment');
+  if (!d.data_points.length) { el.innerHTML = '<div style="font-size:0.8125rem;color:var(--muted);">No data</div>'; return; }
+  const maxVal = Math.max(...d.data_points.map(p => p.positive + p.neutral + p.negative), 1);
+  el.innerHTML = d.data_points.slice(-14).map(p => {
+    const total = p.positive + p.neutral + p.negative;
+    const h = Math.max((total / maxVal) * 70, 4);
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
+      <div style="width:100%;height:${h}px;background:linear-gradient(to top, var(--red) ${p.negative/total*100||0}%, var(--yellow) ${(p.negative+p.neutral)/total*100||0}%, var(--green) 100%);border-radius:4px;min-height:4px;"></div>
+      <div style="font-size:0.5rem;color:var(--muted);">${p.date.slice(5)}</div>
+    </div>`;
+  }).join('');
+}
+
+async function vrSuggestResponse(reviewId) {
+  const el = document.getElementById('vr-suggest-' + reviewId);
+  el.style.display = 'block';
+  el.innerHTML = '<div style="color:var(--muted);">Generating...</div>';
+  const r = await fetch(`/api/vendor/reviews/${reviewId}/suggest-response`, {method: 'POST'});
+  const d = await r.json();
+  el.innerHTML = `<strong>AI Suggestion:</strong> ${d.suggestion || 'No suggestion available'}`;
+}
+
+async function vrLoadList(page = 1) {
+  vrPage = page;
+  const r = await fetch(`/api/vendor/reviews?rating=${vrRating}&page=${page}&per_page=15`);
+  const d = await r.json();
+
+  if (!d.reviews.length) {
+    document.getElementById('vrList').innerHTML = `<div class="vr-empty"><p>No reviews found</p></div>`;
+    document.getElementById('vrPagination').innerHTML = '';
+    return;
+  }
+
+  let html = '';
+  for (const rv of d.reviews) {
+    const stars = '★'.repeat(rv.rating) + '☆'.repeat(5 - rv.rating);
+    const date = rv.created_at ? new Date(rv.created_at).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'}) : '';
+    const img = rv.product_image ? `<img src="${rv.product_image}" alt="">` : '';
+    html += `<div class="vr-card">
+      <div class="vr-card-header">
+        <div>
+          <div class="vr-stars">${stars}</div>
+          <div class="vr-author">${rv.author}</div>
+        </div>
+        <div class="vr-product">${img}<span>${rv.product_name}</span></div>
+      </div>
+      ${rv.title ? `<div class="vr-title">${rv.title}</div>` : ''}
+      ${rv.content ? `<div class="vr-content">${rv.content}</div>` : ''}
+      <div class="vr-meta">${date} · ${rv.helpful} found helpful</div>
+      <div style="margin-top:0.5rem;"><button onclick="vrSuggestResponse('${rv.id}')" style="min-height:32px;padding:0.25rem 0.75rem;border-radius:6px;font-size:0.6875rem;font-weight:600;cursor:pointer;border:1px solid var(--blue);background:transparent;color:var(--blue);">AI Suggest Response</button></div>
+      <div id="vr-suggest-${rv.id}" style="margin-top:0.5rem;display:none;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:0.75rem;font-size:0.8125rem;"></div>
+    </div>`;
+  }
+  document.getElementById('vrList').innerHTML = html;
+
+  let pag = '';
+  if (d.pages > 1) {
+    for (let i = 1; i <= d.pages; i++) {
+      pag += `<button class="vr-page-btn ${i === page ? 'active' : ''}" onclick="vrLoadList(${i})">${i}</button>`;
+    }
+  }
+  document.getElementById('vrPagination').innerHTML = pag;
+}
+
+document.querySelectorAll('.vr-filter').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.vr-filter').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    vrRating = btn.dataset.rating;
+    vrLoadList(1);
+  });
+});
+
+vrLoadStats();
+vrLoadAI();
+vrLoadSentiment();
+vrLoadList();
+</script>
+{% endblock %}
