@@ -469,6 +469,12 @@
                                 </div>
                                 <div class="admin-catalog-product-info">
                                     <a href="/admin/catalog/{{ product.id }}" class="admin-catalog-product-name">{{ product.name }}</a>
+                                    {% if flag_counts.get(product.id, 0) > 0 %}
+                                    <span style="display:inline-flex;align-items:center;gap:0.25rem;font-size:0.6875rem;font-weight:700;color:#dc2626;background:#fee2e2;padding:0.15rem 0.5rem;border-radius:9999px;margin-top:0.25rem;">
+                                        <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
+                                        {{ flag_counts[product.id] }} flag{{ 's' if flag_counts[product.id] != 1 }}
+                                    </span>
+                                    {% endif %}
                                     {% if product.brand %}<p class="admin-catalog-product-brand">{{ product.brand }}</p>{% endif %}
                                 </div>
                             </div>

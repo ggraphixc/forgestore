@@ -1901,8 +1901,10 @@ async def report_product(
     request: Request,
     db: Session = Depends(get_db),
 ):
-    """Customer reports a product for policy violation."""
-    from app.models import ProductFlag, Product
+    """Customer reports a product — AI triages automatically."""
+    from app.models import ProductFlag, Product, AdminNotification, VendorNotification, Retailer, ProductModerationLog
+    from app.services.flag_triage import triage_flag
+    from app.core.notifications import send_whatsapp_message, _normalize_phone
     customer = get_current_customer_from_cookie(request, db)
 
     body = await request.json() if request.headers.get("content-type") == "application/json" else {}
@@ -1916,7 +1918,7 @@ async def report_product(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    # Check if already reported
+    # Check if already reported by this user
     existing = db.query(ProductFlag).filter(
         ProductFlag.product_id == product_id,
         ProductFlag.reported_by == (customer.id if customer else None),
@@ -1925,6 +1927,18 @@ async def report_product(
     if existing:
         raise HTTPException(status_code=400, detail="You have already reported this product")
 
+    # Count existing flags and reporter history
+    existing_flag_count = db.query(ProductFlag).filter(
+        ProductFlag.product_id == product_id,
+        ProductFlag.status == "PENDING",
+    ).count()
+    reporter_history = 0
+    if customer:
+        reporter_history = db.query(ProductFlag).filter(
+            ProductFlag.reported_by == customer.id,
+        ).count()
+
+    # Create the flag
     flag = ProductFlag(
         product_id=product_id,
         reported_by=customer.id if customer else None,
@@ -1932,5 +1946,132 @@ async def report_product(
         description=description,
     )
     db.add(flag)
+    db.flush()
+
+    # ── AI Triage ──────────────────────────────────────────────
+    product_data = {
+        "name": product.name,
+        "description": product.description,
+        "price": product.price,
+        "category": product.category.name if product.category else "",
+        "status": product.status,
+        "ai_confidence_score": product.ai_confidence_score,
+    }
+    triage = triage_flag(
+        reason=reason,
+        description=description,
+        product_data=product_data,
+        existing_flags=existing_flag_count,
+        reporter_history=reporter_history,
+    )
+
+    # Store triage result in the flag description for admin review
+    flag.description = (
+        f"{description}\n\n---\n"
+        f"AI Triage: {triage['decision']} ({triage['confidence']}%)\n"
+        f"Reasoning: {triage['reasoning']}\n"
+        f"Recommended: {triage.get('recommended_action', 'N/A')}"
+    ).strip()
+
+    # ── HIGH confidence → Auto-suspend ─────────────────────────
+    if triage["auto_action"] == "suspend" and product.status != "SUSPENDED":
+        product.status = "SUSPENDED"
+        product.moderation_note = f"Auto-suspended: {triage['reasoning']}"
+        log = ProductModerationLog(
+            product_id=product_id,
+            action="auto_suspend",
+            ai_score=triage["confidence"],
+            ai_reasoning=triage["reasoning"],
+            note=f"Auto-suspended after {existing_flag_count + 1} flags",
+        )
+        db.add(log)
+
+        # Admin notification (in-app)
+        admin_notif = AdminNotification(
+            type="warning",
+            title="Product Auto-Suspended",
+            message=f"\"{product.name}\" was auto-suspended after {existing_flag_count + 1} customer flags. AI confidence: {triage['confidence']}%. Reason: {triage['reasoning'][:200]}",
+            link=f"/admin/moderation",
+        )
+        db.add(admin_notif)
+
+        # Try WhatsApp to admin (first DIR_ADMIN with phone)
+        try:
+            admin = db.query(AdminUser).filter(AdminUser.role == "DIR_ADMIN").first()
+            if admin and getattr(admin, "phone", None):
+                msg = (
+                    f"⚠️ Product Auto-Suspended\n\n"
+                    f"Product: {product.name}\n"
+                    f"Flags: {existing_flag_count + 1}\n"
+                    f"AI Confidence: {triage['confidence']}%\n"
+                    f"Reason: {triage['reasoning'][:200]}\n\n"
+                    f"Review: /admin/moderation"
+                )
+                await send_whatsapp_message(admin.phone, msg)
+        except Exception as e:
+            logger.error(f"Admin WhatsApp notification failed: {e}")
+
+    # ── MEDIUM confidence → Escalate (admin notification only) ─
+    elif triage["auto_action"] == "escalate":
+        admin_notif = AdminNotification(
+            type="info",
+            title="Product Flag — Review Needed",
+            message=f"\"{product.name}\" was flagged ({reason}). AI confidence: {triage['confidence']}%. {triage['reasoning'][:200]}",
+            link=f"/admin/flags",
+        )
+        db.add(admin_notif)
+
+    # ── LOW confidence → Vendor self-correct (no admin action) ─
+    elif triage["auto_action"] == "notify_vendor":
+        pass  # Just notify vendor below
+
+    # ── Vendor notification (all confidence levels) ────────────
+    try:
+        retailer = db.query(Retailer).filter(Retailer.id == product.retailer_id).first()
+        if retailer:
+            severity = "CRITICAL" if triage["decision"] == "HIGH" else "WARNING" if triage["decision"] == "MEDIUM" else "INFO"
+            vendor_msg = (
+                f"Your product \"{product.name}\" was reported by a customer.\n\n"
+                f"Reason: {reason}\n"
+                f"Details: {description or 'None provided'}\n\n"
+                f"AI Analysis: {triage['decision']} severity ({triage['confidence']}%)\n"
+            )
+            if triage.get("vendor_message"):
+                vendor_msg += f"Recommendation: {triage['vendor_message']}\n"
+            if triage["auto_action"] == "suspend":
+                vendor_msg += "\n⚠️ Your product has been temporarily suspended pending review."
+            vendor_msg += "\n\nPlease review your product listing for accuracy and quality."
+
+            notif = VendorNotification(
+                retailer_id=retailer.id,
+                message_text=vendor_msg,
+                severity_level=severity,
+                notification_type="product_flag",
+                related_product_id=product_id,
+            )
+            db.add(notif)
+
+            # Try WhatsApp to vendor
+            if getattr(retailer, "phone", None):
+                wa_msg = f"🔔 Product Reported\n\nProduct: {product.name}\nReason: {reason}\nSeverity: {triage['decision']}\n\nPlease review your listing."
+                await send_whatsapp_message(retailer.phone, wa_msg)
+    except Exception as e:
+        logger.error(f"Vendor notification failed: {e}")
+
     db.commit()
-    return {"success": True, "message": "Report submitted. Our team will review it."}
+
+    # Return response based on triage
+    response_msg = "Report submitted. Our team will review it."
+    if triage["auto_action"] == "suspend":
+        response_msg = "Report submitted. The product has been temporarily suspended pending review."
+    elif triage["auto_action"] == "escalate":
+        response_msg = "Report submitted. Our team has been notified and will review shortly."
+
+    return {
+        "success": True,
+        "message": response_msg,
+        "triage": {
+            "decision": triage["decision"],
+            "confidence": triage["confidence"],
+        },
+    }

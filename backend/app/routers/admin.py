@@ -14,7 +14,7 @@ from app.models import (
     User, Settings, NewsletterSubscriber,
     BroadcastCampaign, BroadcastTemplate,
     Shipment, Affiliate, AdCampaign, PromoAd,
-    ProductChatMessage,
+    ProductChatMessage, ProductFlag,
 )
 from app.auth import hash_password, verify_password, get_current_user_from_cookie, has_permission, log_admin_action
 from app.config import get_settings
@@ -106,12 +106,20 @@ def product_list(request: Request, db: Session = Depends(get_db)):
     categories = {c.id: c.name for c in db.query(Category).all()}
     retailers = {r.id: r.name for r in db.query(Retailer).all()}
 
+    flag_counts = dict(
+        db.query(ProductFlag.product_id, func.count(ProductFlag.id))
+        .filter(ProductFlag.status == "PENDING")
+        .group_by(ProductFlag.product_id)
+        .all()
+    )
+
     return render_template("admin/catalog/list.html", {
         "request": request,
         "admin": admin,
         "products": products,
         "categories": categories,
         "retailers": retailers,
+        "flag_counts": flag_counts,
         "has_permission": has_permission,
     })
 
@@ -1076,6 +1084,18 @@ def moderation_page(request: Request, db: Session = Depends(get_db)):
     if not admin or not has_permission(admin, "catalog"):
         return RedirectResponse(url="/admin/login", status_code=302)
     return render_template("admin/moderation/dashboard.html", {
+        "request": request,
+        "admin": admin,
+        "has_permission": has_permission,
+    })
+
+
+@router.get("/flags", response_class=HTMLResponse)
+def flags_page(request: Request, db: Session = Depends(get_db)):
+    admin = get_current_user_from_cookie(request, db)
+    if not admin or not has_permission(admin, "catalog"):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    return render_template("admin/flags/queue.html", {
         "request": request,
         "admin": admin,
         "has_permission": has_permission,

@@ -4451,3 +4451,152 @@ def moderate_bulk(
     db.commit()
     return {"success": True, "updated": updated}
 
+
+# ─── Flag Queue Endpoints ──────────────────────────────────────────
+
+
+@router.get("/flags")
+def flag_queue(
+    status: str = "PENDING",
+    page: int = 1,
+    per_page: int = 20,
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """Get product flags with AI triage data."""
+    from app.models import ProductFlag, Retailer
+    query = db.query(ProductFlag).filter(ProductFlag.status == status)
+    total = query.count()
+    flags = query.order_by(ProductFlag.created_at.desc()).offset((page - 1) * per_page).limit(per_page).all()
+
+    retailers = {r.id: r.name for r in db.query(Retailer).all()}
+    result = []
+    for f in flags:
+        product = db.query(Product).filter(Product.id == f.product_id).first()
+        reporter = db.query(User).filter(User.id == f.reported_by).first() if f.reported_by else None
+        flag_count = db.query(ProductFlag).filter(
+            ProductFlag.product_id == f.product_id,
+            ProductFlag.status == "PENDING",
+        ).count()
+
+        result.append({
+            "id": f.id,
+            "product_id": f.product_id,
+            "product_name": product.name if product else "Deleted",
+            "product_image": (product.images or [None])[0] if product else None,
+            "product_price": product.price if product else 0,
+            "product_status": product.status if product else "unknown",
+            "retailer": retailers.get(product.retailer_id, "Unknown") if product else "Unknown",
+            "reason": f.reason,
+            "description": f.description or "",
+            "status": f.status,
+            "flag_count": flag_count,
+            "reporter_name": reporter.name if reporter else "Anonymous",
+            "created_at": f.created_at.isoformat() if f.created_at else None,
+            "admin_note": f.admin_note,
+            "reviewed_at": f.reviewed_at.isoformat() if f.reviewed_at else None,
+        })
+
+    return {
+        "flags": result,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "pages": (total + per_page - 1) // per_page,
+    }
+
+
+@router.get("/flags/stats")
+def flag_stats(
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """Get flag queue statistics."""
+    from app.models import ProductFlag
+    pending = db.query(ProductFlag).filter(ProductFlag.status == "PENDING").count()
+    reviewed = db.query(ProductFlag).filter(ProductFlag.status == "REVIEWED").count()
+    resolved = db.query(ProductFlag).filter(ProductFlag.status == "RESOLVED").count()
+    dismissed = db.query(ProductFlag).filter(ProductFlag.status == "DISMISSED").count()
+    total = db.query(ProductFlag).count()
+
+    # Products with 3+ flags (auto-suspended candidates)
+    from sqlalchemy import func
+    high_flag_products = db.query(
+        ProductFlag.product_id,
+        func.count(ProductFlag.id).label("flag_count"),
+    ).filter(
+        ProductFlag.status == "PENDING"
+    ).group_by(
+        ProductFlag.product_id
+    ).having(
+        func.count(ProductFlag.id) >= 3
+    ).count()
+
+    return {
+        "pending": pending,
+        "reviewed": reviewed,
+        "resolved": resolved,
+        "dismissed": dismissed,
+        "total": total,
+        "high_flag_products": high_flag_products,
+    }
+
+
+@router.post("/flags/{flag_id}/review")
+def review_flag(
+    flag_id: str,
+    action: str = "resolve",
+    note: str = "",
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """Review a flag — resolve (confirm issue) or dismiss (false alarm)."""
+    from app.models import ProductFlag, ProductModerationLog
+    flag = db.query(ProductFlag).filter(ProductFlag.id == flag_id).first()
+    if not flag:
+        raise HTTPException(status_code=404, detail="Flag not found")
+
+    flag.status = "RESOLVED" if action == "resolve" else "DISMISSED"
+    flag.reviewed_by = admin.id
+    flag.reviewed_at = utcnow()
+    flag.admin_note = note
+
+    # If resolving (confirming the issue), log it
+    if action == "resolve":
+        product = db.query(Product).filter(Product.id == flag.product_id).first()
+        if product:
+            log = ProductModerationLog(
+                product_id=flag.product_id,
+                action="flag_resolved",
+                performed_by=admin.id,
+                note=f"Flag resolved: {flag.reason}. {note}",
+            )
+            db.add(log)
+
+    db.commit()
+    log_admin_action(db, admin, f"flag_{action}", "flag", flag_id, f"Flag {action}d for product {flag.product_id}")
+    return {"success": True, "status": flag.status}
+
+
+@router.post("/flags/bulk-action")
+def flag_bulk_action(
+    flag_ids: list[str],
+    action: str = "resolve",
+    db: Session = Depends(get_db),
+    admin: AdminUser = Depends(require_role("catalog")),
+):
+    """Bulk resolve or dismiss flags."""
+    from app.models import ProductFlag
+    updated = 0
+    for fid in flag_ids:
+        flag = db.query(ProductFlag).filter(ProductFlag.id == fid).first()
+        if not flag:
+            continue
+        flag.status = "RESOLVED" if action == "resolve" else "DISMISSED"
+        flag.reviewed_by = admin.id
+        flag.reviewed_at = utcnow()
+        flag.admin_note = f"Bulk {action}"
+        updated += 1
+    db.commit()
+    return {"success": True, "updated": updated}
+
