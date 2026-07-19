@@ -328,9 +328,9 @@ def vendor_analytics_api(
     # ── Top products ──
     from app.models import Product
     product_sales = {}
-    for item in db.query(OrderItem).join(Order).filter(
-        Order.retailer_ids.any(retailer.id) if hasattr(Order, 'retailer_ids') else Order.retailer_id == retailer.id
-    ).all():
+    for item in db.query(OrderItem).join(
+        Product, OrderItem.product_id == Product.id
+    ).filter(Product.retailer_id == retailer.id).all():
         pid = item.product_id
         if pid not in product_sales:
             product_sales[pid] = {"qty": 0, "revenue": 0}
