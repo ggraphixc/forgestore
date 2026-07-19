@@ -371,12 +371,36 @@ async def websocket_endpoint(request: Request):
 
 
 @app.on_event("startup")
-def on_startup():
-    init_db()
-    logger.info("Database initialized")
-    _run_migrations()
-    _seed_default_settings()
-    _cleanup_abandoned_carts()
+async def on_startup():
+    """Run startup tasks in background so gunicorn binds the port immediately.
+
+    Render scans for open HTTP ports during startup. If init_db() / migrations
+    block the event loop, Render logs "No open HTTP ports detected" and may
+    restart the service before it ever starts listening.
+    """
+    import asyncio
+
+    def _do_startup():
+        try:
+            init_db()
+            logger.info("Database initialized")
+        except Exception as e:
+            logger.error("Database init failed: %s", e)
+        try:
+            _run_migrations()
+            logger.info("Pending migrations applied successfully")
+        except Exception as e:
+            logger.warning("Migration runner failed: %s", e)
+        try:
+            _seed_default_settings()
+        except Exception as e:
+            logger.warning("Settings seeding failed: %s", e)
+        try:
+            _cleanup_abandoned_carts()
+        except Exception as e:
+            logger.warning("Cart cleanup failed: %s", e)
+
+    asyncio.create_task(asyncio.to_thread(_do_startup))
 
 
 def _run_migrations():
