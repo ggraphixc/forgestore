@@ -1100,7 +1100,7 @@ class RecommendationService:
                     f"Candidates: {json.dumps(product_list)}"
                 ),
                 temperature=0.3,
-                max_tokens=300,
+                max_tokens=1000,
             )
 
             if result:
@@ -1114,7 +1114,7 @@ class RecommendationService:
                     if isinstance(recommended_ids, list):
                         id_order = {pid: idx for idx, pid in enumerate(recommended_ids)}
                         ordered = [p for p in all_products if p.id in id_order]
-                        ordered.sort(key=lambda p: id_order.get(p.id(), 999))
+                        ordered.sort(key=lambda p: id_order.get(p.id, 999))
                         return [self._product_to_dict(p, "Similar to what you're viewing") for p in ordered[:limit]]
                 except Exception as e:
                     logger.warning(f"AI recommendation parse failed: {e}")

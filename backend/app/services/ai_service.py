@@ -132,6 +132,7 @@ def _call_llm_sync(
             logger.error(f"LLM returned empty response: {resp}")
             return None
         content = resp.choices[0].message.content
+        finish_reason = resp.choices[0].finish_reason
         # Some providers return content as a list of blocks — extract text
         if isinstance(content, list):
             texts = []
@@ -141,10 +142,14 @@ def _call_llm_sync(
                 elif isinstance(block, str):
                     texts.append(block)
             content = "\n".join(texts) if texts else None
+        # When finish_reason=length, the response was truncated. Return whatever
+        # partial content we got instead of None — callers can work with partial JSON.
+        if content is None and finish_reason == "length":
+            logger.warning("LLM response truncated (finish_reason=length) — returning None so caller falls back")
         # Log full response details when content is None to diagnose provider issues
         if content is None:
             msg = resp.choices[0].message
-            logger.error(f"LLM returned None content. Full message dump: role={getattr(msg, 'role', '?')}, content={repr(msg.content)}, tool_calls={getattr(msg, 'tool_calls', None)}, function_call={getattr(msg, 'function_call', None)}, finish_reason={resp.choices[0].finish_reason}")
+            logger.error(f"LLM returned None content. Full message dump: role={getattr(msg, 'role', '?')}, content={repr(msg.content)}, tool_calls={getattr(msg, 'tool_calls', None)}, function_call={getattr(msg, 'function_call', None)}, finish_reason={finish_reason}")
             # Try extracting from alternate fields some providers use
             if hasattr(msg, 'tool_calls') and msg.tool_calls:
                 for tc in msg.tool_calls:
@@ -152,6 +157,10 @@ def _call_llm_sync(
                         content = tc.function.arguments
                         logger.info(f"Extracted content from tool_calls[0].function.arguments: {repr(content[:200])}")
                         break
+            # MiMo models hide reasoning in a separate field — check for it
+            if content is None and hasattr(msg, 'reasoning_content') and msg.reasoning_content:
+                content = msg.reasoning_content
+                logger.info(f"Extracted content from reasoning_content: {repr(content[:200])}")
         logger.info(f"LLM content type={type(content)}, len={len(content) if content else 0}, preview={repr(content[:200]) if content else 'None'}")
         return content
 
