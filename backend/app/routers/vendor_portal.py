@@ -1773,6 +1773,7 @@ def vendor_bulk_orders(request: Request, db: Session = Depends(get_db)):
     return render_template("vendor/bulk_orders.html", {
         "request": request, "admin": admin, "retailer": retailer,
         "orders": orders, "format_price": format_price,
+        "has_permission": has_permission,
     })
 
 
@@ -1858,6 +1859,7 @@ def vendor_returns_page(request: Request, db: Session = Depends(get_db)):
         "reason_labels": REASON_LABELS,
         "status_labels": STATUS_LABELS,
         "status_colors": STATUS_COLORS,
+        "has_permission": has_permission,
     })
 
 
@@ -1935,6 +1937,7 @@ def vendor_return_detail_page(return_id: str, request: Request, db: Session = De
         "reason_labels": REASON_LABELS,
         "status_labels": STATUS_LABELS,
         "status_colors": STATUS_COLORS,
+        "has_permission": has_permission,
     })
 
 
@@ -2171,6 +2174,7 @@ def vendor_inventory_page(request: Request, db: Session = Depends(get_db)):
         "request": request,
         "admin": admin,
         "retailer": retailer,
+        "has_permission": has_permission,
     })
 
 
@@ -2362,6 +2366,7 @@ def vendor_reviews_page(request: Request, db: Session = Depends(get_db)):
         "request": request,
         "admin": admin,
         "retailer": retailer,
+        "has_permission": has_permission,
     })
 
 
@@ -2571,6 +2576,7 @@ def vendor_messages_page(request: Request, db: Session = Depends(get_db)):
         "request": request,
         "admin": admin,
         "retailer": retailer,
+        "has_permission": has_permission,
     })
 
 
@@ -2836,6 +2842,7 @@ def vendor_promotions_page(request: Request, db: Session = Depends(get_db)):
         "request": request,
         "admin": admin,
         "retailer": retailer,
+        "has_permission": has_permission,
     })
 
 
@@ -3032,6 +3039,7 @@ def vendor_performance_page(request: Request, db: Session = Depends(get_db)):
         "request": request,
         "admin": admin,
         "retailer": retailer,
+        "has_permission": has_permission,
     })
 
 
