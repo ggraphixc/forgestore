@@ -2,129 +2,387 @@
 {% block title %}{{ product.name }} — Vendor Portal{% endblock %}
 {% block content %}
 <style>
-  :root{--amber-500:#f59e0b;--stone-50:#fafaf9;--stone-100:#f5f5f4;--stone-200:#e7e5e4;--stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#57534e;--stone-900:#1c1917;--emerald-50:#ecfdf5;--emerald-600:#059669;--red-50:#fef2f2;--red-600:#dc2626;}
-  .dark{--stone-50:#1c1917;--stone-100:#292524;--stone-200:#44403c;--stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#a8a29e;--stone-900:#fafaf9;}
-  .vp-wrap{max-width:900px;margin:0 auto;padding:1rem;}
-  .vp-breadcrumb{display:flex;align-items:center;gap:6px;font-size:0.8125rem;color:var(--stone-400);margin-bottom:1rem;}
-  .vp-breadcrumb a{color:var(--stone-400);text-decoration:none;}
-  .vp-breadcrumb a:hover{color:var(--amber-500);}
-  .vp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.5rem;}
-  .vp-header h1{font-size:1.25rem;font-weight:700;color:var(--stone-900);margin:0;}
-  .vp-card{background:var(--stone-50);border:1px solid var(--stone-200);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
-  .dark .vp-card{background:var(--stone-100);border-color:var(--stone-200);}
-  .vp-card-title{font-size:0.875rem;font-weight:700;color:var(--stone-900);margin-bottom:0.75rem;}
-  .vp-img-grid{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem;}
-  .vp-img-grid img{width:100px;height:100px;border-radius:8px;object-fit:cover;border:1px solid var(--stone-200);}
-  .vp-field{margin-bottom:0.5rem;}
-  .vp-field-label{font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--stone-400);font-weight:600;}
-  .vp-field-value{font-size:0.875rem;color:var(--stone-900);margin-top:2px;}
-  .vp-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
-  .vp-badge{display:inline-flex;padding:3px 10px;border-radius:999px;font-size:0.6875rem;font-weight:600;}
-  .vp-badge-green{background:#dcfce7;color:#166534;}
-  .vp-badge-red{background:#fef2f2;color:#991b1b;}
-  .vp-actions{display:flex;gap:0.5rem;margin-top:1rem;}
-  .vp-btn{padding:0.5rem 1.25rem;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;border:none;min-height:40px;text-decoration:none;display:inline-flex;align-items:center;}
-  .vp-btn-primary{background:var(--amber-500);color:#fff;}
-  .vp-btn-ghost{background:transparent;color:var(--stone-600);border:1px solid var(--stone-200);}
-  @media(max-width:640px){.vp-grid{grid-template-columns:1fr;}.vp-img-grid img{width:80px;height:80px;}}
+@import url('/static/css/vendor_portal.css');
+
+.vp-hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  animation: vpSlideUp 0.5s ease-out both;
+}
+
+.vp-hero-gallery {
+  background: var(--vp-bg-elevated);
+  border: 1px solid var(--vp-border);
+  border-radius: var(--vp-radius-xl);
+  overflow: hidden;
+  transition: box-shadow var(--vp-transition);
+}
+
+.vp-hero-gallery:hover {
+  box-shadow: var(--vp-shadow-lg);
+}
+
+.vp-hero-main-img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--vp-transition-slow);
+}
+
+.vp-hero-gallery:hover .vp-hero-main-img {
+  transform: scale(1.03);
+}
+
+.vp-hero-thumbs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--vp-border) transparent;
+}
+
+.vp-hero-thumbs::-webkit-scrollbar { height: 4px; }
+.vp-hero-thumbs::-webkit-scrollbar-thumb { background: var(--vp-border); border-radius: 99px; }
+
+.vp-hero-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--vp-radius-md);
+  object-fit: cover;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all var(--vp-transition);
+  flex-shrink: 0;
+}
+
+.vp-hero-thumb:hover,
+.vp-hero-thumb.active {
+  border-color: var(--vp-accent);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.vp-hero-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.vp-hero-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.vp-hero-name {
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: var(--vp-text);
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.vp-hero-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.vp-hero-price {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--vp-accent);
+  letter-spacing: -0.03em;
+}
+
+.vp-hero-price-original {
+  font-size: 1.125rem;
+  color: var(--vp-text-muted);
+  text-decoration: line-through;
+}
+
+.vp-hero-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.vp-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.vp-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.vp-field-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.vp-field-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: var(--vp-text-muted);
+}
+
+.vp-field-value {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--vp-text);
+}
+
+.vp-field-value.mono {
+  font-family: var(--vp-font-mono);
+  font-size: 0.8125rem;
+}
+
+.vp-hero-desc {
+  font-size: 0.9375rem;
+  color: var(--vp-text-secondary);
+  line-height: 1.7;
+  padding: 1rem 1.25rem;
+  background: var(--vp-bg);
+  border-radius: var(--vp-radius-lg);
+  border: 1px solid var(--vp-border-light);
+}
+
+.vp-hero-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+
+.vp-hero-actions .vp-btn {
+  flex: 1;
+  min-width: 140px;
+}
+
+.vp-stats-section {
+  animation: vpSlideUp 0.5s ease-out 0.15s both;
+}
+
+.vp-section-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: var(--vp-text-muted);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.vp-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--vp-border-light);
+}
+
+@keyframes vpSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .vp-hero {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .vp-hero-name { font-size: 1.375rem; }
+  .vp-hero-price { font-size: 1.5rem; }
+  .vp-hero-actions .vp-btn { min-width: 100%; }
+  .vp-field-row { grid-template-columns: 1fr; }
+}
 </style>
 
-<div class="vp-wrap">
-  <nav class="vp-breadcrumb">
-    <a href="/vendor/products">Products</a>
-    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-    <span>{{ product.name }}</span>
-  </nav>
+<div class="vp-page">
   <div class="vp-header">
-    <h1>{{ product.name }}</h1>
-    <a href="/vendor/products/{{ product.id }}/edit" class="vp-btn vp-btn-primary">Edit</a>
-  </div>
-
-  {% if product.images %}
-  <div class="vp-card">
-    <div class="vp-card-title">Images</div>
-    <div class="vp-img-grid">
-      {% for img in product.images %}
-      <img src="{{ img }}" alt="Product image">
-      {% endfor %}
+    <div class="vp-header-left">
+      <h1 style="display:flex;align-items:center;gap:0.75rem;">
+        <a href="/vendor/products" class="vp-btn vp-btn-ghost vp-btn-icon" style="flex-shrink:0;" title="Back to products">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        </a>
+        {{ product.name }}
+      </h1>
+      <div class="vp-subtitle">Product detail &middot; {{ product.id[:8] }}...</div>
+    </div>
+    <div class="vp-header-actions">
+      <a href="/vendor/products/{{ product.id }}/edit" class="vp-btn vp-btn-primary">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        Edit Product
+      </a>
+      <a href="/vendor/products" class="vp-btn vp-btn-outline">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        All Products
+      </a>
     </div>
   </div>
-  {% endif %}
 
-  <div class="vp-card">
-    <div class="vp-card-title">Details</div>
-    <div class="vp-grid">
-      <div class="vp-field">
-        <div class="vp-field-label">Product ID</div>
-        <div class="vp-field-value" style="font-family:monospace;font-size:0.8125rem;">{{ product.id[:8] }}...</div>
-      </div>
-      <div class="vp-field">
-        <div class="vp-field-label">Price</div>
-        <div class="vp-field-value">₦{{ "{:,.2f}".format(product.price) }}</div>
-      </div>
-      {% if product.discount_price %}
-      <div class="vp-field">
-        <div class="vp-field-label">Discount Price</div>
-        <div class="vp-field-value" style="color:var(--emerald-600);">₦{{ "{:,.2f}".format(product.discount_price) }}</div>
-      </div>
+  <div class="vp-hero">
+    <div class="vp-hero-gallery">
+      {% if product.images %}
+        <img class="vp-hero-main-img" src="{{ product.images[0] }}" alt="{{ product.name }}">
+        {% if product.images|length > 1 %}
+        <div class="vp-hero-thumbs">
+          {% for img in product.images %}
+          <img class="vp-hero-thumb{% if loop.index0 == 0 %} active{% endif %}" src="{{ img }}" alt="Thumbnail {{ loop.index }}" data-full="{{ img }}">
+          {% endfor %}
+        </div>
+        {% endif %}
+      {% else %}
+        <div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:var(--vp-bg);color:var(--vp-text-muted);">
+          <svg width="64" height="64" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24" style="opacity:0.3"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        </div>
       {% endif %}
-      <div class="vp-field">
-        <div class="vp-field-label">Inventory</div>
-        <div class="vp-field-value">
-          <span class="vp-badge {% if product.inventory > 0 %}vp-badge-green{% else %}vp-badge-red{% endif %}">
-            {{ product.inventory }} units
+    </div>
+
+    <div class="vp-hero-info">
+      <div class="vp-hero-top">
+        <div>
+          <h1 class="vp-hero-name">{{ product.name }}</h1>
+          <div class="vp-hero-price-row" style="margin-top:0.5rem;">
+            <span class="vp-hero-price">₦{{ "{:,.2f}".format(product.price) }}</span>
+            {% if product.discount_price %}
+            <span class="vp-hero-price-original">₦{{ "{:,.2f}".format(product.discount_price) }}</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="vp-hero-badges">
+          {% if product.is_flagship %}<span class="vp-badge vp-badge-amber"><span class="vp-badge-dot"></span> Flagship</span>{% endif %}
+          {% if product.is_new_arrival %}<span class="vp-badge vp-badge-emerald"><span class="vp-badge-dot"></span> New Arrival</span>{% endif %}
+          <span class="vp-badge {% if product.inventory > 0 %}vp-badge-emerald{% else %}vp-badge-red{% %}">
+            {% if product.inventory > 0 %}In Stock{% else %}Out of Stock{% endif %}
           </span>
         </div>
       </div>
-      {% if product.category %}
-      <div class="vp-field">
-        <div class="vp-field-label">Category</div>
-        <div class="vp-field-value">{{ product.category.name }}</div>
+
+      <div class="vp-field-group">
+        <div class="vp-field-row">
+          <div class="vp-field-item">
+            <span class="vp-field-label">Product ID</span>
+            <span class="vp-field-value mono">{{ product.id[:8] }}...</span>
+          </div>
+          <div class="vp-field-item">
+            <span class="vp-field-label">Inventory</span>
+            <span class="vp-field-value">{{ product.inventory }} units</span>
+          </div>
+          {% if product.category %}
+          <div class="vp-field-item">
+            <span class="vp-field-label">Category</span>
+            <span class="vp-field-value">{{ product.category.name }}</span>
+          </div>
+          {% endif %}
+          {% if product.sub_category %}
+          <div class="vp-field-item">
+            <span class="vp-field-label">Sub-Category</span>
+            <span class="vp-field-value">{{ product.sub_category }}</span>
+          </div>
+          {% endif %}
+          {% if product.brand %}
+          <div class="vp-field-item">
+            <span class="vp-field-label">Brand</span>
+            <span class="vp-field-value">{{ product.brand }}</span>
+          </div>
+          {% endif %}
+          <div class="vp-field-item">
+            <span class="vp-field-label">Slug</span>
+            <span class="vp-field-value mono">{{ product.slug }}</span>
+          </div>
+          {% if product.rating %}
+          <div class="vp-field-item">
+            <span class="vp-field-label">Rating</span>
+            <span class="vp-field-value">
+              <span style="color:var(--vp-amber);">&#9733;</span> {{ product.rating }} / 5
+            </span>
+          </div>
+          {% endif %}
+          <div class="vp-field-item">
+            <span class="vp-field-label">Created</span>
+            <span class="vp-field-value">{{ product.created_at.strftime('%b %d, %Y') if product.created_at else '—' }}</span>
+          </div>
+        </div>
       </div>
+
+      {% if product.description %}
+      <div class="vp-hero-desc">{{ product.description }}</div>
       {% endif %}
-      {% if product.sub_category %}
-      <div class="vp-field">
-        <div class="vp-field-label">Sub-Category</div>
-        <div class="vp-field-value">{{ product.sub_category }}</div>
-      </div>
-      {% endif %}
-      {% if product.brand %}
-      <div class="vp-field">
-        <div class="vp-field-label">Brand</div>
-        <div class="vp-field-value">{{ product.brand }}</div>
-      </div>
-      {% endif %}
-      <div class="vp-field">
-        <div class="vp-field-label">Slug</div>
-        <div class="vp-field-value">{{ product.slug }}</div>
-      </div>
-      {% if product.rating %}
-      <div class="vp-field">
-        <div class="vp-field-label">Rating</div>
-        <div class="vp-field-value">{{ product.rating }} / 5</div>
-      </div>
-      {% endif %}
-      <div class="vp-field">
-        <div class="vp-field-label">Created</div>
-        <div class="vp-field-value">{{ product.created_at.strftime('%b %d, %Y') if product.created_at else '—' }}</div>
+
+      <div class="vp-hero-actions">
+        <a href="/vendor/products/{{ product.id }}/edit" class="vp-btn vp-btn-primary">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+          Edit Product
+        </a>
+        <a href="/vendor/products" class="vp-btn vp-btn-ghost">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+          Back to Products
+        </a>
       </div>
     </div>
-    {% if product.is_flagship or product.is_new_arrival %}
-    <div style="display:flex;gap:8px;margin-top:0.75rem;flex-wrap:wrap;">
-      {% if product.is_flagship %}<span class="vp-badge" style="background:#fef3c7;color:#92400e;">Flagship</span>{% endif %}
-      {% if product.is_new_arrival %}<span class="vp-badge" style="background:#dcfce7;color:#166534;">New Arrival</span>{% endif %}
-    </div>
-    {% endif %}
-    {% if product.description %}
-    <div class="vp-field" style="margin-top:0.75rem;">
-      <div class="vp-field-label">Description</div>
-      <div class="vp-field-value">{{ product.description }}</div>
-    </div>
-    {% endif %}
   </div>
 
-  <div class="vp-actions">
-    <a href="/vendor/products" class="vp-btn vp-btn-ghost">Back to Products</a>
+  <div class="vp-stats-section">
+    <div class="vp-section-title">Sales Statistics</div>
+    <div class="vp-stats">
+      <div class="vp-stat vp-stat-amber">
+        <div class="vp-stat-icon amber">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div class="vp-stat-label">Unit Price</div>
+        <div class="vp-stat-value">₦{{ "{:,.2f}".format(product.price) }}</div>
+      </div>
+      <div class="vp-stat vp-stat-emerald">
+        <div class="vp-stat-icon emerald">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        </div>
+        <div class="vp-stat-label">Inventory</div>
+        <div class="vp-stat-value">{{ product.inventory }}</div>
+      </div>
+      <div class="vp-stat vp-stat-blue">
+        <div class="vp-stat-icon blue">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+        </div>
+        <div class="vp-stat-label">Rating</div>
+        <div class="vp-stat-value">{{ product.rating if product.rating else '—' }}</div>
+      </div>
+      <div class="vp-stat vp-stat-rose">
+        <div class="vp-stat-icon rose">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </div>
+        <div class="vp-stat-label">Created</div>
+        <div class="vp-stat-value" style="font-size:1.125rem;">{{ product.created_at.strftime('%b %d') if product.created_at else '—' }}</div>
+      </div>
+    </div>
   </div>
 </div>
+
+<script>
+document.querySelectorAll('.vp-hero-thumb').forEach(function(thumb) {
+  thumb.addEventListener('click', function() {
+    var mainImg = document.querySelector('.vp-hero-main-img');
+    if (mainImg && this.dataset.full) {
+      mainImg.src = this.dataset.full;
+      document.querySelectorAll('.vp-hero-thumb').forEach(function(t) { t.classList.remove('active'); });
+      this.classList.add('active');
+    }
+  });
+});
+</script>
 {% endblock %}

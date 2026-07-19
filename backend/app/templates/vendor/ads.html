@@ -2,316 +2,769 @@
 {% block title %}My Ads & Campaigns — {{ settings.site_name|default("ForgeStore") }}{% endblock %}
 {% block content %}
 <style>
-  :root{--va-primary:#f59e0b;--va-primary-dark:#d97706;--va-bg:#fafaf9;--va-card:#fff;--va-border:#e7e5e4;--va-text:#1c1917;--va-muted:#78716c;--va-green:#16a34a;--va-red:#dc2626;--va-blue:#2563eb;--va-purple:#7c3aed;--va-radius:12px;}
-  .dark{--va-bg:#1c1917;--va-card:#292524;--va-border:#44403c;--va-text:#fafaf9;--va-muted:#a8a29e;}
-  .va-wrap{max-width:1000px;margin:0 auto;padding:1rem;}
-  .va-breadcrumb{display:flex;align-items:center;gap:6px;font-size:0.8125rem;color:var(--va-muted);margin-bottom:1rem;}
-  .va-breadcrumb a{color:var(--va-muted);text-decoration:none;}
-  .va-breadcrumb a:hover{color:var(--va-primary);}
-  .va-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.5rem;}
-  .va-header h1{font-size:1.25rem;font-weight:700;color:var(--va-text);margin:0;}
-  .va-header p{font-size:0.8125rem;color:var(--va-muted);margin:0;}
+  @import url('/static/css/vendor_portal.css');
 
-  .va-hero{background:linear-gradient(135deg,#f59e0b,#f97316);border-radius:16px;padding:1.5rem;color:#fff;margin-bottom:1.5rem;position:relative;overflow:hidden;}
-  .va-hero::after{content:'';position:absolute;top:-40%;right:-10%;width:200px;height:200px;background:rgba(255,255,255,0.1);border-radius:50%;}
-  .va-hero h2{font-size:1.125rem;font-weight:700;margin:0 0 4px;}
-  .va-hero p{font-size:0.8125rem;opacity:0.9;margin:0;}
+  .ads-hero {
+    background: var(--vp-gradient-primary);
+    background-size: 200% 200%;
+    animation: vpGradientShift 6s ease infinite;
+    border-radius: var(--vp-radius-2xl);
+    padding: 2.5rem 2rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 2rem;
+  }
+  .ads-hero::before {
+    content: '';
+    position: absolute;
+    top: -60%;
+    right: -15%;
+    width: 320px;
+    height: 320px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .ads-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -40%;
+    left: -10%;
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .ads-hero h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0 0 0.375rem;
+    letter-spacing: -0.025em;
+    position: relative;
+    z-index: 1;
+  }
+  .ads-hero p {
+    font-size: 0.9375rem;
+    opacity: 0.9;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+  }
 
-  .va-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;margin-bottom:1.5rem;}
-  .va-stat{background:var(--va-card);border:1px solid var(--va-border);border-radius:var(--va-radius);padding:1rem;text-align:center;}
-  .va-stat-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:1rem;}
-  .va-stat-icon.orange{background:rgba(245,158,11,0.1);color:#f59e0b;}
-  .va-stat-icon.green{background:rgba(22,163,74,0.1);color:#16a34a;}
-  .va-stat-icon.blue{background:rgba(37,99,235,0.1);color:#2563eb;}
-  .va-stat-icon.purple{background:rgba(124,58,237,0.1);color:#7c3aed;}
-  .va-stat-label{font-size:0.6875rem;color:var(--va-muted);text-transform:uppercase;letter-spacing:0.05em;}
-  .va-stat-value{font-size:1.25rem;font-weight:700;color:var(--va-text);margin-top:2px;}
+  .ads-wallet-card {
+    background: var(--vp-bg-elevated);
+    border: 1px solid var(--vp-border);
+    border-radius: var(--vp-radius-xl);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    transition: all var(--vp-transition);
+  }
+  .ads-wallet-card:hover {
+    box-shadow: var(--vp-shadow-md);
+  }
+  .ads-wallet-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .ads-wallet-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--vp-radius-md);
+    background: var(--vp-emerald-soft);
+    color: var(--vp-emerald);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+  .ads-wallet-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--vp-text-muted);
+    margin-bottom: 0.25rem;
+  }
+  .ads-wallet-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--vp-text);
+    letter-spacing: -0.025em;
+    font-feature-settings: 'tnum';
+  }
 
-  .va-tabs{display:flex;gap:4px;background:var(--va-card);border:1px solid var(--va-border);border-radius:var(--va-radius);padding:4px;margin-bottom:1rem;}
-  .va-tab{padding:0.5rem 1rem;border-radius:8px;font-size:0.8125rem;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--va-muted);transition:all 0.15s;min-height:36px;}
-  .va-tab.active{background:var(--va-primary);color:#fff;}
-  .va-tab:hover:not(.active){background:var(--va-border);color:var(--va-text);}
-  .va-tab-content{display:none;}
-  .va-tab-content.active{display:block;}
+  .ads-pricing-section {
+    margin-bottom: 2rem;
+  }
+  .ads-pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+  .ads-tier {
+    background: var(--vp-bg-elevated);
+    border: 1.5px solid var(--vp-border);
+    border-radius: var(--vp-radius-xl);
+    padding: 1.5rem;
+    text-align: center;
+    transition: all var(--vp-transition);
+    position: relative;
+    overflow: hidden;
+  }
+  .ads-tier:hover {
+    border-color: var(--vp-primary);
+    box-shadow: var(--vp-shadow-primary);
+    transform: translateY(-2px);
+  }
+  .ads-tier.featured {
+    border-color: var(--vp-primary);
+    background: linear-gradient(180deg, rgba(245, 158, 11, 0.04) 0%, var(--vp-bg-elevated) 100%);
+  }
+  .ads-tier.featured::before {
+    content: 'POPULAR';
+    position: absolute;
+    top: 0.75rem;
+    right: -2rem;
+    background: var(--vp-gradient-primary);
+    color: white;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 0.2rem 2.5rem;
+    transform: rotate(45deg);
+  }
+  .ads-tier-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.875rem;
+    border-radius: var(--vp-radius-pill);
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+  .ads-tier-badge.shop {
+    background: var(--vp-amber-soft);
+    color: #92400e;
+  }
+  .ads-tier-badge.product {
+    background: var(--vp-blue-soft);
+    color: #1e40af;
+  }
+  .ads-tier-price {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--vp-text);
+    letter-spacing: -0.025em;
+    margin-bottom: 0.25rem;
+  }
+  .ads-tier-price span {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--vp-text-muted);
+  }
+  .ads-tier-desc {
+    font-size: 0.8125rem;
+    color: var(--vp-text-secondary);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+  .ads-tier-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.25rem;
+    text-align: left;
+  }
+  .ads-tier-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--vp-text-secondary);
+    padding: 0.375rem 0;
+  }
+  .ads-tier-features li svg {
+    width: 1rem;
+    height: 1rem;
+    color: var(--vp-emerald);
+    flex-shrink: 0;
+  }
+  .ads-tier-discount {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    background: var(--vp-emerald-soft);
+    color: #065f46;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--vp-radius-pill);
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 0.75rem;
+  }
 
-  .va-panel{background:var(--va-card);border:1px solid var(--va-border);border-radius:var(--va-radius);padding:1.25rem;}
-  .va-panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
-  .va-panel-title{font-size:0.9375rem;font-weight:700;color:var(--va-text);}
+  .ads-campaign-table {
+    width: 100%;
+  }
+  .ads-campaign-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--vp-border-light);
+  }
+  .ads-campaign-row:last-child {
+    border-bottom: none;
+  }
+  .ads-campaign-type-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--vp-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  .ads-campaign-type-icon.shop {
+    background: var(--vp-amber-soft);
+    color: var(--vp-amber);
+  }
+  .ads-campaign-type-icon.product {
+    background: var(--vp-blue-soft);
+    color: var(--vp-blue);
+  }
+  .ads-campaign-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .ads-campaign-name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--vp-text);
+    margin-bottom: 0.125rem;
+  }
+  .ads-campaign-meta {
+    font-size: 0.8125rem;
+    color: var(--vp-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .ads-campaign-stats {
+    display: flex;
+    gap: 1.25rem;
+    align-items: center;
+  }
+  .ads-campaign-stat {
+    text-align: center;
+  }
+  .ads-campaign-stat-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--vp-text);
+    font-feature-settings: 'tnum';
+  }
+  .ads-campaign-stat-label {
+    font-size: 0.6875rem;
+    color: var(--vp-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
 
-  .va-btn{padding:0.5rem 1rem;border-radius:8px;font-size:0.8125rem;font-weight:600;cursor:pointer;border:1px solid var(--va-border);background:var(--va-card);color:var(--va-text);min-height:36px;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;}
-  .va-btn:hover{border-color:var(--va-primary);color:var(--va-primary);}
-  .va-btn-primary{background:var(--va-primary);color:#fff;border-color:var(--va-primary);}
-  .va-btn-primary:hover{background:var(--va-primary-dark);border-color:var(--va-primary-dark);}
-  .va-btn-sm{padding:4px 10px;font-size:0.75rem;min-height:28px;}
-  .va-btn-green{color:var(--va-green);border-color:var(--va-green);}
-  .va-btn-red{color:var(--va-red);border-color:var(--va-red);}
-  .va-btn-red:hover{background:#fef2f2;color:var(--va-red);}
+  .ads-promo-card {
+    background: var(--vp-bg-elevated);
+    border: 1px solid var(--vp-border);
+    border-radius: var(--vp-radius-xl);
+    overflow: hidden;
+    transition: all var(--vp-transition);
+  }
+  .ads-promo-card:hover {
+    border-color: transparent;
+    box-shadow: var(--vp-shadow-lg);
+    transform: translateY(-2px);
+  }
+  .ads-promo-img {
+    height: 160px;
+    background: var(--vp-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .ads-promo-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--vp-transition-slow);
+  }
+  .ads-promo-card:hover .ads-promo-img img {
+    transform: scale(1.05);
+  }
+  .ads-promo-body {
+    padding: 1rem 1.25rem;
+  }
+  .ads-promo-title {
+    font-weight: 700;
+    font-size: 0.9375rem;
+    color: var(--vp-text);
+    margin-bottom: 0.5rem;
+  }
+  .ads-promo-meta {
+    font-size: 0.8125rem;
+    color: var(--vp-text-muted);
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 0.75rem;
+  }
+  .ads-promo-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--vp-border-light);
+    background: var(--vp-bg);
+  }
 
-  .va-table{width:100%;border-collapse:collapse;font-size:0.8125rem;}
-  .va-table th{text-align:left;padding:0.5rem 0.75rem;color:var(--va-muted);font-weight:600;font-size:0.6875rem;text-transform:uppercase;border-bottom:1px solid var(--va-border);}
-  .va-table td{padding:0.625rem 0.75rem;border-bottom:1px solid var(--va-border);color:var(--va-text);}
-  .va-table tr:last-child td{border-bottom:none;}
-  .va-table tr:hover td{background:rgba(245,158,11,0.03);}
-  .va-badge{padding:3px 10px;border-radius:999px;font-size:0.6875rem;font-weight:600;}
-  .va-badge-active{background:#dcfce7;color:#166534;}
-  .va-badge-pending{background:#fef9c3;color:#854d0e;}
-  .va-badge-expired{background:#f3f4f6;color:#6b7280;}
-  .va-badge-inactive{background:#fef2f2;color:#991b1b;}
+  .ads-form-group {
+    margin-bottom: 1.25rem;
+  }
+  .ads-form-label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--vp-text-secondary);
+    margin-bottom: 0.5rem;
+  }
+  .ads-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
 
-  .va-empty{text-align:center;padding:3rem 1rem;color:var(--va-muted);}
-  .va-empty svg{width:48px;height:48px;margin:0 auto 1rem;opacity:0.3;}
-  .va-empty p{font-size:0.875rem;margin:0 0 0.25rem;}
-  .va-empty p:last-child{font-size:0.75rem;}
+  .ads-price-display {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.06), rgba(249, 115, 22, 0.06));
+    border: 1.5px solid rgba(245, 158, 11, 0.2);
+    border-radius: var(--vp-radius-lg);
+    padding: 1.25rem;
+    text-align: center;
+  }
+  .ads-price-display-label {
+    font-size: 0.8125rem;
+    color: var(--vp-text-muted);
+    margin-bottom: 0.25rem;
+  }
+  .ads-price-display-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--vp-primary);
+    letter-spacing: -0.025em;
+  }
 
-  .va-promo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0.75rem;}
-  .va-promo-card{background:var(--va-card);border:1px solid var(--va-border);border-radius:var(--va-radius);overflow:hidden;transition:all 0.15s;}
-  .va-promo-card:hover{border-color:var(--va-primary);box-shadow:0 4px 12px rgba(0,0,0,0.06);}
-  .va-promo-img{height:140px;background:#f5f5f4;display:flex;align-items:center;justify-content:center;overflow:hidden;}
-  .va-promo-img img{width:100%;height:100%;object-fit:cover;}
-  .va-promo-body{padding:0.75rem;}
-  .va-promo-title{font-weight:600;font-size:0.875rem;color:var(--va-text);margin-bottom:4px;}
-  .va-promo-meta{font-size:0.75rem;color:var(--va-muted);display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-  .va-promo-actions{display:flex;gap:6px;padding:0.75rem;border-top:1px solid var(--va-border);}
+  .ads-topup-presets {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
 
-  .va-modal-overlay{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);}
-  .va-modal-overlay.show{display:flex;}
-  .va-modal{background:var(--va-card);border-radius:16px;width:90%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
-  .va-modal-header{display:flex;justify-content:space-between;align-items:center;padding:1.25rem;border-bottom:1px solid var(--va-border);}
-  .va-modal-title{font-weight:700;font-size:1rem;color:var(--va-text);}
-  .va-modal-close{background:none;border:none;cursor:pointer;color:var(--va-muted);min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px;}
-  .va-modal-close:hover{background:var(--va-border);}
-  .va-modal-body{padding:1.25rem;}
-  .va-modal-footer{padding:1rem 1.25rem;border-top:1px solid var(--va-border);display:flex;justify-content:flex-end;gap:8px;}
-  .va-form-group{margin-bottom:0.75rem;}
-  .va-form-label{display:block;font-size:0.75rem;font-weight:600;color:var(--va-muted);margin-bottom:4px;}
-  .va-form-input{width:100%;padding:0.5rem 0.75rem;border:1px solid var(--va-border);border-radius:8px;font-size:0.8125rem;background:var(--va-card);color:var(--va-text);min-height:40px;box-sizing:border-box;}
-  .va-form-input:focus{outline:none;border-color:var(--va-primary);box-shadow:0 0 0 2px rgba(245,158,11,0.15);}
-  .va-form-row{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
+  .ads-confirm-content {
+    text-align: center;
+  }
+  .ads-confirm-content p {
+    font-size: 0.9375rem;
+    color: var(--vp-text);
+    margin: 0;
+  }
 
-  .va-price-box{background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(249,115,22,0.08));border:1px solid rgba(245,158,11,0.2);border-radius:12px;padding:1rem;text-align:center;}
-  .va-price-label{font-size:0.75rem;color:var(--va-muted);margin-bottom:4px;}
-  .va-price-value{font-size:1.5rem;font-weight:700;color:var(--va-primary);}
+  .ads-preview-img {
+    max-width: 100%;
+    max-height: 140px;
+    border-radius: var(--vp-radius-md);
+    border: 1.5px solid var(--vp-border);
+    object-fit: cover;
+  }
+  .ads-preview-actions {
+    margin-top: 0.75rem;
+  }
 
-  @media(max-width:640px){
-    .va-stats{grid-template-columns:repeat(2,1fr);}
-    .va-form-row{grid-template-columns:1fr;}
-    .va-promo-grid{grid-template-columns:1fr;}
-    .va-hero{padding:1rem;}
-    .hide-mobile{display:none!important;}
+  @media (max-width: 768px) {
+    .ads-hero { padding: 1.5rem; }
+    .ads-hero h2 { font-size: 1.25rem; }
+    .ads-wallet-card { flex-direction: column; align-items: flex-start; }
+    .ads-campaign-stats { gap: 0.75rem; }
+    .ads-campaign-row { flex-wrap: wrap; }
+    .ads-form-row { grid-template-columns: 1fr; }
+    .ads-pricing-grid { grid-template-columns: 1fr; }
+    .ads-tier-features li { font-size: 0.8125rem; }
+  }
+
+  @media (max-width: 480px) {
+    .ads-hero { padding: 1.25rem; }
+    .ads-hero h2 { font-size: 1.125rem; }
+    .ads-promo-grid { grid-template-columns: 1fr; }
+    .ads-topup-presets { flex-direction: column; }
   }
 </style>
 
-<div class="va-wrap">
-  <nav class="va-breadcrumb">
-    <a href="/vendor/dashboard">Dashboard</a>
-    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-    <span>My Ads</span>
-  </nav>
+<div class="vp-page">
+  <div class="vp-header">
+    <div class="vp-header-left">
+      <h1>My Ads & Campaigns</h1>
+      <p class="vp-subtitle">Reach more customers with targeted ad campaigns and promo banners</p>
+    </div>
+    <div class="vp-header-actions">
+      <button class="vp-btn vp-btn-outline" onclick="vaOpenTopupModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        Top Up Wallet
+      </button>
+      <button class="vp-btn vp-btn-primary" onclick="vaOpenCampaignModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        New Campaign
+      </button>
+    </div>
+  </div>
 
-  <div class="va-hero">
+  <div class="ads-hero">
     <h2>Advertise Your Products</h2>
     <p>Reach more customers with targeted ad campaigns and promo banners</p>
   </div>
 
-  <div class="va-stats" id="va-stats">
-    <div class="va-stat"><div class="va-stat-icon orange">📢</div><div class="va-stat-label">Campaigns</div><div class="va-stat-value" id="va-stat-campaigns">-</div></div>
-    <div class="va-stat"><div class="va-stat-icon green">✓</div><div class="va-stat-label">Active</div><div class="va-stat-value" id="va-stat-active">-</div></div>
-    <div class="va-stat"><div class="va-stat-icon blue">💰</div><div class="va-stat-label">Wallet</div><div class="va-stat-value" id="va-stat-wallet">₦0</div></div>
-    <div class="va-stat" style="cursor:pointer;" onclick="vaOpenTopupModal()"><div class="va-stat-icon purple">+</div><div class="va-stat-label">Top Up</div><div class="va-stat-value" style="font-size:0.875rem;">Add Funds</div></div>
-  </div>
-
-  <div class="va-tabs">
-    <button class="va-tab active" onclick="vaSwitchTab('campaigns', this)">Campaigns</button>
-    <button class="va-tab" onclick="vaSwitchTab('promos', this)">Promo Banners</button>
-  </div>
-
-  <div class="va-tab-content active" id="va-tab-campaigns">
-    <div class="va-panel">
-      <div class="va-panel-header">
-        <span class="va-panel-title">Ad Campaigns</span>
-        <button class="va-btn va-btn-primary" onclick="vaOpenCampaignModal()">+ New Campaign</button>
+  <div class="ads-wallet-card">
+    <div class="ads-wallet-left">
+      <div class="ads-wallet-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 100 4 2 2 0 000-4z"/></svg>
       </div>
-      <div id="va-campaigns-list"></div>
+      <div>
+        <div class="ads-wallet-label">Wallet Balance</div>
+        <div class="ads-wallet-value" id="va-stat-wallet">₦0</div>
+      </div>
+    </div>
+    <button class="vp-btn vp-btn-primary" onclick="vaOpenTopupModal()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+      Add Funds
+    </button>
+  </div>
+
+  <div class="vp-stats" id="va-stats">
+    <div class="vp-stat vp-stat-amber">
+      <div class="vp-stat-icon amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg>
+      </div>
+      <div class="vp-stat-label">Campaigns</div>
+      <div class="vp-stat-value" id="va-stat-campaigns">-</div>
+    </div>
+    <div class="vp-stat vp-stat-emerald">
+      <div class="vp-stat-icon emerald">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+      </div>
+      <div class="vp-stat-label">Active</div>
+      <div class="vp-stat-value" id="va-stat-active">-</div>
+    </div>
+    <div class="vp-stat vp-stat-blue">
+      <div class="vp-stat-icon blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+      </div>
+      <div class="vp-stat-label">Impressions</div>
+      <div class="vp-stat-value">—</div>
+    </div>
+    <div class="vp-stat vp-stat-rose">
+      <div class="vp-stat-icon purple">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/></svg>
+      </div>
+      <div class="vp-stat-label">Clicks</div>
+      <div class="vp-stat-value">—</div>
     </div>
   </div>
 
-  <div class="va-tab-content" id="va-tab-promos">
-    <div class="va-panel">
-      <div class="va-panel-header">
-        <span class="va-panel-title">Promo Banners</span>
-        <button class="va-btn va-btn-primary" onclick="vaOpenPromoModal()">+ Create Promo</button>
+  <div class="vp-card" style="margin-bottom:1.5rem;">
+    <div class="vp-card-body">
+      <div class="vp-tabs">
+        <button class="vp-tab active" onclick="vaSwitchTab('campaigns', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg>
+          Campaigns
+        </button>
+        <button class="vp-tab" onclick="vaSwitchTab('promos', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          Promo Banners
+        </button>
       </div>
-      <div class="va-promo-grid" id="va-promos-grid"></div>
+    </div>
+  </div>
+
+  <div id="va-tab-campaigns" style="display:block;">
+    <div class="vp-card">
+      <div class="vp-card-header">
+        <h2>Ad Campaigns</h2>
+        <button class="vp-btn vp-btn-primary" onclick="vaOpenCampaignModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          New Campaign
+        </button>
+      </div>
+      <div class="vp-card-body" id="va-campaigns-list"></div>
+    </div>
+  </div>
+
+  <div id="va-tab-promos" style="display:none;">
+    <div class="vp-card">
+      <div class="vp-card-header">
+        <h2>Promo Banners</h2>
+        <button class="vp-btn vp-btn-primary" onclick="vaOpenPromoModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Create Promo
+        </button>
+      </div>
+      <div class="vp-card-body">
+        <div class="vp-grid-3" id="va-promos-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ads-pricing-section">
+    <div class="vp-section-header">
+      <h2>Pricing Tiers</h2>
+    </div>
+    <div class="ads-pricing-grid">
+      <div class="ads-tier">
+        <div class="ads-tier-badge product">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1"/></svg>
+          Product Promotion
+        </div>
+        <div class="ads-tier-price">₦5,000<span>/mo</span></div>
+        <div class="ads-tier-desc">Promote individual products with targeted visibility across the marketplace</div>
+        <ul class="ads-tier-features">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/></svg>
+            Product spotlight placement
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/></svg>
+            Click & impression tracking
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/></svg>
+            Custom target URL
+          </li>
+        </ul>
+        <button class="vp-btn vp-btn-outline" style="width:100%;" onclick="vaOpenCampaignModal()">Get Started</button>
+        <div class="ads-tier-discount">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          Save 10% with 3 months, 20% with 6
+        </div>
+      </div>
+      <div class="ads-tier featured">
+        <div class="ads-tier-badge shop">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Shop Banner
+        </div>
+        <div class="ads-tier-price">₦10,000<span>/mo</span></div>
+        <div class="ads-tier-desc">Premium homepage banner placement to drive maximum traffic to your shop</div>
+        <ul class="ads-tier-features">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/></svg>
+            Homepage banner placement
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/></svg>
+            Marketplace featured spot
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/></svg>
+            Full analytics dashboard
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/></svg>
+            Priority support
+          </li>
+        </ul>
+        <button class="vp-btn vp-btn-primary" style="width:100%;" onclick="vaOpenCampaignModal()">Get Started</button>
+        <div class="ads-tier-discount">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          Save 10% with 3 months, 20% with 6
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- CAMPAIGN MODAL -->
-<div class="va-modal-overlay" id="va-campaign-modal">
-  <div class="va-modal">
-    <div class="va-modal-header">
-      <span class="va-modal-title">New Ad Campaign</span>
-      <button class="va-modal-close" onclick="vaCloseCampaignModal()">
+<div class="vp-modal-backdrop" id="va-campaign-modal" style="display:none;">
+  <div class="vp-modal">
+    <div class="vp-modal-header">
+      <h3>New Ad Campaign</h3>
+      <button class="vp-btn vp-btn-ghost vp-btn-icon" onclick="vaCloseCampaignModal()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <div class="va-modal-body">
-      <div class="va-form-group">
-        <label class="va-form-label">Campaign Type *</label>
-        <select id="va-camp-type" class="va-form-input" onchange="vaUpdatePrice()">
+    <div class="vp-modal-body">
+      <div class="ads-form-group">
+        <label class="ads-form-label">Campaign Type *</label>
+        <select id="va-camp-type" class="vp-input vp-select" onchange="vaUpdatePrice()">
           <option value="SHOP">Shop Banner — ₦10,000/mo</option>
           <option value="PRODUCT">Product Promotion — ₦5,000/mo</option>
         </select>
       </div>
-      <div class="va-form-group" id="va-camp-product-group" style="display:none;">
-        <label class="va-form-label">Select Product</label>
-        <select id="va-camp-product" class="va-form-input">
+      <div class="ads-form-group" id="va-camp-product-group" style="display:none;">
+        <label class="ads-form-label">Select Product</label>
+        <select id="va-camp-product" class="vp-input vp-select">
           <option value="">Choose a product...</option>
         </select>
       </div>
-      <div class="va-form-group">
-        <label class="va-form-label">Duration</label>
-        <select id="va-camp-duration" class="va-form-input" onchange="vaUpdatePrice()">
+      <div class="ads-form-group">
+        <label class="ads-form-label">Duration</label>
+        <select id="va-camp-duration" class="vp-input vp-select" onchange="vaUpdatePrice()">
           <option value="1">1 month</option>
           <option value="3">3 months (10% off)</option>
           <option value="6">6 months (20% off)</option>
         </select>
       </div>
-      <div class="va-form-group">
-        <label class="va-form-label">Target URL (optional)</label>
-        <select id="va-camp-target-preset" class="va-form-input" onchange="vaHandleTargetPreset()">
+      <div class="ads-form-group">
+        <label class="ads-form-label">Target URL (optional)</label>
+        <select id="va-camp-target-preset" class="vp-input vp-select" onchange="vaHandleTargetPreset()">
           <option value="">No target</option>
           <option value="homepage">Homepage</option>
           <option value="marketplace">Marketplace</option>
           <option value="shop">My Shop</option>
         </select>
-        <input type="url" id="va-camp-target-custom" class="va-form-input" placeholder="https://..." style="display:none;margin-top:6px;">
+        <input type="url" id="va-camp-target-custom" class="vp-input" placeholder="https://..." style="display:none;margin-top:0.5rem;">
         <input type="hidden" id="va-camp-target-url">
       </div>
-      <div class="va-price-box">
-        <div class="va-price-label">Total Cost</div>
-        <div class="va-price-value" id="va-camp-price">₦10,000</div>
+      <div class="ads-price-display">
+        <div class="ads-price-display-label">Total Cost</div>
+        <div class="ads-price-display-value" id="va-camp-price">₦10,000</div>
       </div>
     </div>
-    <div class="va-modal-footer">
-      <button class="va-btn" onclick="vaCloseCampaignModal()">Cancel</button>
-      <button class="va-btn va-btn-primary" onclick="vaSubmitCampaign()">Proceed to Payment</button>
+    <div class="vp-modal-footer">
+      <button class="vp-btn vp-btn-outline" onclick="vaCloseCampaignModal()">Cancel</button>
+      <button class="vp-btn vp-btn-primary" onclick="vaSubmitCampaign()">Proceed to Payment</button>
     </div>
   </div>
 </div>
 
 <!-- TOP-UP MODAL -->
-<div class="va-modal-overlay" id="va-topup-modal">
-  <div class="va-modal" style="max-width:380px;">
-    <div class="va-modal-header">
-      <span class="va-modal-title">Top Up Wallet</span>
-      <button class="va-modal-close" onclick="vaCloseTopupModal()">
+<div class="vp-modal-backdrop" id="va-topup-modal" style="display:none;">
+  <div class="vp-modal" style="max-width:24rem;">
+    <div class="vp-modal-header">
+      <h3>Top Up Wallet</h3>
+      <button class="vp-btn vp-btn-ghost vp-btn-icon" onclick="vaCloseTopupModal()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <div class="va-modal-body">
-      <div class="va-form-group">
-        <label class="va-form-label">Amount (₦)</label>
-        <input type="number" id="va-topup-amount" class="va-form-input" placeholder="e.g. 5000" min="100" value="5000">
+    <div class="vp-modal-body">
+      <div class="ads-form-group">
+        <label class="ads-form-label">Amount (₦)</label>
+        <input type="number" id="va-topup-amount" class="vp-input" placeholder="e.g. 5000" min="100" value="5000">
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:0.75rem;">
-        <button class="va-btn va-btn-sm" onclick="document.getElementById('va-topup-amount').value=1000">₦1,000</button>
-        <button class="va-btn va-btn-sm" onclick="document.getElementById('va-topup-amount').value=2000">₦2,000</button>
-        <button class="va-btn va-btn-sm" onclick="document.getElementById('va-topup-amount').value=5000">₦5,000</button>
-        <button class="va-btn va-btn-sm" onclick="document.getElementById('va-topup-amount').value=10000">₦10,000</button>
-        <button class="va-btn va-btn-sm" onclick="document.getElementById('va-topup-amount').value=20000">₦20,000</button>
+      <div class="ads-topup-presets">
+        <button class="vp-btn vp-btn-sm vp-btn-outline" onclick="document.getElementById('va-topup-amount').value=1000">₦1,000</button>
+        <button class="vp-btn vp-btn-sm vp-btn-outline" onclick="document.getElementById('va-topup-amount').value=2000">₦2,000</button>
+        <button class="vp-btn vp-btn-sm vp-btn-outline" onclick="document.getElementById('va-topup-amount').value=5000">₦5,000</button>
+        <button class="vp-btn vp-btn-sm vp-btn-outline" onclick="document.getElementById('va-topup-amount').value=10000">₦10,000</button>
+        <button class="vp-btn vp-btn-sm vp-btn-outline" onclick="document.getElementById('va-topup-amount').value=20000">₦20,000</button>
       </div>
     </div>
-    <div class="va-modal-footer">
-      <button class="va-btn" onclick="vaCloseTopupModal()">Cancel</button>
-      <button class="va-btn va-btn-primary" onclick="vaSubmitTopup()">Fund Wallet</button>
+    <div class="vp-modal-footer">
+      <button class="vp-btn vp-btn-outline" onclick="vaCloseTopupModal()">Cancel</button>
+      <button class="vp-btn vp-btn-primary" onclick="vaSubmitTopup()">Fund Wallet</button>
     </div>
   </div>
 </div>
 
 <!-- PROMO MODAL -->
-<div class="va-modal-overlay" id="va-promo-modal">
-  <div class="va-modal">
-    <div class="va-modal-header">
-      <span class="va-modal-title" id="va-promo-modal-title">Create Promo Banner</span>
-      <button class="va-modal-close" onclick="vaClosePromoModal()">
+<div class="vp-modal-backdrop" id="va-promo-modal" style="display:none;">
+  <div class="vp-modal">
+    <div class="vp-modal-header">
+      <h3 id="va-promo-modal-title">Create Promo Banner</h3>
+      <button class="vp-btn vp-btn-ghost vp-btn-icon" onclick="vaClosePromoModal()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <div class="va-modal-body">
+    <div class="vp-modal-body">
       <input type="hidden" id="va-promo-id">
-      <div class="va-form-group">
-        <label class="va-form-label">Title *</label>
-        <input type="text" id="va-promo-title" class="va-form-input" placeholder="e.g. Summer Flash Sale">
+      <div class="ads-form-group">
+        <label class="ads-form-label">Title *</label>
+        <input type="text" id="va-promo-title" class="vp-input" placeholder="e.g. Summer Flash Sale">
       </div>
-      <div class="va-form-row">
-        <div class="va-form-group">
-          <label class="va-form-label">Type *</label>
-          <select id="va-promo-subtype" class="va-form-input">
+      <div class="ads-form-row">
+        <div class="ads-form-group">
+          <label class="ads-form-label">Type *</label>
+          <select id="va-promo-subtype" class="vp-input vp-select">
             <option value="PROMO">General Promo</option>
             <option value="FLASH_SALE">Flash Sale</option>
             <option value="SUPER_SALE">Super Sale</option>
           </select>
         </div>
-        <div class="va-form-group">
-          <label class="va-form-label">Banner Format</label>
-          <select id="va-promo-banner-type" class="va-form-input">
+        <div class="ads-form-group">
+          <label class="ads-form-label">Banner Format</label>
+          <select id="va-promo-banner-type" class="vp-input vp-select">
             <option value="banner">Banner</option>
             <option value="poster">Poster</option>
             <option value="flyer">Flyer</option>
           </select>
         </div>
       </div>
-      <div class="va-form-group">
-        <label class="va-form-label">Banner Image *</label>
-        <input type="file" id="va-promo-file" accept="image/*" class="va-form-input" style="padding:0.5rem;" onchange="vaHandlePromoUpload(this)">
+      <div class="ads-form-group">
+        <label class="ads-form-label">Banner Image *</label>
+        <input type="file" id="va-promo-file" accept="image/*" class="vp-input" onchange="vaHandlePromoUpload(this)">
         <input type="hidden" id="va-promo-banner-url">
-        <div id="va-promo-preview" style="display:none;margin-top:8px;">
-          <img id="va-promo-preview-img" src="" style="max-width:100%;max-height:120px;border-radius:8px;border:1px solid var(--va-border);object-fit:cover;">
-          <button type="button" onclick="vaClearPromoBanner()" style="margin-top:6px;padding:4px 10px;font-size:0.6875rem;color:#dc2626;background:none;border:1px solid #fecaca;border-radius:6px;cursor:pointer;">Remove</button>
+        <div id="va-promo-preview" style="display:none;margin-top:0.75rem;">
+          <img id="va-promo-preview-img" src="" class="ads-preview-img">
+          <div class="ads-preview-actions">
+            <button type="button" onclick="vaClearPromoBanner()" class="vp-btn vp-btn-sm vp-btn-danger" style="margin-top:0.5rem;">Remove</button>
+          </div>
         </div>
       </div>
-      <div class="va-form-group">
-        <label class="va-form-label">Target URL (optional)</label>
-        <input type="url" id="va-promo-target" class="va-form-input" placeholder="https://...">
+      <div class="ads-form-group">
+        <label class="ads-form-label">Target URL (optional)</label>
+        <input type="url" id="va-promo-target" class="vp-input" placeholder="https://...">
       </div>
-      <div class="va-form-row">
-        <div class="va-form-group">
-          <label class="va-form-label">Start Date</label>
-          <input type="date" id="va-promo-start" class="va-form-input">
+      <div class="ads-form-row">
+        <div class="ads-form-group">
+          <label class="ads-form-label">Start Date</label>
+          <input type="date" id="va-promo-start" class="vp-input">
         </div>
-        <div class="va-form-group">
-          <label class="va-form-label">End Date</label>
-          <input type="date" id="va-promo-end" class="va-form-input">
+        <div class="ads-form-group">
+          <label class="ads-form-label">End Date</label>
+          <input type="date" id="va-promo-end" class="vp-input">
         </div>
       </div>
-      <div class="va-form-group">
-        <label class="va-form-label">Notes</label>
-        <input type="text" id="va-promo-note" class="va-form-input" placeholder="Internal notes...">
+      <div class="ads-form-group">
+        <label class="ads-form-label">Notes</label>
+        <input type="text" id="va-promo-note" class="vp-input" placeholder="Internal notes...">
       </div>
     </div>
-    <div class="va-modal-footer">
-      <button class="va-btn" onclick="vaClosePromoModal()">Cancel</button>
-      <button class="va-btn va-btn-primary" onclick="vaSavePromo()">Save</button>
+    <div class="vp-modal-footer">
+      <button class="vp-btn vp-btn-outline" onclick="vaClosePromoModal()">Cancel</button>
+      <button class="vp-btn vp-btn-primary" onclick="vaSavePromo()">Save</button>
     </div>
   </div>
 </div>
 
 <!-- CONFIRM MODAL -->
-<div class="va-modal-overlay" id="va-confirm-modal">
-  <div class="va-modal" style="max-width:360px;">
-    <div class="va-modal-header">
-      <span class="va-modal-title">Confirm</span>
-      <button class="va-modal-close" onclick="document.getElementById('va-confirm-modal').classList.remove('show')">
+<div class="vp-modal-backdrop" id="va-confirm-modal" style="display:none;">
+  <div class="vp-modal" style="max-width:24rem;">
+    <div class="vp-modal-header">
+      <h3>Confirm</h3>
+      <button class="vp-btn vp-btn-ghost vp-btn-icon" onclick="document.getElementById('va-confirm-modal').style.display='none'">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <div class="va-modal-body" style="text-align:center;">
-      <p id="va-confirm-msg" style="font-size:0.875rem;color:var(--va-text);margin:0;">Are you sure?</p>
+    <div class="vp-modal-body ads-confirm-content">
+      <p id="va-confirm-msg">Are you sure?</p>
     </div>
-    <div class="va-modal-footer">
-      <button class="va-btn" onclick="document.getElementById('va-confirm-modal').classList.remove('show')">Cancel</button>
-      <button class="va-btn va-btn-red" id="va-confirm-btn">Delete</button>
+    <div class="vp-modal-footer">
+      <button class="vp-btn vp-btn-outline" onclick="document.getElementById('va-confirm-modal').style.display='none'">Cancel</button>
+      <button class="vp-btn vp-btn-danger" id="va-confirm-btn">Delete</button>
     </div>
   </div>
 </div>
@@ -344,10 +797,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function vaSwitchTab(tab, el) {
-  document.querySelectorAll('.va-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.va-tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.vp-tab').forEach(t => t.classList.remove('active'));
   if (el) el.classList.add('active');
-  document.getElementById('va-tab-' + tab).classList.add('active');
+  document.getElementById('va-tab-campaigns').style.display = tab === 'campaigns' ? 'block' : 'none';
+  document.getElementById('va-tab-promos').style.display = tab === 'promos' ? 'block' : 'none';
 }
 
 function vaShowToast(msg, type) {
@@ -365,23 +818,24 @@ function vaShowToast(msg, type) {
 function vaConfirm(msg, onConfirm) {
   document.getElementById('va-confirm-msg').textContent = msg;
   const btn = document.getElementById('va-confirm-btn');
-  btn.onclick = () => { document.getElementById('va-confirm-modal').classList.remove('show'); onConfirm(); };
-  document.getElementById('va-confirm-modal').classList.add('show');
+  btn.onclick = () => { document.getElementById('va-confirm-modal').style.display = 'none'; onConfirm(); };
+  document.getElementById('va-confirm-modal').style.display = 'flex';
 }
 
 function vaRenderCampaigns() {
   const el = document.getElementById('va-campaigns-list');
   if (!vaCampaigns.length) {
-    el.innerHTML = '<div class="va-empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg><p>No campaigns yet</p><p style="font-size:0.75rem;">Create your first ad campaign to promote your shop or products</p></div>';
+    el.innerHTML = '<div class="vp-empty"><div class="vp-empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg></div><h3>No campaigns yet</h3><p>Create your first ad campaign to promote your shop or products</p><button class="vp-btn vp-btn-primary" onclick="vaOpenCampaignModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> Create Campaign</button></div>';
     return;
   }
-  let html = '<table class="va-table"><thead><tr><th>Type</th><th>Status</th><th class="hide-mobile">Clicks</th><th class="hide-mobile">Impressions</th><th>Dates</th></tr></thead><tbody>';
+  let html = '<div class="ads-campaign-table">';
   vaCampaigns.forEach(c => {
-    const badge = c.status === 'ACTIVE' ? 'va-badge-active' : c.status === 'PENDING' ? 'va-badge-pending' : 'va-badge-expired';
+    const badge = c.status === 'ACTIVE' ? 'vp-badge-emerald' : c.status === 'PENDING' ? 'vp-badge-amber' : 'vp-badge-red';
     const dates = c.created_at ? new Date(c.created_at).toLocaleDateString() : '-';
-    html += '<tr><td><strong>'+c.ad_type+'</strong></td><td><span class="va-badge '+badge+'">'+c.status+'</span></td><td class="hide-mobile">'+(c.clicks||0).toLocaleString()+'</td><td class="hide-mobile">'+(c.impressions||0).toLocaleString()+'</td><td style="font-size:0.75rem;">'+dates+'</td></tr>';
+    const typeIcon = c.ad_type === 'SHOP' ? 'shop' : 'product';
+    html += '<div class="ads-campaign-row"><div class="ads-campaign-type-icon '+typeIcon+'">'+(c.ad_type === 'SHOP' ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1"/></svg>')+'</div><div class="ads-campaign-info"><div class="ads-campaign-name">'+c.ad_type+'</div><div class="ads-campaign-meta"><span class="vp-badge '+badge+'"><span class="vp-badge-dot"></span> '+c.status+'</span><span>'+dates+'</span></div></div><div class="ads-campaign-stats"><div class="ads-campaign-stat"><div class="ads-campaign-stat-value">'+(c.clicks||0).toLocaleString()+'</div><div class="ads-campaign-stat-label">Clicks</div></div><div class="ads-campaign-stat"><div class="ads-campaign-stat-value">'+(c.impressions||0).toLocaleString()+'</div><div class="ads-campaign-stat-label">Views</div></div></div></div>';
   });
-  html += '</tbody></table>';
+  html += '</div>';
   el.innerHTML = html;
 }
 
@@ -407,8 +861,8 @@ function vaHandleTargetPreset() {
 document.getElementById('va-camp-target-custom')?.addEventListener('input', function() { document.getElementById('va-camp-target-url').value = this.value; });
 
 // Wallet top-up
-function vaOpenTopupModal() { document.getElementById('va-topup-modal').classList.add('show'); }
-function vaCloseTopupModal() { document.getElementById('va-topup-modal').classList.remove('show'); }
+function vaOpenTopupModal() { document.getElementById('va-topup-modal').style.display = 'flex'; }
+function vaCloseTopupModal() { document.getElementById('va-topup-modal').style.display = 'none'; }
 
 async function vaSubmitTopup() {
   const amount = parseFloat(document.getElementById('va-topup-amount').value);
@@ -424,8 +878,8 @@ async function vaSubmitTopup() {
   } catch(e) { vaShowToast('Error: ' + e.message, 'error'); }
 }
 
-function vaOpenCampaignModal() { document.getElementById('va-campaign-modal').classList.add('show'); vaUpdatePrice(); }
-function vaCloseCampaignModal() { document.getElementById('va-campaign-modal').classList.remove('show'); }
+function vaOpenCampaignModal() { document.getElementById('va-campaign-modal').style.display = 'flex'; vaUpdatePrice(); }
+function vaCloseCampaignModal() { document.getElementById('va-campaign-modal').style.display = 'none'; }
 
 async function vaSubmitCampaign() {
   const type = document.getElementById('va-camp-type').value;
@@ -451,13 +905,13 @@ async function vaSubmitCampaign() {
 function vaRenderPromos() {
   const el = document.getElementById('va-promos-grid');
   if (!vaPromos.length) {
-    el.innerHTML = '<div class="va-empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg><p>No promo banners yet</p><p style="font-size:0.75rem;">Create eye-catching banners to promote sales and events</p></div>';
+    el.innerHTML = '<div class="vp-empty" style="grid-column:1/-1;"><div class="vp-empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div><h3>No promo banners yet</h3><p>Create eye-catching banners to promote sales and events</p><button class="vp-btn vp-btn-primary" onclick="vaOpenPromoModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> Create Promo</button></div>';
     return;
   }
   el.innerHTML = vaPromos.map(p => {
-    const badge = p.status === 'ACTIVE' ? 'va-badge-active' : p.status === 'INACTIVE' ? 'va-badge-inactive' : 'va-badge-expired';
+    const badge = p.status === 'ACTIVE' ? 'vp-badge-emerald' : p.status === 'INACTIVE' ? 'vp-badge-red' : 'vp-badge-amber';
     const dates = p.start_date ? new Date(p.start_date).toLocaleDateString() + ' — ' + (p.end_date ? new Date(p.end_date).toLocaleDateString() : '...') : '';
-    return '<div class="va-promo-card"><div class="va-promo-img">'+(p.banner_url ? '<img src="'+p.banner_url+'" alt="'+p.title+'">' : '<span style="color:var(--va-muted);font-size:0.75rem;">No image</span>')+'</div><div class="va-promo-body"><div class="va-promo-title">'+p.title+'</div><div class="va-promo-meta"><span class="va-badge '+badge+'">'+p.status+'</span><span>'+p.ad_subtype+'</span>'+(dates ? '<span>'+dates+'</span>' : '')+'</div></div><div class="va-promo-actions"><button class="va-btn va-btn-sm" onclick="vaEditPromo(\''+p.id+'\')">Edit</button>'+(p.status === 'ACTIVE' ? '<button class="va-btn va-btn-sm va-btn-red" onclick="vaTogglePromo(\''+p.id+'\',\'INACTIVE\')">Deactivate</button>' : '<button class="va-btn va-btn-sm va-btn-green" onclick="vaTogglePromo(\''+p.id+'\',\'ACTIVE\')">Activate</button>')+'<button class="va-btn va-btn-sm va-btn-red" onclick="vaDeletePromo(\''+p.id+'\')" style="margin-left:auto;">Delete</button></div></div>';
+    return '<div class="ads-promo-card"><div class="ads-promo-img">'+(p.banner_url ? '<img src="'+p.banner_url+'" alt="'+p.title+'">' : '<span style="color:var(--vp-text-muted);font-size:0.8125rem;">No image</span>')+'</div><div class="ads-promo-body"><div class="ads-promo-title">'+p.title+'</div><div class="ads-promo-meta"><span class="vp-badge '+badge+'"><span class="vp-badge-dot"></span> '+p.status+'</span><span>'+p.ad_subtype+'</span>'+(dates ? '<span>'+dates+'</span>' : '')+'</div></div><div class="ads-promo-actions"><button class="vp-btn vp-btn-sm vp-btn-outline" onclick="vaEditPromo(\''+p.id+'\')">Edit</button>'+(p.status === 'ACTIVE' ? '<button class="vp-btn vp-btn-sm vp-btn-outline" onclick="vaTogglePromo(\''+p.id+'\',\'INACTIVE\')" style="color:var(--vp-red);border-color:var(--vp-red);">Deactivate</button>' : '<button class="vp-btn vp-btn-sm vp-btn-outline" onclick="vaTogglePromo(\''+p.id+'\',\'ACTIVE\')" style="color:var(--vp-emerald);border-color:var(--vp-emerald);">Activate</button>')+'<button class="vp-btn vp-btn-sm vp-btn-danger" style="margin-left:auto;" onclick="vaDeletePromo(\''+p.id+'\')">Delete</button></div></div>';
   }).join('');
 }
 
@@ -475,7 +929,7 @@ function vaHandlePromoUpload(input) {
 function vaClearPromoBanner() { document.getElementById('va-promo-banner-url').value = ''; document.getElementById('va-promo-file').value = ''; document.getElementById('va-promo-preview').style.display = 'none'; }
 
 function vaOpenPromoModal(id) {
-  document.getElementById('va-promo-modal').classList.add('show');
+  document.getElementById('va-promo-modal').style.display = 'flex';
   if (!id) {
     document.getElementById('va-promo-modal-title').textContent = 'Create Promo Banner';
     document.getElementById('va-promo-id').value = '';
@@ -491,7 +945,7 @@ function vaOpenPromoModal(id) {
     document.getElementById('va-promo-note').value = '';
   }
 }
-function vaClosePromoModal() { document.getElementById('va-promo-modal').classList.remove('show'); }
+function vaClosePromoModal() { document.getElementById('va-promo-modal').style.display = 'none'; }
 
 function vaEditPromo(id) {
   const p = vaPromos.find(a => a.id === id); if (!p) return;

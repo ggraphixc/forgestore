@@ -2,399 +2,185 @@
 {% block title %}Vendor Orders &mdash; {{ settings.site_name|default('ForgeStore') }}{% endblock %}
 {% block content %}
 <style>
-  :root {
-    --color-primary: {{ settings.primary_color|default('#f59e0b') }};
-    --color-primary-hover: {{ settings.secondary_color|default('#d97706') }};
-    --color-primary-light: #fef3c7;
-    --color-primary-bg: #fffbeb;
-    --color-text: {{ settings.text_color|default('#78716c') }};
-    --color-text-dark: {{ settings.dark_color|default('#1c1917') }};
-    --color-text-muted: #a8a29e;
-    --color-border: #e7e5e4;
-    --color-border-light: #f5f5f4;
-    --color-bg: #f5f5f4;
-    --color-bg-alt: #ffffff;
-    --color-emerald: #10b981;
-    --color-emerald-light: #d1fae5;
-    --color-emerald-dark: #065f46;
-    --color-blue: #3b82f6;
-    --color-blue-light: #dbeafe;
-    --color-blue-dark: #1e40af;
-    --color-amber: #f59e0b;
-    --color-amber-light: #fef3c7;
-    --color-amber-dark: #92400e;
-    --color-purple: #8b5cf6;
-    --color-purple-light: #ede9fe;
-    --color-purple-dark: #5b21b6;
-    --color-red: #ef4444;
-    --color-red-light: #fee2e2;
-    --color-red-dark: #991b1b;
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
-    --radius-lg: 1rem;
-    --radius-md: 0.75rem;
-    --radius-sm: 0.5rem;
-  }
+  @import url('/static/css/vendor_portal.css');
 
-  .vendor-page {
-    max-width: 72rem;
-    margin: 0 auto;
-    padding: 1.5rem;
-  }
-
-  .vendor-page-header {
+  .orders-page {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .orders-header-row {
+    display: flex;
     align-items: center;
-    gap: 0.75rem;
     justify-content: space-between;
-  }
-
-  .vendor-page-header h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--color-text-dark);
-    margin: 0;
-  }
-
-  .vendor-page-header .subtitle {
-    font-size: 0.875rem;
-    color: var(--color-text-muted);
-    margin-top: 0.25rem;
-  }
-
-  .vendor-stats-grid {
-    display: grid;
-    grid-template-columns: 1fr;
+    flex-wrap: wrap;
     gap: 1rem;
   }
 
-  @media (min-width: 640px) {
-    .vendor-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .orders-table .vp-table tbody tr {
+    transition: background var(--vp-transition);
   }
 
-  @media (min-width: 1024px) {
-    .vendor-stats-grid { grid-template-columns: repeat(4, 1fr); }
+  .orders-table .vp-table tbody tr:hover td {
+    background: rgba(99, 102, 241, 0.04);
   }
 
-  .vendor-stat-card {
-    background: var(--color-bg-alt);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-border);
-    padding: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .vendor-stat-card .label {
-    font-size: 0.75rem;
+  .orders-table .order-num {
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-text-muted);
-  }
-
-  .vendor-stat-card .value {
-    font-size: 1.875rem;
-    font-weight: 900;
-    color: var(--color-text-dark);
-  }
-
-  .vendor-stat-card .value.amber { color: var(--color-amber); }
-  .vendor-stat-card .value.emerald { color: var(--color-emerald); }
-  .vendor-stat-card .value.blue { color: var(--color-blue); }
-  .vendor-stat-card .value.purple { color: var(--color-purple); }
-
-  .vendor-stat-card .meta {
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-    margin-top: 0.125rem;
-  }
-
-  .vendor-card {
-    background: var(--color-bg-alt);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-border);
-    overflow: hidden;
-  }
-
-  .vendor-card-header {
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--color-border-light);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-
-  .vendor-card-header h2 {
+    color: var(--vp-text);
+    font-family: var(--vp-font-mono);
     font-size: 0.875rem;
+  }
+
+  .orders-table .order-price {
     font-weight: 700;
-    color: var(--color-text-dark);
-    margin: 0;
-  }
-
-  .vendor-table-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .vendor-table {
-    width: 100%;
-    font-size: 0.875rem;
-    border-collapse: collapse;
-  }
-
-  .vendor-table th {
-    padding: 0.75rem 1.25rem;
-    text-align: left;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-text-muted);
-    border-bottom: 1px solid var(--color-border-light);
-    white-space: nowrap;
-    background: var(--color-bg);
-  }
-
-  .vendor-table td {
-    padding: 0.75rem 1.25rem;
-    border-bottom: 1px solid var(--color-border-light);
-    color: var(--color-text);
-    vertical-align: middle;
-  }
-
-  .vendor-table tbody tr:hover {
-    background: var(--color-bg);
-  }
-
-  .vendor-table tbody tr:last-child td {
-    border-bottom: none;
-  }
-
-  .vendor-table .cell-order {
-    font-weight: 600;
-    color: var(--color-text-dark);
-  }
-
-  .vendor-table .cell-price {
-    font-weight: 700;
-    color: var(--color-text-dark);
+    color: var(--vp-text);
     font-variant-numeric: tabular-nums;
+    font-family: var(--vp-font-mono);
   }
 
-  .vendor-table .cell-muted {
-    color: var(--color-text-muted);
-    font-size: 0.75rem;
-  }
-
-  .vendor-badge {
-    display: inline-block;
-    font-size: 0.625rem;
-    font-weight: 700;
-    padding: 0.1875rem 0.625rem;
-    border-radius: 9999px;
-    line-height: 1.4;
+  .orders-table .order-date {
+    color: var(--vp-text-muted);
+    font-size: 0.8125rem;
     white-space: nowrap;
   }
 
-  .vendor-badge.delivered {
-    background: var(--color-emerald-light);
-    color: var(--color-emerald-dark);
+  .orders-table .order-customer {
+    color: var(--vp-text-secondary);
   }
 
-  .vendor-badge.shipped {
-    background: var(--color-blue-light);
-    color: var(--color-blue-dark);
-  }
-
-  .vendor-badge.processing {
-    background: var(--color-amber-light);
-    color: var(--color-amber-dark);
-  }
-
-  .vendor-badge.default {
-    background: var(--color-border-light);
-    color: var(--color-text);
-  }
-
-  .vendor-form-group {
-    position: relative;
-  }
-
-  .vendor-form-input {
-    min-height: 44px;
-    padding: 0.5rem 1rem 0.5rem 2.25rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    font-size: 0.875rem;
-    color: var(--color-text-dark);
-    background: var(--color-bg-alt);
-    width: 100%;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-
-  .vendor-form-input:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
-  }
-
-  .vendor-form-input::placeholder {
-    color: var(--color-text-muted);
-  }
-
-  .vendor-form-icon {
-    position: absolute;
-    left: 0.625rem;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 1rem;
-    height: 1rem;
-    color: var(--color-text-muted);
-    pointer-events: none;
-  }
-
-  .vendor-btn-outline {
-    display: inline-flex;
+  .orders-actions {
+    display: flex;
     align-items: center;
-    min-height: 44px;
-    padding: 0.5rem 0.75rem;
-    background: transparent;
-    color: var(--color-primary);
-    font-size: 0.75rem;
-    font-weight: 700;
-    border: none;
-    cursor: pointer;
-    text-decoration: none;
-    transition: opacity 0.2s, background 0.2s;
-    border-radius: var(--radius-sm);
     gap: 0.375rem;
+    flex-wrap: nowrap;
   }
 
-  .vendor-btn-outline:hover {
-    opacity: 0.7;
-    background: var(--color-primary-light);
+  .orders-actions .vp-btn { white-space: nowrap; }
+
+  .dark .orders-table .vp-table tbody tr:hover td {
+    background: rgba(99, 102, 241, 0.06);
   }
 
-  .vendor-btn-outline svg {
-    width: 0.875rem;
-    height: 0.875rem;
+  @media (max-width: 768px) {
+    .orders-header-row { flex-direction: column; align-items: stretch; }
+    .orders-header-row .vp-search { max-width: 100%; }
+    .orders-table .hide-mobile { display: none; }
   }
 
-  .vendor-empty {
-    padding: 3rem 1.25rem;
-    text-align: center;
-    font-size: 0.875rem;
-    color: var(--color-text-muted);
-  }
-
-  .vendor-empty svg {
-    width: 2.5rem;
-    height: 2.5rem;
-    margin: 0 auto 0.75rem;
-    color: var(--color-border);
-  }
-
-  .hide-mobile {
-    display: table-cell;
-  }
-
-  @media (max-width: 640px) {
-    .vendor-page { padding: 1rem; }
-    .vendor-page-header h1 { font-size: 1.25rem; }
-    .vendor-stat-card .value { font-size: 1.5rem; }
-    .vendor-table th,
-    .vendor-table td { padding: 0.625rem 0.75rem; }
-    .hide-mobile { display: none; }
-    .vendor-form-group { width: 100%; }
+  @media (max-width: 480px) {
+    .orders-actions { flex-direction: column; align-items: stretch; }
+    .orders-actions .vp-btn { width: 100%; justify-content: center; }
   }
 </style>
 
-<div class="vendor-page">
-  <div class="vendor-page-header">
-    <div>
+<div class="vp-page orders-page">
+  <div class="vp-header orders-header-row">
+    <div class="vp-header-left">
       <h1>Orders</h1>
-      <p class="subtitle">Track and manage customer orders</p>
+      <p class="vp-subtitle">Track and manage customer orders</p>
     </div>
-    <div class="vendor-form-group" style="max-width:16rem;">
-      <svg class="vendor-form-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-      <input type="text" class="vendor-form-input" id="orderSearch" placeholder="Search orders..." oninput="filterOrders()">
+    <div class="vp-header-actions">
+      <div class="vp-search">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" class="vp-input" id="orderSearch" placeholder="Search orders..." oninput="filterOrders()">
+      </div>
     </div>
   </div>
 
   {% if orders %}
-  <div class="vendor-stats-grid" style="margin-top:1.5rem;">
-    <div class="vendor-stat-card">
-      <span class="label">Total Orders</span>
-      <span class="value">{{ orders|length }}</span>
+  <div class="vp-stats">
+    <div class="vp-stat vp-stat-amber">
+      <div class="vp-stat-icon amber">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </div>
+      <span class="vp-stat-label">Total Orders</span>
+      <span class="vp-stat-value">{{ orders|length }}</span>
     </div>
-    <div class="vendor-stat-card">
-      <span class="label">Delivered</span>
-      <span class="value emerald">{{ orders|selectattr('status.value','equalto','DELIVERED')|list|length }}</span>
+    <div class="vp-stat vp-stat-emerald">
+      <div class="vp-stat-icon emerald">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <span class="vp-stat-label">Delivered</span>
+      <span class="vp-stat-value">{{ orders|selectattr('status.value','equalto','DELIVERED')|list|length }}</span>
     </div>
-    <div class="vendor-stat-card">
-      <span class="label">Shipped</span>
-      <span class="value blue">{{ orders|selectattr('status.value','equalto','SHIPPED')|list|length }}</span>
+    <div class="vp-stat vp-stat-blue">
+      <div class="vp-stat-icon blue">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+      </div>
+      <span class="vp-stat-label">Shipped</span>
+      <span class="vp-stat-value">{{ orders|selectattr('status.value','equalto','SHIPPED')|list|length }}</span>
     </div>
-    <div class="vendor-stat-card">
-      <span class="label">Processing</span>
-      <span class="value amber">{{ orders|selectattr('status.value','equalto','PROCESSING')|list|length }}</span>
+    <div class="vp-stat vp-stat-rose">
+      <div class="vp-stat-icon purple">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <span class="vp-stat-label">Processing</span>
+      <span class="vp-stat-value">{{ orders|selectattr('status.value','equalto','PROCESSING')|list|length }}</span>
     </div>
   </div>
-  {% endif %}
 
-  <div class="vendor-card" style="margin-top:1.5rem;">
-    {% if orders %}
-    <div class="vendor-card-header">
+  <div class="vp-card orders-table">
+    <div class="vp-card-header">
       <h2>All Orders</h2>
     </div>
-    <div class="vendor-table-container">
-      <table class="vendor-table" id="ordersTable">
+    <div class="vp-table-wrap">
+      <table class="vp-table" id="ordersTable">
         <thead>
           <tr>
             <th>Order #</th>
             <th>Customer</th>
+            <th>Date</th>
             <th>Total</th>
             <th class="hide-mobile">Status</th>
-            <th class="hide-mobile">Date</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {% for o in orders %}
           <tr data-search="{{ o.order_number }} {{ customers.get(o.id, 'Unknown')|lower }} {{ o.status.value|lower }}">
-            <td class="cell-order">#{{ o.order_number }}</td>
-            <td>{{ customers.get(o.id, 'Unknown') }}</td>
-            <td class="cell-price">₦{{ "{:,.2f}".format(o.total_amount) }}</td>
+            <td><span class="order-num">#{{ o.order_number }}</span></td>
+            <td class="order-customer">{{ customers.get(o.id, 'Unknown') }}</td>
+            <td class="order-date">{{ o.created_at.strftime('%b %d, %Y') if o.created_at else '' }}</td>
+            <td><span class="order-price">₦{{ "{:,.2f}".format(o.total_amount) }}</span></td>
             <td class="hide-mobile">
-              <span class="vendor-badge {% if o.status.value == 'DELIVERED' %}delivered{% elif o.status.value == 'SHIPPED' %}shipped{% elif o.status.value == 'PROCESSING' %}processing{% else %}default{% endif %}">{{ o.status.value }}</span>
+              <span class="vp-badge {% if o.status.value == 'PENDING' %}vp-badge-amber{% elif o.status.value == 'PAID' %}vp-badge-blue{% elif o.status.value == 'PROCESSING' %}vp-badge-purple{% elif o.status.value == 'SHIPPED' %}vp-badge-cyan{% elif o.status.value == 'DELIVERED' %}vp-badge-emerald{% elif o.status.value == 'CANCELLED' %}vp-badge-red{% else %}vp-badge-amber{% endif %}">
+                <span class="vp-badge-dot"></span>
+                {{ o.status.value }}
+              </span>
             </td>
-            <td class="hide-mobile cell-muted">{{ o.created_at.strftime('%b %d, %Y') if o.created_at else '' }}</td>
-            <td style="display:flex;gap:4px;flex-wrap:wrap;">
-              <a href="/vendor/orders/{{ o.id }}" class="vendor-btn-outline" style="min-height:36px;font-size:0.8125rem;">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                View
-              </a>
-              {% if o.status.value == 'PAID' %}
-              <button onclick="vendorMarkShipped('{{ o.id }}', this)" class="vendor-btn-primary" style="min-height:36px;padding:6px 12px;font-size:0.8125rem;">📦 Ship</button>
-              {% endif %}
+            <td>
+              <div class="orders-actions">
+                <a href="/vendor/orders/{{ o.id }}" class="vp-btn vp-btn-outline vp-btn-sm">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  View
+                </a>
+                {% if o.status.value == 'PAID' %}
+                <button onclick="vendorMarkShipped('{{ o.id }}', this)" class="vp-btn vp-btn-primary vp-btn-sm">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                  Ship
+                </button>
+                {% endif %}
+              </div>
             </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-    {% else %}
-    <div class="vendor-empty">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-      <p>No orders yet.</p>
-    </div>
-    {% endif %}
   </div>
+  {% else %}
+  <div class="vp-card">
+    <div class="vp-empty">
+      <div class="vp-empty-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="2rem" height="2rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </div>
+      <h3>No orders yet</h3>
+      <p>When customers place orders, they will appear here.</p>
+    </div>
+  </div>
+  {% endif %}
 </div>
 
 <script>

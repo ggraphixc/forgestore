@@ -2,96 +2,598 @@
 {% block title %}Messages — {{ settings.site_name|default('ForgeStore') }}{% endblock %}
 {% block content %}
 <style>
-  :root {
-    --primary: {{ settings.primary_color|default('#f59e0b') }};
-    --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
-    --green: #10b981; --red: #ef4444; --yellow: #f59e0b; --blue: #3b82f6;
+  @import url('/static/css/vendor_portal.css');
+
+  .msg-layout {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    height: calc(100vh - 180px);
+    min-height: 520px;
+    border-radius: var(--vp-radius-xl);
+    overflow: hidden;
+    border: 1px solid var(--vp-border);
+    background: var(--vp-bg-elevated);
+    box-shadow: var(--vp-shadow-md);
+    animation: vpSlideUp 0.4s ease-out;
   }
-  .dark { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --muted: #94a3b8; --border: #334155; }
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; }
-  .vm-page { max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
-  .vm-page h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.25rem; }
-  .vm-sub { font-size: 0.875rem; color: var(--muted); margin-bottom: 1.5rem; }
-  .vm-layout { display: grid; grid-template-columns: 1fr 2fr; height: calc(100vh - 160px); min-height: 400px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--card); }
-  .vm-threads { border-right: 1px solid var(--border); overflow-y: auto; }
-  .vm-thread-header { padding: 0.875rem 1rem; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 0.8125rem; color: var(--muted); }
-  .vm-thread { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; gap: 0.75rem; align-items: center; transition: background 0.1s; }
-  .vm-thread:hover { background: var(--bg); }
-  .vm-thread.active { background: var(--bg); border-left: 3px solid var(--primary); }
-  .vm-thread img { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
-  .vm-thread-info { flex: 1; min-width: 0; }
-  .vm-thread-name { font-weight: 700; font-size: 0.8125rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .vm-thread-preview { font-size: 0.75rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .vm-thread-meta { font-size: 0.6875rem; color: var(--muted); text-align: right; flex-shrink: 0; }
-  .vm-thread-badge { background: var(--red); color: #fff; font-size: 0.625rem; font-weight: 700; padding: 2px 6px; border-radius: 10px; margin-top: 0.25rem; display: inline-block; }
-  .vm-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--muted); font-size: 0.875rem; }
-  .vm-chat { display: flex; flex-direction: column; height: 100%; }
-  .vm-chat-header { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.75rem; }
-  .vm-chat-header img { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; }
-  .vm-chat-header .name { font-weight: 700; font-size: 0.875rem; }
-  .vm-chat-header .sub { font-size: 0.75rem; color: var(--muted); }
-  .vm-messages { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
-  .vm-msg { max-width: 75%; padding: 0.625rem 0.875rem; border-radius: 12px; font-size: 0.8125rem; line-height: 1.5; }
-  .vm-msg.customer { background: var(--bg); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 4px; }
-  .vm-msg.vendor { background: var(--primary); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
-  .vm-msg .author { font-weight: 700; font-size: 0.6875rem; margin-bottom: 0.125rem; }
-  .vm-msg .time { font-size: 0.625rem; opacity: 0.7; margin-top: 0.25rem; }
-  .vm-msg.flagged { opacity: 0.5; border-style: dashed; }
-  .vm-input { padding: 0.75rem 1rem; border-top: 1px solid var(--border); display: flex; gap: 0.5rem; align-items: flex-end; }
-  .vm-input textarea { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem; font-size: 0.8125rem; resize: none; min-height: 40px; max-height: 120px; font-family: inherit; background: var(--bg); color: var(--text); }
-  .vm-input button { min-height: 44px; padding: 0 1rem; border-radius: 8px; font-weight: 600; font-size: 0.8125rem; cursor: pointer; border: none; background: var(--primary); color: #fff; }
-  .vm-input button:disabled { opacity: 0.5; cursor: not-allowed; }
-  @media (max-width: 640px) {
-    .vm-layout { grid-template-columns: 1fr; height: calc(100vh - 120px); }
-    .vm-threads.hidden { display: none; }
-    .vm-chat.hidden { display: none; }
+
+  .msg-sidebar {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--vp-border-light);
+    background: var(--vp-bg-elevated);
+  }
+
+  .msg-sidebar-header {
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--vp-border-light);
+  }
+
+  .msg-sidebar-header h3 {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--vp-text-muted);
+    margin: 0 0 0.75rem 0;
+  }
+
+  .msg-search {
+    position: relative;
+  }
+
+  .msg-search input {
+    width: 100%;
+    min-height: 40px;
+    padding: 0.5rem 0.875rem 0.5rem 2.5rem;
+    font-size: 0.8125rem;
+    font-family: var(--vp-font);
+    color: var(--vp-text);
+    background: var(--vp-bg);
+    border: 1.5px solid var(--vp-border);
+    border-radius: var(--vp-radius-md);
+    outline: none;
+    transition: all var(--vp-transition);
+  }
+
+  .msg-search input:focus {
+    border-color: var(--vp-accent);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+
+  .msg-search input::placeholder { color: var(--vp-text-muted); }
+
+  .msg-search svg {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1rem;
+    height: 1rem;
+    color: var(--vp-text-muted);
+    pointer-events: none;
+  }
+
+  .msg-thread-list {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .msg-thread-list::-webkit-scrollbar { width: 4px; }
+  .msg-thread-list::-webkit-scrollbar-track { background: transparent; }
+  .msg-thread-list::-webkit-scrollbar-thumb {
+    background: var(--vp-border);
+    border-radius: var(--vp-radius-pill);
+  }
+
+  .msg-thread {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.25rem;
+    cursor: pointer;
+    transition: all var(--vp-transition);
+    border-bottom: 1px solid var(--vp-border-light);
+    position: relative;
+  }
+
+  .msg-thread:hover {
+    background: var(--vp-bg);
+  }
+
+  .msg-thread.active {
+    background: rgba(99, 102, 241, 0.06);
+    border-left: 3px solid var(--vp-accent);
+  }
+
+  .msg-thread-avatar {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .msg-thread-avatar img {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--vp-radius-md);
+    object-fit: cover;
+  }
+
+  .msg-thread-avatar-placeholder {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--vp-radius-md);
+    background: var(--vp-bg);
+    border: 1.5px solid var(--vp-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--vp-text-muted);
+  }
+
+  .msg-online-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    background: var(--vp-emerald);
+    border: 2.5px solid var(--vp-bg-elevated);
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    animation: msgPulseOnline 2s infinite;
+  }
+
+  @keyframes msgPulseOnline {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+    50% { box-shadow: 0 0 0 4px rgba(16, 185, 129, 0); }
+  }
+
+  .msg-thread-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .msg-thread-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--vp-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.125rem;
+  }
+
+  .msg-thread-preview {
+    font-size: 0.75rem;
+    color: var(--vp-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .msg-thread-meta {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+  }
+
+  .msg-thread-time {
+    font-size: 0.6875rem;
+    color: var(--vp-text-muted);
+    white-space: nowrap;
+  }
+
+  .msg-thread-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background: var(--vp-gradient-accent);
+    color: white;
+    font-size: 0.625rem;
+    font-weight: 700;
+    border-radius: var(--vp-radius-pill);
+    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
+  }
+
+  .msg-chat {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--vp-bg);
+  }
+
+  .msg-chat-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: var(--vp-bg-elevated);
+    border-bottom: 1px solid var(--vp-border-light);
+  }
+
+  .msg-chat-header-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--vp-radius-md);
+    object-fit: cover;
+  }
+
+  .msg-chat-header-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .msg-chat-header-name {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--vp-text);
+  }
+
+  .msg-chat-header-sub {
+    font-size: 0.75rem;
+    color: var(--vp-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  .msg-chat-header-sub .msg-status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--vp-emerald);
+  }
+
+  .msg-chat-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: auto;
+  }
+
+  .msg-chat-actions .vp-badge {
+    font-size: 0.6875rem;
+  }
+
+  .msg-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overscroll-behavior: contain;
+  }
+
+  .msg-messages::-webkit-scrollbar { width: 5px; }
+  .msg-messages::-webkit-scrollbar-track { background: transparent; }
+  .msg-messages::-webkit-scrollbar-thumb {
+    background: var(--vp-border);
+    border-radius: var(--vp-radius-pill);
+  }
+
+  .msg-date-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0.5rem 0;
+  }
+
+  .msg-date-divider::before,
+  .msg-date-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--vp-border);
+  }
+
+  .msg-date-divider span {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--vp-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  .msg-bubble-wrap {
+    display: flex;
+    flex-direction: column;
+    max-width: 72%;
+    animation: vpSlideUp 0.25s ease-out;
+  }
+
+  .msg-bubble-wrap.sent { align-self: flex-end; align-items: flex-end; }
+  .msg-bubble-wrap.received { align-self: flex-start; align-items: flex-start; }
+
+  .msg-bubble {
+    padding: 0.75rem 1rem;
+    border-radius: var(--vp-radius-lg);
+    font-size: 0.875rem;
+    line-height: 1.55;
+    word-wrap: break-word;
+  }
+
+  .msg-bubble.sent {
+    background: var(--vp-gradient-accent);
+    color: white;
+    border-bottom-right-radius: var(--vp-radius-xs);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+  }
+
+  .msg-bubble.received {
+    background: var(--vp-bg-elevated);
+    color: var(--vp-text);
+    border: 1px solid var(--vp-border);
+    border-bottom-left-radius: var(--vp-radius-xs);
+    box-shadow: var(--vp-shadow-xs);
+  }
+
+  .msg-bubble.flagged {
+    opacity: 0.5;
+    border-style: dashed;
+  }
+
+  .msg-bubble-author {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    opacity: 0.85;
+  }
+
+  .msg-bubble-time {
+    font-size: 0.625rem;
+    opacity: 0.6;
+    margin-top: 0.375rem;
+  }
+
+  .msg-suggestions {
+    padding: 0.625rem 1.5rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    background: var(--vp-bg-elevated);
+    border-top: 1px solid var(--vp-border-light);
+  }
+
+  .msg-suggestion-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 32px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    font-family: var(--vp-font);
+    color: var(--vp-accent);
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: var(--vp-radius-pill);
+    cursor: pointer;
+    transition: all var(--vp-transition);
+    white-space: nowrap;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .msg-suggestion-chip:hover {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: var(--vp-accent);
+    transform: translateY(-1px);
+  }
+
+  .msg-suggestion-chip svg {
+    width: 0.75rem;
+    height: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .msg-input-bar {
+    padding: 1rem 1.5rem;
+    background: var(--vp-bg-elevated);
+    border-top: 1px solid var(--vp-border-light);
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+  }
+
+  .msg-input-field {
+    flex: 1;
+    min-height: 44px;
+    max-height: 120px;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    font-family: var(--vp-font);
+    color: var(--vp-text);
+    background: var(--vp-bg);
+    border: 1.5px solid var(--vp-border);
+    border-radius: var(--vp-radius-lg);
+    resize: none;
+    outline: none;
+    transition: all var(--vp-transition);
+    line-height: 1.5;
+  }
+
+  .msg-input-field:focus {
+    border-color: var(--vp-accent);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+
+  .msg-input-field::placeholder { color: var(--vp-text-muted); }
+
+  .msg-send-btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0 1.125rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: var(--vp-font);
+    color: white;
+    background: var(--vp-gradient-accent);
+    border: none;
+    border-radius: var(--vp-radius-md);
+    cursor: pointer;
+    transition: all var(--vp-transition);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+  }
+
+  .msg-send-btn:hover {
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .msg-send-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .msg-send-btn svg {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
+  .msg-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 3rem;
+    text-align: center;
+  }
+
+  .msg-empty-icon {
+    width: 5rem;
+    height: 5rem;
+    margin-bottom: 1.5rem;
+    background: var(--vp-bg);
+    border-radius: var(--vp-radius-2xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--vp-text-muted);
+    border: 1.5px dashed var(--vp-border);
+  }
+
+  .msg-empty-icon svg {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .msg-empty-state h3 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--vp-text);
+    margin-bottom: 0.5rem;
+  }
+
+  .msg-empty-state p {
+    font-size: 0.875rem;
+    color: var(--vp-text-secondary);
+    max-width: 20rem;
+  }
+
+  @media (max-width: 768px) {
+    .msg-layout {
+      grid-template-columns: 1fr;
+      height: calc(100vh - 140px);
+    }
+    .msg-sidebar.hidden { display: none; }
+    .msg-chat.hidden { display: none; }
+    .msg-bubble-wrap { max-width: 88%; }
+    .msg-messages { padding: 1rem; }
+    .msg-input-bar { padding: 0.75rem 1rem; }
   }
 </style>
 
-<div class="vm-page">
-  <h1>Customer Messages</h1>
-  <p class="vm-sub">Respond to customer questions about your products</p>
-
-  <div class="vm-layout">
-    <div class="vm-threads" id="vmThreads">
-      <div class="vm-thread-header">Product Conversations</div>
-      <div id="vmThreadList"></div>
+<div class="vp-page">
+  <div class="vp-header">
+    <div class="vp-header-left">
+      <h1>Messages</h1>
+      <p class="vp-subtitle">Respond to customer questions about your products</p>
     </div>
-    <div class="vm-chat" id="vmChat">
-      <div class="vm-empty" id="vmEmpty">Select a conversation to start</div>
+  </div>
+
+  <div class="msg-layout">
+    <div class="msg-sidebar" id="msgSidebar">
+      <div class="msg-sidebar-header">
+        <h3>Conversations</h3>
+        <div class="msg-search">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="msgSearchInput" placeholder="Search conversations..." oninput="msgFilterThreads(this.value)">
+        </div>
+      </div>
+      <div class="msg-thread-list" id="msgThreadList"></div>
+    </div>
+
+    <div class="msg-chat" id="msgChat">
+      <div class="msg-empty-state" id="msgEmpty">
+        <div class="msg-empty-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h3>Select a conversation</h3>
+        <p>Choose a product conversation from the sidebar to start responding</p>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-let vmCurrent = null;
+let msgCurrent = null;
+let msgAllThreads = [];
 
-async function vmLoadThreads() {
+async function msgLoadThreads() {
   const r = await fetch('/api/vendor/messages/threads');
   const d = await r.json();
-  const el = document.getElementById('vmThreadList');
-  if (!d.threads.length) {
-    el.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--muted);font-size:0.8125rem;">No customer messages yet</div>';
+  msgAllThreads = d.threads || [];
+  msgRenderThreads(msgAllThreads);
+}
+
+function msgRenderThreads(threads) {
+  const el = document.getElementById('msgThreadList');
+  if (!threads.length) {
+    el.innerHTML = '<div style="padding:2.5rem;text-align:center;color:var(--vp-text-muted);font-size:0.8125rem;">No customer messages yet</div>';
     return;
   }
-  el.innerHTML = d.threads.map(t => `
-    <div class="vm-thread ${vmCurrent === t.product_id ? 'active' : ''}" onclick="vmOpen('${t.product_id}', this)">
-      ${t.product_image ? `<img src="${t.product_image}" alt="">` : '<div style="width:36px;height:36px;border-radius:8px;background:var(--border);flex-shrink:0;"></div>'}
-      <div class="vm-thread-info">
-        <div class="vm-thread-name">${t.product_name}</div>
-        <div class="vm-thread-preview">${t.last_message}</div>
+  el.innerHTML = threads.map(t => `
+    <div class="msg-thread ${msgCurrent === t.product_id ? 'active' : ''}" onclick="msgOpen('${t.product_id}', this)">
+      <div class="msg-thread-avatar">
+        ${t.product_image ? `<img src="${t.product_image}" alt="">` : '<div class="msg-thread-avatar-placeholder"><svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div>'}
+        <div class="msg-online-dot"></div>
       </div>
-      <div class="vm-thread-meta">
-        ${t.last_at ? new Date(t.last_at).toLocaleDateString('en-US', {month:'short', day:'numeric'}) : ''}
-        ${t.unread_count > 0 ? `<div class="vm-thread-badge">${t.unread_count}</div>` : ''}
+      <div class="msg-thread-content">
+        <div class="msg-thread-name">${t.product_name}</div>
+        <div class="msg-thread-preview">${t.last_message}</div>
+      </div>
+      <div class="msg-thread-meta">
+        <div class="msg-thread-time">${t.last_at ? new Date(t.last_at).toLocaleDateString('en-US', {month:'short', day:'numeric'}) : ''}</div>
+        ${t.unread_count > 0 ? `<div class="msg-thread-badge">${t.unread_count}</div>` : ''}
       </div>
     </div>
   `).join('');
 }
 
-async function vmOpen(productId, el) {
-  vmCurrent = productId;
-  document.querySelectorAll('.vm-thread').forEach(t => t.classList.remove('active'));
+function msgFilterThreads(q) {
+  const lower = q.toLowerCase();
+  const filtered = msgAllThreads.filter(t => t.product_name.toLowerCase().includes(lower) || (t.last_message && t.last_message.toLowerCase().includes(lower)));
+  msgRenderThreads(filtered);
+}
+
+async function msgOpen(productId, el) {
+  msgCurrent = productId;
+  document.querySelectorAll('.msg-thread').forEach(t => t.classList.remove('active'));
   if (el) el.classList.add('active');
 
   const [r, catR, aiR] = await Promise.all([
@@ -104,65 +606,81 @@ async function vmOpen(productId, el) {
   const ai = await aiR.json();
   if (!d.success && !d.product) return;
 
-  const chat = document.getElementById('vmChat');
+  const chat = document.getElementById('msgChat');
   chat.innerHTML = `
-    <div class="vm-chat-header">
-      ${d.product.image ? `<img src="${d.product.image}" alt="">` : ''}
-      <div><div class="name">${d.product.name}</div><div class="sub">Product Q&A</div></div>
-      <div style="margin-left:auto;display:flex;gap:0.5rem;">
-        <span id="vmCat" style="font-size:0.6875rem;padding:2px 8px;border-radius:10px;background:var(--bg);border:1px solid var(--border);color:var(--muted);"></span>
-        <button onclick="vmEscalate('${productId}')" style="min-height:44px;padding:0.25rem 0.5rem;border-radius:6px;font-size:0.6875rem;font-weight:600;cursor:pointer;border:1px solid var(--red);background:transparent;color:var(--red);">Escalate</button>
+    <div class="msg-chat-header">
+      ${d.product.image ? `<img src="${d.product.image}" class="msg-chat-header-avatar" alt="">` : ''}
+      <div class="msg-chat-header-info">
+        <div class="msg-chat-header-name">${d.product.name}</div>
+        <div class="msg-chat-header-sub"><span class="msg-status-dot"></span> Product Q&A</div>
+      </div>
+      <div class="msg-chat-actions">
+        <span id="msgCat" class="vp-badge vp-badge-blue"></span>
+        <button onclick="msgEscalate('${productId}')" class="vp-btn vp-btn-sm vp-btn-outline" style="color:var(--vp-red);border-color:var(--vp-red);min-height:36px;">
+          <svg width="14" height="14" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          Escalate
+        </button>
       </div>
     </div>
-    <div class="vm-messages" id="vmMsgs">
+    <div class="msg-messages" id="msgMsgs">
       ${d.messages.map(m => `
-        <div class="vm-msg ${m.is_admin ? 'vendor' : 'customer'} ${m.is_flagged ? 'flagged' : ''}">
-          <div class="author">${m.author}</div>
-          <div>${m.content}</div>
-          <div class="time">${m.created_at ? new Date(m.created_at).toLocaleString('en-US', {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : ''}</div>
+        <div class="msg-bubble-wrap ${m.is_admin ? 'sent' : 'received'}">
+          <div class="msg-bubble ${m.is_admin ? 'sent' : 'received'} ${m.is_flagged ? 'flagged' : ''}">
+            <div class="msg-bubble-author">${m.author}</div>
+            <div>${m.content}</div>
+            <div class="msg-bubble-time">${m.created_at ? new Date(m.created_at).toLocaleString('en-US', {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : ''}</div>
+          </div>
         </div>
       `).join('')}
     </div>
-    <div id="vmSuggestions" style="padding:0.5rem 1rem;display:flex;gap:0.5rem;flex-wrap:wrap;"></div>
-    <div class="vm-input">
-      <textarea id="vmText" placeholder="Type your reply..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();vmSend();}"></textarea>
-      <button onclick="vmSend()" id="vmSendBtn">Send</button>
+    <div id="msgSuggestions" class="msg-suggestions"></div>
+    <div class="msg-input-bar">
+      <textarea id="msgText" class="msg-input-field" placeholder="Type your reply..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();msgSend();}"></textarea>
+      <button onclick="msgSend()" id="msgSendBtn" class="msg-send-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Send
+      </button>
     </div>
   `;
-  const msgs = document.getElementById('vmMsgs');
+  const msgs = document.getElementById('msgMsgs');
   msgs.scrollTop = msgs.scrollHeight;
 
-  // Render category badge
-  const catEl = document.getElementById('vmCat');
+  const catEl = document.getElementById('msgCat');
   const catLabels = {return_request:'Return Request',shipping_inquiry:'Shipping',complaint:'Complaint',product_question:'Product Q',pricing_inquiry:'Pricing',general:'General'};
-  const catColors = {return_request:'var(--red)',shipping_inquiry:'var(--blue)',complaint:'var(--yellow)',product_question:'var(--green)',pricing_inquiry:'var(--muted)',general:'var(--muted)'};
+  const catBadgeClasses = {return_request:'vp-badge-red',shipping_inquiry:'vp-badge-blue',complaint:'vp-badge-amber',product_question:'vp-badge-emerald',pricing_inquiry:'vp-badge-purple',general:'vp-badge-blue'};
   catEl.textContent = catLabels[cat.category] || cat.category;
-  catEl.style.color = catColors[cat.category] || 'var(--muted)';
-  if (cat.priority === 'high') catEl.style.borderColor = 'var(--red)';
+  catEl.className = 'vp-badge ' + (catBadgeClasses[cat.category] || 'vp-badge-blue');
+  if (cat.priority === 'high') {
+    catEl.classList.add('vp-badge-red');
+  }
 
-  // Render AI suggestions
-  const sugEl = document.getElementById('vmSuggestions');
+  const sugEl = document.getElementById('msgSuggestions');
   if (ai.suggestions && ai.suggestions.length) {
-    sugEl.innerHTML = ai.suggestions.map(s => `<button onclick="document.getElementById('vmText').value=this.dataset.s" data-s="${s.replace(/"/g,'&quot;')}" style="min-height:32px;padding:0.25rem 0.75rem;border-radius:16px;font-size:0.6875rem;cursor:pointer;border:1px solid var(--primary);background:transparent;color:var(--primary);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;">${s.length > 50 ? s.slice(0,50)+'...' : s}</button>`).join('');
+    sugEl.innerHTML = ai.suggestions.map(s => `
+      <button class="msg-suggestion-chip" onclick="document.getElementById('msgText').value=this.dataset.s" data-s="${s.replace(/"/g,'&quot;')}">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg>
+        ${s.length > 50 ? s.slice(0,50)+'...' : s}
+      </button>
+    `).join('');
   }
 }
 
-async function vmSend() {
-  const text = document.getElementById('vmText');
-  const btn = document.getElementById('vmSendBtn');
-  if (!text.value.trim() || !vmCurrent) return;
+async function msgSend() {
+  const text = document.getElementById('msgText');
+  const btn = document.getElementById('msgSendBtn');
+  if (!text.value.trim() || !msgCurrent) return;
   btn.disabled = true;
-  await fetch(`/api/vendor/messages/${vmCurrent}/reply`, {
+  await fetch(`/api/vendor/messages/${msgCurrent}/reply`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({content: text.value.trim()})
   });
   text.value = '';
   btn.disabled = false;
-  vmOpen(vmCurrent);
+  msgOpen(msgCurrent);
 }
 
-async function vmEscalate(productId) {
+async function msgEscalate(productId) {
   const reason = prompt('Reason for escalation:');
   if (!reason) return;
   await fetch(`/api/vendor/messages/${productId}/escalate`, {
@@ -173,6 +691,6 @@ async function vmEscalate(productId) {
   alert('Escalated to admin support');
 }
 
-vmLoadThreads();
+msgLoadThreads();
 </script>
 {% endblock %}

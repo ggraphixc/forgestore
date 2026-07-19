@@ -2,90 +2,361 @@
 {% block title %}Promotions — {{ settings.site_name|default('ForgeStore') }}{% endblock %}
 {% block content %}
 <style>
-  :root {
-    --primary: {{ settings.primary_color|default('#f59e0b') }};
-    --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
-    --green: #10b981; --red: #ef4444; --yellow: #f59e0b; --blue: #3b82f6;
+@import url('/static/css/vendor_portal.css');
+
+/* ── Page-specific dark overrides ── */
+.dark .vendor-promos .vp-stat { background: rgba(30, 30, 35, 0.65); backdrop-filter: blur(20px); }
+.dark .vendor-promos .vp-card { background: rgba(30, 30, 35, 0.65); backdrop-filter: blur(20px); }
+.dark .vendor-promos .vp-badge-emerald { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+.dark .vendor-promos .vp-badge-red { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+.dark .vendor-promos .vp-badge-amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.dark .vendor-promos .vp-badge-purple { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
+.dark .vendor-promos .vp-ai-section { background: linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.12) 100%); border-color: rgba(99,102,241,0.2); }
+
+/* ── AI Suggestions Hero ── */
+.vendor-ai-hero {
+  position: relative;
+  margin-bottom: 2rem;
+  padding: 1.75rem 1.75rem;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 40%, #a78bfa 100%);
+  border-radius: var(--vp-radius-xl);
+  overflow: hidden;
+  color: #fff;
+}
+.vendor-ai-hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.vendor-ai-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -40%;
+  left: 10%;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.dark .vendor-ai-hero {
+  background: linear-gradient(135deg, #4f46e5 0%, #6d28d9 50%, #7c3aed 100%);
+}
+.vendor-ai-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
+}
+.vendor-ai-label svg { width: 1rem; height: 1rem; }
+.vendor-ai-suggestions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  position: relative;
+  z-index: 1;
+}
+@media (min-width: 640px) {
+  .vendor-ai-suggestions { grid-template-columns: repeat(3, 1fr); }
+}
+.vendor-ai-card {
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--vp-radius-lg);
+  padding: 1rem 1.125rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.vendor-ai-card:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+.vendor-ai-card .vendor-ai-card-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+.vendor-ai-card .vendor-ai-card-reason {
+  font-size: 0.75rem;
+  opacity: 0.75;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+}
+.vendor-ai-card .vendor-ai-card-discount {
+  font-size: 1.375rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+/* ── Promo Card ── */
+.vendor-promo-card {
+  background: var(--vp-bg-elevated);
+  border: 1px solid var(--vp-border);
+  border-radius: var(--vp-radius-xl);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all var(--vp-transition);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+.vendor-promo-card:hover {
+  box-shadow: var(--vp-shadow-md);
+  border-color: transparent;
+}
+.vendor-promo-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  border-radius: 0 4px 4px 0;
+  transition: background var(--vp-transition);
+}
+.vendor-promo-card.is-active::before { background: var(--vp-gradient-emerald); }
+.vendor-promo-card.is-inactive::before { background: var(--vp-border); }
+.vendor-promo-card-info { flex: 1; min-width: 0; }
+.vendor-promo-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--vp-text);
+  margin-bottom: 0.375rem;
+}
+.vendor-promo-card-code {
+  display: inline-block;
+  font-family: var(--vp-font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--vp-accent);
+  background: var(--vp-purple-soft);
+  padding: 0.125rem 0.625rem;
+  border-radius: var(--vp-radius-xs);
+  margin-bottom: 0.375rem;
+  letter-spacing: 0.04em;
+}
+.dark .vendor-promo-card-code { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
+.vendor-promo-card-meta {
+  font-size: 0.8125rem;
+  color: var(--vp-text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.vendor-promo-card-meta span { display: inline-flex; align-items: center; gap: 0.25rem; }
+.vendor-promo-card-meta svg { width: 0.875rem; height: 0.875rem; opacity: 0.5; }
+.vendor-promo-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* ── Empty State ── */
+.vendor-promo-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+.vendor-promo-empty-icon {
+  width: 5rem;
+  height: 5rem;
+  margin: 0 auto 1.25rem;
+  background: var(--vp-bg);
+  border-radius: var(--vp-radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--vp-text-muted);
+}
+.vendor-promo-empty-icon svg { width: 2rem; height: 2rem; }
+.vendor-promo-empty h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--vp-text);
+  margin-bottom: 0.5rem;
+}
+.vendor-promo-empty p {
+  font-size: 0.9375rem;
+  color: var(--vp-text-secondary);
+  max-width: 28rem;
+  margin: 0 auto 1.5rem;
+}
+
+/* ── Modal Form ── */
+.vendor-modal-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--vp-text-secondary);
+  margin-bottom: 0.375rem;
+}
+.vendor-modal-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+@media (min-width: 640px) {
+  .vendor-modal-row { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .vendor-promo-card {
+    flex-direction: column;
+    align-items: flex-start;
   }
-  .dark { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --muted: #94a3b8; --border: #334155; }
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; }
-  .vp-page { max-width: 80rem; margin: 0 auto; padding: 1.5rem; }
-  .vp-page h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.25rem; }
-  .vp-sub { font-size: 0.875rem; color: var(--muted); margin-bottom: 1.5rem; }
-  .vp-ai-box { background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: #fff; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; }
-  .vp-ai-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; opacity: 0.8; margin-bottom: 0.75rem; }
-  .vp-ai-card { background: rgba(255,255,255,0.15); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.5rem; }
-  .vp-ai-card .title { font-weight: 700; font-size: 0.875rem; }
-  .vp-ai-card .reason { font-size: 0.75rem; opacity: 0.85; }
-  .vp-ai-card .discount { font-size: 1.125rem; font-weight: 900; }
-  .vp-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-  .vp-create-btn { min-height: 44px; padding: 0 1.25rem; border-radius: 10px; font-weight: 700; font-size: 0.875rem; cursor: pointer; border: none; background: var(--primary); color: #fff; }
-  .vp-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-  .vp-info { flex: 1; }
-  .vp-title { font-weight: 700; font-size: 0.9375rem; }
-  .vp-code { font-size: 0.75rem; font-weight: 700; color: var(--primary); background: var(--bg); padding: 2px 8px; border-radius: 4px; display: inline-block; margin-top: 0.25rem; }
-  .vp-meta { font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; }
-  .vp-actions { display: flex; gap: 0.5rem; align-items: center; }
-  .vp-toggle { min-height: 44px; padding: 0 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); }
-  .vp-delete { min-height: 44px; padding: 0 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid var(--red); background: transparent; color: var(--red); }
-  .vp-badge { font-size: 0.6875rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
-  .vp-badge.active { background: #d1fae5; color: #065f46; }
-  .vp-badge.inactive { background: #fee2e2; color: #991b1b; }
-  .vp-empty { text-align: center; padding: 3rem; color: var(--muted); }
-  .vp-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; }
-  .vp-modal { background: var(--card); border-radius: 12px; padding: 1.5rem; max-width: 28rem; width: 90%; max-height: 80vh; overflow-y: auto; }
-  .vp-modal h3 { margin: 0 0 1rem; font-size: 1.125rem; }
-  .vp-modal label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--muted); margin-bottom: 0.25rem; }
-  .vp-modal input, .vp-modal select, .vp-modal textarea { width: 100%; min-height: 40px; border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem; font-size: 0.8125rem; background: var(--bg); color: var(--text); box-sizing: border-box; margin-bottom: 0.75rem; }
-  .vp-modal textarea { min-height: 60px; resize: vertical; }
-  .vp-modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-  .vp-modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem; }
-  .vp-modal-actions button { min-height: 40px; padding: 0 1rem; border-radius: 8px; font-weight: 600; font-size: 0.8125rem; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); }
-  .vp-modal-actions .primary { background: var(--primary); color: #fff; border: none; }
+  .vendor-promo-card-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
 </style>
 
-<div class="vp-page">
-  <h1>Promotions & Discounts</h1>
-  <p class="vp-sub">Create coupon codes and discount campaigns</p>
-
-  <div class="vp-ai-box" id="vpAI">
-    <div class="vp-ai-title">AI Promotion Suggestions</div>
-    <div style="font-size:0.8125rem;opacity:0.8;">Loading suggestions...</div>
+<div class="vp-page vendor-promos">
+  <div class="vp-header">
+    <div class="vp-header-left">
+      <h1>Promotions & Discounts</h1>
+      <p class="vp-subtitle">Create coupon codes and discount campaigns to drive sales</p>
+    </div>
+    <div class="vp-header-actions">
+      <button class="vp-btn vp-btn-primary" onclick="vpShowModal()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        New Promotion
+      </button>
+    </div>
   </div>
 
-  <div class="vp-top">
-    <span style="font-size:0.8125rem;color:var(--muted);" id="vpCount"></span>
-    <button class="vp-create-btn" onclick="vpShowModal()">+ New Promotion</button>
+  <div class="vp-stats" id="vpStats">
+    <div class="vp-stat vp-stat-amber" style="animation-delay:0ms;">
+      <div class="vp-stat-icon amber">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+      </div>
+      <div class="vp-stat-label">Total Promotions</div>
+      <div class="vp-stat-value" id="vpStatTotal">—</div>
+    </div>
+    <div class="vp-stat vp-stat-emerald" style="animation-delay:60ms;">
+      <div class="vp-stat-icon emerald">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <div class="vp-stat-label">Active</div>
+      <div class="vp-stat-value" id="vpStatActive">—</div>
+    </div>
+    <div class="vp-stat vp-stat-blue" style="animation-delay:120ms;">
+      <div class="vp-stat-icon blue">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+      </div>
+      <div class="vp-stat-label">Total Redemptions</div>
+      <div class="vp-stat-value" id="vpStatRedemptions">—</div>
+    </div>
+    <div class="vp-stat vp-stat-purple" style="animation-delay:180ms;">
+      <div class="vp-stat-icon purple">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      </div>
+      <div class="vp-stat-label">AI Suggestions</div>
+      <div class="vp-stat-value" id="vpStatAI">—</div>
+    </div>
   </div>
 
-  <div id="vpList"></div>
+  <div class="vendor-ai-hero vp-ai-section" id="vpAI">
+    <div class="vendor-ai-label">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+      AI Promotion Suggestions
+    </div>
+    <div class="vendor-ai-suggestions">
+      <div class="vendor-ai-card" style="opacity:0.6;">
+        <div class="vendor-ai-card-title">Loading suggestions...</div>
+        <div class="vendor-ai-card-reason">Analyzing your products and sales data</div>
+      </div>
+    </div>
+  </div>
 
-  <div class="vp-modal-overlay" id="vpModalOverlay" onclick="if(event.target===this)vpHideModal()">
+  <div class="vp-section">
+    <div class="vp-section-header">
+      <h2>Your Promotions</h2>
+      <span style="font-size:0.8125rem;color:var(--vp-text-muted);" id="vpCount"></span>
+    </div>
+    <div id="vpList"></div>
+  </div>
+
+  <div class="vp-modal-backdrop" id="vpModalOverlay" onclick="if(event.target===this)vpHideModal()">
     <div class="vp-modal">
-      <h3>Create Promotion</h3>
-      <label>Title</label>
-      <input id="vpFTitle" placeholder="e.g. Summer Sale 20% Off">
-      <label>Description</label>
-      <textarea id="vpFDesc" placeholder="Optional description"></textarea>
-      <div class="vp-modal-row">
-        <div><label>Discount Type</label>
-          <select id="vpFType"><option value="percentage">Percentage (%)</option><option value="fixed">Fixed Amount</option><option value="bogo">Buy One Get One</option></select>
+      <div class="vp-modal-header">
+        <h3>Create Promotion</h3>
+        <button class="vp-btn vp-btn-ghost vp-btn-icon" onclick="vpHideModal()" aria-label="Close">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="vp-modal-body">
+        <label class="vendor-modal-label">Title</label>
+        <input id="vpFTitle" class="vp-input" placeholder="e.g. Summer Sale 20% Off">
+
+        <label class="vendor-modal-label">Description</label>
+        <textarea id="vpFDesc" class="vp-input" style="min-height:60px;resize:vertical;" placeholder="Optional description"></textarea>
+
+        <div class="vendor-modal-row">
+          <div>
+            <label class="vendor-modal-label">Discount Type</label>
+            <select id="vpFType" class="vp-input vp-select">
+              <option value="percentage">Percentage (%)</option>
+              <option value="fixed">Fixed Amount</option>
+              <option value="bogo">Buy One Get One</option>
+            </select>
+          </div>
+          <div>
+            <label class="vendor-modal-label">Discount Value</label>
+            <input id="vpFValue" class="vp-input" type="number" placeholder="10">
+          </div>
         </div>
-        <div><label>Discount Value</label><input id="vpFValue" type="number" placeholder="10"></div>
+
+        <div class="vendor-modal-row">
+          <div>
+            <label class="vendor-modal-label">Promo Code</label>
+            <input id="vpFCode" class="vp-input" placeholder="e.g. SUMMER20" style="font-family:var(--vp-font-mono);text-transform:uppercase;letter-spacing:0.06em;">
+          </div>
+          <div>
+            <label class="vendor-modal-label">Min Purchase</label>
+            <input id="vpFMin" class="vp-input" type="number" placeholder="0">
+          </div>
+        </div>
+
+        <div class="vendor-modal-row">
+          <div>
+            <label class="vendor-modal-label">Start Date</label>
+            <input id="vpFStart" class="vp-input" type="date">
+          </div>
+          <div>
+            <label class="vendor-modal-label">End Date</label>
+            <input id="vpFEnd" class="vp-input" type="date">
+          </div>
+        </div>
+
+        <label class="vendor-modal-label">Usage Limit (0 = unlimited)</label>
+        <input id="vpFLimit" class="vp-input" type="number" placeholder="0">
       </div>
-      <div class="vp-modal-row">
-        <div><label>Promo Code</label><input id="vpFCode" placeholder="e.g. SUMMER20"></div>
-        <div><label>Min Purchase</label><input id="vpFMin" type="number" placeholder="0"></div>
-      </div>
-      <div class="vp-modal-row">
-        <div><label>Start Date</label><input id="vpFStart" type="date"></div>
-        <div><label>End Date</label><input id="vpFEnd" type="date"></div>
-      </div>
-      <label>Usage Limit (0 = unlimited)</label>
-      <input id="vpFLimit" type="number" placeholder="0">
-      <div class="vp-modal-actions">
-        <button onclick="vpHideModal()">Cancel</button>
-        <button class="primary" onclick="vpCreate()">Create</button>
+      <div class="vp-modal-footer">
+        <button class="vp-btn vp-btn-outline" onclick="vpHideModal()">Cancel</button>
+        <button class="vp-btn vp-btn-accent" onclick="vpCreate()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Create Promotion
+        </button>
       </div>
     </div>
   </div>
@@ -99,25 +370,41 @@ async function vpLoad() {
   const r = await fetch('/api/vendor/promotions');
   const d = await r.json();
   const el = document.getElementById('vpList');
-  document.getElementById('vpCount').textContent = `${d.promotions.length} promotions`;
-  if (!d.promotions.length) {
-    el.innerHTML = '<div class="vp-empty">No promotions yet. Create one to get started.</div>';
+  const count = d.promotions.length;
+  const active = d.promotions.filter(p => p.is_active).length;
+  const totalRedemptions = d.promotions.reduce((sum, p) => sum + (p.usage_count || 0), 0);
+
+  document.getElementById('vpCount').textContent = count + ' promotions';
+  document.getElementById('vpStatTotal').textContent = count;
+  document.getElementById('vpStatActive').textContent = active;
+  document.getElementById('vpStatRedemptions').textContent = totalRedemptions;
+
+  if (!count) {
+    el.innerHTML = '<div class="vendor-promo-empty"><div class="vendor-promo-empty-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg></div><h3>No promotions yet</h3><p>Create your first promotion to start driving sales with discounts and coupon codes.</p><button class="vp-btn vp-btn-primary" onclick="vpShowModal()"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg> Create Promotion</button></div>';
     return;
   }
-  el.innerHTML = d.promotions.map(p => `
-    <div class="vp-card">
-      <div class="vp-info">
-        <div class="vp-title">${p.title}</div>
-        ${p.promo_code ? `<span class="vp-code">${p.promo_code}</span>` : ''}
-        <div class="vp-meta">${p.discount_type === 'percentage' ? p.discount_value + '% off' : p.discount_type === 'fixed' ? '$' + p.discount_value + ' off' : 'BOGO'} · ${p.usage_count}/${p.usage_limit || '∞'} used · ${p.end_date ? 'Expires ' + p.end_date : 'No expiry'}</div>
-      </div>
-      <div class="vp-actions">
-        <span class="vp-badge ${p.is_active ? 'active' : 'inactive'}">${p.is_active ? 'Active' : 'Inactive'}</span>
-        <button class="vp-toggle" onclick="vpToggle('${p.id}', ${!p.is_active})">${p.is_active ? 'Pause' : 'Activate'}</button>
-        <button class="vp-delete" onclick="vpDelete('${p.id}')">Delete</button>
-      </div>
-    </div>
-  `).join('');
+  el.innerHTML = d.promotions.map(p => {
+    const isActive = p.is_active;
+    const discountLabel = p.discount_type === 'percentage' ? p.discount_value + '% off' : p.discount_type === 'fixed' ? '$' + p.discount_value + ' off' : 'BOGO';
+    const usageLabel = p.usage_count + '/' + (p.usage_limit || '∞') + ' used';
+    const expiryLabel = p.end_date ? 'Expires ' + p.end_date : 'No expiry';
+    return '<div class="vendor-promo-card ' + (isActive ? 'is-active' : 'is-inactive') + '">' +
+      '<div class="vendor-promo-card-info">' +
+        '<div class="vendor-promo-card-title">' + p.title + '</div>' +
+        (p.promo_code ? '<span class="vendor-promo-card-code">' + p.promo_code + '</span>' : '') +
+        '<div class="vendor-promo-card-meta">' +
+          '<span><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg> ' + discountLabel + '</span>' +
+          '<span><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg> ' + usageLabel + '</span>' +
+          '<span><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> ' + expiryLabel + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="vendor-promo-card-actions">' +
+        '<span class="vp-badge ' + (isActive ? 'vp-badge-emerald' : 'vp-badge-red') + '"><span class="vp-badge-dot"></span>' + (isActive ? 'Active' : 'Inactive') + '</span>' +
+        '<button class="vp-btn vp-btn-sm vp-btn-outline" onclick="vpToggle(\'' + p.id + '\', ' + !isActive + ')">' + (isActive ? 'Pause' : 'Activate') + '</button>' +
+        '<button class="vp-btn vp-btn-sm vp-btn-ghost" style="color:var(--vp-red);" onclick="vpDelete(\'' + p.id + '\')"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:1rem;height:1rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
 }
 
 async function vpCreate() {
@@ -138,13 +425,13 @@ async function vpCreate() {
 }
 
 async function vpToggle(id, isActive) {
-  await fetch(`/api/vendor/promotions/${id}/toggle`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({is_active: isActive})});
+  await fetch('/api/vendor/promotions/' + id + '/toggle', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({is_active: isActive})});
   vpLoad();
 }
 
 async function vpDelete(id) {
   if (!confirm('Are you sure you want to delete this promotion?')) return;
-  await fetch(`/api/vendor/promotions/${id}`, {method:'DELETE'});
+  await fetch('/api/vendor/promotions/' + id, {method:'DELETE'});
   vpLoad();
 }
 
@@ -152,17 +439,22 @@ async function vpLoadAI() {
   const r = await fetch('/api/vendor/promotions/ai-suggestions');
   const d = await r.json();
   const el = document.getElementById('vpAI');
+  const label = '<div class="vendor-ai-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg> AI Promotion Suggestions</div>';
   if (!d.suggestions.length) {
-    el.innerHTML = '<div class="vp-ai-title">AI Promotion Suggestions</div><div style="font-size:0.8125rem;opacity:0.8;">Add products to get AI promotion suggestions</div>';
+    el.innerHTML = label + '<div class="vendor-ai-suggestions"><div class="vendor-ai-card" style="opacity:0.6;cursor:default;"><div class="vendor-ai-card-title">No suggestions yet</div><div class="vendor-ai-card-reason">Add products to get AI-powered promotion suggestions</div></div></div>';
+    document.getElementById('vpStatAI').textContent = '0';
     return;
   }
-  el.innerHTML = '<div class="vp-ai-title">AI Promotion Suggestions</div>' + d.suggestions.slice(0,3).map(s => `
-    <div class="vp-ai-card" style="cursor:pointer;" onclick="vpApplySuggestion('${(s.title||'').replace(/'/g,"\\'")}', ${s.suggested_discount || 15}, '${(s.promo_code||'').replace(/'/g,"\\'")}')">
-      <div class="title">${s.title}</div>
-      <div class="reason">${s.reason}</div>
-      <div class="discount">${s.suggested_discount}% off</div>
-    </div>
-  `).join('');
+  document.getElementById('vpStatAI').textContent = d.suggestions.length;
+  el.innerHTML = label + '<div class="vendor-ai-suggestions">' + d.suggestions.slice(0, 3).map(s => {
+    const safeTitle = (s.title || '').replace(/'/g, "\\'");
+    const safeCode = (s.promo_code || '').replace(/'/g, "\\'");
+    return '<div class="vendor-ai-card" onclick="vpApplySuggestion(\'' + safeTitle + '\', ' + (s.suggested_discount || 15) + ', \'' + safeCode + '\')">' +
+      '<div class="vendor-ai-card-title">' + s.title + '</div>' +
+      '<div class="vendor-ai-card-reason">' + s.reason + '</div>' +
+      '<div class="vendor-ai-card-discount">' + s.suggested_discount + '% off</div>' +
+    '</div>';
+  }).join('') + '</div>';
 }
 
 function vpApplySuggestion(title, discount, code) {

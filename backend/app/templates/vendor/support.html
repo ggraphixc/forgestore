@@ -2,126 +2,634 @@
 {% block title %}Support — Vendor Portal{% endblock %}
 {% block content %}
 <style>
-  :root{--amber-50:#fffbeb;--amber-100:#fef3c7;--amber-200:#fde68a;--amber-400:#fbbf24;--amber-500:#f59e0b;--amber-600:#d97706;--stone-50:#fafaf9;--stone-100:#f5f5f4;--stone-200:#e7e5e4;--stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#57534e;--stone-700:#44403c;--stone-800:#292524;--stone-900:#1c1917;--red-500:#ef4444;--emerald-500:#22c55e;--radius-md:10px;--radius-lg:14px}
-  .vs-page{max-width:800px;margin:0 auto;padding:0}
-  .vs-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem}
-  .vs-title{font-size:1.5rem;font-weight:800;color:var(--stone-900)}
-  .vs-subtitle{font-size:.8125rem;color:var(--stone-500);margin-top:.25rem}
-  .vs-card{background:#fff;border:1px solid var(--stone-200);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-  .vs-empty{text-align:center;padding:3rem 1rem;color:var(--stone-400)}
-  .vs-empty svg{width:48px;height:48px;margin:0 auto 1rem;opacity:.4}
-  .vs-ticket{display:flex;align-items:flex-start;gap:1rem;padding:1rem;border:1px solid var(--stone-200);border-radius:var(--radius-md);margin-bottom:.75rem;transition:border-color .15s}
-  .vs-ticket:hover{border-color:var(--amber-400)}
-  .vs-ticket-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.75rem;font-weight:700}
-  .vs-ticket-icon.open{background:#fef3c7;color:#92400e}
-  .vs-ticket-icon.progress{background:#dbeafe;color:#2563eb}
-  .vs-ticket-icon.resolved{background:#d1fae5;color:#059669}
-  .vs-ticket-title{font-size:.875rem;font-weight:600;color:var(--stone-900)}
-  .vs-ticket-meta{font-size:.75rem;color:var(--stone-500);margin-top:.25rem}
-  .vs-ticket-status{font-size:.6875rem;font-weight:600;padding:2px 8px;border-radius:9999px;white-space:nowrap}
-  .vs-ticket-status.open{background:#fef3c7;color:#92400e}
-  .vs-ticket-status.progress{background:#dbeafe;color:#2563eb}
-  .vs-ticket-status.resolved{background:#d1fae5;color:#059669}
-  .vs-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.625rem 1.25rem;background:linear-gradient(135deg,#f59e0b,#d97706);color:#1c1917;border:none;border-radius:var(--radius-md);font-size:.8125rem;font-weight:600;cursor:pointer;min-height:44px;transition:all .15s}
-  .vs-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(245,158,11,.3)}
-  .vs-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;align-items:center;justify-content:center;padding:1rem}
-  .vs-modal-overlay.show{display:flex}
-  .vs-modal{background:#fff;border-radius:var(--radius-lg);width:min(100%,480px);max-height:90vh;overflow-y:auto;padding:1.5rem}
-  .vs-modal h3{font-size:1rem;font-weight:700;margin-bottom:1rem}
-  .vs-form-group{margin-bottom:1rem}
-  .vs-form-group label{display:block;font-size:.75rem;font-weight:600;color:var(--stone-600);margin-bottom:.375rem}
-  .vs-form-group input,.vs-form-group textarea,.vs-form-group select{width:100%;padding:.5rem .75rem;border:1px solid var(--stone-200);border-radius:8px;font-size:.8125rem;color:var(--stone-900);background:var(--stone-50);min-height:40px}
-  .vs-form-group textarea{resize:vertical;min-height:80px}
-  .vs-form-actions{display:flex;gap:.5rem;justify-content:flex-end;margin-top:1.25rem}
+  @import url('/static/css/vendor_portal.css');
+
+  .vp-support-hero {
+    background: var(--vp-bg-elevated);
+    border: 1px solid var(--vp-border);
+    border-radius: var(--vp-radius-2xl);
+    padding: 2.5rem 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .vp-support-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--vp-gradient-primary);
+  }
+
+  .vp-support-hero::after {
+    content: '';
+    position: absolute;
+    top: -60%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .vp-faq-item {
+    background: var(--vp-bg-elevated);
+    border: 1px solid var(--vp-border);
+    border-radius: var(--vp-radius-lg);
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    transition: all var(--vp-transition);
+  }
+
+  .vp-faq-item:hover {
+    border-color: var(--vp-accent);
+    box-shadow: var(--vp-shadow-sm);
+  }
+
+  .vp-faq-question {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    min-height: 44px;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--vp-text);
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    font-family: var(--vp-font);
+    transition: color var(--vp-transition);
+  }
+
+  .vp-faq-question:hover { color: var(--vp-accent); }
+
+  .vp-faq-chevron {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--vp-text-muted);
+    transition: transform var(--vp-transition);
+    flex-shrink: 0;
+  }
+
+  .vp-faq-item.open .vp-faq-chevron { transform: rotate(180deg); }
+
+  .vp-faq-answer {
+    display: none;
+    padding: 0 1.25rem 1.25rem;
+    font-size: 0.9375rem;
+    color: var(--vp-text-secondary);
+    line-height: 1.7;
+  }
+
+  .vp-faq-item.open .vp-faq-answer { display: block; }
+
+  .vp-contact-card {
+    background: var(--vp-bg-elevated);
+    border: 1px solid var(--vp-border);
+    border-radius: var(--vp-radius-xl);
+    padding: 1.5rem;
+    transition: all var(--vp-transition);
+  }
+
+  .vp-contact-card:hover {
+    box-shadow: var(--vp-shadow-md);
+    transform: translateY(-2px);
+  }
+
+  .vp-contact-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--vp-radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    transition: transform var(--vp-transition-bounce);
+  }
+
+  .vp-contact-card:hover .vp-contact-icon { transform: scale(1.1); }
+
+  .vp-ticket-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--vp-border-light);
+    transition: background var(--vp-transition);
+  }
+
+  .vp-ticket-row:last-child { border-bottom: none; }
+  .vp-ticket-row:hover { background: rgba(99,102,241,0.03); }
+
+  .vp-ticket-num {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--vp-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: var(--vp-font-mono);
+  }
+
+  .vp-ticket-num.open { background: var(--vp-amber-soft); color: #92400e; }
+  .vp-ticket-num.progress { background: var(--vp-blue-soft); color: #1e40af; }
+  .vp-ticket-num.resolved { background: var(--vp-emerald-soft); color: #065f46; }
+
+  .vp-ticket-info { flex: 1; min-width: 0; }
+  .vp-ticket-subject { font-size: 0.9375rem; font-weight: 600; color: var(--vp-text); }
+  .vp-ticket-meta { font-size: 0.8125rem; color: var(--vp-text-muted); margin-top: 0.25rem; }
+
+  .vp-support-tabs {
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    background: var(--vp-bg);
+    border-radius: var(--vp-radius-lg);
+    margin-bottom: 1.5rem;
+  }
+
+  .vp-support-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.125rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--vp-text-secondary);
+    background: transparent;
+    border: none;
+    border-radius: var(--vp-radius-md);
+    cursor: pointer;
+    transition: all var(--vp-transition);
+    white-space: nowrap;
+    min-height: 44px;
+    font-family: var(--vp-font);
+  }
+
+  .vp-support-tab:hover { color: var(--vp-text); background: var(--vp-bg-elevated); }
+
+  .vp-support-tab.active {
+    color: var(--vp-accent);
+    background: var(--vp-bg-elevated);
+    box-shadow: var(--vp-shadow-sm);
+    font-weight: 600;
+  }
+
+  .vp-support-tab svg { width: 1rem; height: 1rem; }
+
+  .vp-tab-panel { display: none; }
+  .vp-tab-panel.active { display: block; animation: vpFadeIn 0.3s ease-out; }
+
+  .vp-form-label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--vp-text-secondary);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.01em;
+  }
+
+  .vp-form-group { margin-bottom: 1.25rem; }
+  .vp-form-group textarea.vp-input { min-height: 120px; resize: vertical; }
+
+  .vp-form-hint {
+    font-size: 0.75rem;
+    color: var(--vp-text-muted);
+    margin-top: 0.375rem;
+  }
+
+  .vp-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 0.375rem;
+  }
+
+  .vp-status-dot.open { background: var(--vp-amber); }
+  .vp-status-dot.progress { background: var(--vp-blue); }
+  .vp-status-dot.resolved { background: var(--vp-emerald); }
+
+  @media (max-width: 640px) {
+    .vp-support-hero { padding: 1.5rem 1.25rem; }
+    .vp-support-tab { padding: 0.5rem 0.75rem; font-size: 0.8125rem; }
+  }
 </style>
 
-<div class="vs-page">
-  <div class="vs-header">
-    <div>
-      <div class="vs-title">Support Tickets</div>
-      <div class="vs-subtitle">Get help with your store, products, or orders</div>
+<div class="vp-page">
+  <div class="vp-support-hero">
+    <div class="vp-header">
+      <div class="vp-header-left">
+        <h1>Support Center</h1>
+        <div class="vp-subtitle">Find answers, browse FAQs, or submit a support ticket</div>
+      </div>
+      <div class="vp-header-actions">
+        <button class="vp-btn vp-btn-primary" onclick="vsOpenModal()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          New Ticket
+        </button>
+      </div>
     </div>
-    <button class="vs-btn" onclick="vsOpenModal()">
-      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-      New Ticket
+
+    <div class="vp-stats" style="margin-bottom:0">
+      <div class="vp-stat vp-stat-amber">
+        <div class="vp-stat-icon amber">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div class="vp-stat-label">Open Tickets</div>
+        <div class="vp-stat-value" id="vp-open-count">0</div>
+      </div>
+      <div class="vp-stat vp-stat-blue">
+        <div class="vp-stat-icon blue">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div class="vp-stat-label">In Progress</div>
+        <div class="vp-stat-value" id="vp-progress-count">0</div>
+      </div>
+      <div class="vp-stat vp-stat-emerald">
+        <div class="vp-stat-icon emerald">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div class="vp-stat-label">Resolved</div>
+        <div class="vp-stat-value" id="vp-resolved-count">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="vp-support-tabs">
+    <button class="vp-support-tab active" onclick="vsSwitchTab('tickets')">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      My Tickets
+    </button>
+    <button class="vp-support-tab" onclick="vsSwitchTab('faq')">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      FAQ
+    </button>
+    <button class="vp-support-tab" onclick="vsSwitchTab('contact')">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      Contact
     </button>
   </div>
 
-  <div id="vs-tickets"><div class="vs-empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg><p>Loading tickets...</p></div></div>
+  <div id="vp-tab-tickets" class="vp-tab-panel active">
+    <div class="vp-card">
+      <div class="vp-card-header">
+        <h2>Ticket History</h2>
+        <button class="vp-btn vp-btn-sm vp-btn-outline" onclick="vsLoadTickets()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Refresh
+        </button>
+      </div>
+      <div class="vp-card-body flush" id="vs-tickets">
+        <div class="vp-empty">
+          <div class="vp-empty-icon">
+            <svg width="2rem" height="2rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+          </div>
+          <h3>Loading tickets...</h3>
+          <p>Please wait while we fetch your support history.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="vp-tab-faq" class="vp-tab-panel">
+    <div class="vp-card" style="margin-bottom:1.5rem">
+      <div class="vp-card-header">
+        <h2>Frequently Asked Questions</h2>
+      </div>
+      <div class="vp-card-body">
+        <div class="vp-faq-item">
+          <button class="vp-faq-question" onclick="this.parentElement.classList.toggle('open')">
+            How do I update my store information?
+            <svg class="vp-faq-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="vp-faq-answer">
+            Navigate to <strong>Store Settings</strong> in the sidebar to update your store name, description, logo, and contact information. Changes take effect immediately after saving.
+          </div>
+        </div>
+        <div class="vp-faq-item">
+          <button class="vp-faq-question" onclick="this.parentElement.classList.toggle('open')">
+            How do I add or edit products?
+            <svg class="vp-faq-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="vp-faq-answer">
+            Go to the <strong>Products</strong> section and click "Add Product". Fill in the title, description, price, and upload images. You can edit or remove products at any time from the same page.
+          </div>
+        </div>
+        <div class="vp-faq-item">
+          <button class="vp-faq-question" onclick="this.parentElement.classList.toggle('open')">
+            When do I get paid?
+            <svg class="vp-faq-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="vp-faq-answer">
+            Payouts are processed on a <strong>weekly basis</strong> every Friday. You can view your earnings and payout history in the <strong>Earnings</strong> section. Minimum payout threshold is $50.
+          </div>
+        </div>
+        <div class="vp-faq-item">
+          <button class="vp-faq-question" onclick="this.parentElement.classList.toggle('open')">
+            How do I handle a return or refund request?
+            <svg class="vp-faq-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="vp-faq-answer">
+            Return requests appear in your <strong>Orders</strong> dashboard. You can approve or dispute a return within 7 days. Approved refunds are deducted from your next payout. For complex cases, submit a support ticket.
+          </div>
+        </div>
+        <div class="vp-faq-item">
+          <button class="vp-faq-question" onclick="this.parentElement.classList.toggle('open')">
+            Can I change my commission rate or pricing?
+            <svg class="vp-faq-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="vp-faq-answer">
+            Commission rates are set by the platform and are not adjustable per vendor. However, you have full control over your product pricing. Contact support if you believe your commission rate needs review.
+          </div>
+        </div>
+        <div class="vp-faq-item">
+          <button class="vp-faq-question" onclick="this.parentElement.classList.toggle('open')">
+            What should I do if my account is suspended?
+            <svg class="vp-faq-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="vp-faq-answer">
+            Account suspensions are rare and typically due to policy violations. Check your email for the suspension notice with details. You can appeal by submitting a support ticket with subject "Account Suspension Appeal" and include any relevant context.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="vp-grid-3">
+      <div class="vp-contact-card">
+        <div class="vp-contact-icon" style="background:var(--vp-amber-soft);color:var(--vp-amber)">
+          <svg width="1.5rem" height="1.5rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        </div>
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:0.375rem">Documentation</h3>
+        <p style="font-size:0.875rem;color:var(--vp-text-secondary);margin:0">Browse our vendor guides for step-by-step tutorials.</p>
+      </div>
+      <div class="vp-contact-card">
+        <div class="vp-contact-icon" style="background:var(--vp-blue-soft);color:var(--vp-blue)">
+          <svg width="1.5rem" height="1.5rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        </div>
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:0.375rem">Community Forum</h3>
+        <p style="font-size:0.875rem;color:var(--vp-text-secondary);margin:0">Connect with other vendors and share best practices.</p>
+      </div>
+      <div class="vp-contact-card">
+        <div class="vp-contact-icon" style="background:var(--vp-emerald-soft);color:var(--vp-emerald)">
+          <svg width="1.5rem" height="1.5rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:0.375rem">Quick Start</h3>
+        <p style="font-size:0.875rem;color:var(--vp-text-secondary);margin:0">New to ForgeStore? Get up and running in minutes.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="vp-tab-contact" class="vp-tab-panel">
+    <div class="vp-grid-2">
+      <div class="vp-card">
+        <div class="vp-card-header">
+          <h2>Send Us a Message</h2>
+        </div>
+        <div class="vp-card-body">
+          <div class="vp-form-group">
+            <label class="vp-form-label">Subject</label>
+            <input type="text" id="vs-subject" class="vp-input" placeholder="Brief description of your issue">
+          </div>
+          <div class="vp-form-group">
+            <label class="vp-form-label">Category</label>
+            <select id="vs-category" class="vp-input vp-select">
+              <option value="GENERAL">General Inquiry</option>
+              <option value="ORDER">Order Issue</option>
+              <option value="PRODUCT">Product Issue</option>
+              <option value="PAYMENT">Payment Issue</option>
+              <option value="SHIPPING">Shipping Issue</option>
+              <option value="ACCOUNT">Account Issue</option>
+            </select>
+          </div>
+          <div class="vp-form-group">
+            <label class="vp-form-label">Message</label>
+            <textarea id="vs-message" class="vp-input" placeholder="Describe your issue in detail..."></textarea>
+            <div class="vp-form-hint">Please include as much detail as possible so we can help you faster.</div>
+          </div>
+          <div style="display:flex;gap:0.75rem;justify-content:flex-end">
+            <button class="vp-btn vp-btn-outline" onclick="vsClearContactForm()">Clear</button>
+            <button class="vp-btn vp-btn-primary" onclick="vsSubmitTicket()">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+              Submit Ticket
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="vp-card" style="margin-bottom:1.25rem">
+          <div class="vp-card-header">
+            <h2>Contact Info</h2>
+          </div>
+          <div class="vp-card-body">
+            <div style="display:flex;flex-direction:column;gap:1.25rem">
+              <div style="display:flex;align-items:flex-start;gap:0.875rem">
+                <div style="width:2.25rem;height:2.25rem;border-radius:var(--vp-radius-md);background:var(--vp-amber-soft);color:var(--vp-amber);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <svg width="1rem" height="1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:0.8125rem;font-weight:600;color:var(--vp-text)">Email</div>
+                  <div style="font-size:0.875rem;color:var(--vp-text-secondary)">support@forgestore.com</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:flex-start;gap:0.875rem">
+                <div style="width:2.25rem;height:2.25rem;border-radius:var(--vp-radius-md);background:var(--vp-blue-soft);color:var(--vp-blue);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <svg width="1rem" height="1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:0.8125rem;font-weight:600;color:var(--vp-text)">Response Time</div>
+                  <div style="font-size:0.875rem;color:var(--vp-text-secondary)">Within 24 hours on business days</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:flex-start;gap:0.875rem">
+                <div style="width:2.25rem;height:2.25rem;border-radius:var(--vp-radius-md);background:var(--vp-emerald-soft);color:var(--vp-emerald);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <svg width="1rem" height="1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:0.8125rem;font-weight:600;color:var(--vp-text)">Hours</div>
+                  <div style="font-size:0.875rem;color:var(--vp-text-secondary)">Mon-Fri, 9AM-6PM EST</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="vp-card">
+          <div class="vp-card-header">
+            <h2>Emergency?</h2>
+          </div>
+          <div class="vp-card-body">
+            <p style="font-size:0.875rem;color:var(--vp-text-secondary);margin:0 0 1rem">
+              For urgent issues like account security or payment discrepancies, select "Account Issue" or "Payment Issue" as the category and mark your message with high priority.
+            </p>
+            <div class="vp-badge vp-badge-red">
+              <span class="vp-badge-dot"></span>
+              Priority support available
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div id="vs-modal" class="vs-modal-overlay" onclick="if(event.target===this)vsCloseModal()">
-  <div class="vs-modal">
-    <h3>Submit a Support Ticket</h3>
-    <div class="vs-form-group">
-      <label>Subject</label>
-      <input type="text" id="vs-subject" placeholder="Brief description of your issue">
+<div id="vs-modal" class="vp-modal-backdrop" onclick="if(event.target===this)vsCloseModal()" style="display:none">
+  <div class="vp-modal">
+    <div class="vp-modal-header">
+      <h3>Submit a Support Ticket</h3>
+      <button class="vp-btn vp-btn-icon vp-btn-ghost" onclick="vsCloseModal()" aria-label="Close">
+        <svg width="1.25rem" height="1.25rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
     </div>
-    <div class="vs-form-group">
-      <label>Category</label>
-      <select id="vs-category">
-        <option value="GENERAL">General Inquiry</option>
-        <option value="ORDER">Order Issue</option>
-        <option value="PRODUCT">Product Issue</option>
-        <option value="PAYMENT">Payment Issue</option>
-        <option value="SHIPPING">Shipping Issue</option>
-        <option value="ACCOUNT">Account Issue</option>
-      </select>
+    <div class="vp-modal-body">
+      <div class="vp-form-group">
+        <label class="vp-form-label">Subject</label>
+        <input type="text" id="vs-modal-subject" class="vp-input" placeholder="Brief description of your issue">
+      </div>
+      <div class="vp-form-group">
+        <label class="vp-form-label">Category</label>
+        <select id="vs-modal-category" class="vp-input vp-select">
+          <option value="GENERAL">General Inquiry</option>
+          <option value="ORDER">Order Issue</option>
+          <option value="PRODUCT">Product Issue</option>
+          <option value="PAYMENT">Payment Issue</option>
+          <option value="SHIPPING">Shipping Issue</option>
+          <option value="ACCOUNT">Account Issue</option>
+        </select>
+      </div>
+      <div class="vp-form-group">
+        <label class="vp-form-label">Message</label>
+        <textarea id="vs-modal-message" class="vp-input" placeholder="Describe your issue in detail..."></textarea>
+      </div>
     </div>
-    <div class="vs-form-group">
-      <label>Message</label>
-      <textarea id="vs-message" placeholder="Describe your issue in detail..."></textarea>
-    </div>
-    <div class="vs-form-actions">
-      <button class="vs-btn" style="background:var(--stone-100);color:var(--stone-600)" onclick="vsCloseModal()">Cancel</button>
-      <button class="vs-btn" onclick="vsSubmitTicket()">Submit Ticket</button>
+    <div class="vp-modal-footer">
+      <button class="vp-btn vp-btn-outline" onclick="vsCloseModal()">Cancel</button>
+      <button class="vp-btn vp-btn-primary" onclick="vsSubmitTicketModal()">Submit Ticket</button>
     </div>
   </div>
 </div>
 
 <script>
-function vsOpenModal() { document.getElementById('vs-modal').classList.add('show'); }
-function vsCloseModal() { document.getElementById('vs-modal').classList.remove('show'); }
+function vsSwitchTab(tab) {
+  document.querySelectorAll('.vp-support-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.vp-tab-panel').forEach(p => p.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('vp-tab-' + tab).classList.add('active');
+}
+
+function vsOpenModal() {
+  var modal = document.getElementById('vs-modal');
+  modal.style.display = 'flex';
+}
+
+function vsCloseModal() {
+  var modal = document.getElementById('vs-modal');
+  modal.style.display = 'none';
+}
+
+function vsClearContactForm() {
+  document.getElementById('vs-subject').value = '';
+  document.getElementById('vs-category').value = 'GENERAL';
+  document.getElementById('vs-message').value = '';
+}
+
+function vsUpdateStats(tickets) {
+  var open = 0, progress = 0, resolved = 0;
+  tickets.forEach(function(t) {
+    if (t.status === 'OPEN') open++;
+    else if (t.status === 'IN_PROGRESS') progress++;
+    else resolved++;
+  });
+  document.getElementById('vp-open-count').textContent = open;
+  document.getElementById('vp-progress-count').textContent = progress;
+  document.getElementById('vp-resolved-count').textContent = resolved;
+}
 
 async function vsLoadTickets() {
   try {
-    const res = await fetch('/api/support/tickets');
-    const data = await res.json();
-    const tickets = data.tickets || data || [];
-    const el = document.getElementById('vs-tickets');
+    var res = await fetch('/api/support/tickets');
+    var data = await res.json();
+    var tickets = data.tickets || data || [];
+    var el = document.getElementById('vs-tickets');
+    vsUpdateStats(tickets);
     if (!tickets.length) {
-      el.innerHTML = '<div class="vs-empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg><p>No support tickets yet</p></div>';
+      el.innerHTML = '<div class="vp-empty">' +
+        '<div class="vp-empty-icon"><svg width="2rem" height="2rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg></div>' +
+        '<h3>No tickets yet</h3>' +
+        '<p>You haven\'t submitted any support tickets. Click "New Ticket" to get started.</p>' +
+        '<button class="vp-btn vp-btn-primary" onclick="vsOpenModal()">' +
+          '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>' +
+          'Create First Ticket' +
+        '</button>' +
+        '</div>';
       return;
     }
-    el.innerHTML = tickets.map(t => {
-      const statusClass = t.status === 'OPEN' ? 'open' : t.status === 'IN_PROGRESS' ? 'progress' : 'resolved';
-      const statusLabel = t.status === 'IN_PROGRESS' ? 'In Progress' : t.status.charAt(0) + t.status.slice(1).toLowerCase();
-      const date = t.created_at ? new Date(t.created_at).toLocaleDateString() : '';
-      return '<div class="vs-ticket">' +
-        '<div class="vs-ticket-icon ' + statusClass + '">' + (t.ticket_number || '#').slice(-4) + '</div>' +
-        '<div style="flex:1;min-width:0">' +
-          '<div class="vs-ticket-title">' + (t.subject || 'Support Ticket') + '</div>' +
-          '<div class="vs-ticket-meta">' + (t.category || 'General') + (date ? ' &middot; ' + date : '') + '</div>' +
+    el.innerHTML = tickets.map(function(t) {
+      var statusClass = t.status === 'OPEN' ? 'open' : t.status === 'IN_PROGRESS' ? 'progress' : 'resolved';
+      var statusLabel = t.status === 'IN_PROGRESS' ? 'In Progress' : t.status.charAt(0) + t.status.slice(1).toLowerCase();
+      var date = t.created_at ? new Date(t.created_at).toLocaleDateString() : '';
+      return '<div class="vp-ticket-row">' +
+        '<div class="vp-ticket-num ' + statusClass + '">' + (t.ticket_number || '#').slice(-4) + '</div>' +
+        '<div class="vp-ticket-info">' +
+          '<div class="vp-ticket-subject">' + (t.subject || 'Support Ticket') + '</div>' +
+          '<div class="vp-ticket-meta">' + (t.category || 'General') + (date ? ' &middot; ' + date : '') + '</div>' +
         '</div>' +
-        '<span class="vs-ticket-status ' + statusClass + '">' + statusLabel + '</span>' +
+        '<span class="vp-badge vp-badge-' + statusClass + '">' +
+          '<span class="vp-badge-dot"></span>' + statusLabel +
+        '</span>' +
       '</div>';
     }).join('');
   } catch(e) {
-    document.getElementById('vs-tickets').innerHTML = '<div class="vs-empty"><p>Failed to load tickets</p></div>';
+    document.getElementById('vs-tickets').innerHTML = '<div class="vp-empty"><h3>Failed to load tickets</h3><p>Please try again later.</p></div>';
   }
 }
 
 async function vsSubmitTicket() {
-  const subject = document.getElementById('vs-subject').value.trim();
-  const category = document.getElementById('vs-category').value;
-  const message = document.getElementById('vs-message').value.trim();
+  var subject = document.getElementById('vs-subject').value.trim();
+  var category = document.getElementById('vs-category').value;
+  var message = document.getElementById('vs-message').value.trim();
   if (!subject || !message) { alert('Please fill in all fields'); return; }
   try {
-    const res = await fetch('/api/support/tickets', {
+    var res = await fetch('/api/support/tickets', {
       method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ subject, category, message })
+      body: JSON.stringify({ subject: subject, category: category, message: message })
     });
-    if (res.ok) { vsCloseModal(); vsLoadTickets(); document.getElementById('vs-subject').value=''; document.getElementById('vs-message').value=''; }
+    if (res.ok) {
+      vsClearContactForm();
+      vsLoadTickets();
+      vsSwitchTab('tickets');
+      document.querySelector('.vp-support-tab').click();
+    }
+  } catch(e) { alert('Failed to submit ticket'); }
+}
+
+async function vsSubmitTicketModal() {
+  var subject = document.getElementById('vs-modal-subject').value.trim();
+  var category = document.getElementById('vs-modal-category').value;
+  var message = document.getElementById('vs-modal-message').value.trim();
+  if (!subject || !message) { alert('Please fill in all fields'); return; }
+  try {
+    var res = await fetch('/api/support/tickets', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ subject: subject, category: category, message: message })
+    });
+    if (res.ok) {
+      vsCloseModal();
+      document.getElementById('vs-modal-subject').value = '';
+      document.getElementById('vs-modal-message').value = '';
+      vsLoadTickets();
+    }
   } catch(e) { alert('Failed to submit ticket'); }
 }
 

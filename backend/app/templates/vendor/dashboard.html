@@ -2,697 +2,524 @@
 {% block title %}Vendor Dashboard &mdash; {{ settings.site_name|default('ForgeStore') }}{% endblock %}
 {% block content %}
 <style>
-  :root {
-    --vs-primary: {{ settings.primary_color|default('#f59e0b') }};
-    --vs-primary-hover: {{ settings.secondary_color|default('#d97706') }};
-    --vs-primary-light: #fef3c7;
-    --vs-primary-bg: #fffbeb;
-    --vs-primary-ring: rgba(245, 158, 11, 0.25);
-    --vs-text: {{ settings.text_color|default('#78716c') }};
-    --vs-text-dark: {{ settings.dark_color|default('#1c1917') }};
-    --vs-text-muted: #a8a29e;
-    --vs-border: #e7e5e4;
-    --vs-border-light: #f5f5f4;
-    --vs-bg: #f5f5f4;
-    --vs-white: #ffffff;
-    --vs-emerald: #10b981;
-    --vs-emerald-light: #d1fae5;
-    --vs-emerald-dark: #065f46;
-    --vs-blue: #3b82f6;
-    --vs-blue-light: #dbeafe;
-    --vs-blue-dark: #1e40af;
-    --vs-purple: #8b5cf6;
-    --vs-purple-light: #ede9fe;
-    --vs-purple-dark: #5b21b6;
-    --vs-red: #ef4444;
-    --vs-red-light: #fee2e2;
-    --vs-red-dark: #991b1b;
-    --vs-amber: #f59e0b;
-    --vs-amber-light: #fef3c7;
-    --vs-amber-dark: #92400e;
-    --vs-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --vs-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-    --vs-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-    --vs-radius-lg: 1rem;
-    --vs-radius-md: 0.75rem;
-    --vs-radius-sm: 0.5rem;
-    --vs-radius-pill: 9999px;
-    --vs-transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+@import url('/static/css/vendor_portal.css');
+
+/* ── Page-specific dark overrides ── */
+.dark .vendor-dashboard .vp-stat { background: rgba(30, 30, 35, 0.65); backdrop-filter: blur(20px); }
+.dark .vendor-dashboard .vp-card { background: rgba(30, 30, 35, 0.65); backdrop-filter: blur(20px); }
+.dark .vendor-dashboard .vp-badge-amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+
+/* ── Dashboard hero accent ── */
+.vendor-dashboard { padding-top: 0; }
+.vendor-hero-accent {
+  position: relative;
+  margin: -1.5rem -1.5rem 1.5rem;
+  padding: 2rem 1.5rem 1.75rem;
+  background: linear-gradient(135deg, var(--vp-primary) 0%, #d97706 50%, #f59e0b 100%);
+  border-radius: 0 0 1.5rem 1.5rem;
+  overflow: hidden;
+}
+.vendor-hero-accent::before {
+  content: '';
+  position: absolute;
+  top: -60%; right: -20%;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.vendor-hero-accent::after {
+  content: '';
+  position: absolute;
+  bottom: -50%; left: 10%;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.dark .vendor-hero-accent {
+  background: linear-gradient(135deg, #b45309 0%, #92400e 50%, #78350f 100%);
+}
+.vendor-hero-greeting {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.vendor-hero-greeting h1 {
+  font-size: 1.625rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+  letter-spacing: -0.025em;
+}
+.vendor-hero-greeting p {
+  font-size: 0.875rem;
+  color: rgba(255,255,255,0.8);
+  margin: 0.25rem 0 0;
+  font-weight: 500;
+}
+.vendor-retailer-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 44px;
+  padding: 0 1rem;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  border-radius: var(--vp-radius-pill);
+  border: 1px solid rgba(255,255,255,0.25);
+  transition: background 200ms ease;
+}
+.vendor-retailer-pill:hover { background: rgba(255,255,255,0.3); }
+
+/* ── Stat card value accent ── */
+.vendor-dashboard .vp-stat .stat-val-amber { color: var(--vp-amber); }
+
+/* ── Chart area placeholder ── */
+.vendor-chart-wrap {
+  position: relative;
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.vendor-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  height: 180px;
+  padding: 0 0.5rem;
+}
+.vendor-chart-bar {
+  width: 2rem;
+  border-radius: 0.375rem 0.375rem 0 0;
+  background: linear-gradient(180deg, var(--vp-primary) 0%, rgba(245,158,11,0.4) 100%);
+  transition: height 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+}
+.vendor-chart-bar:hover {
+  filter: brightness(1.1);
+}
+.vendor-chart-bar::after {
+  content: attr(data-value);
+  position: absolute;
+  top: -1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--vp-text-muted);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+.vendor-chart-bar:hover::after { opacity: 1; }
+.dark .vendor-chart-bar {
+  background: linear-gradient(180deg, #fbbf24 0%, rgba(251, 191, 36, 0.3) 100%);
+}
+.vendor-chart-empty {
+  color: var(--vp-text-muted);
+  font-size: 0.8125rem;
+  text-align: center;
+  padding: 2rem;
+}
+
+/* ── Quick action cards ── */
+.vendor-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+@media (min-width: 768px) {
+  .vendor-quick-grid { grid-template-columns: repeat(4, 1fr); }
+}
+.vendor-quick-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 1.25rem 0.75rem;
+  background: rgba(255,255,255,0.5);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--vp-border);
+  border-radius: var(--vp-radius-lg);
+  text-decoration: none;
+  text-align: center;
+  min-height: 44px;
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+.dark .vendor-quick-card {
+  background: rgba(30, 30, 35, 0.55);
+  border-color: rgba(255,255,255,0.08);
+}
+.vendor-quick-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 250ms ease;
+  border-radius: inherit;
+}
+.vendor-quick-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px -6px rgba(0,0,0,0.1);
+  border-color: var(--vp-primary);
+}
+.vendor-quick-card:hover::before { opacity: 1; }
+.vendor-quick-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--vp-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 250ms ease;
+}
+.vendor-quick-card:hover .vendor-quick-icon { transform: scale(1.08); }
+.vendor-quick-icon svg { width: 1.375rem; height: 1.375rem; }
+.vendor-quick-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--vp-text-dark);
+  line-height: 1.2;
+}
+.dark .vendor-quick-label { color: #f0f0f0; }
+.vendor-quick-sub {
+  font-size: 0.6875rem;
+  color: var(--vp-text-muted);
+  margin-top: -0.25rem;
+}
+
+/* ── Low stock alert ── */
+.vendor-stock-alert {
+  background: linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(251,191,36,0.05) 100%);
+  border: 1px solid rgba(245,158,11,0.2);
+  border-radius: var(--vp-radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  transition: border-color 200ms ease;
+}
+.vendor-stock-alert:hover { border-color: var(--vp-amber); }
+.dark .vendor-stock-alert {
+  background: linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(251,191,36,0.06) 100%);
+}
+.vendor-stock-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.vendor-stock-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--vp-radius-sm);
+  background: var(--vp-amber-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.dark .vendor-stock-icon { background: rgba(245,158,11,0.2); }
+.vendor-stock-icon svg { width: 1.125rem; height: 1.125rem; color: var(--vp-amber); }
+.vendor-stock-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--vp-amber-dark);
+  margin: 0;
+}
+.dark .vendor-stock-title { color: #fbbf24; }
+.vendor-stock-desc {
+  font-size: 0.75rem;
+  color: var(--vp-text-muted);
+  margin: 0.125rem 0 0;
+}
+.vendor-stock-list {
+  margin-top: 0.625rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.vendor-stock-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  padding: 0.25rem 0;
+}
+.vendor-stock-item a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--vp-amber-dark);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 200ms ease;
+}
+.dark .vendor-stock-item a { color: #fbbf24; }
+.vendor-stock-item a:hover { color: var(--vp-primary); text-decoration: underline; }
+.vendor-stock-count {
+  font-family: 'SF Mono', SFMono-Regular, ui-monospace, monospace;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--vp-amber);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.vendor-stock-more {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--vp-amber-dark);
+  text-decoration: none;
+  transition: color 200ms ease;
+}
+.dark .vendor-stock-more { color: #fbbf24; }
+.vendor-stock-more:hover { text-decoration: underline; }
+
+/* ── Orders table card ── */
+.vendor-dashboard .vp-table th { white-space: nowrap; }
+.vendor-dashboard .vp-table td { vertical-align: middle; }
+
+/* ── Order status dot ── */
+.vendor-status-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.vendor-status-dot::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.vendor-status-dot.s-delivered::before { background: var(--vp-emerald); }
+.vendor-status-dot.s-shipped::before { background: var(--vp-purple); }
+.vendor-status-dot.s-processing::before { background: var(--vp-blue); }
+.vendor-status-dot.s-paid::before { background: var(--vp-emerald); }
+.vendor-status-dot.s-cancelled::before { background: var(--vp-red); }
+.vendor-status-dot.s-default::before { background: #a8a29e; }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .vendor-hero-accent { margin: -1rem -1rem 1rem; padding: 1.5rem 1rem; }
+  .vendor-hero-greeting h1 { font-size: 1.25rem; }
+  .vendor-quick-grid { gap: 0.5rem; }
+  .vendor-quick-card { padding: 1rem 0.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
-
-  *, *::before, *::after { box-sizing: border-box; }
-
-  .vendor-page {
-    max-width: 72rem;
-    margin: 0 auto;
-    padding: 1.5rem;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    color: var(--vs-text-dark);
-    line-height: 1.5;
-  }
-
-  .vendor-page-header {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.5rem;
-  }
-
-  .vendor-page-header h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--vs-text-dark);
-    margin: 0;
-    line-height: 1.25;
-  }
-
-  .vendor-page-header .subtitle {
-    font-size: 0.875rem;
-    color: var(--vs-text-muted);
-    margin-top: 0.25rem;
-  }
-
-  .vendor-stats-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .vendor-stat-card {
-    background: var(--vs-white);
-    border-radius: var(--vs-radius-lg);
-    border: 1px solid var(--vs-border);
-    padding: 1.25rem 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    transition: box-shadow var(--vs-transition), border-color var(--vs-transition);
-  }
-
-  .vendor-stat-card:hover {
-    border-color: var(--vs-primary);
-    box-shadow: var(--vs-shadow-md);
-  }
-
-  .vendor-stat-card .stat-icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: var(--vs-radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 0.5rem;
-  }
-
-  .vendor-stat-card .stat-icon.amber { background: var(--vs-amber-light); }
-  .vendor-stat-card .stat-icon.amber svg { color: var(--vs-amber); }
-  .vendor-stat-card .stat-icon.blue { background: var(--vs-blue-light); }
-  .vendor-stat-card .stat-icon.blue svg { color: var(--vs-blue); }
-  .vendor-stat-card .stat-icon.emerald { background: var(--vs-emerald-light); }
-  .vendor-stat-card .stat-icon.emerald svg { color: var(--vs-emerald); }
-
-  .vendor-stat-card .label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--vs-text-muted);
-  }
-
-  .vendor-stat-card .value {
-    font-size: 1.875rem;
-    font-weight: 900;
-    color: var(--vs-text-dark);
-    line-height: 1.2;
-  }
-
-  .vendor-stat-card .value.amber { color: var(--vs-amber); }
-
-  .vendor-card {
-    background: var(--vs-white);
-    border-radius: var(--vs-radius-lg);
-    border: 1px solid var(--vs-border);
-    overflow: hidden;
-    margin-bottom: 1.5rem;
-  }
-
-  .vendor-card-header {
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--vs-border-light);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .vendor-card-header h2 {
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: var(--vs-text-dark);
-    margin: 0;
-  }
-
-  .vendor-card-header .card-action {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--vs-primary);
-    text-decoration: none;
-    min-height: 44px;
-    min-width: 44px;
-    display: inline-flex;
-    align-items: center;
-    padding: 0 0.25rem;
-    transition: color var(--vs-transition);
-  }
-
-  .vendor-card-header .card-action:hover { color: var(--vs-primary-hover); }
-
-  .vendor-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  .vendor-table th {
-    padding: 0.75rem 1.25rem;
-    text-align: left;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--vs-text-muted);
-    background: var(--vs-bg);
-    border-bottom: 1px solid var(--vs-border);
-  }
-
-  .vendor-table td {
-    padding: 0.875rem 1.25rem;
-    font-size: 0.875rem;
-    color: var(--vs-text-dark);
-    border-bottom: 1px solid var(--vs-border-light);
-    vertical-align: middle;
-  }
-
-  .vendor-table tr:last-child td { border-bottom: none; }
-
-  .vendor-table tr:hover td { background: var(--vs-bg); }
-
-  .vendor-badge {
-    display: inline-block;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    padding: 0.25rem 0.625rem;
-    border-radius: var(--vs-radius-pill);
-    line-height: 1.3;
-    white-space: nowrap;
-  }
-
-  .vendor-badge.paid,
-  .vendor-badge.delivered,
-  .vendor-badge.completed {
-    background: var(--vs-emerald-light);
-    color: var(--vs-emerald-dark);
-  }
-
-  .vendor-badge.pending {
-    background: var(--vs-amber-light);
-    color: var(--vs-amber-dark);
-  }
-
-  .vendor-badge.processing {
-    background: var(--vs-blue-light);
-    color: var(--vs-blue-dark);
-  }
-
-  .vendor-badge.shipped {
-    background: var(--vs-purple-light);
-    color: var(--vs-purple-dark);
-  }
-
-  .vendor-badge.cancelled,
-  .vendor-badge.failed {
-    background: var(--vs-red-light);
-    color: var(--vs-red-dark);
-  }
-
-  .vendor-badge.default {
-    background: var(--vs-border-light);
-    color: var(--vs-text);
-  }
-
-  .vendor-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    min-height: 44px;
-    padding: 0 1rem;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    border-radius: var(--vs-radius-sm);
-    border: 1px solid transparent;
-    cursor: pointer;
-    text-decoration: none;
-    transition: all var(--vs-transition);
-    white-space: nowrap;
-  }
-
-  .vendor-btn-primary {
-    background: var(--vs-primary);
-    color: var(--vs-white);
-    border-color: var(--vs-primary);
-  }
-
-  .vendor-btn-primary:hover {
-    background: var(--vs-primary-hover);
-    border-color: var(--vs-primary-hover);
-    box-shadow: var(--vs-shadow-md);
-  }
-
-  .vendor-btn-outline {
-    background: var(--vs-white);
-    color: var(--vs-text-dark);
-    border-color: var(--vs-border);
-  }
-
-  .vendor-btn-outline:hover {
-    border-color: var(--vs-primary);
-    color: var(--vs-primary);
-    background: var(--vs-primary-light);
-  }
-
-  .vendor-alert {
-    background: var(--vs-primary-bg);
-    border: 1px solid #fde68a;
-    border-radius: var(--vs-radius-lg);
-    padding: 1.25rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .vendor-alert-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .vendor-alert-icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    background: var(--vs-primary-light);
-    border-radius: var(--vs-radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .vendor-alert-icon svg {
-    width: 1.25rem;
-    height: 1.25rem;
-    color: var(--vs-amber);
-  }
-
-  .vendor-alert-title {
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: var(--vs-amber-dark);
-    margin: 0;
-  }
-
-  .vendor-alert-desc {
-    font-size: 0.75rem;
-    color: var(--vs-amber);
-    margin-top: 0.25rem;
-  }
-
-  .vendor-alert-items {
-    margin-top: 0.75rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-  }
-
-  .vendor-alert-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 0.75rem;
-  }
-
-  .vendor-alert-item a {
-    padding: 0.5rem 0;
-    min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-    color: var(--vs-amber-dark);
-    text-decoration: none;
-    font-weight: 500;
-    transition: color var(--vs-transition);
-  }
-
-  .vendor-alert-item a:hover { color: var(--vs-primary-hover); text-decoration: underline; }
-
-  .vendor-alert-item .stock-count {
-    color: var(--vs-amber);
-    font-family: 'SF Mono', SFMono-Regular, ui-monospace, monospace;
-    font-size: 0.6875rem;
-    font-weight: 600;
-  }
-
-  .vendor-alert-link {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    margin-top: 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--vs-amber-dark);
-    text-decoration: none;
-    transition: color var(--vs-transition);
-  }
-
-  .vendor-alert-link:hover { text-decoration: underline; }
-
-  .vendor-actions-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .vendor-action-card {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem;
-    background: var(--vs-white);
-    border-radius: var(--vs-radius-md);
-    border: 1px solid var(--vs-border);
-    text-decoration: none;
-    min-height: 44px;
-    transition: all var(--vs-transition);
-  }
-
-  .vendor-action-card:hover {
-    border-color: var(--vs-primary);
-    box-shadow: var(--vs-shadow-md);
-    transform: translateY(-1px);
-  }
-
-  .vendor-action-icon {
-    width: 2.75rem;
-    height: 2.75rem;
-    border-radius: var(--vs-radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: background var(--vs-transition);
-  }
-
-  .vendor-action-icon svg { width: 1.25rem; height: 1.25rem; }
-
-  .vendor-action-icon.amber { background: var(--vs-amber-light); }
-  .vendor-action-icon.amber svg { color: var(--vs-amber); }
-  .vendor-action-card:hover .vendor-action-icon.amber { background: #fde68a; }
-
-  .vendor-action-icon.blue { background: var(--vs-blue-light); }
-  .vendor-action-icon.blue svg { color: var(--vs-blue); }
-  .vendor-action-card:hover .vendor-action-icon.blue { background: #bfdbfe; }
-
-  .vendor-action-icon.emerald { background: var(--vs-emerald-light); }
-  .vendor-action-icon.emerald svg { color: var(--vs-emerald); }
-  .vendor-action-card:hover .vendor-action-icon.emerald { background: #a7f3d0; }
-
-  .vendor-action-icon.purple { background: var(--vs-purple-light); }
-  .vendor-action-icon.purple svg { color: var(--vs-purple); }
-  .vendor-action-card:hover .vendor-action-icon.purple { background: #c4b5fd; }
-
-  .vendor-action-label {
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: var(--vs-text-dark);
-    display: block;
-    line-height: 1.25;
-  }
-
-  .vendor-action-sub {
-    font-size: 0.75rem;
-    color: var(--vs-text-muted);
-    display: block;
-    margin-top: 0.125rem;
-  }
-
-  .vendor-order-row {
-    padding: 0.875rem 1.25rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--vs-border-light);
-    transition: background var(--vs-transition);
-  }
-
-  .vendor-order-row:last-child { border-bottom: none; }
-  .vendor-order-row:hover { background: var(--vs-bg); }
-
-  .vendor-order-number {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--vs-text-dark);
-    margin: 0;
-  }
-
-  .vendor-order-date {
-    font-size: 0.75rem;
-    color: var(--vs-text-muted);
-    margin: 0.125rem 0 0;
-  }
-
-  .vendor-order-amount {
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: var(--vs-text-dark);
-    text-align: right;
-    margin: 0;
-  }
-
-  .vendor-empty {
-    padding: 3rem 1.25rem;
-    text-align: center;
-    color: var(--vs-text-muted);
-  }
-
-  .vendor-empty svg {
-    width: 2.5rem;
-    height: 2.5rem;
-    margin: 0 auto 0.75rem;
-    color: var(--vs-text-muted);
-    opacity: 0.5;
-  }
-
-  .vendor-empty p {
-    font-size: 0.875rem;
-    margin: 0;
-  }
-
-  .vendor-retailer-badge {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    padding: 0 0.875rem;
-    background: var(--vs-primary-light);
-    color: var(--vs-amber-dark);
-    font-size: 0.75rem;
-    font-weight: 700;
-    border-radius: var(--vs-radius-pill);
-    border: 1px solid #fde68a;
-  }
-
-  .vendor-section-gap { margin-bottom: 1.5rem; }
-
-  @media (min-width: 640px) {
-    .vendor-stats-grid { grid-template-columns: repeat(3, 1fr); }
-    .vendor-actions-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-
-  @media (min-width: 1024px) {
-    .vendor-actions-grid { grid-template-columns: repeat(4, 1fr); }
-  }
-
-  @media (max-width: 640px) {
-    .vendor-page { padding: 1rem; }
-    .vendor-page-header h1 { font-size: 1.25rem; }
-    .vendor-stat-card .value { font-size: 1.5rem; }
-    .vendor-action-card { padding: 0.75rem; }
-    .vendor-card-header { padding: 0.875rem 1rem; }
-    .vendor-table th,
-    .vendor-table td { padding: 0.625rem 0.875rem; }
-    .vendor-order-row { padding: 0.75rem 1rem; }
-    .vendor-order-amount { text-align: left; margin-top: 0.25rem; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
+}
 </style>
 
-<div class="vendor-page">
+<div class="vp-page vendor-dashboard">
 
-  <div class="vendor-page-header">
-    <div>
-      <h1>Vendor Dashboard</h1>
-      <p class="subtitle">Welcome back, {{ admin.name or 'Vendor' }}</p>
+  {# ── Hero Header ── #}
+  <div class="vendor-hero-accent">
+    <div class="vendor-hero-greeting">
+      <div>
+        <h1>Vendor Dashboard</h1>
+        <p>Welcome back, {{ admin.name or 'Vendor' }}</p>
+      </div>
+      {% if retailer %}
+      <span class="vendor-retailer-pill">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        {{ retailer.name }}
+      </span>
+      {% endif %}
     </div>
-    {% if retailer %}
-    <span class="vendor-retailer-badge">{{ retailer.name }}</span>
-    {% endif %}
   </div>
 
-  <div class="vendor-stats-grid">
-    <div class="vendor-stat-card">
-      <div class="stat-icon amber">
+  {# ── Stat Cards ── #}
+  <div class="vp-stats">
+    <div class="vp-stat vp-stat-amber">
+      <div class="vp-stat-icon">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
       </div>
-      <span class="label">Products</span>
-      <span class="value">{{ total_products }}</span>
+      <span class="vp-stat-label">Products</span>
+      <span class="vp-stat-value">{{ total_products }}</span>
     </div>
-    <div class="vendor-stat-card">
-      <div class="stat-icon blue">
+    <div class="vp-stat vp-stat-blue">
+      <div class="vp-stat-icon">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
       </div>
-      <span class="label">Orders</span>
-      <span class="value">{{ total_orders }}</span>
+      <span class="vp-stat-label">Orders</span>
+      <span class="vp-stat-value">{{ total_orders }}</span>
     </div>
-    <div class="vendor-stat-card">
-      <div class="stat-icon emerald">
+    <div class="vp-stat vp-stat-emerald">
+      <div class="vp-stat-icon">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
       </div>
-      <span class="label">Revenue</span>
-      <span class="value amber">&#8358;{{ "{:,.2f}".format(total_revenue) }}</span>
+      <span class="vp-stat-label">Revenue</span>
+      <span class="vp-stat-value stat-val-amber">&#8358;{{ "{:,.2f}".format(total_revenue) }}</span>
     </div>
-    <div class="vendor-stat-card">
-      <div class="stat-icon emerald">
+    <div class="vp-stat vp-stat-emerald">
+      <div class="vp-stat-icon">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
       </div>
-      <span class="label">Wallet Balance</span>
-      <span class="value">&#8358;{{ "{:,.2f}".format(wallet_balance) }}</span>
+      <span class="vp-stat-label">Wallet Balance</span>
+      <span class="vp-stat-value">&#8358;{{ "{:,.2f}".format(wallet_balance) }}</span>
     </div>
-    <div class="vendor-stat-card">
-      <div class="stat-icon blue">
+    <div class="vp-stat vp-stat-blue">
+      <div class="vp-stat-icon">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       </div>
-      <span class="label">Pending Earnings</span>
-      <span class="value">&#8358;{{ "{:,.2f}".format(pending_earnings) }}</span>
+      <span class="vp-stat-label">Pending Earnings</span>
+      <span class="vp-stat-value">&#8358;{{ "{:,.2f}".format(pending_earnings) }}</span>
     </div>
-    <div class="vendor-stat-card">
-      <div class="stat-icon amber">
+    <div class="vp-stat vp-stat-amber">
+      <div class="vp-stat-icon">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
       </div>
-      <span class="label">Active Campaigns</span>
-      <span class="value">{{ active_campaigns }}</span>
+      <span class="vp-stat-label">Active Campaigns</span>
+      <span class="vp-stat-value">{{ active_campaigns }}</span>
     </div>
   </div>
 
+  {# ── Low Stock Alert ── #}
   {% if low_stock_count > 0 %}
-  <div class="vendor-alert">
-    <div class="vendor-alert-header">
-      <div class="vendor-alert-icon">
+  <div class="vendor-stock-alert">
+    <div class="vendor-stock-head">
+      <div class="vendor-stock-icon">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
       </div>
       <div style="flex:1;">
-        <h3 class="vendor-alert-title">{{ low_stock_count }} product{{ 's' if low_stock_count != 1 else '' }} low on stock</h3>
-        <p class="vendor-alert-desc">Items at or below your low-stock threshold need attention.</p>
-        <div class="vendor-alert-items">
+        <h3 class="vendor-stock-title">{{ low_stock_count }} product{{ 's' if low_stock_count != 1 else '' }} low on stock</h3>
+        <p class="vendor-stock-desc">Items at or below your low-stock threshold need attention.</p>
+        <div class="vendor-stock-list">
           {% for item in low_stock_items %}
-          <div class="vendor-alert-item">
+          <div class="vendor-stock-item">
             <a href="/vendor/products">{{ item.name }}</a>
-            <span class="stock-count">{{ item.inventory }} left</span>
+            <span class="vendor-stock-count">{{ item.inventory }} left</span>
           </div>
           {% endfor %}
         </div>
         {% if low_stock_count > 5 %}
-        <a href="/vendor/products" class="vendor-alert-link">View all {{ low_stock_count }} items &rarr;</a>
+        <a href="/vendor/products" class="vendor-stock-more">View all {{ low_stock_count }} items &rarr;</a>
         {% endif %}
       </div>
     </div>
   </div>
   {% endif %}
 
-  <div class="vendor-actions-grid">
-    <a href="/vendor/products" class="vendor-action-card">
-      <div class="vendor-action-icon amber">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+  {# ── Revenue Chart + Recent Orders side-by-side ── #}
+  <div class="vp-grid-2" style="margin-bottom:1.5rem;">
+
+    {# ── Revenue Overview Card ── #}
+    <div class="vp-card">
+      <div class="vp-card-header">
+        <h2 style="margin:0;font-size:0.9375rem;">Revenue Overview</h2>
+        <a href="/vendor/analytics" class="vp-btn vp-btn-ghost" style="font-size:0.75rem;padding:0 0.5rem;min-height:36px;">Details &rarr;</a>
       </div>
-      <div>
-        <span class="vendor-action-label">Products</span>
-        <span class="vendor-action-sub">Manage inventory</span>
+      <div class="vp-card-body">
+        <div class="vendor-chart-wrap">
+          {% if revenue_chart_data %}
+          <div class="vendor-chart-bars" style="width:100%;justify-content:space-around;">
+            {% for point in revenue_chart_data %}
+            <div class="vendor-chart-bar" style="height:{{ point.pct|default(10) }}%;" data-value="{{ point.label|default('') }}"></div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="vendor-chart-empty">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="32" height="32" style="margin:0 auto 0.5rem;display:block;opacity:0.35;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            No revenue data yet
+          </div>
+          {% endif %}
+        </div>
       </div>
-    </a>
-    <a href="/vendor/orders" class="vendor-action-card">
-      <div class="vendor-action-icon blue">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+    </div>
+
+    {# ── Quick Actions ── #}
+    <div class="vp-card">
+      <div class="vp-card-header">
+        <h2 style="margin:0;font-size:0.9375rem;">Quick Actions</h2>
       </div>
-      <div>
-        <span class="vendor-action-label">Orders</span>
-        <span class="vendor-action-sub">View &amp; fulfill</span>
+      <div class="vp-card-body">
+        <div class="vendor-quick-grid">
+          <a href="/vendor/products" class="vendor-quick-card">
+            <div class="vendor-quick-icon" style="background:var(--vp-amber-light);">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--vp-amber);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </div>
+            <span class="vendor-quick-label">Products</span>
+            <span class="vendor-quick-sub">Manage inventory</span>
+          </a>
+          <a href="/vendor/orders" class="vendor-quick-card">
+            <div class="vendor-quick-icon" style="background:var(--vp-blue-light);">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--vp-blue);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            </div>
+            <span class="vendor-quick-label">Orders</span>
+            <span class="vendor-quick-sub">View &amp; fulfill</span>
+          </a>
+          <a href="/vendor/earnings" class="vendor-quick-card">
+            <div class="vendor-quick-icon" style="background:var(--vp-emerald-light);">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--vp-emerald);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+            </div>
+            <span class="vendor-quick-label">Earnings</span>
+            <span class="vendor-quick-sub">Track payouts</span>
+          </a>
+          <a href="/vendor/analytics" class="vendor-quick-card">
+            <div class="vendor-quick-icon" style="background:var(--vp-purple-light);">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--vp-purple);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            </div>
+            <span class="vendor-quick-label">Analytics</span>
+            <span class="vendor-quick-sub">Sales insights</span>
+          </a>
+        </div>
       </div>
-    </a>
-    <a href="/vendor/earnings" class="vendor-action-card">
-      <div class="vendor-action-icon emerald">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
-      </div>
-      <div>
-        <span class="vendor-action-label">Earnings</span>
-        <span class="vendor-action-sub">Track payouts</span>
-      </div>
-    </a>
-    <a href="/vendor/analytics" class="vendor-action-card">
-      <div class="vendor-action-icon purple">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-      </div>
-      <div>
-        <span class="vendor-action-label">Analytics</span>
-        <span class="vendor-action-sub">Sales insights</span>
-      </div>
-    </a>
+    </div>
   </div>
 
-  <div class="vendor-card">
-    <div class="vendor-card-header">
-      <h2>Recent Orders</h2>
+  {# ── Recent Orders ── #}
+  <div class="vp-card">
+    <div class="vp-card-header">
+      <h2 style="margin:0;font-size:0.9375rem;">Recent Orders</h2>
       {% if recent_orders %}
-      <a href="/vendor/orders" class="card-action">View all &rarr;</a>
+      <a href="/vendor/orders" class="vp-btn vp-btn-ghost" style="font-size:0.75rem;padding:0 0.5rem;min-height:36px;">View all &rarr;</a>
       {% endif %}
     </div>
     {% if recent_orders %}
-    <table class="vendor-table">
-      <thead>
-        <tr>
-          <th>Order</th>
-          <th>Date</th>
-          <th style="text-align:right;">Amount</th>
-          <th style="text-align:right;">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for order in recent_orders %}
-        <tr>
-          <td><span class="vendor-order-number">#{{ order.order_number }}</span></td>
-          <td><span class="vendor-order-date">{{ order.created_at.strftime('%b %d, %Y') if order.created_at else '' }}</span></td>
-          <td style="text-align:right;"><span class="vendor-order-amount">&#8358;{{ "{:,.2f}".format(order.total_amount) }}</span></td>
-          <td style="text-align:right;">
-            <span class="vendor-badge {% if order.status.value == 'DELIVERED' %}delivered{% elif order.status.value == 'SHIPPED' %}shipped{% elif order.status.value == 'PROCESSING' %}processing{% elif order.status.value == 'PAID' %}paid{% elif order.status.value == 'CANCELLED' %}cancelled{% else %}default{% endif %}">{{ order.status.value }}</span>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="vp-table-wrap">
+      <table class="vp-table">
+        <thead>
+          <tr>
+            <th>Order</th>
+            <th>Date</th>
+            <th style="text-align:right;">Amount</th>
+            <th style="text-align:right;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in recent_orders %}
+          <tr>
+            <td style="font-weight:700;color:var(--vp-text-dark);">#{{ order.order_number }}</td>
+            <td style="color:var(--vp-text-muted);font-size:0.8125rem;">{{ order.created_at.strftime('%b %d, %Y') if order.created_at else '' }}</td>
+            <td style="text-align:right;font-weight:700;">&#8358;{{ "{:,.2f}".format(order.total_amount) }}</td>
+            <td style="text-align:right;">
+              <span class="vendor-status-dot {% if order.status.value == 'DELIVERED' %}s-delivered{% elif order.status.value == 'SHIPPED' %}s-shipped{% elif order.status.value == 'PROCESSING' %}s-processing{% elif order.status.value == 'PAID' %}s-paid{% elif order.status.value == 'CANCELLED' %}s-cancelled{% else %}s-default{% endif %}">{{ order.status.value }}</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
     {% else %}
-    <div class="vendor-empty">
+    <div class="vp-empty">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
       <p>No orders yet.</p>
     </div>

@@ -2,326 +2,308 @@
 {% block title %}Earnings &mdash; {{ settings.site_name|default('ForgeStore') }}{% endblock %}
 {% block content %}
 <style>
-  :root {
-    --color-primary: {{ settings.primary_color|default('#f59e0b') }};
-    --color-primary-hover: {{ settings.secondary_color|default('#d97706') }};
-    --color-primary-light: #fef3c7;
-    --color-primary-bg: #fffbeb;
-    --color-text: {{ settings.text_color|default('#78716c') }};
-    --color-text-dark: {{ settings.dark_color|default('#1c1917') }};
-    --color-text-muted: #a8a29e;
-    --color-border: #e7e5e4;
-    --color-border-light: #f5f5f4;
-    --color-bg: #f5f5f4;
-    --color-bg-alt: #ffffff;
-    --color-emerald: #10b981;
-    --color-emerald-light: #d1fae5;
-    --color-emerald-dark: #065f46;
-    --color-blue: #3b82f6;
-    --color-blue-light: #dbeafe;
-    --color-blue-dark: #1e40af;
-    --color-amber: #f59e0b;
-    --color-amber-light: #fef3c7;
-    --color-amber-dark: #92400e;
-    --color-purple: #8b5cf6;
-    --color-purple-light: #ede9fe;
-    --color-purple-dark: #5b21b6;
-    --color-red: #ef4444;
-    --color-red-light: #fee2e2;
-    --color-red-dark: #991b1b;
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
-    --radius-lg: 1rem;
-    --radius-md: 0.75rem;
-    --radius-sm: 0.5rem;
-  }
+@import url('/static/css/vendor_portal.css');
 
-  .vendor-page {
-    max-width: 72rem;
-    margin: 0 auto;
-    padding: 1.5rem;
-  }
+/* ── Page-specific dark overrides ── */
+.dark .vendor-earnings .vp-stat { background: rgba(30, 30, 35, 0.65); backdrop-filter: blur(20px); }
+.dark .vendor-earnings .vp-card { background: rgba(30, 30, 35, 0.65); backdrop-filter: blur(20px); }
+.dark .vendor-earnings .vp-badge-emerald { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+.dark .vendor-earnings .vp-badge-amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.dark .vendor-earnings .vp-badge-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+.dark .vendor-earnings .vp-badge-purple { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
 
-  .vendor-page-header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 0.75rem;
-    justify-content: space-between;
-  }
+/* ── Balance Hero Card ── */
+.vendor-balance-hero {
+  position: relative;
+  margin: -1.5rem -1.5rem 1.5rem;
+  padding: 2.5rem 2rem 2.25rem;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 40%, #334155 100%);
+  border-radius: 0 0 1.5rem 1.5rem;
+  overflow: hidden;
+  color: #fff;
+}
+.vendor-balance-hero::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -15%;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.18) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.vendor-balance-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: 5%;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.dark .vendor-balance-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #1a2332 100%);
+}
+.vendor-balance-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+.vendor-balance-left .vendor-balance-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.vendor-balance-left .vendor-balance-label svg {
+  width: 1rem;
+  height: 1rem;
+  opacity: 0.6;
+}
+.vendor-balance-left .vendor-balance-amount {
+  font-size: 2.75rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #f97316 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.dark .vendor-balance-left .vendor-balance-amount {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.vendor-balance-left .vendor-balance-sub {
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.vendor-balance-left .vendor-balance-sub svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  opacity: 0.5;
+}
+.vendor-balance-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.vendor-balance-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 44px;
+  padding: 0 1.25rem;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: var(--vp-radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  transition: all 200ms ease;
+  text-decoration: none;
+}
+.vendor-balance-pill:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+.vendor-balance-pill.primary {
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 4px 14px -2px rgba(245, 158, 11, 0.35);
+}
+.vendor-balance-pill.primary:hover {
+  box-shadow: 0 6px 20px -3px rgba(245, 158, 11, 0.5);
+}
 
-  .vendor-page-header h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--color-text-dark);
-    margin: 0;
-  }
+/* ── Stats Section ── */
+.vendor-earnings-stats {
+  margin-bottom: 1.5rem;
+}
 
-  .vendor-page-header .subtitle {
-    font-size: 0.875rem;
-    color: var(--color-text-muted);
-    margin-top: 0.25rem;
-  }
+/* ── Earnings Table Row Accent ── */
+.vendor-earnings .vp-table .cell-amount {
+  font-weight: 700;
+  color: var(--vp-text);
+  font-variant-numeric: tabular-nums;
+}
+.vendor-earnings .vp-table .cell-net {
+  font-weight: 700;
+  color: var(--vp-emerald);
+  font-variant-numeric: tabular-nums;
+}
+.vendor-earnings .vp-table .cell-muted {
+  color: var(--vp-text-muted);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
 
-  .vendor-stats-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
+/* ── Transaction timeline ── */
+.vendor-timeline {
+  display: flex;
+  flex-direction: column;
+}
+.vendor-timeline-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--vp-border-light);
+  position: relative;
+  transition: background 200ms ease;
+}
+.vendor-timeline-item:last-child { border-bottom: none; }
+.vendor-timeline-item:hover { background: rgba(99, 102, 241, 0.02); margin: 0 -1.5rem; padding-left: 1.5rem; padding-right: 1.5rem; }
+.vendor-timeline-dot {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--vp-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+.vendor-timeline-dot.emerald { background: var(--vp-emerald-soft); color: var(--vp-emerald); }
+.vendor-timeline-dot.blue { background: var(--vp-blue-soft); color: var(--vp-blue); }
+.vendor-timeline-dot.amber { background: var(--vp-amber-soft); color: var(--vp-amber); }
+.vendor-timeline-dot.purple { background: var(--vp-purple-soft); color: var(--vp-purple); }
+.vendor-timeline-dot svg { width: 1rem; height: 1rem; }
+.vendor-timeline-content { flex: 1; min-width: 0; }
+.vendor-timeline-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--vp-text);
+  margin-bottom: 0.125rem;
+}
+.vendor-timeline-desc {
+  font-size: 0.8125rem;
+  color: var(--vp-text-muted);
+}
+.vendor-timeline-meta {
+  text-align: right;
+  flex-shrink: 0;
+}
+.vendor-timeline-amount {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--vp-text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.vendor-timeline-amount.positive { color: var(--vp-emerald); }
+.vendor-timeline-amount.negative { color: var(--vp-red); }
+.vendor-timeline-date {
+  font-size: 0.75rem;
+  color: var(--vp-text-muted);
+  margin-top: 0.125rem;
+}
 
-  @media (min-width: 640px) {
-    .vendor-stats-grid { grid-template-columns: repeat(3, 1fr); }
-  }
+/* ── Hide mobile columns ── */
+.vendor-earnings .vp-table .hide-mobile { display: table-cell; }
 
-  .vendor-stat-card {
-    background: var(--color-bg-alt);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-border);
-    padding: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .vendor-balance-hero { margin: -1rem -1rem 1rem; padding: 2rem 1.25rem; }
+  .vendor-balance-left .vendor-balance-amount { font-size: 2rem; }
+  .vendor-balance-inner { flex-direction: column; align-items: flex-start; }
+  .vendor-timeline-item:hover { margin: 0; padding-left: 0; padding-right: 0; }
+}
 
-  .vendor-stat-card .label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-text-muted);
-  }
+@media (max-width: 640px) {
+  .vendor-earnings .vp-table .hide-mobile { display: none; }
+}
 
-  .vendor-stat-card .value {
-    font-size: 1.875rem;
-    font-weight: 900;
-    color: var(--color-text-dark);
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
-
-  .vendor-stat-card .value.emerald { color: var(--color-emerald); }
-  .vendor-stat-card .value.amber { color: var(--color-amber); }
-  .vendor-stat-card .value.blue { color: var(--color-blue); }
-
-  .vendor-stat-card .meta {
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-    margin-top: 0.125rem;
-  }
-
-  .vendor-summary {
-    background: var(--color-emerald-light);
-    border: 1px solid #a7f3d0;
-    border-radius: var(--radius-lg);
-    padding: 1.25rem 1.5rem;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-
-  .vendor-summary .label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-emerald-dark);
-  }
-
-  .vendor-summary .amount {
-    font-size: 2rem;
-    font-weight: 900;
-    color: var(--color-emerald-dark);
-    line-height: 1;
-  }
-
-  .vendor-summary .meta {
-    font-size: 0.75rem;
-    color: var(--color-emerald-dark);
-    opacity: 0.7;
-  }
-
-  .vendor-card {
-    background: var(--color-bg-alt);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-border);
-    overflow: hidden;
-  }
-
-  .vendor-card-header {
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--color-border-light);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-
-  .vendor-card-header h2 {
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: var(--color-text-dark);
-    margin: 0;
-  }
-
-  .vendor-table-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .vendor-table {
-    width: 100%;
-    font-size: 0.875rem;
-    border-collapse: collapse;
-  }
-
-  .vendor-table th {
-    padding: 0.75rem 1.25rem;
-    text-align: left;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-text-muted);
-    border-bottom: 1px solid var(--color-border-light);
-    white-space: nowrap;
-    background: var(--color-bg);
-  }
-
-  .vendor-table td {
-    padding: 0.75rem 1.25rem;
-    border-bottom: 1px solid var(--color-border-light);
-    color: var(--color-text);
-    vertical-align: middle;
-  }
-
-  .vendor-table tbody tr:hover {
-    background: var(--color-bg);
-  }
-
-  .vendor-table tbody tr:last-child td {
-    border-bottom: none;
-  }
-
-  .vendor-table .cell-amount {
-    font-weight: 600;
-    color: var(--color-text-dark);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .vendor-table .cell-net {
-    font-weight: 700;
-    color: var(--color-emerald);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .vendor-table .cell-muted {
-    color: var(--color-text-muted);
-    font-size: 0.75rem;
-  }
-
-  .vendor-badge {
-    display: inline-block;
-    font-size: 0.625rem;
-    font-weight: 700;
-    padding: 0.1875rem 0.625rem;
-    border-radius: 9999px;
-    line-height: 1.4;
-    white-space: nowrap;
-  }
-
-  .vendor-badge.paid {
-    background: var(--color-emerald-light);
-    color: var(--color-emerald-dark);
-  }
-
-  .vendor-badge.processing {
-    background: var(--color-blue-light);
-    color: var(--color-blue-dark);
-  }
-
-  .vendor-badge.pending {
-    background: var(--color-amber-light);
-    color: var(--color-amber-dark);
-  }
-
-  .vendor-badge.default {
-    background: var(--color-border-light);
-    color: var(--color-text);
-  }
-
-  .vendor-empty {
-    padding: 3rem 1.25rem;
-    text-align: center;
-    font-size: 0.875rem;
-    color: var(--color-text-muted);
-  }
-
-  .vendor-empty svg {
-    width: 2.5rem;
-    height: 2.5rem;
-    margin: 0 auto 0.75rem;
-    color: var(--color-border);
-  }
-
-  .hide-mobile {
-    display: table-cell;
-  }
-
-  @media (max-width: 640px) {
-    .vendor-page { padding: 1rem; }
-    .vendor-page-header h1 { font-size: 1.25rem; }
-    .vendor-summary { flex-direction: column; align-items: flex-start; }
-    .vendor-summary .amount { font-size: 1.5rem; }
-    .vendor-stat-card .value { font-size: 1.5rem; }
-    .vendor-table th,
-    .vendor-table td { padding: 0.625rem 0.75rem; }
-    .hide-mobile { display: none; }
-  }
+}
 </style>
 
-<div class="vendor-page">
-  <div class="vendor-page-header">
-    <div>
-      <h1>Earnings</h1>
-      <p class="subtitle">Track your revenue and payouts</p>
+<div class="vp-page vendor-earnings">
+
+  {# ── Balance Hero Card ── #}
+  <div class="vendor-balance-hero">
+    <div class="vendor-balance-inner">
+      <div class="vendor-balance-left">
+        <div class="vendor-balance-label">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+          Total Net Earnings
+        </div>
+        <div class="vendor-balance-amount">&#8358;{{ "{:,.2f}".format(total_net) }}</div>
+        <div class="vendor-balance-sub">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          {{ earnings|length }} earning{{ 's' if earnings|length != 1 else '' }} recorded
+        </div>
+      </div>
+      <div class="vendor-balance-actions">
+        <a href="/vendor/withdrawals" class="vendor-balance-pill primary">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          Request Withdrawal
+        </a>
+        <a href="/vendor/analytics" class="vendor-balance-pill">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          View Analytics
+        </a>
+      </div>
     </div>
   </div>
 
-  <div class="vendor-summary" style="margin-top:1.5rem;">
-    <div>
-      <p class="label">Total Net Earnings</p>
-      <p class="amount">₦{{ "{:,.2f}".format(total_net) }}</p>
+  {# ── Stat Cards ── #}
+  <div class="vp-stats vendor-earnings-stats">
+    <div class="vp-stat vp-stat-emerald">
+      <div class="vp-stat-icon emerald">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+      </div>
+      <span class="vp-stat-label">Gross Revenue</span>
+      <span class="vp-stat-value">&#8358;{{ "{:,.2f}".format(earnings|map(attribute='amount')|sum) }}</span>
     </div>
-    <div>
-      <p class="meta">{{ earnings|length }} earning{{ 's' if earnings|length != 1 else '' }} recorded</p>
+    <div class="vp-stat vp-stat-amber">
+      <div class="vp-stat-icon amber">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>
+      </div>
+      <span class="vp-stat-label">Total Commission</span>
+      <span class="vp-stat-value">&#8358;{{ "{:,.2f}".format(earnings|map(attribute='commission')|sum) }}</span>
+    </div>
+    <div class="vp-stat vp-stat-emerald">
+      <div class="vp-stat-icon emerald">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <span class="vp-stat-label">Net Earnings</span>
+      <span class="vp-stat-value">&#8358;{{ "{:,.2f}".format(total_net) }}</span>
     </div>
   </div>
 
-  {% if earnings %}
-  <div class="vendor-stats-grid" style="margin-top:1.5rem;">
-    <div class="vendor-stat-card">
-      <span class="label">Gross Revenue</span>
-      <span class="value">₦{{ "{:,.2f}".format(earnings|map(attribute='amount')|sum) }}</span>
-    </div>
-    <div class="vendor-stat-card">
-      <span class="label">Total Commission</span>
-      <span class="value amber">₦{{ "{:,.2f}".format(earnings|map(attribute='commission')|sum) }}</span>
-    </div>
-    <div class="vendor-stat-card">
-      <span class="label">Net Earnings</span>
-      <span class="value emerald">₦{{ "{:,.2f}".format(total_net) }}</span>
-    </div>
-  </div>
-  {% endif %}
-
-  <div class="vendor-card" style="margin-top:1.5rem;">
+  {# ── Earnings Table ── #}
+  <div class="vp-card" style="margin-bottom:1.5rem;">
     {% if earnings %}
-    <div class="vendor-card-header">
-      <h2>Payout History</h2>
+    <div class="vp-card-header">
+      <h2>Earnings History</h2>
+      <span class="vp-badge vp-badge-emerald">{{ earnings|length }} record{{ 's' if earnings|length != 1 else '' }}</span>
     </div>
-    <div class="vendor-table-container">
-      <table class="vendor-table">
+    <div class="vp-table-wrap">
+      <table class="vp-table">
         <thead>
           <tr>
             <th>Order</th>
@@ -334,11 +316,14 @@
         <tbody>
           {% for e in earnings %}
           <tr>
-            <td class="cell-amount">₦{{ "{:,.2f}".format(e.amount) }}</td>
-            <td class="hide-mobile cell-muted">₦{{ "{:,.2f}".format(e.commission) }}</td>
-            <td class="cell-net">₦{{ "{:,.2f}".format(e.net_amount) }}</td>
+            <td class="cell-amount">&#8358;{{ "{:,.2f}".format(e.amount) }}</td>
+            <td class="hide-mobile cell-muted">&#8358;{{ "{:,.2f}".format(e.commission) }}</td>
+            <td class="cell-net">&#8358;{{ "{:,.2f}".format(e.net_amount) }}</td>
             <td>
-              <span class="vendor-badge {% if e.status == 'PAID' %}paid{% elif e.status == 'SCHEDULED' %}processing{% else %}pending{% endif %}">{{ e.status }}</span>
+              <span class="vp-badge {% if e.status == 'PAID' %}vp-badge-emerald{% elif e.status == 'SCHEDULED' %}vp-badge-blue{% else %}vp-badge-amber{% endif %}">
+                <span class="vp-badge-dot"></span>
+                {{ e.status }}
+              </span>
             </td>
           </tr>
           {% endfor %}
@@ -346,11 +331,61 @@
       </table>
     </div>
     {% else %}
-    <div class="vendor-empty">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
-      <p>No earnings recorded yet.</p>
+    <div class="vp-empty">
+      <div class="vp-empty-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="2rem" height="2rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+      </div>
+      <h3>No Earnings Yet</h3>
+      <p>When you make sales, your earnings will appear here.</p>
     </div>
     {% endif %}
   </div>
+
+  {# ── Transaction Timeline ── #}
+  <div class="vp-card">
+    <div class="vp-card-header">
+      <h2>Transaction Timeline</h2>
+    </div>
+    {% if earnings %}
+    <div class="vp-card-body flush">
+      <div class="vendor-timeline">
+        {% for e in earnings %}
+        <div class="vendor-timeline-item">
+          <div class="vendor-timeline-dot {% if e.status == 'PAID' %}emerald{% elif e.status == 'SCHEDULED' %}blue{% else %}amber{% endif %}">
+            {% if e.status == 'PAID' %}
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            {% elif e.status == 'SCHEDULED' %}
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            {% else %}
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+            {% endif %}
+          </div>
+          <div class="vendor-timeline-content">
+            <div class="vendor-timeline-title">
+              {% if e.status == 'PAID' %}Payment Received{% elif e.status == 'SCHEDULED' %}Payment Scheduled{% else %}Earning Pending{% endif %}
+            </div>
+            <div class="vendor-timeline-desc">
+              Commission: &#8358;{{ "{:,.2f}".format(e.commission) }} &middot;
+              <span class="vp-badge vp-badge-{% if e.status == 'PAID' %}emerald{% elif e.status == 'SCHEDULED' %}blue{% else %}amber{% endif %}" style="font-size:0.625rem;padding:0.125rem 0.5rem;">{{ e.status }}</span>
+            </div>
+          </div>
+          <div class="vendor-timeline-meta">
+            <div class="vendor-timeline-amount positive">+&#8358;{{ "{:,.2f}".format(e.net_amount) }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% else %}
+    <div class="vp-empty">
+      <div class="vp-empty-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="2rem" height="2rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <h3>No Transactions</h3>
+      <p>Your transaction history will appear here once sales start rolling in.</p>
+    </div>
+    {% endif %}
+  </div>
+
 </div>
 {% endblock %}

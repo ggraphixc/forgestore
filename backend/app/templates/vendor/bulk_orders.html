@@ -1,84 +1,247 @@
-{% extends "admin/base.html" %}
-{% block title %}Bulk Orders — Vendor{% endblock %}
+{% extends "admin/sidebar.html" %}
+{% block title %}Bulk Orders — Vendor Portal{% endblock %}
 {% block content %}
 <style>
-  .bo-page { max-width: 1100px; margin: 0 auto; padding: 2rem; }
-  .bo-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--stone-900); }
-  .bo-card { background: var(--white, #fff); border-radius: 12px; border: 1px solid var(--stone-200, #e7e5e3); padding: 1.25rem; margin-bottom: 1rem; transition: box-shadow 0.2s; }
-  .bo-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-  .bo-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem; }
-  .bo-product { font-weight: 600; font-size: 1rem; color: var(--stone-900); }
-  .bo-customer { font-size: 0.85rem; color: var(--stone-500); }
-  .bo-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem; margin: 0.75rem 0; }
-  .bo-detail { text-align: center; }
-  .bo-detail-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--stone-400); margin-bottom: 2px; }
-  .bo-detail-value { font-weight: 600; font-size: 1rem; color: var(--stone-900); }
-  .bo-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-  .bo-pending { background: #fef3c7; color: #92400e; }
-  .bo-approved { background: #d1fae5; color: #065f46; }
-  .bo-rejected { background: #fee2e2; color: #991b1b; }
-  .bo-fulfilled { background: #dbeafe; color: #1e40af; }
-  .bo-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
-  .bo-btn { padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; min-height: 44px; }
-  .bo-btn-approve { background: #059669; color: #fff; }
-  .bo-btn-approve:hover { background: #047857; }
-  .bo-btn-reject { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-  .bo-btn-reject:hover { background: #fecaca; }
-  .bo-empty { text-align: center; padding: 3rem; color: var(--stone-400); }
-  .bo-notes { font-size: 0.85rem; color: var(--stone-600); background: var(--stone-50, #fafaf9); padding: 0.5rem 0.75rem; border-radius: 8px; margin-top: 0.5rem; }
+@import url('/static/css/vendor_portal.css');
+
+.vp-order-card {
+  background: var(--vp-bg-elevated);
+  border: 1px solid var(--vp-border);
+  border-radius: var(--vp-radius-xl);
+  overflow: hidden;
+  transition: all var(--vp-transition);
+  animation: vpSlideUp 0.4s ease-out both;
+}
+
+.vp-order-card:nth-child(1) { animation-delay: 0ms; }
+.vp-order-card:nth-child(2) { animation-delay: 50ms; }
+.vp-order-card:nth-child(3) { animation-delay: 100ms; }
+.vp-order-card:nth-child(4) { animation-delay: 150ms; }
+.vp-order-card:nth-child(5) { animation-delay: 200ms; }
+
+.vp-order-card:hover {
+  border-color: transparent;
+  box-shadow: var(--vp-shadow-lg);
+}
+
+.vp-order-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem 0;
+}
+
+.vp-order-product {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--vp-text);
+  letter-spacing: -0.01em;
+}
+
+.vp-order-customer {
+  font-size: 0.8125rem;
+  color: var(--vp-text-muted);
+  margin-top: 0.25rem;
+}
+
+.vp-order-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.25rem;
+  padding: 1rem 1.5rem;
+}
+
+.vp-order-cell {
+  text-align: center;
+  padding: 0.75rem 0.5rem;
+  border-radius: var(--vp-radius-md);
+  background: var(--vp-bg);
+}
+
+.vp-order-cell-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: var(--vp-text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.vp-order-cell-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--vp-text);
+  font-feature-settings: 'tnum';
+}
+
+.vp-order-cell-value.total {
+  color: var(--vp-accent);
+  font-size: 1.125rem;
+}
+
+.vp-order-notes {
+  margin: 0 1.5rem 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--vp-bg);
+  border-radius: var(--vp-radius-md);
+  border-left: 3px solid var(--vp-border);
+  font-size: 0.8125rem;
+  color: var(--vp-text-secondary);
+  line-height: 1.5;
+}
+
+.vp-order-notes strong {
+  color: var(--vp-text);
+  font-weight: 600;
+}
+
+.vp-order-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--vp-border-light);
+  background: var(--vp-bg);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.vp-order-actions .vp-input {
+  max-width: 180px;
+  min-height: 44px;
+}
+
+.vp-order-actions .vp-btn {
+  min-height: 44px;
+}
+
+.vp-order-btn-approve {
+  background: var(--vp-gradient-emerald);
+  color: white;
+  box-shadow: 0 4px 14px -2px rgba(16, 185, 129, 0.3);
+}
+
+.vp-order-btn-approve:hover {
+  box-shadow: 0 6px 20px -3px rgba(16, 185, 129, 0.4);
+  transform: translateY(-1px);
+}
+
+.vp-order-btn-reject {
+  background: var(--vp-red-soft);
+  color: #991b1b;
+  border: 1.5px solid var(--vp-red);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.vp-order-btn-reject:hover {
+  background: var(--vp-red);
+  color: white;
+}
+
+@keyframes vpSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 640px) {
+  .vp-order-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+  }
+  .vp-order-top { padding: 1rem 1rem 0; }
+  .vp-order-actions { padding: 0.75rem 1rem; }
+  .vp-order-notes { margin: 0 1rem 0.75rem; }
+}
 </style>
 
-<div class="bo-page">
-  <h1 class="bo-title">Bulk Orders</h1>
+<div class="vp-page">
+  <div class="vp-header">
+    <div class="vp-header-left">
+      <h1>Bulk Orders</h1>
+      <div class="vp-subtitle">Manage incoming bulk purchase requests</div>
+    </div>
+    <div class="vp-header-actions">
+      {% if orders %}
+      <span class="vp-badge vp-badge-blue"><span class="vp-badge-dot"></span> {{ orders|length }} order{{ 's' if orders|length != 1 }}</span>
+      {% endif %}
+    </div>
+  </div>
 
   {% if orders %}
+  <div style="display:flex;flex-direction:column;gap:1rem;">
     {% for order in orders %}
-    <div class="bo-card" id="bo-{{ order.id }}">
-      <div class="bo-header">
+    <div class="vp-order-card" id="bo-{{ order.id }}">
+      <div class="vp-order-top">
         <div>
-          <div class="bo-product">{{ order.product.name if order.product else 'Unknown Product' }}</div>
-          <div class="bo-customer">{{ order.customer_name }} — {{ order.customer_email }}</div>
+          <div class="vp-order-product">{{ order.product.name if order.product else 'Unknown Product' }}</div>
+          <div class="vp-order-customer">{{ order.customer_name }} &middot; {{ order.customer_email }}</div>
         </div>
-        <span class="bo-badge bo-{{ order.status|lower }}">{{ order.status }}</span>
+        <span class="vp-badge {% if order.status|lower == 'pending' %}vp-badge-amber{% elif order.status|lower == 'approved' %}vp-badge-emerald{% elif order.status|lower == 'rejected' %}vp-badge-red{% else %}vp-badge-blue{% endif %}">
+          <span class="vp-badge-dot"></span>
+          {{ order.status }}
+        </span>
       </div>
-      <div class="bo-details">
-        <div class="bo-detail">
-          <div class="bo-detail-label">Quantity</div>
-          <div class="bo-detail-value">{{ order.quantity }}</div>
+
+      <div class="vp-order-grid">
+        <div class="vp-order-cell">
+          <div class="vp-order-cell-label">Quantity</div>
+          <div class="vp-order-cell-value">{{ order.quantity }}</div>
         </div>
-        <div class="bo-detail">
-          <div class="bo-detail-label">Unit Price</div>
-          <div class="bo-detail-value">₦{{ "%.2f"|format(order.unit_price or 0) }}</div>
+        <div class="vp-order-cell">
+          <div class="vp-order-cell-label">Unit Price</div>
+          <div class="vp-order-cell-value">₦{{ "%.2f"|format(order.unit_price or 0) }}</div>
         </div>
-        <div class="bo-detail">
-          <div class="bo-detail-label">Total</div>
-          <div class="bo-detail-value">₦{{ "%.2f"|format(order.total_price or 0) }}</div>
+        <div class="vp-order-cell">
+          <div class="vp-order-cell-label">Total</div>
+          <div class="vp-order-cell-value total">₦{{ "%.2f"|format(order.total_price or 0) }}</div>
         </div>
-        <div class="bo-detail">
-          <div class="bo-detail-label">Date</div>
-          <div class="bo-detail-value">{{ order.created_at.strftime('%b %d, %Y') }}</div>
+        <div class="vp-order-cell">
+          <div class="vp-order-cell-label">Date</div>
+          <div class="vp-order-cell-value">{{ order.created_at.strftime('%b %d, %Y') }}</div>
         </div>
       </div>
+
       {% if order.notes %}
-      <div class="bo-notes">Customer notes: {{ order.notes }}</div>
-      {% endif %}
-      {% if order.status == 'PENDING' %}
-      <div class="bo-actions">
-        <input type="number" id="price-{{ order.id }}" value="{{ order.unit_price or '' }}" placeholder="Set unit price" style="padding:8px;border:1px solid var(--stone-200);border-radius:8px;width:150px;min-height:44px;">
-        <button class="bo-btn bo-btn-approve" onclick="boApprove('{{ order.id }}')">Approve</button>
-        <button class="bo-btn bo-btn-reject" onclick="boReject('{{ order.id }}')">Reject</button>
+      <div class="vp-order-notes">
+        <strong>Customer notes:</strong> {{ order.notes }}
       </div>
       {% endif %}
+
+      {% if order.status == 'PENDING' %}
+      <div class="vp-order-actions">
+        <input type="number" id="price-{{ order.id }}" value="{{ order.unit_price or '' }}" placeholder="Set unit price" class="vp-input" style="max-width:180px;">
+        <button class="vp-btn vp-order-btn-approve" onclick="boApprove('{{ order.id }}')">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          Approve
+        </button>
+        <button class="vp-btn vp-order-btn-reject" onclick="boReject('{{ order.id }}')">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          Reject
+        </button>
+      </div>
+      {% endif %}
+
       {% if order.vendor_notes %}
-      <div class="bo-notes">Your notes: {{ order.vendor_notes }}</div>
+      <div class="vp-order-notes" style="border-left-color:var(--vp-accent);">
+        <strong>Your notes:</strong> {{ order.vendor_notes }}
+      </div>
       {% endif %}
     </div>
     {% endfor %}
+  </div>
   {% else %}
-    <div class="bo-empty">
-      <svg style="width:48px;height:48px;margin:0 auto 1rem;display:block;opacity:0.3;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-      <p>No bulk order requests yet.</p>
+  <div class="vp-card">
+    <div class="vp-card-body">
+      <div class="vp-empty">
+        <div class="vp-empty-icon">
+          <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        </div>
+        <h3>No bulk orders yet</h3>
+        <p>When customers submit bulk purchase requests, they will appear here for your review.</p>
+      </div>
     </div>
+  </div>
   {% endif %}
 </div>
 

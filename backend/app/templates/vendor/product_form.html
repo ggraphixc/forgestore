@@ -2,254 +2,674 @@
 {% block title %}{{ 'Edit' if product else 'New' }} Product — Vendor Portal{% endblock %}
 {% block content %}
 <style>
-  :root{--amber-500:#f59e0b;--stone-50:#fafaf9;--stone-100:#f5f5f4;--stone-200:#e7e5e4;--stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#57534e;--stone-900:#1c1917;--emerald-50:#ecfdf5;--emerald-600:#059669;--red-50:#fef2f2;--red-600:#dc2626;}
-  .dark{--stone-50:#1c1917;--stone-100:#292524;--stone-200:#44403c;--stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#a8a29e;--stone-900:#fafaf9;--amber-500:#f59e0b;--emerald-50:#052e16;--emerald-600:#22c55e;--red-50:#450a0a;--red-600:#ef4444;}
-  .vp-wrap{max-width:1100px;margin:0 auto;padding:1rem;}
-  .vp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.5rem;}
-  .vp-header h1{font-size:1.25rem;font-weight:700;color:var(--stone-900);margin:0;}
-  .dark .vp-header h1{color:var(--stone-900);}
-  .vp-breadcrumb{display:flex;align-items:center;gap:6px;font-size:0.8125rem;color:var(--stone-400);margin-bottom:1rem;}
-  .vp-breadcrumb a{color:var(--stone-400);text-decoration:none;}
-  .vp-breadcrumb a:hover{color:var(--amber-500);}
-  .vp-card{background:var(--stone-50);border:1px solid var(--stone-200);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
-  .dark .vp-card{background:var(--stone-100);border-color:var(--stone-200);}
-  .vp-card-title{font-size:0.875rem;font-weight:700;color:var(--stone-900);margin-bottom:0.75rem;display:flex;align-items:center;gap:6px;}
-  .vp-form-group{margin-bottom:0.75rem;}
-  .vp-form-label{display:block;font-size:0.75rem;font-weight:600;color:var(--stone-600);margin-bottom:4px;}
-  .dark .vp-form-label{color:var(--stone-400);}
-  .vp-form-input{width:100%;padding:0.5rem 0.75rem;border:1px solid var(--stone-200);border-radius:8px;font-size:0.875rem;color:var(--stone-900);background:var(--stone-50);min-height:40px;box-sizing:border-box;}
-  .dark .vp-form-input{background:var(--stone-100);color:var(--stone-900);border-color:var(--stone-200);}
-  .vp-form-input:focus{outline:none;border-color:var(--amber-500);box-shadow:0 0 0 2px rgba(245,158,11,0.2);}
-  textarea.vp-form-input{min-height:80px;resize:vertical;}
-  .vp-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
-  .vp-dropzone{border:2px dashed var(--stone-200);border-radius:12px;padding:2rem;text-align:center;cursor:pointer;transition:border-color 0.15s;}
-  .vp-dropzone:hover{border-color:var(--amber-500);}
-  .vp-dropzone p{font-size:0.8125rem;color:var(--stone-400);margin:0;}
-  .vp-preview-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:0.75rem;}
-  .vp-preview-item{position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:1px solid var(--stone-200);}
-  .vp-preview-item img{width:100%;height:100%;object-fit:cover;}
-  .vp-preview-item .remove{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.6);color:#fff;border:none;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;}
-  .vp-actions{display:flex;gap:0.5rem;margin-top:1rem;}
-  .vp-btn{padding:0.5rem 1.25rem;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;border:none;min-height:40px;}
-  .vp-btn-primary{background:var(--amber-500);color:#fff;}
-  .vp-btn-primary:hover{opacity:0.9;}
-  .vp-btn-ghost{background:transparent;color:var(--stone-600);border:1px solid var(--stone-200);}
-  .vp-toggle{display:flex;align-items:center;gap:8px;}
-  .vp-toggle input[type=checkbox]{width:18px;height:18px;accent-color:var(--amber-500);}
-  .vai-inline-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border:1px solid #8b5cf6;border-radius:6px;background:rgba(139,92,246,0.08);color:#8b5cf6;font-size:0.6875rem;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;vertical-align:middle;min-height:28px;}
-  .vai-inline-btn:hover{background:#8b5cf6;color:#fff;}
-  .vai-inline-btn:disabled{opacity:0.4;cursor:not-allowed;}
-  .vai-inline-btn .vai-spin-sm{width:12px;height:12px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:vai-spin 0.6s linear infinite;display:none;}
-  .vai-inline-btn.loading .vai-spin-sm{display:block;}
-  .vai-inline-btn.loading{pointer-events:none;}
-  .vai-field-row{display:flex;align-items:center;gap:8px;}
-  .vai-field-row .vp-form-input{flex:1;}
-  @keyframes vai-spin{to{transform:rotate(360deg);}}
+  @import url('/static/css/vendor_portal.css');
 
-  /* Two-column edit grid + preview card */
-  .vp-edit-grid{display:grid;grid-template-columns:1fr;gap:1.5rem;}
-  @media(min-width:1024px){.vp-edit-grid{grid-template-columns:2fr 1fr;}}
-  .vp-preview-card{background:var(--stone-50);border:1px solid var(--stone-200);border-radius:12px;overflow:hidden;max-width:260px;}
-  .dark .vp-preview-card{background:var(--stone-100);border-color:var(--stone-200);}
-  .vp-preview-card-img{aspect-ratio:1;background:#f8f8f8;overflow:hidden;display:flex;align-items:center;justify-content:center;}
-  .dark .vp-preview-card-img{background:var(--stone-200);}
-  .vp-preview-card-img img{width:100%;height:100%;object-fit:cover;}
-  .vp-preview-card-placeholder{display:flex;align-items:center;justify-content:center;color:var(--stone-400);}
-  .vp-preview-card-placeholder svg{width:3rem;height:3rem;}
-  .vp-preview-card-body{padding:0.625rem;display:flex;flex-direction:column;gap:0.1875rem;}
-  .vp-preview-card-name{font-size:0.75rem;font-weight:500;color:var(--stone-900);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .vp-preview-card-brand{font-size:0.6875rem;color:var(--stone-500);}
-  .vp-preview-card-prices{display:flex;align-items:baseline;gap:0.375rem;flex-wrap:wrap;}
-  .vp-preview-card-price{font-size:1rem;font-weight:800;color:#f43f5e;}
-  .vp-preview-card-original{font-size:0.75rem;color:var(--stone-400);text-decoration:line-through;}
-  .vp-preview-card-discount{display:inline-flex;align-self:flex-start;background:#f43f5e;color:#fff;font-size:0.5625rem;font-weight:700;padding:0.1875rem 0.375rem;border-radius:0.25rem;margin-top:0.25rem;}
-  .vp-preview-card-cart{position:absolute;bottom:0.625rem;right:0.625rem;width:36px;height:36px;border-radius:50%;background:#fff;border:1.5px solid var(--stone-200);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
-  .vp-preview-card-cart svg{width:1rem;height:1rem;color:var(--stone-900);}
-  .vp-preview-card-flag{position:absolute;top:0.5rem;left:0.5rem;background:var(--amber-500);color:#fff;font-size:0.5625rem;font-weight:700;padding:0.125rem 0.375rem;border-radius:0.25rem;text-transform:uppercase;}
+  /* ── Product Form – Page-Specific ─────────────────────────────── */
+  .vp-form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  @media (min-width: 1024px) {
+    .vp-form-grid { grid-template-columns: 5fr 3fr; }
+  }
 
-  @media(max-width:640px){.vp-grid{grid-template-columns:1fr;}.vp-wrap{padding:0.75rem;}}
+  .vp-field { margin-bottom: 1rem; }
+  .vp-field:last-child { margin-bottom: 0; }
+
+  .vp-label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--vp-text-secondary);
+    margin-bottom: 0.375rem;
+    letter-spacing: 0.01em;
+  }
+  .dark .vp-label { color: var(--vp-text-muted); }
+
+  .vp-hint {
+    font-size: 0.75rem;
+    color: var(--vp-text-muted);
+    margin-top: 0.25rem;
+  }
+
+  textarea.vp-input { min-height: 120px; resize: vertical; line-height: 1.6; }
+
+  /* ── Dropzone ───────────────────────────────────────────────── */
+  .vp-dropzone {
+    position: relative;
+    border: 2px dashed var(--vp-border);
+    border-radius: var(--vp-radius-xl);
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--vp-transition);
+    background: var(--vp-bg);
+  }
+
+  .vp-dropzone:hover {
+    border-color: var(--vp-accent);
+    background: rgba(99, 102, 241, 0.03);
+  }
+
+  .vp-dropzone-icon {
+    width: 3rem;
+    height: 3rem;
+    margin: 0 auto 0.75rem;
+    background: var(--vp-accent-soft, rgba(99, 102, 241, 0.1));
+    border-radius: var(--vp-radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--vp-accent);
+    transition: transform var(--vp-transition-bounce);
+  }
+
+  .vp-dropzone:hover .vp-dropzone-icon { transform: scale(1.1) rotate(-3deg); }
+
+  .vp-dropzone-text {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--vp-text-secondary);
+    margin-bottom: 0.25rem;
+  }
+
+  .vp-dropzone-hint {
+    font-size: 0.75rem;
+    color: var(--vp-text-muted);
+  }
+
+  /* ── Image Preview Strip ────────────────────────────────────── */
+  .vp-preview-strip {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+  }
+
+  .vp-preview-thumb {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: var(--vp-radius-md);
+    overflow: hidden;
+    border: 2px solid var(--vp-border);
+    transition: border-color var(--vp-transition);
+    animation: vpSlideUp 0.3s ease-out both;
+  }
+
+  .vp-preview-thumb:hover { border-color: var(--vp-accent); }
+
+  .vp-preview-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .vp-preview-thumb .vp-remove-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(4px);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity var(--vp-transition);
+  }
+
+  .vp-preview-thumb:hover .vp-remove-btn { opacity: 1; }
+
+  /* ── AI Button Row ──────────────────────────────────────────── */
+  .vp-ai-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+  }
+
+  .vp-ai-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--vp-radius-md);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--vp-transition);
+    white-space: nowrap;
+    vertical-align: middle;
+    min-height: 36px;
+    border: 1.5px solid var(--vp-purple);
+    background: rgba(139, 92, 246, 0.06);
+    color: var(--vp-purple);
+  }
+
+  .vp-ai-btn:hover {
+    background: var(--vp-purple);
+    color: #fff;
+    box-shadow: 0 4px 12px -2px rgba(139, 92, 246, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .vp-ai-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .vp-ai-btn.vp-ai-cyan {
+    border-color: var(--vp-cyan);
+    background: rgba(6, 182, 212, 0.06);
+    color: var(--vp-cyan);
+  }
+  .vp-ai-btn.vp-ai-cyan:hover { background: var(--vp-cyan); color: #fff; }
+
+  .vp-ai-btn.vp-ai-amber {
+    border-color: var(--vp-amber);
+    background: rgba(245, 158, 11, 0.06);
+    color: var(--vp-amber);
+  }
+  .vp-ai-btn.vp-ai-amber:hover { background: var(--vp-amber); color: #fff; }
+
+  .vp-ai-btn.vp-ai-rose {
+    border-color: var(--vp-rose);
+    background: rgba(244, 63, 94, 0.06);
+    color: var(--vp-rose);
+  }
+  .vp-ai-btn.vp-ai-rose:hover { background: var(--vp-rose); color: #fff; }
+
+  .vp-ai-spin {
+    width: 14px;
+    height: 14px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: vpSpin 0.6s linear infinite;
+    display: none;
+  }
+
+  .vp-ai-btn.loading .vp-ai-spin { display: block; }
+  .vp-ai-btn.loading { pointer-events: none; }
+
+  @keyframes vpSpin { to { transform: rotate(360deg); } }
+
+  /* ── Field + AI Row Combo ───────────────────────────────────── */
+  .vp-field-combo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .vp-field-combo .vp-input { flex: 1; }
+
+  /* ── Slug Preview ───────────────────────────────────────────── */
+  .vp-slug-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .vp-slug-preview {
+    flex: 1;
+    padding: 0.625rem 0.875rem;
+    background: var(--vp-bg);
+    border: 1.5px solid var(--vp-border);
+    border-radius: var(--vp-radius-md);
+    font-size: 0.8125rem;
+    font-family: var(--vp-font-mono);
+    color: var(--vp-text-muted);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ── Toggle Row ─────────────────────────────────────────────── */
+  .vp-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.75rem 0;
+  }
+
+  .vp-toggle-row + .vp-toggle-row {
+    border-top: 1px solid var(--vp-border-light);
+  }
+
+  .vp-toggle-switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    background: var(--vp-border);
+    border-radius: var(--vp-radius-pill);
+    cursor: pointer;
+    transition: background var(--vp-transition);
+    border: none;
+    padding: 0;
+    flex-shrink: 0;
+  }
+
+  .vp-toggle-switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform var(--vp-transition);
+    box-shadow: var(--vp-shadow-sm);
+  }
+
+  .vp-toggle-switch.on { background: var(--vp-accent); }
+  .vp-toggle-switch.on::after { transform: translateX(20px); }
+
+  .vp-toggle-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--vp-text-secondary);
+    cursor: pointer;
+  }
+
+  /* ── Sticky Preview ─────────────────────────────────────────── */
+  @media (min-width: 1024px) {
+    .vp-preview-sticky { position: sticky; top: 1.5rem; }
+  }
+
+  .vp-preview-card-wrap {
+    background: var(--vp-bg-elevated);
+    border: 1px solid var(--vp-border);
+    border-radius: var(--vp-radius-xl);
+    overflow: hidden;
+    transition: all var(--vp-transition);
+  }
+
+  .vp-preview-card-wrap:hover { box-shadow: var(--vp-shadow-lg); }
+
+  .vp-preview-card-img {
+    aspect-ratio: 1;
+    background: var(--vp-bg);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .vp-preview-card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .vp-preview-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--vp-text-muted);
+  }
+
+  .vp-preview-placeholder svg { width: 3rem; height: 3rem; opacity: 0.4; }
+  .vp-preview-placeholder span { font-size: 0.75rem; }
+
+  .vp-preview-flag {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--vp-radius-xs);
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    z-index: 2;
+  }
+
+  .vp-preview-flag.flagship { background: var(--vp-amber); color: #fff; }
+  .vp-preview-flag.new-arrival { background: var(--vp-emerald); color: #fff; }
+
+  .vp-preview-cart {
+    position: absolute;
+    bottom: 0.75rem;
+    right: 0.75rem;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--vp-bg-elevated);
+    border: 1.5px solid var(--vp-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--vp-shadow-md);
+  }
+
+  .vp-preview-cart svg { width: 1rem; height: 1rem; color: var(--vp-text); }
+
+  .vp-preview-body {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .vp-preview-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--vp-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .vp-preview-brand {
+    font-size: 0.75rem;
+    color: var(--vp-text-muted);
+  }
+
+  .vp-preview-prices {
+    display: flex;
+    align-items: baseline;
+    gap: 0.375rem;
+    flex-wrap: wrap;
+    margin-top: 0.25rem;
+  }
+
+  .vp-preview-price {
+    font-size: 1.125rem;
+    font-weight: 800;
+    color: var(--vp-rose);
+    letter-spacing: -0.01em;
+  }
+
+  .vp-preview-original {
+    font-size: 0.75rem;
+    color: var(--vp-text-muted);
+    text-decoration: line-through;
+  }
+
+  .vp-preview-discount {
+    display: inline-flex;
+    align-self: flex-start;
+    background: var(--vp-rose);
+    color: #fff;
+    font-size: 0.625rem;
+    font-weight: 700;
+    padding: 0.1875rem 0.375rem;
+    border-radius: var(--vp-radius-xs);
+    margin-top: 0.125rem;
+  }
+
+  /* ── Actions Bar ────────────────────────────────────────────── */
+  .vp-actions {
+    display: flex;
+    gap: 0.75rem;
+    padding-top: 0.5rem;
+  }
+
+  /* ── Pricing Result ─────────────────────────────────────────── */
+  .vp-pricing-result {
+    margin-top: 0.75rem;
+    padding: 0.875rem 1rem;
+    background: rgba(139, 92, 246, 0.04);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+    border-radius: var(--vp-radius-md);
+    font-size: 0.8125rem;
+    color: var(--vp-text-secondary);
+    line-height: 1.5;
+  }
+
+  .dark .vp-pricing-result {
+    background: rgba(139, 92, 246, 0.08);
+    border-color: rgba(139, 92, 246, 0.25);
+  }
+
+  .vp-pricing-result strong { color: var(--vp-purple); }
+
+  /* ── Responsive ─────────────────────────────────────────────── */
+  @media (max-width: 640px) {
+    .vp-dropzone { padding: 1.5rem 1rem; }
+    .vp-ai-row { gap: 0.375rem; }
+  }
 </style>
 
-<div class="vp-wrap">
-  <nav class="vp-breadcrumb">
-    <a href="/vendor/products">Products</a>
+<div class="vp-page">
+  <nav class="vp-breadcrumb" style="display:flex;align-items:center;gap:6px;font-size:0.8125rem;color:var(--vp-text-muted);margin-bottom:1rem;">
+    <a href="/vendor/products" style="color:var(--vp-text-muted);text-decoration:none;transition:color var(--vp-transition);">Products</a>
     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-    <span>{{ 'Edit' if product else 'New' }}</span>
+    <span style="color:var(--vp-text-secondary);font-weight:500;">{{ 'Edit' if product else 'New' }}</span>
   </nav>
+
   <div class="vp-header">
-    <h1>{{ 'Edit Product' if product else 'New Product' }}</h1>
+    <div class="vp-header-left">
+      <h1>{{ 'Edit Product' if product else 'New Product' }}</h1>
+      <p class="vp-subtitle">{{ 'Update your product details and images' if product else 'Add a new product to your store' }}</p>
+    </div>
   </div>
 
   <form id="product-form" method="POST" action="/vendor/products{{ '/' + product.id + '/edit' if product else '/new' }}" enctype="multipart/form-data">
-    <div class="vp-edit-grid">
+    <div class="vp-form-grid">
       <div>
-    <div class="vp-card">
-      <div class="vp-card-title">Product Images</div>
-      <div class="vp-dropzone" onclick="document.getElementById('image-input').click()">
-        <input type="file" id="image-input" multiple accept="image/*" style="display:none;">
-        <p>Click to upload images (PNG, JPG)</p>
-      </div>
-      <div id="image-preview" class="vp-preview-list"></div>
-      <input type="hidden" id="images-input" name="images" value='{{ product.images|tojson if product and product.images else "[]" }}'>
-    </div>
 
-    {% if settings.product_video_enabled|default('true') != 'false' %}
-    <div class="vp-card">
-      <div class="vp-card-title">Product Video</div>
-      <div class="vp-form-group">
-        <label class="vp-form-label">Video URL (YouTube, Vimeo, or direct MP4 link)</label>
-        <input type="url" name="video_url" class="vp-form-input" placeholder="https://youtube.com/watch?v=..." value="{{ product.video_url if product and product.video_url else '' }}">
-        <p style="font-size:0.8rem;color:var(--stone-400);margin-top:4px;">Optional. Supports YouTube, Vimeo, or direct video file URLs.</p>
-      </div>
-    </div>
-    {% endif %}
-
-    <div class="vp-card">
-      <div class="vp-card-title">Basic Information</div>
-      <div class="vp-form-group">
-        <label class="vp-form-label">Product Name *</label>
-        <div class="vai-field-row">
-          <input type="text" name="name" required class="vp-form-input" placeholder="Product name" value="{{ product.name if product else '' }}" oninput="updateVpPreview()">
-          <button type="button" class="vai-inline-btn" onclick="vaiInlineOptimizeTitle()" id="vai-inline-title">
-            <span class="vai-spin-sm"></span>AI Optimize
-          </button>
+        <!-- ── Images ──────────────────────────────────────────── -->
+        <div class="vp-card" style="margin-bottom:1.5rem;">
+          <div class="vp-card-header">
+            <h3>Product Images</h3>
+          </div>
+          <div class="vp-card-body">
+            <div class="vp-dropzone" onclick="document.getElementById('image-input').click()">
+              <input type="file" id="image-input" multiple accept="image/*" style="display:none;">
+              <div class="vp-dropzone-icon">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              </div>
+              <div class="vp-dropzone-text">Click to upload images</div>
+              <div class="vp-dropzone-hint">PNG, JPG up to 10MB each</div>
+            </div>
+            <div id="image-preview" class="vp-preview-strip"></div>
+            <input type="hidden" id="images-input" name="images" value='{{ product.images|tojson if product and product.images else "[]" }}'>
+          </div>
         </div>
-      </div>
-      <div class="vp-grid">
-        <div class="vp-form-group">
-          <label class="vp-form-label">URL Slug</label>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div id="slug-preview" style="flex:1;padding:10px 12px;background:var(--stone-100,#f3f4f6);border:1px solid var(--stone-200,#e5e7eb);border-radius:8px;font-size:0.85rem;color:var(--stone-500,#6b7280);min-height:44px;display:flex;align-items:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-              {% if product and product.slug %}/products/{{ product.slug }}{% else %}/products/...{% endif %}
+
+        <!-- ── Product Video ───────────────────────────────────── -->
+        {% if settings.product_video_enabled|default('true') != 'false' %}
+        <div class="vp-card" style="margin-bottom:1.5rem;">
+          <div class="vp-card-header">
+            <h3>Product Video</h3>
+          </div>
+          <div class="vp-card-body">
+            <div class="vp-field">
+              <label class="vp-label">Video URL (YouTube, Vimeo, or direct MP4 link)</label>
+              <input type="url" name="video_url" class="vp-input" placeholder="https://youtube.com/watch?v=..." value="{{ product.video_url if product and product.video_url else '' }}">
+              <p class="vp-hint">Optional. Supports YouTube, Vimeo, or direct video file URLs.</p>
             </div>
           </div>
-          <p style="margin-top:4px;font-size:0.75rem;color:var(--stone-400,#9ca3af);">Auto-generated from product name</p>
         </div>
-        <div class="vp-form-group">
-          <label class="vp-form-label">Brand</label>
-          <input type="text" name="brand" class="vp-form-input" placeholder="Brand name" value="{{ product.brand if product and product.brand else '' }}" oninput="updateVpPreview()">
-        </div>
-      </div>
-      <div class="vp-form-group">
-        <label class="vp-form-label">Description</label>
-        <div class="vai-field-row">
-          <textarea name="description" class="vp-form-input" placeholder="Product description" style="flex:1;">{{ product.description if product and product.description else '' }}</textarea>
-        </div>
-        <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;">
-          <button type="button" class="vai-inline-btn" onclick="vaiInlineGenerateDesc()" id="vai-inline-desc">
-            <span class="vai-spin-sm"></span>AI Generate Description
-          </button>
-          <button type="button" class="vai-inline-btn" onclick="vaiInlineGenerateSpecs()" id="vai-inline-specs" style="border-color:#06b6d4;color:#06b6d4;background:rgba(6,182,212,0.08);">
-            <span class="vai-spin-sm"></span>AI Generate Specs
-          </button>
-          <button type="button" class="vai-inline-btn" onclick="vaiInlineGenerateTags()" id="vai-inline-tags" style="border-color:#f59e0b;color:#f59e0b;background:rgba(245,158,11,0.08);">
-            <span class="vai-spin-sm"></span>AI SEO Tags
-          </button>
-        </div>
-      </div>
-    </div>
+        {% endif %}
 
-    <div class="vp-card">
-      <div class="vp-card-title">Pricing & Inventory</div>
-      <div class="vp-grid">
-        <div class="vp-form-group">
-          <label class="vp-form-label">Price (₦) *</label>
-          <div class="vai-field-row">
-            <input type="number" name="price" required step="0.01" min="0" class="vp-form-input" placeholder="0.00" value="{{ product.price if product else '' }}" oninput="updateVpPreview()">
-            <button type="button" class="vai-inline-btn" onclick="vaiInlinePricingAdvisor()" id="vai-inline-price" style="border-color:#ef4444;color:#ef4444;background:rgba(239,68,68,0.08);">
-              <span class="vai-spin-sm"></span>AI Price
-            </button>
+        <!-- ── Basic Information ───────────────────────────────── -->
+        <div class="vp-card" style="margin-bottom:1.5rem;">
+          <div class="vp-card-header">
+            <h3>Basic Information</h3>
           </div>
-        </div>
-        <div class="vp-form-group">
-          <label class="vp-form-label">Discount Price (₦)</label>
-          <input type="number" name="discount_price" step="0.01" min="0" class="vp-form-input" placeholder="Optional" value="{{ product.discount_price if product and product.discount_price else '' }}" oninput="updateVpPreview()">
-        </div>
-      </div>
-      <div id="vai-pricing-result"></div>
-      <div class="vp-grid">
-        <div class="vp-form-group">
-          <label class="vp-form-label">Inventory *</label>
-          <input type="number" name="inventory" required min="0" class="vp-form-input" placeholder="0" value="{{ product.inventory if product else '0' }}">
-        </div>
-        <div class="vp-form-group">
-          <label class="vp-form-label">Category</label>
-          <select name="category_id" class="vp-form-input">
-            <option value="">Select category</option>
-            {% for cat in categories %}
-            <option value="{{ cat.id }}" {% if product and product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-      </div>
-      <div class="vp-grid">
-        <div class="vp-form-group">
-          <label class="vp-form-label">Sub-Category</label>
-          <input type="text" name="sub_category" class="vp-form-input" placeholder="e.g. Oak Furniture" value="{{ product.sub_category if product and product.sub_category else '' }}">
-        </div>
-        <div class="vp-form-group">
-          <label class="vp-form-label">Specifications</label>
-          <input type="text" name="specifications" class="vp-form-input" placeholder="e.g. Weight: 2kg, Color: Blue" value="{{ product.specifications if product and product.specifications else '' }}">
-        </div>
-      </div>
-      <p style="font-size:0.75rem;color:var(--stone-400);margin-top:2px;">Specifications: comma-separated key-value pairs.</p>
-    </div>
-
-    <div class="vp-card">
-      <div class="vp-card-title">Options</div>
-      <div class="vp-toggle">
-        <input type="checkbox" name="is_new_arrival" value="true" id="chk-new" {% if product and product.is_new_arrival %}checked{% endif %}>
-        <label for="chk-new" style="font-size:0.8125rem;color:var(--stone-600);">New Arrival</label>
-      </div>
-      <div class="vp-toggle" style="margin-top:0.5rem;">
-        <input type="checkbox" name="is_flagship" value="true" id="chk-flag" {% if product and product.is_flagship %}checked{% endif %}>
-        <label for="chk-flag" style="font-size:0.8125rem;color:var(--stone-600);">Flagship Product</label>
-      </div>
-    </div>
-
-    <div class="vp-actions">
-      <button type="submit" class="vp-btn vp-btn-primary">{{ 'Update Product' if product else 'Create Product' }}</button>
-      <a href="/vendor/products" class="vp-btn vp-btn-ghost">Cancel</a>
-    </div>
-      </div>
-
-      <!-- Live Preview -->
-      <div>
-        <div class="vp-card" style="padding:1rem;position:sticky;top:1rem;">
-          <div class="vp-card-title">
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-            Card Preview
-          </div>
-          <div class="vp-preview-card">
-            <div class="vp-preview-card-img" id="vp-preview-img" style="position:relative;">
-              {% if product and product.images and product.images|length > 0 %}
-              <img src="{{ product.images[0] }}" alt="{{ product.name }}">
-              {% else %}
-              <div class="vp-preview-card-placeholder">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-              </div>
-              {% endif %}
-              {% if product and product.is_flagship %}<span class="vp-preview-card-flag">Flagship</span>{% elif product and product.is_new_arrival %}<span class="vp-preview-card-flag" style="background:#059669;">New</span>{% endif %}
-              <div class="vp-preview-card-cart">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+          <div class="vp-card-body">
+            <div class="vp-field">
+              <label class="vp-label">Product Name *</label>
+              <div class="vp-field-combo">
+                <input type="text" name="name" required class="vp-input" placeholder="Product name" value="{{ product.name if product else '' }}" oninput="updateVpPreview()">
+                <button type="button" class="vp-ai-btn" onclick="vaiInlineOptimizeTitle()" id="vai-inline-title">
+                  <span class="vp-ai-spin"></span>AI Optimize
+                </button>
               </div>
             </div>
-            <div class="vp-preview-card-body">
-              <span class="vp-preview-card-name" id="vp-preview-name">{{ product.name if product else 'Product Name' }}</span>
-              <span class="vp-preview-card-brand" id="vp-preview-brand">{% if product and product.brand %}{{ product.brand }}{% endif %}</span>
-              <div class="vp-preview-card-prices">
-                <span class="vp-preview-card-price" id="vp-preview-price">₦{{ "{:,.0f}".format(product.discount_price if product and product.discount_price and product.discount_price < product.price else (product.price if product else 0)) }}</span>
-                {% if product and product.discount_price and product.discount_price < product.price %}
-                <span class="vp-preview-card-original" id="vp-preview-original">₦{{ "{:,.0f}".format(product.price) }}</span>
-                {% else %}
-                <span class="vp-preview-card-original" id="vp-preview-original" style="display:none;"></span>
-                {% endif %}
+            <div class="vp-grid-2" style="margin-bottom:1rem;">
+              <div class="vp-field">
+                <label class="vp-label">URL Slug</label>
+                <div class="vp-slug-bar">
+                  <div id="slug-preview" class="vp-slug-preview">
+                    {% if product and product.slug %}/products/{{ product.slug }}{% else %}/products/...{% endif %}
+                  </div>
+                </div>
+                <p class="vp-hint">Auto-generated from product name</p>
               </div>
-              {% if product and product.discount_price and product.discount_price < product.price %}
-              <div class="vp-preview-card-discount" id="vp-preview-discount">-{{ ((1 - product.discount_price / product.price) * 100)|int }}%</div>
-              {% else %}
-              <div class="vp-preview-card-discount" id="vp-preview-discount" style="display:none;"></div>
-              {% endif %}
+              <div class="vp-field">
+                <label class="vp-label">Brand</label>
+                <input type="text" name="brand" class="vp-input" placeholder="Brand name" value="{{ product.brand if product and product.brand else '' }}" oninput="updateVpPreview()">
+              </div>
+            </div>
+            <div class="vp-field">
+              <label class="vp-label">Description</label>
+              <textarea name="description" class="vp-input" placeholder="Write a compelling product description...">{{ product.description if product and product.description else '' }}</textarea>
+              <div class="vp-ai-row">
+                <button type="button" class="vp-ai-btn" onclick="vaiInlineGenerateDesc()" id="vai-inline-desc">
+                  <span class="vp-ai-spin"></span>AI Generate Description
+                </button>
+                <button type="button" class="vp-ai-btn vp-ai-cyan" onclick="vaiInlineGenerateSpecs()" id="vai-inline-specs">
+                  <span class="vp-ai-spin"></span>AI Generate Specs
+                </button>
+                <button type="button" class="vp-ai-btn vp-ai-amber" onclick="vaiInlineGenerateTags()" id="vai-inline-tags">
+                  <span class="vp-ai-spin"></span>AI SEO Tags
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Pricing & Inventory ─────────────────────────────── -->
+        <div class="vp-card" style="margin-bottom:1.5rem;">
+          <div class="vp-card-header">
+            <h3>Pricing & Inventory</h3>
+          </div>
+          <div class="vp-card-body">
+            <div class="vp-grid-2" style="margin-bottom:1rem;">
+              <div class="vp-field">
+                <label class="vp-label">Price (₦) *</label>
+                <div class="vp-field-combo">
+                  <input type="number" name="price" required step="0.01" min="0" class="vp-input" placeholder="0.00" value="{{ product.price if product else '' }}" oninput="updateVpPreview()">
+                  <button type="button" class="vp-ai-btn vp-ai-rose" onclick="vaiInlinePricingAdvisor()" id="vai-inline-price">
+                    <span class="vp-ai-spin"></span>AI Price
+                  </button>
+                </div>
+              </div>
+              <div class="vp-field">
+                <label class="vp-label">Discount Price (₦)</label>
+                <input type="number" name="discount_price" step="0.01" min="0" class="vp-input" placeholder="Optional" value="{{ product.discount_price if product and product.discount_price else '' }}" oninput="updateVpPreview()">
+              </div>
+            </div>
+            <div id="vai-pricing-result"></div>
+            <div class="vp-grid-2" style="margin-bottom:1rem;">
+              <div class="vp-field">
+                <label class="vp-label">Inventory *</label>
+                <input type="number" name="inventory" required min="0" class="vp-input" placeholder="0" value="{{ product.inventory if product else '0' }}">
+              </div>
+              <div class="vp-field">
+                <label class="vp-label">Category</label>
+                <select name="category_id" class="vp-input vp-select">
+                  <option value="">Select category</option>
+                  {% for cat in categories %}
+                  <option value="{{ cat.id }}" {% if product and product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="vp-grid-2">
+              <div class="vp-field">
+                <label class="vp-label">Sub-Category</label>
+                <input type="text" name="sub_category" class="vp-input" placeholder="e.g. Oak Furniture" value="{{ product.sub_category if product and product.sub_category else '' }}">
+              </div>
+              <div class="vp-field">
+                <label class="vp-label">Specifications</label>
+                <input type="text" name="specifications" class="vp-input" placeholder="e.g. Weight: 2kg, Color: Blue" value="{{ product.specifications if product and product.specifications else '' }}">
+              </div>
+            </div>
+            <p class="vp-hint">Specifications: comma-separated key-value pairs.</p>
+          </div>
+        </div>
+
+        <!-- ── Options ─────────────────────────────────────────── -->
+        <div class="vp-card" style="margin-bottom:1.5rem;">
+          <div class="vp-card-header">
+            <h3>Options</h3>
+          </div>
+          <div class="vp-card-body" style="padding-top:0.5rem;">
+            <div class="vp-toggle-row">
+              <button type="button" class="vp-toggle-switch {% if product and product.is_new_arrival %}on{% endif %}" id="tog-new" onclick="this.classList.toggle('on');document.getElementById('chk-new').checked=this.classList.contains('on')"></button>
+              <input type="hidden" name="is_new_arrival" value="true" id="chk-new" {% if product and product.is_new_arrival %}checked{% endif %}>
+              <label class="vp-toggle-label" for="chk-new" onclick="document.getElementById('tog-new').click()">New Arrival</label>
+            </div>
+            <div class="vp-toggle-row">
+              <button type="button" class="vp-toggle-switch {% if product and product.is_flagship %}on{% endif %}" id="tog-flag" onclick="this.classList.toggle('on');document.getElementById('chk-flag').checked=this.classList.contains('on')"></button>
+              <input type="hidden" name="is_flagship" value="true" id="chk-flag" {% if product and product.is_flagship %}checked{% endif %}>
+              <label class="vp-toggle-label" for="chk-flag" onclick="document.getElementById('tog-flag').click()">Flagship Product</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Actions ─────────────────────────────────────────── -->
+        <div class="vp-actions">
+          <button type="submit" class="vp-btn vp-btn-primary vp-btn-lg">{{ 'Update Product' if product else 'Create Product' }}</button>
+          <a href="/vendor/products" class="vp-btn vp-btn-outline">Cancel</a>
+        </div>
+
+      </div>
+
+      <!-- ── Live Preview ──────────────────────────────────────── -->
+      <div>
+        <div class="vp-preview-sticky">
+          <div class="vp-card" style="overflow:visible;">
+            <div class="vp-card-header">
+              <h3 style="display:flex;align-items:center;gap:0.5rem;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                Card Preview
+              </h3>
+            </div>
+            <div class="vp-card-body" style="display:flex;justify-content:center;">
+              <div class="vp-preview-card-wrap">
+                <div class="vp-preview-card-img" id="vp-preview-img">
+                  {% if product and product.images and product.images|length > 0 %}
+                  <img src="{{ product.images[0] }}" alt="{{ product.name }}">
+                  {% else %}
+                  <div class="vp-preview-placeholder">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span>No image</span>
+                  </div>
+                  {% endif %}
+                  {% if product and product.is_flagship %}
+                  <span class="vp-preview-flag flagship">Flagship</span>
+                  {% elif product and product.is_new_arrival %}
+                  <span class="vp-preview-flag new-arrival">New</span>
+                  {% endif %}
+                  <div class="vp-preview-cart">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+                  </div>
+                </div>
+                <div class="vp-preview-body">
+                  <span class="vp-preview-name" id="vp-preview-name">{{ product.name if product else 'Product Name' }}</span>
+                  <span class="vp-preview-brand" id="vp-preview-brand">{% if product and product.brand %}{{ product.brand }}{% endif %}</span>
+                  <div class="vp-preview-prices">
+                    <span class="vp-preview-price" id="vp-preview-price">₦{{ "{:,.0f}".format(product.discount_price if product and product.discount_price and product.discount_price < product.price else (product.price if product else 0)) }}</span>
+                    {% if product and product.discount_price and product.discount_price < product.price %}
+                    <span class="vp-preview-original" id="vp-preview-original">₦{{ "{:,.0f}".format(product.price) }}</span>
+                    {% else %}
+                    <span class="vp-preview-original" id="vp-preview-original" style="display:none;"></span>
+                    {% endif %}
+                  </div>
+                  {% if product and product.discount_price and product.discount_price < product.price %}
+                  <div class="vp-preview-discount" id="vp-preview-discount">-{{ ((1 - product.discount_price / product.price) * 100)|int }}%</div>
+                  {% else %}
+                  <div class="vp-preview-discount" id="vp-preview-discount" style="display:none;"></div>
+                  {% endif %}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -266,16 +686,15 @@ const imagesInput = document.getElementById('images-input');
 let images = JSON.parse(imagesInput.value || '[]');
 function renderPreviews() {
   const el = document.getElementById('image-preview');
-  el.innerHTML = images.map((url, i) => '<div class="vp-preview-item"><img src="'+url+'" alt="Image '+(i+1)+'"><button type="button" class="remove" onclick="removeImage('+i+')">&times;</button></div>').join('');
-  // Update preview card image
+  el.innerHTML = images.map((url, i) => '<div class="vp-preview-thumb"><img src="'+url+'" alt="Image '+(i+1)+'"><button type="button" class="vp-remove-btn" onclick="removeImage('+i+')">&times;</button></div>').join('');
   const prevImg = document.getElementById('vp-preview-img');
   if (prevImg) {
     if (images.length > 0) {
       const existing = prevImg.querySelector('img');
       if (existing) { existing.src = images[0]; }
       else {
-        const placeholder = prevImg.querySelector('.vp-preview-card-placeholder');
-        if (placeholder) placeholder.remove();
+        const ph = prevImg.querySelector('.vp-preview-placeholder');
+        if (ph) ph.remove();
         const img = document.createElement('img');
         img.src = images[0];
         img.alt = 'Preview';
@@ -284,10 +703,10 @@ function renderPreviews() {
     } else {
       const existing = prevImg.querySelector('img');
       if (existing) existing.remove();
-      if (!prevImg.querySelector('.vp-preview-card-placeholder')) {
+      if (!prevImg.querySelector('.vp-preview-placeholder')) {
         const ph = document.createElement('div');
-        ph.className = 'vp-preview-card-placeholder';
-        ph.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>';
+        ph.className = 'vp-preview-placeholder';
+        ph.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span>No image</span>';
         prevImg.appendChild(ph);
       }
     }
@@ -455,7 +874,7 @@ async function vaiInlinePricingAdvisor() {
         const a = d.advice;
         const el = document.getElementById('vai-pricing-result');
         if (el) {
-          el.innerHTML = '<div style="margin-top:8px;padding:12px;background:rgba(139,92,246,0.05);border:1px solid rgba(139,92,246,0.2);border-radius:8px;font-size:0.8125rem;"><strong>AI Pricing:</strong> ₦'+Number(a.recommended||0).toLocaleString()+' ('+a.strategy+') — '+a.reasoning+'</div>';
+          el.innerHTML = '<div class="vp-pricing-result"><strong>AI Pricing:</strong> ₦'+Number(a.recommended||0).toLocaleString()+' ('+a.strategy+') — '+a.reasoning+'</div>';
         }
       }
       vaiInlineToast('Pricing advice ready!', 'success');

@@ -2,95 +2,399 @@
 {% block title %}Reviews — {{ settings.site_name|default('ForgeStore') }}{% endblock %}
 {% block content %}
 <style>
-  :root {
-    --primary: {{ settings.primary_color|default('#f59e0b') }};
-    --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
-    --green: #10b981; --red: #ef4444; --yellow: #f59e0b; --blue: #3b82f6;
+  @import url('/static/css/vendor_portal.css');
+
+  .reviews-overview { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 2rem; }
+
+  .review-card {
+    background: var(--vp-bg-elevated);
+    border: 1px solid var(--vp-border);
+    border-radius: var(--vp-radius-xl);
+    padding: 1.5rem;
+    margin-bottom: 0.875rem;
+    transition: all var(--vp-transition);
+    animation: vpSlideUp 0.4s ease-out both;
   }
-  .dark { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --muted: #94a3b8; --border: #334155; }
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; }
-  .vr-page { max-width: 80rem; margin: 0 auto; padding: 1.5rem; }
-  .vr-page h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.25rem; }
-  .vr-sub { font-size: 0.875rem; color: var(--muted); margin-bottom: 1.5rem; }
-  .vr-top { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
-  .vr-summary { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
-  .vr-summary h3 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 0 0 0.75rem; }
-  .vr-avg { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.75rem; }
-  .vr-avg .num { font-size: 2.5rem; font-weight: 900; }
-  .vr-avg .stars { color: var(--yellow); font-size: 1.25rem; }
-  .vr-avg .count { font-size: 0.8125rem; color: var(--muted); }
-  .vr-bar-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; margin-bottom: 0.25rem; }
-  .vr-bar-row .lbl { width: 1rem; text-align: right; color: var(--muted); font-weight: 600; }
-  .vr-bar { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
-  .vr-bar-fill { height: 100%; background: var(--yellow); border-radius: 3px; }
-  .vr-bar-row .cnt { width: 2rem; text-align: right; color: var(--muted); }
-  .vr-ai-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
-  .vr-ai-label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
-  .vr-ai-item { font-size: 0.8125rem; color: var(--text); padding: 0.25rem 0; display: flex; gap: 0.375rem; }
-  .vr-ai-item::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 0.375rem; }
-  .vr-ai-pro::before { background: var(--green); }
-  .vr-ai-con::before { background: var(--red); }
-  .vr-ai-verdict { font-size: 0.8125rem; color: var(--text); font-style: italic; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border); }
-  .vr-filters { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
-  .vr-filter { min-height: 44px; padding: 0.375rem 0.75rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--muted); transition: all 0.15s; }
-  .vr-filter.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-  .vr-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-bottom: 0.75rem; }
-  .vr-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.5rem; }
-  .vr-stars { color: var(--yellow); font-size: 0.875rem; }
-  .vr-author { font-weight: 700; font-size: 0.875rem; }
-  .vr-product { font-size: 0.75rem; color: var(--muted); display: flex; align-items: center; gap: 0.5rem; }
-  .vr-product img { width: 32px; height: 32px; border-radius: 6px; object-fit: cover; }
-  .vr-title { font-weight: 700; font-size: 0.875rem; margin-bottom: 0.25rem; }
-  .vr-content { font-size: 0.8125rem; color: var(--muted); line-height: 1.5; }
-  .vr-meta { font-size: 0.6875rem; color: var(--muted); margin-top: 0.5rem; }
-  .vr-empty { text-align: center; padding: 4rem 1.5rem; color: var(--muted); }
-  .vr-pagination { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; }
-  .vr-page-btn { min-height: 44px; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); }
-  .vr-page-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-  @media (max-width: 640px) {
-    .vr-top { grid-template-columns: 1fr; }
+
+  .review-card:hover {
+    border-color: transparent;
+    box-shadow: var(--vp-shadow-lg);
+    transform: translateY(-2px);
+  }
+
+  .review-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .review-stars {
+    display: flex;
+    gap: 0.125rem;
+    font-size: 1rem;
+    letter-spacing: 1px;
+  }
+
+  .review-stars .filled { color: var(--vp-amber); }
+  .review-stars .empty { color: var(--vp-border); }
+
+  .review-author {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--vp-text);
+    margin-top: 0.25rem;
+  }
+
+  .review-product {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    text-align: right;
+  }
+
+  .review-product img {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--vp-radius-sm);
+    object-fit: cover;
+    border: 1px solid var(--vp-border);
+  }
+
+  .review-product span {
+    font-size: 0.8125rem;
+    color: var(--vp-text-secondary);
+    font-weight: 500;
+  }
+
+  .review-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--vp-text);
+    margin-bottom: 0.375rem;
+  }
+
+  .review-content {
+    font-size: 0.9375rem;
+    color: var(--vp-text-secondary);
+    line-height: 1.65;
+  }
+
+  .review-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.875rem;
+    font-size: 0.8125rem;
+    color: var(--vp-text-muted);
+  }
+
+  .review-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  .review-actions {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--vp-border-light);
+    display: flex;
+    gap: 0.625rem;
+    flex-wrap: wrap;
+  }
+
+  .review-suggest-box {
+    margin-top: 0.875rem;
+    display: none;
+    background: var(--vp-bg);
+    border: 1px solid var(--vp-border);
+    border-radius: var(--vp-radius-lg);
+    padding: 1.25rem;
+    font-size: 0.875rem;
+    color: var(--vp-text-secondary);
+    line-height: 1.6;
+    animation: vpSlideUp 0.3s ease-out;
+  }
+
+  .review-suggest-box strong {
+    color: var(--vp-accent);
+    font-weight: 700;
+  }
+
+  .sentiment-bar {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+    height: 100px;
+    padding-top: 0.5rem;
+  }
+
+  .sentiment-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .sentiment-col .bar {
+    width: 100%;
+    border-radius: var(--vp-radius-xs);
+    min-height: 4px;
+    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .sentiment-col .bar-label {
+    font-size: 0.625rem;
+    color: var(--vp-text-muted);
+    font-weight: 500;
+  }
+
+  .sentiment-legend {
+    display: flex;
+    gap: 1.25rem;
+    margin-top: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .sentiment-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  .sentiment-legend .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .dist-row {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-size: 0.8125rem;
+    margin-bottom: 0.375rem;
+  }
+
+  .dist-row .dist-label {
+    width: 1.25rem;
+    text-align: right;
+    color: var(--vp-text-muted);
+    font-weight: 700;
+    font-feature-settings: 'tnum';
+  }
+
+  .dist-row .dist-track {
+    flex: 1;
+    height: 8px;
+    background: var(--vp-border-light);
+    border-radius: var(--vp-radius-pill);
+    overflow: hidden;
+  }
+
+  .dist-row .dist-fill {
+    height: 100%;
+    border-radius: var(--vp-radius-pill);
+    background: var(--vp-gradient-primary);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dist-row .dist-count {
+    width: 2.5rem;
+    text-align: right;
+    color: var(--vp-text-muted);
+    font-weight: 600;
+    font-feature-settings: 'tnum';
+  }
+
+  .ai-summary-box {
+    background: var(--vp-bg);
+    border: 1px solid var(--vp-border);
+    border-radius: var(--vp-radius-lg);
+    padding: 1.25rem;
+  }
+
+  .ai-summary-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--vp-text-muted);
+    margin-bottom: 0.75rem;
+  }
+
+  .ai-item {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--vp-text);
+    padding: 0.375rem 0;
+    line-height: 1.5;
+  }
+
+  .ai-item::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 0.4375rem;
+  }
+
+  .ai-pro::before { background: var(--vp-emerald); }
+  .ai-con::before { background: var(--vp-red); }
+
+  .ai-verdict {
+    font-size: 0.875rem;
+    color: var(--vp-text-secondary);
+    font-style: italic;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--vp-border);
+    line-height: 1.5;
+  }
+
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    margin-top: 2rem;
+  }
+
+  .pagination button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.5rem 0.875rem;
+    border-radius: var(--vp-radius-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--vp-border);
+    background: var(--vp-bg-elevated);
+    color: var(--vp-text);
+    transition: all var(--vp-transition);
+    font-family: var(--vp-font);
+  }
+
+  .pagination button:hover {
+    border-color: var(--vp-accent);
+    color: var(--vp-accent);
+  }
+
+  .pagination button.active {
+    background: var(--vp-gradient-accent);
+    color: white;
+    border-color: transparent;
+    box-shadow: var(--vp-shadow-glow);
+  }
+
+  .empty-reviews {
+    text-align: center;
+    padding: 5rem 2rem;
+  }
+
+  .empty-reviews-icon {
+    width: 4.5rem;
+    height: 4.5rem;
+    margin: 0 auto 1.5rem;
+    background: var(--vp-bg);
+    border-radius: var(--vp-radius-xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--vp-text-muted);
+    font-size: 1.5rem;
+  }
+
+  .empty-reviews h3 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--vp-text);
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-reviews p {
+    font-size: 0.9375rem;
+    color: var(--vp-text-secondary);
+  }
+
+  @media (max-width: 768px) {
+    .reviews-overview { grid-template-columns: 1fr; }
+    .review-card-top { flex-direction: column; }
+    .review-product { justify-content: flex-start; text-align: left; }
   }
 </style>
 
-<div class="vr-page">
-  <h1>Customer Reviews</h1>
-  <p class="vr-sub">AI-powered review insights and customer feedback</p>
-
-  <div class="vr-top">
-    <div class="vr-summary" id="vrSummary">
-      <h3>Rating Overview</h3>
-      <div class="vr-avg"><span class="num" id="vr-avg-num">—</span><span class="stars" id="vr-avg-stars"></span><span class="count" id="vr-avg-count"></span></div>
-      <div id="vr-dist"></div>
+<div class="vp-page">
+  <div class="vp-header">
+    <div class="vp-header-left">
+      <h1>Customer Reviews</h1>
+      <p class="vp-subtitle">AI-powered review insights and customer feedback</p>
     </div>
-    <div class="vr-summary">
-      <h3>AI Review Summary</h3>
-      <div class="vr-ai-box" id="vrAI">
-        <div style="text-align:center;padding:1rem;color:var(--muted);font-size:0.8125rem;">Loading AI summary...</div>
+    <div class="vp-header-actions">
+      <button class="vp-btn vp-btn-outline vp-btn-sm" onclick="vrLoadStats();vrLoadAI();vrLoadSentiment();vrLoadList();">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <div class="reviews-overview">
+    <div class="vp-card">
+      <div class="vp-card-header">
+        <h3>Rating Overview</h3>
+      </div>
+      <div class="vp-card-body">
+        <div style="display:flex;align-items:baseline;gap:0.625rem;margin-bottom:1rem;">
+          <span id="vr-avg-num" style="font-size:2.75rem;font-weight:900;color:var(--vp-text);letter-spacing:-0.03em;line-height:1;">—</span>
+          <span id="vr-avg-stars" style="font-size:1.125rem;color:var(--vp-amber);letter-spacing:2px;"></span>
+          <span id="vr-avg-count" style="font-size:0.8125rem;color:var(--vp-text-muted);"></span>
+        </div>
+        <div id="vr-dist"></div>
+      </div>
+    </div>
+    <div class="vp-card">
+      <div class="vp-card-header">
+        <h3>AI Review Summary</h3>
+      </div>
+      <div class="vp-card-body">
+        <div class="ai-summary-box" id="vrAI">
+          <div style="text-align:center;padding:1.25rem;color:var(--vp-text-muted);font-size:0.875rem;">Loading AI summary...</div>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="vr-summary" style="margin-bottom:1.5rem;">
-    <h3>Sentiment Trend</h3>
-    <div id="vrSentiment" style="display:flex;gap:0.5rem;align-items:flex-end;height:80px;"></div>
-    <div style="display:flex;gap:1rem;margin-top:0.5rem;font-size:0.6875rem;">
-      <span style="color:var(--green);">● Positive</span>
-      <span style="color:var(--yellow);">● Neutral</span>
-      <span style="color:var(--red);">● Negative</span>
+  <div class="vp-card" style="margin-bottom:2rem;">
+    <div class="vp-card-header">
+      <h3>Sentiment Trend</h3>
+    </div>
+    <div class="vp-card-body">
+      <div class="sentiment-bar" id="vrSentiment"></div>
+      <div class="sentiment-legend">
+        <span><span class="dot" style="background:var(--vp-emerald);"></span> Positive</span>
+        <span><span class="dot" style="background:var(--vp-amber);"></span> Neutral</span>
+        <span><span class="dot" style="background:var(--vp-red);"></span> Negative</span>
+      </div>
     </div>
   </div>
 
-  <div class="vr-filters" id="vrFilters">
-    <button class="vr-filter active" data-rating="">All</button>
-    <button class="vr-filter" data-rating="5">5 Stars</button>
-    <button class="vr-filter" data-rating="4">4 Stars</button>
-    <button class="vr-filter" data-rating="3">3 Stars</button>
-    <button class="vr-filter" data-rating="2">2 Stars</button>
-    <button class="vr-filter" data-rating="1">1 Star</button>
+  <div class="vp-tabs" id="vrFilters">
+    <button class="vp-tab active" data-rating="">All Reviews</button>
+    <button class="vp-tab" data-rating="5">5 Stars</button>
+    <button class="vp-tab" data-rating="4">4 Stars</button>
+    <button class="vp-tab" data-rating="3">3 Stars</button>
+    <button class="vp-tab" data-rating="2">2 Stars</button>
+    <button class="vp-tab" data-rating="1">1 Star</button>
   </div>
 
   <div id="vrList"></div>
-  <div class="vr-pagination" id="vrPagination"></div>
+  <div class="pagination" id="vrPagination"></div>
 </div>
 
 <script>
@@ -109,7 +413,7 @@ async function vrLoadStats() {
   for (let i = 5; i >= 1; i--) {
     const cnt = d.distribution[i] || 0;
     const pct = d.total > 0 ? (cnt / d.total * 100) : 0;
-    distHtml += `<div class="vr-bar-row"><span class="lbl">${i}</span><div class="vr-bar"><div class="vr-bar-fill" style="width:${pct}%"></div></div><span class="cnt">${cnt}</span></div>`;
+    distHtml += `<div class="dist-row"><span class="dist-label">${i}</span><div class="dist-track"><div class="dist-fill" style="width:${pct}%"></div></div><span class="dist-count">${cnt}</span></div>`;
   }
   document.getElementById('vr-dist').innerHTML = distHtml;
 }
@@ -121,29 +425,29 @@ async function vrLoadAI() {
   const s = d.summary;
   let html = '';
   if (s.pros && s.pros.length) {
-    html += s.pros.map(p => `<div class="vr-ai-item vr-ai-pro">${p}</div>`).join('');
+    html += s.pros.map(p => `<div class="ai-item ai-pro">${p}</div>`).join('');
   }
   if (s.cons && s.cons.length) {
-    html += s.cons.map(c => `<div class="vr-ai-item vr-ai-con">${c}</div>`).join('');
+    html += s.cons.map(c => `<div class="ai-item ai-con">${c}</div>`).join('');
   }
   if (s.verdict) {
-    html += `<div class="vr-ai-verdict">${s.verdict}</div>`;
+    html += `<div class="ai-verdict">${s.verdict}</div>`;
   }
-  document.getElementById('vrAI').innerHTML = html || '<div style="padding:0.5rem;color:var(--muted);font-size:0.8125rem;">No summary available</div>';
+  document.getElementById('vrAI').innerHTML = html || '<div style="padding:0.75rem;color:var(--vp-text-muted);font-size:0.875rem;">No summary available</div>';
 }
 
 async function vrLoadSentiment() {
   const r = await fetch('/api/vendor/reviews/sentiment');
   const d = await r.json();
   const el = document.getElementById('vrSentiment');
-  if (!d.data_points.length) { el.innerHTML = '<div style="font-size:0.8125rem;color:var(--muted);">No data</div>'; return; }
+  if (!d.data_points.length) { el.innerHTML = '<div style="font-size:0.875rem;color:var(--vp-text-muted);padding:1rem 0;">No sentiment data available yet</div>'; return; }
   const maxVal = Math.max(...d.data_points.map(p => p.positive + p.neutral + p.negative), 1);
   el.innerHTML = d.data_points.slice(-14).map(p => {
     const total = p.positive + p.neutral + p.negative;
-    const h = Math.max((total / maxVal) * 70, 4);
-    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
-      <div style="width:100%;height:${h}px;background:linear-gradient(to top, var(--red) ${p.negative/total*100||0}%, var(--yellow) ${(p.negative+p.neutral)/total*100||0}%, var(--green) 100%);border-radius:4px;min-height:4px;"></div>
-      <div style="font-size:0.5rem;color:var(--muted);">${p.date.slice(5)}</div>
+    const h = Math.max((total / maxVal) * 80, 4);
+    return `<div class="sentiment-col">
+      <div class="bar" style="height:${h}px;background:linear-gradient(to top, var(--vp-red) ${p.negative/total*100||0}%, var(--vp-amber) ${(p.negative+p.neutral)/total*100||0}%, var(--vp-emerald) 100%);"></div>
+      <div class="bar-label">${p.date.slice(5)}</div>
     </div>`;
   }).join('');
 }
@@ -151,7 +455,7 @@ async function vrLoadSentiment() {
 async function vrSuggestResponse(reviewId) {
   const el = document.getElementById('vr-suggest-' + reviewId);
   el.style.display = 'block';
-  el.innerHTML = '<div style="color:var(--muted);">Generating...</div>';
+  el.innerHTML = '<div style="display:flex;align-items:center;gap:0.5rem;color:var(--vp-text-muted);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite;"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg> Generating suggestion...</div>';
   const r = await fetch(`/api/vendor/reviews/${reviewId}/suggest-response`, {method: 'POST'});
   const d = await r.json();
   el.innerHTML = `<strong>AI Suggestion:</strong> ${d.suggestion || 'No suggestion available'}`;
@@ -163,29 +467,38 @@ async function vrLoadList(page = 1) {
   const d = await r.json();
 
   if (!d.reviews.length) {
-    document.getElementById('vrList').innerHTML = `<div class="vr-empty"><p>No reviews found</p></div>`;
+    document.getElementById('vrList').innerHTML = `<div class="empty-reviews"><div class="empty-reviews-icon">★</div><h3>No reviews found</h3><p>There are no reviews matching your current filters.</p></div>`;
     document.getElementById('vrPagination').innerHTML = '';
     return;
   }
 
   let html = '';
   for (const rv of d.reviews) {
-    const stars = '★'.repeat(rv.rating) + '☆'.repeat(5 - rv.rating);
     const date = rv.created_at ? new Date(rv.created_at).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'}) : '';
     const img = rv.product_image ? `<img src="${rv.product_image}" alt="">` : '';
-    html += `<div class="vr-card">
-      <div class="vr-card-header">
+    const filledStars = '★'.repeat(rv.rating);
+    const emptyStars = '☆'.repeat(5 - rv.rating);
+    html += `<div class="review-card">
+      <div class="review-card-top">
         <div>
-          <div class="vr-stars">${stars}</div>
-          <div class="vr-author">${rv.author}</div>
+          <div class="review-stars"><span class="filled">${filledStars}</span><span class="empty">${emptyStars}</span></div>
+          <div class="review-author">${rv.author}</div>
         </div>
-        <div class="vr-product">${img}<span>${rv.product_name}</span></div>
+        <div class="review-product">${img}<span>${rv.product_name}</span></div>
       </div>
-      ${rv.title ? `<div class="vr-title">${rv.title}</div>` : ''}
-      ${rv.content ? `<div class="vr-content">${rv.content}</div>` : ''}
-      <div class="vr-meta">${date} · ${rv.helpful} found helpful</div>
-      <div style="margin-top:0.5rem;"><button onclick="vrSuggestResponse('${rv.id}')" style="min-height:32px;padding:0.25rem 0.75rem;border-radius:6px;font-size:0.6875rem;font-weight:600;cursor:pointer;border:1px solid var(--blue);background:transparent;color:var(--blue);">AI Suggest Response</button></div>
-      <div id="vr-suggest-${rv.id}" style="margin-top:0.5rem;display:none;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:0.75rem;font-size:0.8125rem;"></div>
+      ${rv.title ? `<div class="review-title">${rv.title}</div>` : ''}
+      ${rv.content ? `<div class="review-content">${rv.content}</div>` : ''}
+      <div class="review-meta">
+        <span>${date}</span>
+        <span>${rv.helpful} found helpful</span>
+      </div>
+      <div class="review-actions">
+        <button class="vp-btn vp-btn-outline vp-btn-sm" onclick="vrSuggestResponse('${rv.id}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          AI Suggest Response
+        </button>
+      </div>
+      <div class="review-suggest-box" id="vr-suggest-${rv.id}"></div>
     </div>`;
   }
   document.getElementById('vrList').innerHTML = html;
@@ -193,15 +506,15 @@ async function vrLoadList(page = 1) {
   let pag = '';
   if (d.pages > 1) {
     for (let i = 1; i <= d.pages; i++) {
-      pag += `<button class="vr-page-btn ${i === page ? 'active' : ''}" onclick="vrLoadList(${i})">${i}</button>`;
+      pag += `<button class="${i === page ? 'active' : ''}" onclick="vrLoadList(${i})">${i}</button>`;
     }
   }
   document.getElementById('vrPagination').innerHTML = pag;
 }
 
-document.querySelectorAll('.vr-filter').forEach(btn => {
+document.querySelectorAll('#vrFilters .vp-tab').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.vr-filter').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#vrFilters .vp-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     vrRating = btn.dataset.rating;
     vrLoadList(1);
@@ -213,4 +526,5 @@ vrLoadAI();
 vrLoadSentiment();
 vrLoadList();
 </script>
+<style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
 {% endblock %}

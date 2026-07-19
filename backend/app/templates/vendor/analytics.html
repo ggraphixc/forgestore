@@ -2,149 +2,202 @@
 {% block title %}Analytics &mdash; {{ settings.site_name|default('ForgeStore') }}{% endblock %}
 {% block content %}
 <style>
-  :root {
-    --va-primary: {{ settings.primary_color|default('#f59e0b') }};
-    --va-primary-hover: {{ settings.secondary_color|default('#d97706') }};
-    --va-primary-light: #fef3c7;
-    --va-text: {{ settings.text_color|default('#78716c') }};
-    --va-text-dark: {{ settings.dark_color|default('#1c1917') }};
-    --va-text-muted: #a8a29e;
-    --va-border: #e7e5e4;
-    --va-border-light: #f5f5f4;
-    --va-bg: #f5f5f4;
-    --va-bg-alt: #ffffff;
-    --va-emerald: #10b981;
-    --va-emerald-light: #d1fae5;
-    --va-blue: #3b82f6;
-    --va-blue-light: #dbeafe;
-    --va-amber: #f59e0b;
-    --va-amber-light: #fef3c7;
-    --va-purple: #8b5cf6;
-    --va-purple-light: #ede9fe;
-    --va-red: #ef4444;
-    --va-red-light: #fee2e2;
-    --va-shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-    --va-shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
-    --va-radius-lg: 1rem;
-    --va-radius-md: 0.75rem;
+  @import url('/static/css/vendor_portal.css');
+
+  .analytics-filter-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .analytics-date-group { display: flex; gap: 0.375rem; align-items: center; }
+  .analytics-date-group .vp-input { width: auto; min-width: 140px; font-size: 0.8125rem; padding: 0.5rem 0.75rem; }
+  .analytics-date-sep { font-size: 0.75rem; color: var(--vp-text-muted); }
+  .analytics-export-group { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+
+  .analytics-chart-row { display: grid; grid-template-columns: 1fr; gap: 1.25rem; margin-top: 1.5rem; }
+  .analytics-chart-row.wide { grid-template-columns: 1fr; }
+  .analytics-chart-main { min-height: 280px; }
+  .analytics-chart-side { min-height: 260px; }
+  .analytics-chart-wrap { position: relative; height: 100%; }
+
+  .analytics-section { margin-top: 1.5rem; }
+
+  .analytics-product-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid var(--vp-border-light); }
+  .analytics-product-row:last-child { border-bottom: none; }
+  .analytics-product-img { width: 2.5rem; height: 2.5rem; border-radius: var(--vp-radius-sm); object-fit: cover; background: var(--vp-bg); flex-shrink: 0; }
+  .analytics-product-info { flex: 1; min-width: 0; }
+  .analytics-product-name { font-size: 0.875rem; font-weight: 600; color: var(--vp-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .analytics-product-meta { font-size: 0.75rem; color: var(--vp-text-muted); margin-top: 0.125rem; }
+  .analytics-product-rev { font-size: 0.875rem; font-weight: 700; color: var(--vp-text); text-align: right; white-space: nowrap; }
+
+  .analytics-category-bar { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0; }
+  .analytics-category-label { font-size: 0.8125rem; font-weight: 600; color: var(--vp-text); min-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .analytics-category-track { flex: 1; height: 8px; background: var(--vp-border-light); border-radius: var(--vp-radius-pill); overflow: hidden; }
+  .analytics-category-fill { height: 100%; border-radius: var(--vp-radius-pill); transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+  .analytics-category-value { font-size: 0.75rem; font-weight: 700; color: var(--vp-text-muted); min-width: 48px; text-align: right; font-feature-settings: 'tnum'; }
+
+  .analytics-insight-row { display: flex; gap: 0.75rem; align-items: flex-start; padding: 0.875rem 1rem; border: 1px solid var(--vp-border); border-radius: var(--vp-radius-lg); transition: all var(--vp-transition); }
+  .analytics-insight-row:hover { background: var(--vp-bg); }
+  .analytics-insight-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 0.375rem; }
+  .analytics-insight-title { font-weight: 700; font-size: 0.875rem; color: var(--vp-text); }
+  .analytics-insight-body { font-size: 0.8125rem; color: var(--vp-text-secondary); margin-top: 0.25rem; line-height: 1.5; }
+  .analytics-insight-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+  .analytics-table-id { font-weight: 600; color: var(--vp-text); font-family: var(--vp-font-mono); font-size: 0.8125rem; }
+  .analytics-table-total { font-weight: 700; color: var(--vp-text); }
+  .analytics-table-date { color: var(--vp-text-secondary); white-space: nowrap; }
+
+  @media (min-width: 768px) {
+    .analytics-chart-row.wide { grid-template-columns: 5fr 3fr; }
   }
-  .va-page { max-width:72rem; margin:0 auto; padding:1.5rem; }
-  .va-header { display:flex; flex-wrap:wrap; align-items:center; gap:.75rem; justify-content:space-between; }
-  .va-header h1 { font-size:1.5rem; font-weight:700; color:var(--va-text-dark); margin:0; }
-  .va-header .sub { font-size:.875rem; color:var(--va-text-muted); margin-top:.25rem; }
-  .va-filters { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:1rem; }
-  .va-filter-btn { padding:.5rem 1rem; border-radius:var(--va-radius-md); border:1px solid var(--va-border); background:var(--va-bg-alt); font-size:.8125rem; font-weight:600; color:var(--va-text); cursor:pointer; transition:all .15s; min-height:44px; }
-  .va-filter-btn:hover { border-color:var(--va-primary); color:var(--va-primary); }
-  .va-filter-btn.active { background:var(--va-primary); color:white; border-color:var(--va-primary); }
-  .va-stats { display:grid; grid-template-columns:repeat(2,1fr); gap:.75rem; margin-top:1.5rem; }
-  @media(min-width:640px) { .va-stats { grid-template-columns:repeat(3,1fr); } }
-  @media(min-width:1024px) { .va-stats { grid-template-columns:repeat(6,1fr); } }
-  .va-stat { background:var(--va-bg-alt); border:1px solid var(--va-border); border-radius:var(--va-radius-lg); padding:1rem; }
-  .va-stat .lbl { font-size:.6875rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--va-text-muted); }
-  .va-stat .val { font-size:1.5rem; font-weight:900; color:var(--va-text-dark); font-variant-numeric:tabular-nums; margin-top:.25rem; }
-  .va-stat .meta { font-size:.6875rem; color:var(--va-text-muted); margin-top:.125rem; }
-  .va-stat .trend { font-size:.6875rem; font-weight:600; margin-top:.25rem; }
-  .va-stat .trend.up { color:var(--va-emerald); }
-  .va-stat .trend.down { color:var(--va-red); }
-  .va-chart-row { display:grid; grid-template-columns:1fr; gap:1rem; margin-top:1.5rem; }
-  @media(min-width:768px) { .va-chart-row { grid-template-columns:2fr 1fr; } }
-  .va-card { background:var(--va-bg-alt); border:1px solid var(--va-border); border-radius:var(--va-radius-lg); overflow:hidden; }
-  .va-card-hdr { padding:1rem 1.25rem; border-bottom:1px solid var(--va-border-light); display:flex; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap; }
-  .va-card-hdr h2 { font-size:.875rem; font-weight:700; color:var(--va-text-dark); margin:0; }
-  .va-card-body { padding:1.25rem; }
-  .va-table { width:100%; font-size:.8125rem; border-collapse:collapse; }
-  .va-table th { padding:.625rem 1rem; text-align:left; font-size:.6875rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--va-text-muted); border-bottom:1px solid var(--va-border-light); background:var(--va-bg); white-space:nowrap; }
-  .va-table td { padding:.625rem 1rem; border-bottom:1px solid var(--va-border-light); color:var(--va-text); }
-  .va-table tbody tr:hover { background:var(--va-bg); }
-  .va-table tbody tr:last-child td { border-bottom:none; }
-  .va-badge { display:inline-block; font-size:.625rem; font-weight:700; padding:.1875rem .5rem; border-radius:9999px; line-height:1.4; white-space:nowrap; }
-  .va-badge--green { background:var(--va-emerald-light); color:#065f46; }
-  .va-badge--amber { background:var(--va-amber-light); color:#92400e; }
-  .va-badge--blue { background:var(--va-blue-light); color:#1e40af; }
-  .va-badge--red { background:var(--va-red-light); color:#991b1b; }
-  .va-badge--purple { background:var(--va-purple-light); color:#5b21b6; }
-  .va-empty { padding:3rem 1.25rem; text-align:center; font-size:.875rem; color:var(--va-text-muted); }
-  .va-empty svg { width:2.5rem; height:2.5rem; margin:0 auto .75rem; color:var(--va-border); }
-  .va-product-row { display:flex; align-items:center; gap:.75rem; padding:.625rem 0; border-bottom:1px solid var(--va-border-light); }
-  .va-product-row:last-child { border-bottom:none; }
-  .va-product-img { width:2.5rem; height:2.5rem; border-radius:.5rem; object-fit:cover; background:var(--va-bg); flex-shrink:0; }
-  .va-product-name { font-size:.8125rem; font-weight:600; color:var(--va-text-dark); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .va-product-meta { font-size:.6875rem; color:var(--va-text-muted); }
-  .va-product-rev { font-size:.8125rem; font-weight:700; color:var(--va-text-dark); text-align:right; white-space:nowrap; }
-  @media(max-width:640px) { .va-page { padding:1rem; } .va-header h1 { font-size:1.25rem; } .va-stat .val { font-size:1.25rem; } }
+  @media (min-width: 1024px) {
+    .analytics-chart-row { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 768px) {
+    .analytics-date-group .vp-input { min-width: 110px; font-size: 0.75rem; }
+  }
 </style>
 
-<div class="va-page">
-  <div class="va-header">
-    <div>
+<div class="vp-page">
+  <div class="vp-header">
+    <div class="vp-header-left">
       <h1>Analytics</h1>
-      <p class="sub">Sales performance, revenue insights, and top products</p>
+      <p class="vp-subtitle">Sales performance, revenue insights, and top products</p>
     </div>
-    <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
-      <div style="display:flex;gap:.375rem;align-items:center;">
-        <input type="date" id="va-start-date" style="padding:.375rem .5rem;border:1px solid var(--va-border);border-radius:.5rem;font-size:.75rem;background:var(--va-bg-alt);color:var(--va-text-dark);min-height:44px;">
-        <span style="color:var(--va-text-muted);font-size:.75rem;">to</span>
-        <input type="date" id="va-end-date" style="padding:.375rem .5rem;border:1px solid var(--va-border);border-radius:.5rem;font-size:.75rem;background:var(--va-bg-alt);color:var(--va-text-dark);min-height:44px;">
-        <button onclick="vaApplyDateRange()" style="padding:.375rem .75rem;border:1px solid var(--va-border);border-radius:.5rem;font-size:.75rem;font-weight:600;cursor:pointer;background:var(--va-primary);color:#fff;">Apply</button>
+    <div class="vp-header-actions">
+      <div class="analytics-date-group">
+        <input type="date" id="va-start-date" class="vp-input">
+        <span class="analytics-date-sep">to</span>
+        <input type="date" id="va-end-date" class="vp-input">
+        <button onclick="vaApplyDateRange()" class="vp-btn vp-btn-primary vp-btn-sm">Apply</button>
       </div>
-      <button onclick="vaExportCSV()" style="padding:.375rem .75rem;border:1px solid var(--va-border);border-radius:.5rem;font-size:.75rem;font-weight:600;cursor:pointer;background:var(--va-bg-alt);color:var(--va-text-dark);display:flex;align-items:center;gap:.375rem;">
-        <svg style="width:.875rem;height:.875rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      <button onclick="vaExportCSV()" class="vp-btn vp-btn-outline vp-btn-sm">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         Export CSV
       </button>
-      <button onclick="vaExportPDF()" style="padding:.375rem .75rem;border:1px solid var(--va-border);border-radius:.5rem;font-size:.75rem;font-weight:600;cursor:pointer;background:var(--va-bg-alt);color:var(--va-text-dark);">Export PDF</button>
-      <div class="va-filters">
-        <button class="va-filter-btn active" onclick="setPeriod('daily',this)">Daily</button>
-        <button class="va-filter-btn" onclick="setPeriod('weekly',this)">Weekly</button>
-        <button class="va-filter-btn" onclick="setPeriod('monthly',this)">Monthly</button>
+      <button onclick="vaExportPDF()" class="vp-btn vp-btn-outline vp-btn-sm">Export PDF</button>
+    </div>
+  </div>
+
+  <div class="analytics-filter-row">
+    <div class="vp-tabs">
+      <button class="vp-tab active" onclick="setPeriod('daily',this)">Daily</button>
+      <button class="vp-tab" onclick="setPeriod('weekly',this)">Weekly</button>
+      <button class="vp-tab" onclick="setPeriod('monthly',this)">Monthly</button>
+    </div>
+  </div>
+
+  <div id="va-ai-insights" style="margin-bottom: 1.5rem; display: none;">
+    <div class="vp-card">
+      <div class="vp-card-header">
+        <h2>AI Insights</h2>
+        <span class="vp-badge vp-badge-purple"><span class="vp-badge-dot"></span> AI-Powered</span>
+      </div>
+      <div class="vp-card-body">
+        <div class="analytics-insight-list" id="va-insights-body"></div>
       </div>
     </div>
   </div>
 
-  <div id="va-ai-insights" style="margin-bottom:1.5rem;display:none;">
-    <div class="va-card">
-      <div class="va-card-hdr"><h2>AI Insights</h2><span style="font-size:.6875rem;color:var(--va-text-muted)">Powered by AI</span></div>
-      <div class="va-card-body" id="va-insights-body" style="display:flex;flex-direction:column;gap:.75rem;"></div>
+  <div class="vp-stats" id="stats-grid">
+    <div class="vp-stat vp-stat-amber">
+      <div class="vp-stat-icon amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <div class="vp-stat-label">Revenue</div>
+      <div class="vp-stat-value" id="s-revenue">-</div>
+      <div class="vp-stat-change" id="s-revenue-meta"></div>
+    </div>
+    <div class="vp-stat vp-stat-blue">
+      <div class="vp-stat-icon blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+      </div>
+      <div class="vp-stat-label">Orders</div>
+      <div class="vp-stat-value" id="s-orders">-</div>
+      <div class="vp-stat-change" id="s-orders-meta"></div>
+    </div>
+    <div class="vp-stat vp-stat-emerald">
+      <div class="vp-stat-icon emerald">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+      </div>
+      <div class="vp-stat-label">Avg Order</div>
+      <div class="vp-stat-value" id="s-aov">-</div>
+      <div class="vp-stat-change" style="background: var(--vp-border-light); color: var(--vp-text-muted);">per order</div>
+    </div>
+    <div class="vp-stat vp-stat-purple">
+      <div class="vp-stat-icon purple">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zm13 0l-3 3m0 0l-3-3m3 3V4"/></svg>
+      </div>
+      <div class="vp-stat-label">Customers</div>
+      <div class="vp-stat-value" id="s-customers">-</div>
+      <div class="vp-stat-change" id="s-customers-meta"></div>
+    </div>
+    <div class="vp-stat vp-stat-rose">
+      <div class="vp-stat-icon rose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+      </div>
+      <div class="vp-stat-label">Net Earnings</div>
+      <div class="vp-stat-value" id="s-earnings">-</div>
+      <div class="vp-stat-change" id="s-earnings-meta"></div>
+    </div>
+    <div class="vp-stat vp-stat-blue">
+      <div class="vp-stat-icon cyan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+      </div>
+      <div class="vp-stat-label">Page Views</div>
+      <div class="vp-stat-value" id="s-views">-</div>
+      <div class="vp-stat-change" id="s-views-meta"></div>
     </div>
   </div>
 
-  <div class="va-stats" id="stats-grid">
-    <div class="va-stat"><span class="lbl">Revenue</span><span class="val" id="s-revenue">-</span><span class="meta" id="s-revenue-meta"></span></div>
-    <div class="va-stat"><span class="lbl">Orders</span><span class="val" id="s-orders">-</span><span class="meta" id="s-orders-meta"></span></div>
-    <div class="va-stat"><span class="lbl">Avg Order</span><span class="val" id="s-aov">-</span><span class="meta">per order</span></div>
-    <div class="va-stat"><span class="lbl">Customers</span><span class="val" id="s-customers">-</span><span class="meta" id="s-customers-meta"></span></div>
-    <div class="va-stat"><span class="lbl">Net Earnings</span><span class="val" id="s-earnings">-</span><span class="meta" id="s-earnings-meta"></span></div>
-    <div class="va-stat"><span class="lbl">Page Views</span><span class="val" id="s-views">-</span><span class="meta" id="s-views-meta"></span></div>
-  </div>
-
-  <div class="va-chart-row">
-    <div class="va-card">
-      <div class="va-card-hdr"><h2>Revenue Trend</h2></div>
-      <div class="va-card-body"><canvas id="revenueChart" height="220"></canvas></div>
+  <div class="analytics-chart-row wide">
+    <div class="vp-card">
+      <div class="vp-card-header"><h2>Revenue Trend</h2></div>
+      <div class="vp-card-body analytics-chart-main">
+        <div class="analytics-chart-wrap"><canvas id="revenueChart"></canvas></div>
+      </div>
     </div>
-    <div class="va-card">
-      <div class="va-card-hdr"><h2>Order Status</h2></div>
-      <div class="va-card-body"><canvas id="statusChart" height="220"></canvas></div>
+    <div class="vp-card">
+      <div class="vp-card-header"><h2>Order Status</h2></div>
+      <div class="vp-card-body analytics-chart-side">
+        <div class="analytics-chart-wrap"><canvas id="statusChart"></canvas></div>
+      </div>
     </div>
   </div>
 
-  <div class="va-chart-row" style="margin-top:1rem">
-    <div class="va-card">
-      <div class="va-card-hdr"><h2>Top Products</h2></div>
-      <div class="va-card-body" id="top-products"><div class="va-empty">Loading...</div></div>
+  <div class="analytics-chart-row" style="margin-top: 1.25rem;">
+    <div class="vp-card">
+      <div class="vp-card-header"><h2>Top Products</h2></div>
+      <div class="vp-card-body" id="top-products">
+        <div class="vp-empty"><p>Loading...</p></div>
+      </div>
     </div>
-    <div class="va-card">
-      <div class="va-card-hdr"><h2>Earnings Breakdown</h2></div>
-      <div class="va-card-body"><canvas id="earningsChart" height="200"></canvas></div>
+    <div class="vp-card">
+      <div class="vp-card-header"><h2>Earnings Breakdown</h2></div>
+      <div class="vp-card-body analytics-chart-side">
+        <div class="analytics-chart-wrap"><canvas id="earningsChart"></canvas></div>
+      </div>
     </div>
   </div>
 
-  <div class="va-card" style="margin-top:1rem">
-    <div class="va-card-hdr"><h2>Recent Orders</h2></div>
-    <div style="overflow-x:auto">
-      <table class="va-table" id="orders-table">
-        <thead><tr><th>Order</th><th>Status</th><th>Total</th><th>Date</th></tr></thead>
-        <tbody id="orders-body"><tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--va-text-muted)">Loading...</td></tr></tbody>
-      </table>
+  <div class="analytics-chart-row" style="margin-top: 1.25rem;">
+    <div class="vp-card">
+      <div class="vp-card-header"><h2>Category Breakdown</h2></div>
+      <div class="vp-card-body" id="category-breakdown">
+        <div class="vp-empty"><p>Loading...</p></div>
+      </div>
+    </div>
+    <div class="vp-card">
+      <div class="vp-card-header"><h2>Recent Orders</h2></div>
+      <div class="vp-card-body flush">
+        <div class="vp-table-wrap">
+          <table class="vp-table" id="orders-table">
+            <thead>
+              <tr><th>Order</th><th>Status</th><th>Total</th><th>Date</th></tr>
+            </thead>
+            <tbody id="orders-body">
+              <tr><td colspan="4" class="vp-empty" style="padding: 1.5rem;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -159,7 +212,7 @@ const fmtK = n => n >= 1000 ? (n/1000).toFixed(1)+'k' : String(n);
 
 function setPeriod(p, el) {
   currentPeriod = p;
-  document.querySelectorAll('.va-filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.vp-tab').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   loadAnalytics(p);
 }
@@ -175,6 +228,7 @@ async function loadAnalytics(period) {
     renderEarningsChart(d.earnings);
     renderTopProducts(d.top_products);
     renderOrders(d.recent_orders);
+    renderCategories(d.category_breakdown || []);
   } catch(e) {
     console.error('Analytics load error:', e);
   }
@@ -184,16 +238,31 @@ function renderStats(d) {
   const t = d.totals;
   const e = d.earnings;
   document.getElementById('s-revenue').textContent = fmt(t.revenue);
-  document.getElementById('s-revenue-meta').textContent = t.orders + ' orders total';
+  const revMeta = document.getElementById('s-revenue-meta');
+  revMeta.textContent = t.orders + ' orders total';
+  revMeta.className = 'vp-stat-change';
+
   document.getElementById('s-orders').textContent = t.orders;
-  document.getElementById('s-orders-meta').textContent = (t.products_sold || 0) + ' items sold';
+  const ordMeta = document.getElementById('s-orders-meta');
+  ordMeta.textContent = (t.products_sold || 0) + ' items sold';
+  ordMeta.className = 'vp-stat-change';
+
   document.getElementById('s-aov').textContent = fmt(t.avg_order_value);
+
   document.getElementById('s-customers').textContent = t.customers;
-  document.getElementById('s-customers-meta').textContent = t.avg_conversion + '% conversion';
+  const custMeta = document.getElementById('s-customers-meta');
+  custMeta.textContent = t.avg_conversion + '% conversion';
+  custMeta.className = 'vp-stat-change';
+
   document.getElementById('s-earnings').textContent = fmt(e.net);
-  document.getElementById('s-earnings-meta').textContent = fmt(e.pending) + ' pending';
+  const earnMeta = document.getElementById('s-earnings-meta');
+  earnMeta.textContent = fmt(e.pending) + ' pending';
+  earnMeta.className = 'vp-stat-change';
+
   document.getElementById('s-views').textContent = fmtK(t.page_views);
-  document.getElementById('s-views-meta').textContent = 'visitors';
+  const viewMeta = document.getElementById('s-views-meta');
+  viewMeta.textContent = 'visitors';
+  viewMeta.className = 'vp-stat-change';
 }
 
 function renderRevenueChart(records) {
@@ -211,11 +280,12 @@ function renderRevenueChart(records) {
         label: 'Revenue',
         data: records.map(r => r.revenue),
         borderColor: '#f59e0b',
-        backgroundColor: 'rgba(245,158,11,0.1)',
+        backgroundColor: 'rgba(245,158,11,0.08)',
         fill: true,
         tension: 0.4,
         pointRadius: 3,
         pointBackgroundColor: '#f59e0b',
+        borderWidth: 2.5,
       }]
     },
     options: {
@@ -223,7 +293,7 @@ function renderRevenueChart(records) {
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        y: { beginAtZero: true, ticks: { callback: v => '₦'+fmtK(v) }, grid: { color: '#f5f5f4' } },
+        y: { beginAtZero: true, ticks: { callback: v => '₦'+fmtK(v) }, grid: { color: 'rgba(0,0,0,0.04)' } },
         x: { grid: { display: false } }
       }
     }
@@ -242,14 +312,15 @@ function renderStatusChart(dist) {
       labels,
       datasets: [{
         data: values,
-        backgroundColor: labels.map(l => colors[l] || '#a8a29e'),
+        backgroundColor: labels.map(l => colors[l] || '#94a3b8'),
         borderWidth: 0,
+        hoverOffset: 6,
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 11 } } } },
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, font: { size: 11 } } } },
       cutout: '65%',
     }
   });
@@ -275,7 +346,7 @@ function renderEarningsChart(e) {
       indexAxis: 'y',
       plugins: { legend: { display: false } },
       scales: {
-        x: { beginAtZero: true, ticks: { callback: v => '₦'+fmtK(v) }, grid: { color: '#f5f5f4' } },
+        x: { beginAtZero: true, ticks: { callback: v => '₦'+fmtK(v) }, grid: { color: 'rgba(0,0,0,0.04)' } },
         y: { grid: { display: false } }
       }
     }
@@ -285,41 +356,63 @@ function renderEarningsChart(e) {
 function renderTopProducts(products) {
   const el = document.getElementById('top-products');
   if (!products || products.length === 0) {
-    el.innerHTML = '<div class="va-empty" style="padding:1.5rem"><p>No product sales data yet</p></div>';
+    el.innerHTML = '<div class="vp-empty"><p>No product sales data yet</p></div>';
     return;
   }
   el.innerHTML = products.map(p => `
-    <div class="va-product-row">
-      ${p.image ? `<img src="${p.image}" class="va-product-img" alt="">` : `<div class="va-product-img" style="display:flex;align-items:center;justify-content:center;font-size:.75rem;color:var(--va-text-muted)">No img</div>`}
-      <div style="flex:1;min-width:0">
-        <div class="va-product-name">${p.name}</div>
-        <div class="va-product-meta">${p.qty} sold</div>
+    <div class="analytics-product-row">
+      ${p.image ? `<img src="${p.image}" class="analytics-product-img" alt="">` : `<div class="analytics-product-img" style="display:flex;align-items:center;justify-content:center;font-size:0.6875rem;color:var(--vp-text-muted)">N/A</div>`}
+      <div class="analytics-product-info">
+        <div class="analytics-product-name">${p.name}</div>
+        <div class="analytics-product-meta">${p.qty} sold</div>
       </div>
-      <div class="va-product-rev">${fmt(p.revenue)}</div>
+      <div class="analytics-product-rev">${fmt(p.revenue)}</div>
     </div>
   `).join('');
+}
+
+function renderCategories(cats) {
+  const el = document.getElementById('category-breakdown');
+  if (!cats || cats.length === 0) {
+    el.innerHTML = '<div class="vp-empty"><p>No category data available</p></div>';
+    return;
+  }
+  const max = Math.max(...cats.map(c => c.revenue || 0), 1);
+  const palette = ['#f59e0b','#6366f1','#10b981','#f43f5e','#3b82f6','#8b5cf6','#06b6d4','#ec4899'];
+  el.innerHTML = cats.map((c, i) => {
+    const pct = ((c.revenue || 0) / max * 100).toFixed(1);
+    return `
+      <div class="analytics-category-bar">
+        <span class="analytics-category-label">${c.name || c.category || 'Other'}</span>
+        <div class="analytics-category-track">
+          <div class="analytics-category-fill" style="width:${pct}%;background:${palette[i % palette.length]}"></div>
+        </div>
+        <span class="analytics-category-value">${fmt(c.revenue || 0)}</span>
+      </div>
+    `;
+  }).join('');
 }
 
 function renderOrders(orders) {
   const tbody = document.getElementById('orders-body');
   if (!orders || orders.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--va-text-muted)">No orders yet</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--vp-text-muted)">No orders yet</td></tr>';
     return;
   }
   const badgeCls = s => {
-    if (s==='DELIVERED') return 'va-badge--green';
-    if (s==='SHIPPED'||s==='PROCESSING') return 'va-badge--blue';
-    if (s==='PAID') return 'va-badge--amber';
-    if (s==='CANCELLED') return 'va-badge--red';
-    return 'va-badge--purple';
+    if (s==='DELIVERED') return 'vp-badge-emerald';
+    if (s==='SHIPPED'||s==='PROCESSING') return 'vp-badge-blue';
+    if (s==='PAID') return 'vp-badge-amber';
+    if (s==='CANCELLED') return 'vp-badge-red';
+    return 'vp-badge-purple';
   };
   tbody.innerHTML = orders.map(o => {
     const d = o.created_at ? new Date(o.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
     return `<tr>
-      <td style="font-weight:600;color:var(--va-text-dark)">${o.order_number || o.id.slice(0,8)}</td>
-      <td><span class="va-badge ${badgeCls(o.status)}">${o.status}</span></td>
-      <td style="font-weight:600">${fmt(o.total)}</td>
-      <td>${d}</td>
+      <td class="analytics-table-id">${o.order_number || o.id.slice(0,8)}</td>
+      <td><span class="vp-badge ${badgeCls(o.status)}"><span class="vp-badge-dot"></span> ${o.status}</span></td>
+      <td class="analytics-table-total">${fmt(o.total)}</td>
+      <td class="analytics-table-date">${d}</td>
     </tr>`;
   }).join('');
 }
@@ -353,14 +446,14 @@ async function vaLoadInsights() {
     const r = await fetch(`/api/vendor/analytics/ai-insights?days=${currentDays}`);
     const d = await r.json();
     if (d.success && d.insights.length) {
-      const impactColors = { high: 'var(--va-red)', medium: 'var(--va-amber)', low: 'var(--va-emerald)' };
+      const impactColors = { high: 'var(--vp-red)', medium: 'var(--vp-amber)', low: 'var(--vp-emerald)' };
       const body = document.getElementById('va-insights-body');
       body.innerHTML = d.insights.map(i => `
-        <div style="display:flex;gap:.75rem;align-items:flex-start;padding:.75rem;border:1px solid var(--va-border);border-radius:.75rem;">
-          <div style="width:8px;height:8px;border-radius:50%;background:${impactColors[i.impact] || 'var(--va-text-muted)'};flex-shrink:0;margin-top:.375rem;"></div>
+        <div class="analytics-insight-row">
+          <div class="analytics-insight-dot" style="background:${impactColors[i.impact] || 'var(--vp-text-muted)'}"></div>
           <div>
-            <div style="font-weight:700;font-size:.8125rem;color:var(--va-text-dark)">${i.title}</div>
-            <div style="font-size:.75rem;color:var(--va-text-muted);margin-top:.125rem;line-height:1.4">${i.detail}</div>
+            <div class="analytics-insight-title">${i.title}</div>
+            <div class="analytics-insight-body">${i.detail}</div>
           </div>
         </div>
       `).join('');
