@@ -2498,7 +2498,6 @@ def vendor_reviews_sentiment(request: Request, db: Session = Depends(get_db)):
         return JSONResponse({"success": False}, status_code=401)
 
     from app.models import Review
-from datetime import datetime, timedelta
 
     reviews = db.query(Review).join(Product, Review.product_id == Product.id).filter(
         Product.retailer_id == admin.vendor_id
