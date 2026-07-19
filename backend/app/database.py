@@ -265,4 +265,26 @@ def _apply_pending_migrations():
                 )
             """))
 
+        # 015: VendorPromotion table
+        if 'vendor_promotion' not in existing_tables:
+            conn.execute(text("""
+                CREATE TABLE vendor_promotion (
+                    id VARCHAR PRIMARY KEY,
+                    retailer_id VARCHAR REFERENCES retailer(id) ON DELETE SET NULL,
+                    title VARCHAR(255) NOT NULL,
+                    description TEXT,
+                    discount_type VARCHAR(20) NOT NULL DEFAULT 'percentage',
+                    discount_value FLOAT NOT NULL DEFAULT 0,
+                    promo_code VARCHAR(50) UNIQUE,
+                    min_purchase FLOAT NOT NULL DEFAULT 0,
+                    usage_limit INTEGER NOT NULL DEFAULT 0,
+                    usage_count INTEGER NOT NULL DEFAULT 0,
+                    is_active BOOLEAN NOT NULL DEFAULT 1,
+                    start_date TIMESTAMP,
+                    end_date TIMESTAMP,
+                    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+                )
+            """))
+
         conn.commit()

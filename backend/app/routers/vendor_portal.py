@@ -15,15 +15,23 @@ from app.models import (
     VendorAnalytics, VendorPayout, VendorActivityLog, OrderEarning,
     AdCampaign, PromoAd, AdminRole, VendorWallet, VendorWalletTransaction,
     PayoutRequest, Settings, VendorNotification, ReturnRequest, ReturnEvent,
-    ProductChatMessage
+    ProductChatMessage, User, Review, Shipment, ShipmentEvent, VendorPromotion
 )
 from app.auth import get_current_user_from_cookie, has_permission, AdminRole as AR, log_admin_action, hash_password, verify_password
 from app.templates_shared import render_template
 from app.utils import utcnow
-import json, os
+import json, os, logging
+logger = logging.getLogger(__name__)
 from app.core.image_compressor import compress_image
 
 router = APIRouter(tags=["vendor-portal"])
+
+
+def format_price(value):
+    try:
+        return f"₦{float(value):,.2f}"
+    except (TypeError, ValueError):
+        return "₦0.00"
 
 
 def get_role_badge(role):
@@ -221,7 +229,7 @@ async def vendor_mark_shipped(order_id: str, request: Request, db: Session = Dep
                 order_id=order.id,
                 tracking_number=tracking,
                 status="PENDING",
-                origin=vf.origin_address or (retailer.business_name if retailer else ""),
+                origin=vf.origin_address or (retailer.name if retailer else ""),
                 destination=vf.destination_address or str(order.shipping_address),
                 carrier=None,
             )
@@ -1880,7 +1888,7 @@ def vendor_returns_list(
             "id": r.id,
             "return_number": r.return_number,
             "order_number": order.order_number if order else "—",
-            "customer_name": customer.full_name if customer else "—",
+            "customer_name": customer.name if customer else "—",
             "reason": r.reason,
             "reason_label": REASON_LABELS.get(r.reason, r.reason),
             "status": r.status,
@@ -1980,10 +1988,10 @@ def vendor_return_detail_api(return_id: str, request: Request, db: Session = Dep
         "order": {
             "id": order.id,
             "order_number": order.order_number,
-            "total": order.total,
+            "total": order.total_amount,
         } if order else None,
         "customer": {
-            "name": customer.full_name if customer else "—",
+            "name": customer.name if customer else "—",
             "email": customer.email if customer else "",
         } if customer else None,
         "order_items": order_items,
@@ -2211,7 +2219,7 @@ def vendor_inventory_list(
             "image": p.images[0] if p.images else None,
             "price": p.price,
             "inventory": f["current_inventory"],
-            "daily_rate": f["daily_rate"],
+            "daily_rate": f["daily_sales_rate"],
             "days_until_out": f["days_until_out"],
             "restock_recommended": f["restock_recommended"],
             "urgency": urgency,
@@ -2313,20 +2321,22 @@ def vendor_inventory_export(request: Request, db: Session = Depends(get_db)):
     products = db.query(Product).filter(Product.retailer_id == admin.vendor_id).all()
     from app.services.vendor_analytics_service import VendorAnalyticsService
     vas = VendorAnalyticsService(db)
+    forecast_list = vas.get_inventory_forecast(admin.vendor_id)
+    forecast_map = {f["product_id"]: f for f in forecast_list}
 
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(["Product", "Category", "Price", "Inventory", "Sold", "Daily Rate", "Days Left", "Restock Recommended"])
 
     for p in products:
-        fc = vas.get_inventory_forecast(p.id)
+        fc = forecast_map.get(p.id, {})
         writer.writerow([
             p.name,
             p.category.name if p.category else "",
             float(p.price),
             p.inventory,
-            p.units_sold,
-            fc.get("daily_rate", 0),
+            p.sold_count,
+            fc.get("daily_sales_rate", 0),
             fc.get("days_until_out", "N/A"),
             "Yes" if fc.get("restock_recommended") else "No",
         ])
@@ -2488,7 +2498,7 @@ def vendor_reviews_sentiment(request: Request, db: Session = Depends(get_db)):
         return JSONResponse({"success": False}, status_code=401)
 
     from app.models import Review
-    from datetime import timedelta
+from datetime import datetime, timedelta
 
     reviews = db.query(Review).join(Product, Review.product_id == Product.id).filter(
         Product.retailer_id == admin.vendor_id
@@ -2807,8 +2817,7 @@ async def vendor_message_escalate(product_id: str, request: Request, db: Session
     notif = AdminNotification(
         title="Vendor Chat Escalation",
         message=f"Vendor {admin.name} escalated chat for product '{product.name}': {reason}",
-        notification_type="warning",
-        target_roles="MANAGEMENT",
+        type="warning",
     )
     db.add(notif)
     db.commit()
@@ -2837,7 +2846,7 @@ def vendor_promotions_list(request: Request, db: Session = Depends(get_db)):
     if redirect:
         return JSONResponse({"success": False}, status_code=401)
 
-    promos = db.query(PromoAd).filter(PromoAd.retailer_id == admin.vendor_id).order_by(PromoAd.created_at.desc()).all()
+    promos = db.query(VendorPromotion).filter(VendorPromotion.retailer_id == admin.vendor_id).order_by(VendorPromotion.created_at.desc()).all()
     return {"promotions": [{
         "id": p.id,
         "title": p.title,
@@ -2866,7 +2875,7 @@ async def vendor_create_promotion(request: Request, db: Session = Depends(get_db
     if not title:
         return JSONResponse({"success": False, "detail": "Title required"}, status_code=400)
 
-    promo = PromoAd(
+    promo = VendorPromotion(
         retailer_id=admin.vendor_id,
         title=title,
         description=data.get("description", ""),
@@ -2890,7 +2899,7 @@ async def vendor_toggle_promotion(promo_id: str, request: Request, db: Session =
     if redirect:
         return JSONResponse({"success": False}, status_code=401)
 
-    promo = db.query(PromoAd).filter(PromoAd.id == promo_id, PromoAd.retailer_id == admin.vendor_id).first()
+    promo = db.query(VendorPromotion).filter(VendorPromotion.id == promo_id, VendorPromotion.retailer_id == admin.vendor_id).first()
     if not promo:
         return JSONResponse({"success": False}, status_code=404)
 
@@ -2906,7 +2915,7 @@ async def vendor_delete_promotion(promo_id: str, request: Request, db: Session =
     if redirect:
         return JSONResponse({"success": False}, status_code=401)
 
-    promo = db.query(PromoAd).filter(PromoAd.id == promo_id, PromoAd.retailer_id == admin.vendor_id).first()
+    promo = db.query(VendorPromotion).filter(VendorPromotion.id == promo_id, VendorPromotion.retailer_id == admin.vendor_id).first()
     if not promo:
         return JSONResponse({"success": False}, status_code=404)
 
@@ -2921,7 +2930,7 @@ async def vendor_update_promotion(promo_id: str, request: Request, db: Session =
     if redirect:
         return JSONResponse({"success": False}, status_code=401)
 
-    promo = db.query(PromoAd).filter(PromoAd.id == promo_id, PromoAd.retailer_id == admin.vendor_id).first()
+    promo = db.query(VendorPromotion).filter(VendorPromotion.id == promo_id, VendorPromotion.retailer_id == admin.vendor_id).first()
     if not promo:
         return JSONResponse({"success": False}, status_code=404)
 
@@ -2940,7 +2949,7 @@ async def vendor_update_promotion(promo_id: str, request: Request, db: Session =
 
 
 @router.get("/api/vendor/promotions/ai-suggestions")
-def vendor_promotion_suggestions(request: Request, db: Session = Depends(get_db)):
+async def vendor_promotion_suggestions(request: Request, db: Session = Depends(get_db)):
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return JSONResponse({"success": False}, status_code=401)
@@ -2958,17 +2967,17 @@ def vendor_promotion_suggestions(request: Request, db: Session = Depends(get_db)
                 "product_name": p.name,
                 "type": "clearance",
                 "title": f"Clearance: 20% off {p.name}",
-                "reason": f"High inventory ({p.units_sold} units sold, {p.inventory} in stock)",
+                "reason": f"High inventory ({p.sold_count} units sold, {p.inventory} in stock)",
                 "suggested_discount": 20,
                 "priority": "high",
             })
-        elif p.units_sold > 10:
+        elif p.sold_count > 10:
             suggestions.append({
                 "product_id": p.id,
                 "product_name": p.name,
                 "type": "bundle",
                 "title": f"Bundle deal for {p.name}",
-                "reason": f"Popular product ({p.units_sold} units sold)",
+                "reason": f"Popular product ({p.sold_count} units sold)",
                 "suggested_discount": 10,
                 "priority": "medium",
             })
@@ -2979,7 +2988,7 @@ def vendor_promotion_suggestions(request: Request, db: Session = Depends(get_db)
         client = get_ai_client()
         model = get_active_model()
         if client and model:
-            product_data = [{"name": p.name, "price": float(p.price), "discount_price": float(p.discount_price) if p.discount_price else None, "inventory": p.inventory, "sold": p.units_sold} for p in products[:10]]
+            product_data = [{"name": p.name, "price": float(p.price), "discount_price": float(p.discount_price) if p.discount_price else None, "inventory": p.inventory, "sold": p.sold_count} for p in products[:10]]
             import asyncio
             response = asyncio.wait_for(asyncio.to_thread(
                 lambda: client.chat.completions.create(
@@ -3034,14 +3043,20 @@ def vendor_performance_data(request: Request, db: Session = Depends(get_db)):
         return JSONResponse({"success": False}, status_code=401)
 
     vendor_id = admin.vendor_id
-    orders = db.query(Order).filter(Order.vendor_id == vendor_id).all()
-    reviews = db.query(Review).filter(Review.vendor_id == vendor_id).all()
     products = db.query(Product).filter(Product.retailer_id == vendor_id).all()
+    product_ids = [p.id for p in products]
+    order_items = db.query(OrderItem).filter(OrderItem.product_id.in_(product_ids)).all() if product_ids else []
+    order_ids = list(set(oi.order_id for oi in order_items))
+    orders = db.query(Order).filter(Order.id.in_(order_ids)).all() if order_ids else []
+    reviews = db.query(Review).join(Product).filter(Product.retailer_id == vendor_id).all()
 
     # Order metrics
     total_orders = len(orders)
-    completed_orders = [o for o in orders if o.status.value in ("DELIVERED", "COMPLETED")]
-    on_time = sum(1 for o in completed_orders if o.delivered_at and o.created_at and (o.delivered_at - o.created_at).days <= 7)
+    completed_orders = [o for o in orders if o.status.value in ("DELIVERED",)]
+    completed_ids = [o.id for o in completed_orders]
+    shipments = db.query(Shipment).filter(Shipment.order_id.in_(completed_ids)).all() if completed_ids else []
+    delivery_map = {s.order_id: s.actual_delivery for s in shipments if s.actual_delivery}
+    on_time = sum(1 for o in completed_orders if delivery_map.get(o.id) and o.created_at and (delivery_map[o.id] - o.created_at).days <= 7)
     on_time_rate = (on_time / len(completed_orders) * 100) if completed_orders else 0
     fulfillment_rate = (len(completed_orders) / total_orders * 100) if total_orders else 0
 
@@ -3089,18 +3104,20 @@ def vendor_performance_data(request: Request, db: Session = Depends(get_db)):
 def _compute_benchmark(db, fulfillment, on_time, rating, stock):
     """Compute platform averages for benchmarking."""
     try:
-        all_orders = db.query(Order).all()
-        vendors = db.query(Product.retailer_id).distinct().all()
-        vendor_ids = [v[0] for v in vendors if v[0]]
+        vendor_ids = [v[0] for v in db.query(Product.retailer_id).distinct().all() if v[0]]
         if not vendor_ids:
             return {"platform_avg_score": 0, "vendor_count": 0, "percentile": 0}
 
         scores = []
         for vid in vendor_ids[:50]:
-            vo = [o for o in all_orders if o.vendor_id == vid]
-            vc = [o for o in vo if o.status.value in ("DELIVERED", "COMPLETED")]
+            vproducts = db.query(Product).filter(Product.retailer_id == vid).all()
+            vpids = [p.id for p in vproducts]
+            voi = db.query(OrderItem).filter(OrderItem.product_id.in_(vpids)).all() if vpids else []
+            vo_ids = list(set(oi.order_id for oi in voi))
+            vo = db.query(Order).filter(Order.id.in_(vo_ids)).all() if vo_ids else []
+            vc = [o for o in vo if o.status.value in ("DELIVERED",)]
             vfr = (len(vc) / len(vo) * 100) if vo else 0
-            vrevs = db.query(Review).filter(Review.vendor_id == vid).all()
+            vrevs = db.query(Review).join(Product).filter(Product.retailer_id == vid).all()
             vr = round(sum(r.rating for r in vrevs) / len(vrevs), 2) if vrevs else 0
             vs = round(vfr * 0.3 + min(vr / 5 * 100, 100) * 0.3 + 50 * 0.2 + 90 * 0.2, 1)
             scores.append(vs)
@@ -3121,7 +3138,7 @@ def _compute_benchmark(db, fulfillment, on_time, rating, stock):
 
 
 @router.get("/api/vendor/performance/ai-recommendations")
-def vendor_performance_recommendations(request: Request, db: Session = Depends(get_db)):
+async def vendor_performance_recommendations(request: Request, db: Session = Depends(get_db)):
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return JSONResponse({"success": False}, status_code=401)

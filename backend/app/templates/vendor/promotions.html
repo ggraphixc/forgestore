@@ -26,8 +26,8 @@
   .vp-code { font-size: 0.75rem; font-weight: 700; color: var(--primary); background: var(--bg); padding: 2px 8px; border-radius: 4px; display: inline-block; margin-top: 0.25rem; }
   .vp-meta { font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; }
   .vp-actions { display: flex; gap: 0.5rem; align-items: center; }
-  .vp-toggle { min-height: 36px; padding: 0 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); }
-  .vp-delete { min-height: 36px; padding: 0 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid var(--red); background: transparent; color: var(--red); }
+  .vp-toggle { min-height: 44px; padding: 0 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); }
+  .vp-delete { min-height: 44px; padding: 0 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid var(--red); background: transparent; color: var(--red); }
   .vp-badge { font-size: 0.6875rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
   .vp-badge.active { background: #d1fae5; color: #065f46; }
   .vp-badge.inactive { background: #fee2e2; color: #991b1b; }
@@ -143,6 +143,7 @@ async function vpToggle(id, isActive) {
 }
 
 async function vpDelete(id) {
+  if (!confirm('Are you sure you want to delete this promotion?')) return;
   await fetch(`/api/vendor/promotions/${id}`, {method:'DELETE'});
   vpLoad();
 }

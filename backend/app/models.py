@@ -1298,6 +1298,28 @@ class PromoAd(Base):
     retailer: "Retailer | None" = relationship("Retailer")
 
 
+class VendorPromotion(Base):
+    __tablename__ = "vendor_promotion"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    retailer_id = Column(String(36), ForeignKey("retailer.id", ondelete="SET NULL"), nullable=True)
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    discount_type = Column(String(20), nullable=False, default="percentage")  # percentage, fixed, bogo
+    discount_value = Column(Float, nullable=False, default=0)
+    promo_code = Column(String(50), nullable=True, unique=True)
+    min_purchase = Column(Float, nullable=False, default=0)
+    usage_limit = Column(Integer, nullable=False, default=0)
+    usage_count = Column(Integer, nullable=False, default=0)
+    is_active = Column(Boolean, nullable=False, default=True)
+    start_date = Column(DateTime, nullable=True)
+    end_date = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    updated_at = Column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+    retailer: "Retailer | None" = relationship("Retailer")
+
+
 PROMO_AD_SUBTYPES = {
     "PROMO": {"label": "General Promo", "icon": "tag", "color": "amber"},
     "FLASH_SALE": {"label": "Flash Sale", "icon": "bolt", "color": "red"},

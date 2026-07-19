@@ -1189,7 +1189,7 @@ def checkout(
         {"label": "Subtotal", "value": f"₦{grand_subtotal:,.2f}"},
         {"label": "Shipping", "value": f"₦{total_shipping:,.2f}"},
     ]
-    if tax_enabled:
+    if tax_pct > 0:
         summary_lines_for_email.append({"label": tax_name, "value": f"₦{total_tax:,.2f}"})
     if points_discount > 0:
         summary_lines_for_email.append({"label": "Points Discount", "value": f"-₦{points_discount:,.2f}"})
@@ -1754,12 +1754,11 @@ def delete_customer_account(request: Request, response: Response, db: Session = 
 # ─── Customer Return Requests ───────────────────────────────────────────────
 
 @router.post("/returns/request")
-def request_return(
+async def request_return(
     request: Request,
     db: Session = Depends(get_db),
 ):
     """Customer submits a return request for an order."""
-    import asyncio
     import uuid
     from app.models import ReturnRequest, ReturnEvent, Shipment
     from app.services.delivery_pricing import calculate_return_fee
@@ -1768,9 +1767,7 @@ def request_return(
     if not customer:
         raise HTTPException(status_code=401, detail="Not logged in")
 
-    loop = asyncio.new_event_loop()
-    body = loop.run_until_complete(request.json())
-    loop.close()
+    body = await request.json()
 
     order_id = body.get("order_id", "")
     reason = body.get("reason", "")
@@ -1902,7 +1899,7 @@ async def report_product(
     db: Session = Depends(get_db),
 ):
     """Customer reports a product — AI triages automatically."""
-    from app.models import ProductFlag, Product, AdminNotification, VendorNotification, Retailer, ProductModerationLog
+    from app.models import ProductFlag, Product, AdminNotification, VendorNotification, Retailer, ProductModerationLog, AdminUser
     from app.services.flag_triage import triage_flag
     from app.core.notifications import send_whatsapp_message, _normalize_phone
     customer = get_current_customer_from_cookie(request, db)

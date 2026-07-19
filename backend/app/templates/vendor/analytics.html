@@ -33,7 +33,7 @@
   .va-header h1 { font-size:1.5rem; font-weight:700; color:var(--va-text-dark); margin:0; }
   .va-header .sub { font-size:.875rem; color:var(--va-text-muted); margin-top:.25rem; }
   .va-filters { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:1rem; }
-  .va-filter-btn { padding:.5rem 1rem; border-radius:var(--va-radius-md); border:1px solid var(--va-border); background:var(--va-bg-alt); font-size:.8125rem; font-weight:600; color:var(--va-text); cursor:pointer; transition:all .15s; min-height:36px; }
+  .va-filter-btn { padding:.5rem 1rem; border-radius:var(--va-radius-md); border:1px solid var(--va-border); background:var(--va-bg-alt); font-size:.8125rem; font-weight:600; color:var(--va-text); cursor:pointer; transition:all .15s; min-height:44px; }
   .va-filter-btn:hover { border-color:var(--va-primary); color:var(--va-primary); }
   .va-filter-btn.active { background:var(--va-primary); color:white; border-color:var(--va-primary); }
   .va-stats { display:grid; grid-template-columns:repeat(2,1fr); gap:.75rem; margin-top:1.5rem; }
@@ -82,9 +82,9 @@
     </div>
     <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
       <div style="display:flex;gap:.375rem;align-items:center;">
-        <input type="date" id="va-start-date" style="padding:.375rem .5rem;border:1px solid var(--va-border);border-radius:.5rem;font-size:.75rem;background:var(--va-bg-alt);color:var(--va-text-dark);">
+        <input type="date" id="va-start-date" style="padding:.375rem .5rem;border:1px solid var(--va-border);border-radius:.5rem;font-size:.75rem;background:var(--va-bg-alt);color:var(--va-text-dark);min-height:44px;">
         <span style="color:var(--va-text-muted);font-size:.75rem;">to</span>
-        <input type="date" id="va-end-date" style="padding:.375rem .5rem;border:1px solid var(--va-border);border-radius:.5rem;font-size:.75rem;background:var(--va-bg-alt);color:var(--va-text-dark);">
+        <input type="date" id="va-end-date" style="padding:.375rem .5rem;border:1px solid var(--va-border);border-radius:.5rem;font-size:.75rem;background:var(--va-bg-alt);color:var(--va-text-dark);min-height:44px;">
         <button onclick="vaApplyDateRange()" style="padding:.375rem .75rem;border:1px solid var(--va-border);border-radius:.5rem;font-size:.75rem;font-weight:600;cursor:pointer;background:var(--va-primary);color:#fff;">Apply</button>
       </div>
       <button onclick="vaExportCSV()" style="padding:.375rem .75rem;border:1px solid var(--va-border);border-radius:.5rem;font-size:.75rem;font-weight:600;cursor:pointer;background:var(--va-bg-alt);color:var(--va-text-dark);display:flex;align-items:center;gap:.375rem;">
@@ -166,7 +166,7 @@ function setPeriod(p, el) {
 
 async function loadAnalytics(period) {
   try {
-    const res = await fetch('/vendor/api/vendor/analytics?period=' + period + '&days=' + currentDays);
+    const res = await fetch('/api/vendor/analytics?period=' + period + '&days=' + currentDays);
     if (!res.ok) throw new Error('Failed');
     const d = await res.json();
     renderStats(d);

@@ -39,7 +39,7 @@
   .vm-msg.flagged { opacity: 0.5; border-style: dashed; }
   .vm-input { padding: 0.75rem 1rem; border-top: 1px solid var(--border); display: flex; gap: 0.5rem; align-items: flex-end; }
   .vm-input textarea { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem; font-size: 0.8125rem; resize: none; min-height: 40px; max-height: 120px; font-family: inherit; background: var(--bg); color: var(--text); }
-  .vm-input button { min-height: 40px; padding: 0 1rem; border-radius: 8px; font-weight: 600; font-size: 0.8125rem; cursor: pointer; border: none; background: var(--primary); color: #fff; }
+  .vm-input button { min-height: 44px; padding: 0 1rem; border-radius: 8px; font-weight: 600; font-size: 0.8125rem; cursor: pointer; border: none; background: var(--primary); color: #fff; }
   .vm-input button:disabled { opacity: 0.5; cursor: not-allowed; }
   @media (max-width: 640px) {
     .vm-layout { grid-template-columns: 1fr; height: calc(100vh - 120px); }
@@ -75,7 +75,7 @@ async function vmLoadThreads() {
     return;
   }
   el.innerHTML = d.threads.map(t => `
-    <div class="vm-thread ${vmCurrent === t.product_id ? 'active' : ''}" onclick="vmOpen('${t.product_id}')">
+    <div class="vm-thread ${vmCurrent === t.product_id ? 'active' : ''}" onclick="vmOpen('${t.product_id}', this)">
       ${t.product_image ? `<img src="${t.product_image}" alt="">` : '<div style="width:36px;height:36px;border-radius:8px;background:var(--border);flex-shrink:0;"></div>'}
       <div class="vm-thread-info">
         <div class="vm-thread-name">${t.product_name}</div>
@@ -89,10 +89,10 @@ async function vmLoadThreads() {
   `).join('');
 }
 
-async function vmOpen(productId) {
+async function vmOpen(productId, el) {
   vmCurrent = productId;
   document.querySelectorAll('.vm-thread').forEach(t => t.classList.remove('active'));
-  event.currentTarget?.classList.add('active');
+  if (el) el.classList.add('active');
 
   const [r, catR, aiR] = await Promise.all([
     fetch(`/api/vendor/messages/${productId}`),
@@ -111,7 +111,7 @@ async function vmOpen(productId) {
       <div><div class="name">${d.product.name}</div><div class="sub">Product Q&A</div></div>
       <div style="margin-left:auto;display:flex;gap:0.5rem;">
         <span id="vmCat" style="font-size:0.6875rem;padding:2px 8px;border-radius:10px;background:var(--bg);border:1px solid var(--border);color:var(--muted);"></span>
-        <button onclick="vmEscalate('${productId}')" style="min-height:28px;padding:0.25rem 0.5rem;border-radius:6px;font-size:0.6875rem;font-weight:600;cursor:pointer;border:1px solid var(--red);background:transparent;color:var(--red);">Escalate</button>
+        <button onclick="vmEscalate('${productId}')" style="min-height:44px;padding:0.25rem 0.5rem;border-radius:6px;font-size:0.6875rem;font-weight:600;cursor:pointer;border:1px solid var(--red);background:transparent;color:var(--red);">Escalate</button>
       </div>
     </div>
     <div class="vm-messages" id="vmMsgs">
