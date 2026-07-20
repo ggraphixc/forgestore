@@ -450,8 +450,12 @@
 .ap-modal-backdrop {
   position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px); z-index: 1000;
-  display: flex; align-items: center; justify-content: center;
+  display: none; align-items: center; justify-content: center;
   padding: 1rem; animation: apFadeIn 0.2s ease-out;
+}
+.ap-modal-backdrop.is-active,
+.ap-modal-backdrop.open {
+  display: flex;
 }
 .ap-modal {
   background: var(--ap-bg-elevated); border-radius: var(--ap-radius-2xl);

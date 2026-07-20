@@ -782,29 +782,10 @@
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         <span class="bnav-label">Earnings</span>
       </a>
-      <a href="/vendor/analytics" class="admin-bnav-item {% if '/vendor/analytics' in request.url.path %}active{% endif %}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
-        <span class="bnav-label">Analytics</span>
-      </a>
-      <a href="/vendor/messages" class="admin-bnav-item {% if '/vendor/messages' in request.url.path %}active{% endif %}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-        <span class="bnav-label">Messages</span>
-      </a>
-      <a href="/vendor/ads" class="admin-bnav-item {% if '/vendor/ads' in request.url.path %}active{% endif %}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-        <span class="bnav-label">My Ads</span>
-      </a>
-      <a href="/vendor/me" class="admin-bnav-item {% if '/vendor/me' in request.url.path %}active{% endif %}">
-        <div class="sidebar-avatar
-          {% if admin and admin.role.value == 'DIR_ADMIN' %}role-dir
-          {% elif admin and admin.role.value == 'MANAGEMENT' %}role-mgmt
-          {% elif admin and admin.role.value == 'TECH_ADMIN' %}role-tech
-          {% elif admin and admin.role.value == 'RETAILER' %}role-retail
-          {% else %}role-other{% endif %}" style="width:24px;height:24px;font-size:11px;">
-          {{ admin.name[0]|upper if admin and admin.name else "A" }}
-        </div>
-        <span class="bnav-label">Profile</span>
-      </a>
+      <button onclick="toggleMoreMenu(event)" class="admin-bnav-item" id="more-toggle-btn" style="cursor:pointer;border:none;background:none;font-family:inherit;">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"/></svg>
+        <span class="bnav-label">More</span>
+      </button>
 
       {% elif admin and (admin.role.value == 'LOGISTICS' or admin.role == 'LOGISTICS') %}
       <a href="/logistics/dashboard" class="admin-bnav-item {% if '/logistics/dashboard' in request.url.path %}active{% endif %}">
@@ -869,6 +850,47 @@
       Notifications
     </a>
     <a href="/logistics/logout" class="admin-more-signout">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      Sign Out
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- Vendor More Panel -->
+  {% if admin and (admin.role.value == 'RETAILER' or admin.role == 'RETAILER') %}
+  <div id="more-backdrop" class="admin-more-backdrop" onclick="closeMoreMenu()"></div>
+  <div id="more-panel" class="admin-more-panel">
+    <a href="/vendor/analytics" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+      Analytics
+    </a>
+    <a href="/vendor/messages" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+      Messages
+    </a>
+    <a href="/vendor/ads" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      My Ads
+    </a>
+    <a href="/vendor/notifications" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
+      Notifications
+    </a>
+    <a href="/vendor/support" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+      Support
+    </a>
+    <div class="admin-more-divider"></div>
+    <button onclick="toggleVendorDarkMode()" class="admin-more-link" style="cursor:pointer;border:none;background:none;font-family:inherit;width:100%;text-align:left;">
+      <svg id="vp-darkmode-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
+      <span id="vp-darkmode-label">Dark Mode</span>
+    </button>
+    <a href="/vendor/me" class="admin-more-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      Profile
+    </a>
+    <div class="admin-more-divider"></div>
+    <a href="/vendor/logout" class="admin-more-signout">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
       Sign Out
     </a>
@@ -1047,7 +1069,35 @@ document.addEventListener('DOMContentLoaded', function() {
             closeMoreMenu();
         }
     });
+    // Vendor dark mode toggle init
+    if (document.documentElement.classList.contains('dark')) {
+        var lbl = document.getElementById('vp-darkmode-label');
+        if (lbl) lbl.textContent = 'Light Mode';
+        var ico = document.getElementById('vp-darkmode-icon');
+        if (ico) ico.innerHTML = '<circle cx="12" cy="12" r="5"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+    }
 });
+function toggleVendorDarkMode() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('vp-dark-mode', isDark ? '1' : '0');
+    var lbl = document.getElementById('vp-darkmode-label');
+    if (lbl) lbl.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+    var ico = document.getElementById('vp-darkmode-icon');
+    if (ico) {
+        ico.innerHTML = isDark
+            ? '<circle cx="12" cy="12" r="5"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M12 1v2m0 18v2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>'
+            : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/>';
+    }
+}
+// Apply saved dark mode on load
+(function() {
+    var saved = localStorage.getItem('vp-dark-mode');
+    if (saved === '1') {
+        document.documentElement.classList.add('dark');
+    } else if (saved === '0') {
+        document.documentElement.classList.remove('dark');
+    }
+})();
 </script>
 <script src="/static/js/admin.js"></script>
 {% endblock %}

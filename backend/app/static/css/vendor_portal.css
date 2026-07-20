@@ -808,11 +808,15 @@
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   z-index: 1000;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   padding: 1rem;
   animation: vpFadeIn 0.2s ease-out;
+}
+.vp-modal-backdrop.is-active,
+.vp-modal-backdrop.open {
+  display: flex;
 }
 
 .vp-modal {
