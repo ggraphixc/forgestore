@@ -4,7 +4,7 @@ Support ticket system — users create tickets, vendors/admins reply.
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func, desc, or_
+from sqlalchemy import func, desc, or_, cast, String as SAString
 from typing import Optional
 from pydantic import BaseModel
 
@@ -245,7 +245,7 @@ def admin_list_tickets(
     if priority:
         q = q.filter(SupportTicket.priority == priority.upper())
     if search:
-        q = q.join(User, SupportTicket.created_by == User.id, isouter=True).filter(
+        q = q.join(User, cast(SupportTicket.created_by, SAString) == cast(User.id, SAString), isouter=True).filter(
             or_(
                 SupportTicket.subject.ilike(f"%{search}%"),
                 User.first_name.ilike(f"%{search}%"),
