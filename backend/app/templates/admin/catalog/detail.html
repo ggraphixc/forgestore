@@ -2,415 +2,183 @@
 {% block title %}{{ product.name }} — Catalog{% endblock %}
 {% block content %}
 <style>
-  :root {
-    --amber-50: #fffbeb; --amber-100: #fef3c7; --amber-200: #fde68a;
-    --amber-300: #fcd34d; --amber-400: #fbbf24; --amber-500: #f59e0b;
-    --amber-600: #d97706; --amber-700: #b45309;
-    --stone-50: #fafaf9; --stone-100: #f5f5f4; --stone-200: #e7e5e4;
-    --stone-300: #d6d3d1; --stone-400: #a8a29e; --stone-500: #78716c;
-    --stone-600: #57534e; --stone-700: #44403c; --stone-800: #292524;
-    --stone-900: #1c1917;
-    --emerald-50: #ecfdf5; --emerald-200: #a7f3d0; --emerald-700: #047857;
-    --blue-50: #eff6ff; --blue-200: #bfdbfe; --blue-700: #1d4ed8;
-    --red-50: #fef2f2; --red-200: #fecaca; --red-600: #dc2626;
-  }
+@import url('/static/css/admin_portal.css');
 
-  .admin-page {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 32px 24px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color: var(--stone-900);
-  }
+/* ─── detail page ─── */
+.catalog-detail { max-width: 1000px; margin: 0 auto; }
 
-  .admin-breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: var(--stone-400);
-    margin-bottom: 24px;
-  }
-  .admin-breadcrumb a {
-    color: var(--stone-400);
-    text-decoration: none;
-    transition: color .15s;
-  }
-  .admin-breadcrumb a:hover {
-    color: var(--amber-600);
-  }
-  .admin-breadcrumb svg {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-  }
-  .admin-breadcrumb-current {
-    color: var(--stone-600);
-    font-weight: 500;
-  }
+/* ─── breadcrumb ─── */
+.catalog-breadcrumb {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.875rem; color: var(--ap-text-muted); margin-bottom: 1.5rem;
+}
+.catalog-breadcrumb a { color: var(--ap-text-muted); text-decoration: none; transition: color var(--ap-transition); }
+.catalog-breadcrumb a:hover { color: var(--ap-primary); }
+.catalog-breadcrumb svg { width: 16px; height: 16px; flex-shrink: 0; }
+.catalog-breadcrumb-current { color: var(--ap-text-secondary); font-weight: 500; }
 
-  .admin-card {
-    background: #fff;
-    border-radius: 16px;
-    border: 1px solid var(--stone-200);
-    padding: 24px;
-    margin-bottom: 24px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.04);
-    transition: box-shadow .15s;
-  }
-  .admin-card:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,.06);
-  }
+/* ─── product header card ─── */
+.catalog-product-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+}
+.catalog-product-header-left { display: flex; align-items: center; gap: 16px; }
+.catalog-product-hero-img {
+  width: 80px; height: 80px; border-radius: var(--ap-radius-lg);
+  object-fit: cover; border: 1px solid var(--ap-border);
+  box-shadow: var(--ap-shadow-sm); flex-shrink: 0;
+}
+.catalog-product-hero-placeholder {
+  width: 80px; height: 80px; border-radius: var(--ap-radius-lg);
+  background: var(--ap-bg); display: flex; align-items: center;
+  justify-content: center; color: var(--ap-text-muted);
+  border: 1px solid var(--ap-border); flex-shrink: 0;
+}
+.catalog-product-title { font-size: 1.25rem; font-weight: 700; color: var(--ap-text); margin: 0; }
+.catalog-product-id { font-size: 0.8125rem; color: var(--ap-text-muted); font-family: var(--ap-font-mono); margin-top: 4px; }
 
-  .admin-card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
+/* ─── detail grid ─── */
+.catalog-detail-grid {
+  display: grid; grid-template-columns: 1fr; gap: 1.5rem;
+}
+@media (min-width: 1024px) {
+  .catalog-detail-grid { grid-template-columns: 2fr 1fr; }
+}
 
-  .admin-card-title {
-    font-size: 14px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    color: var(--stone-900);
-    margin-bottom: 12px;
-  }
+/* ─── description ─── */
+.catalog-desc { font-size: 0.9375rem; color: var(--ap-text-secondary); line-height: 1.7; margin: 0; }
 
-  .admin-product-img {
-    width: 80px;
-    height: 80px;
-    border-radius: 14px;
-    object-fit: cover;
-    border: 1px solid var(--stone-200);
-    box-shadow: 0 2px 8px rgba(0,0,0,.06);
-    flex-shrink: 0;
-  }
+/* ─── image grid ─── */
+.catalog-img-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+}
+@media (min-width: 640px) { .catalog-img-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 768px) { .catalog-img-grid { grid-template-columns: repeat(4, 1fr); } }
+.catalog-img-grid img {
+  width: 100%; aspect-ratio: 1; border-radius: var(--ap-radius-md);
+  object-fit: cover; border: 1px solid var(--ap-border);
+  transition: box-shadow var(--ap-transition);
+}
+.catalog-img-grid img:hover { box-shadow: var(--ap-shadow-md); }
 
-  .admin-product-placeholder {
-    width: 80px;
-    height: 80px;
-    border-radius: 14px;
-    background: var(--stone-100);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--stone-300);
-    border: 1px solid var(--stone-200);
-    flex-shrink: 0;
-  }
-
-  .admin-product-name {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--stone-900);
-    margin: 0;
-  }
-
-  .admin-product-id {
-    font-size: 13px;
-    color: var(--stone-400);
-    font-family: monospace;
-    margin-top: 4px;
-  }
-
-  .admin-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all .15s;
-    min-height: 44px;
-    cursor: pointer;
-    border: none;
-  }
-  .admin-btn-dark {
-    background: var(--stone-900);
-    color: #fff;
-  }
-  .admin-btn-dark:hover {
-    background: var(--stone-800);
-    box-shadow: 0 4px 12px rgba(0,0,0,.12);
-  }
-  .admin-btn-primary {
-    background: linear-gradient(135deg, var(--stone-800), var(--stone-900));
-    color: #fff;
-  }
-  .admin-btn-primary:hover {
-    background: linear-gradient(135deg, var(--stone-900), #1a1512);
-    box-shadow: 0 4px 12px rgba(0,0,0,.12);
-  }
-  .admin-btn-danger {
-    background: #fff;
-    border: 2px solid var(--red-200);
-    color: var(--red-600);
-  }
-  .admin-btn-danger:hover {
-    background: var(--red-50);
-    border-color: var(--red-200);
-  }
-  .admin-btn-block {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .admin-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-  @media (min-width: 1024px) {
-    .admin-grid { grid-template-columns: 2fr 1fr; }
-  }
-
-  .admin-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
-
-  .admin-desc-text {
-    font-size: 14px;
-    color: var(--stone-600);
-    line-height: 1.7;
-    margin: 0;
-  }
-
-  .admin-img-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-  @media (min-width: 640px) {
-    .admin-img-grid { grid-template-columns: repeat(3, 1fr); }
-  }
-  @media (min-width: 768px) {
-    .admin-img-grid { grid-template-columns: repeat(4, 1fr); }
-  }
-  .admin-img-grid img {
-    width: 100%;
-    aspect-ratio: 1;
-    border-radius: 12px;
-    object-fit: cover;
-    border: 1px solid var(--stone-200);
-    transition: box-shadow .15s;
-  }
-  .admin-img-grid img:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,.08);
-  }
-
-  .admin-detail-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 14px;
-    padding: 8px 0;
-  }
-  .admin-detail-row .admin-detail-label {
-    color: var(--stone-400);
-  }
-  .admin-detail-row .admin-detail-value {
-    font-weight: 500;
-    color: var(--stone-700);
-  }
-  .admin-detail-row .admin-detail-value.admin-strike {
-    color: var(--stone-400);
-    text-decoration: line-through;
-  }
-  .admin-detail-row .admin-detail-value.admin-danger {
-    color: #ef4444;
-  }
-
-  .admin-badge {
-    display: inline-flex;
-    padding: 4px 10px;
-    font-size: 12px;
-    font-weight: 500;
-    border-radius: 9999px;
-  }
-  .admin-badge-amber {
-    background: var(--amber-50);
-    color: var(--amber-700);
-    border: 1px solid var(--amber-200);
-  }
-  .admin-badge-blue {
-    background: var(--blue-50);
-    color: var(--blue-700);
-    border: 1px solid var(--blue-200);
-  }
-
-  .admin-form-group {
-    margin-bottom: 16px;
-  }
-  .admin-form-label {
-    display: block;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .15em;
-    color: var(--stone-500);
-    margin-bottom: 8px;
-  }
-  .admin-form-input,
-  .admin-form-select,
-  .admin-form-textarea {
-    width: 100%;
-    padding: 12px 16px;
-    background: #fff;
-    border: 1px solid var(--stone-300);
-    border-radius: 12px;
-    font-size: 14px;
-    color: var(--stone-900);
-    transition: all .15s;
-    min-height: 44px;
-    box-sizing: border-box;
-  }
-  .admin-form-input:focus,
-  .admin-form-select:focus,
-  .admin-form-textarea:focus {
-    outline: none;
-    border-color: var(--amber-500);
-    box-shadow: 0 0 0 3px rgba(245,158,11,.12);
-  }
-
-  .admin-modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .2s;
-  }
-  .admin-modal.active {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  .admin-modal-content {
-    background: #fff;
-    border-radius: 16px;
-    padding: 32px;
-    max-width: 420px;
-    width: 90%;
-    text-align: center;
-    box-shadow: 0 20px 60px rgba(0,0,0,.2);
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-  .animate-spin {
-    animation: spin 1s linear infinite;
-  }
-
-  @media (max-width: 640px) {
-    .admin-page { padding: 16px; }
-    .admin-card { padding: 16px; }
-    .admin-product-name { font-size: 17px; }
-  }
+/* ─── detail rows ─── */
+.catalog-detail-row {
+  display: flex; justify-content: space-between; font-size: 0.9375rem;
+  padding: 0.5rem 0;
+}
+.catalog-detail-label { color: var(--ap-text-muted); }
+.catalog-detail-value { font-weight: 500; color: var(--ap-text-secondary); }
+.catalog-detail-value.strike { color: var(--ap-text-muted); text-decoration: line-through; }
+.catalog-detail-value.danger { color: var(--ap-red); }
 </style>
 
-<div class="admin-page">
-    <nav class="admin-breadcrumb">
+<div class="catalog-detail">
+    <nav class="catalog-breadcrumb">
         <a href="/admin/catalog">Catalog</a>
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
-        <span class="admin-breadcrumb-current">{{ product.name }}</span>
+        <span class="catalog-breadcrumb-current">{{ product.name }}</span>
     </nav>
 
-    <div class="admin-card">
-        <div class="admin-card-header">
-            <div style="display:flex;align-items:center;gap:16px;">
-                {% if product.images and product.images|length > 0 %}
-                <img src="{{ product.images[0] }}" alt="{{ product.name }}" class="admin-product-img">
-                {% else %}
-                <div class="admin-product-placeholder">
-                    <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+    <div class="ap-card" style="margin-bottom:1.5rem;">
+        <div class="ap-card-body">
+            <div class="catalog-product-header">
+                <div class="catalog-product-header-left">
+                    {% if product.images and product.images|length > 0 %}
+                    <img src="{{ product.images[0] }}" alt="{{ product.name }}" class="catalog-product-hero-img">
+                    {% else %}
+                    <div class="catalog-product-hero-placeholder">
+                        <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <p class="catalog-product-title">{{ product.name }}</p>
+                        <p class="catalog-product-id">ID: {{ product.id[:8] }}...</p>
+                    </div>
                 </div>
-                {% endif %}
-                <div>
-                    <p class="admin-product-name">{{ product.name }}</p>
-                    <p class="admin-product-id">ID: {{ product.id[:8] }}...</p>
-                </div>
+                <a href="/admin/catalog/{{ product.id }}/edit" class="ap-btn ap-btn-primary">Edit Product</a>
             </div>
-            <a href="/admin/catalog/{{ product.id }}/edit" class="admin-btn admin-btn-dark">Edit Product</a>
         </div>
     </div>
 
-    <div class="admin-grid">
-        <div class="admin-stack">
-            <div class="admin-card">
-                <p class="admin-card-title">Description</p>
-                <p class="admin-desc-text">{{ product.description or "No description provided." }}</p>
+    <div class="catalog-detail-grid">
+        <div style="display:flex;flex-direction:column;gap:1.5rem;">
+            <div class="ap-card">
+                <div class="ap-card-header"><h2>Description</h2></div>
+                <div class="ap-card-body">
+                    <p class="catalog-desc">{{ product.description or "No description provided." }}</p>
+                </div>
             </div>
 
             {% if product.images and product.images|length > 0 %}
-            <div class="admin-card">
-                <p class="admin-card-title">Images</p>
-                <div class="admin-img-grid">
-                    {% for img in product.images %}
-                    <img src="{{ img }}" alt="">
-                    {% endfor %}
+            <div class="ap-card">
+                <div class="ap-card-header"><h2>Images</h2></div>
+                <div class="ap-card-body">
+                    <div class="catalog-img-grid">
+                        {% for img in product.images %}
+                        <img src="{{ img }}" alt="">
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
             {% endif %}
         </div>
 
-        <div class="admin-stack">
-            <div class="admin-card">
-                <p class="admin-card-title">Pricing</p>
-                <div class="admin-detail-row">
-                    <span class="admin-detail-label">Price</span>
-                    <span class="admin-detail-value" style="font-weight:600;color:var(--stone-900);">₦{{ "%.2f"|format(product.price) }}</span>
-                </div>
-                {% if product.discount_price %}
-                <div class="admin-detail-row">
-                    <span class="admin-detail-label">Discount Price</span>
-                    <span class="admin-detail-value admin-strike">₦{{ "%.2f"|format(product.discount_price) }}</span>
-                </div>
-                {% endif %}
-            </div>
-
-            <div class="admin-card">
-                <p class="admin-card-title">Organization</p>
-                <div class="admin-detail-row">
-                    <span class="admin-detail-label">Category</span>
-                    <span class="admin-detail-value">{{ product.category.name if product.category else "Uncategorized" }}</span>
-                </div>
-                <div class="admin-detail-row">
-                    <span class="admin-detail-label">Retailer</span>
-                    <span class="admin-detail-value">{{ product.retailer.name if product.retailer else "None" }}</span>
+        <div style="display:flex;flex-direction:column;gap:1.5rem;">
+            <div class="ap-card">
+                <div class="ap-card-header"><h2>Pricing</h2></div>
+                <div class="ap-card-body">
+                    <div class="catalog-detail-row">
+                        <span class="catalog-detail-label">Price</span>
+                        <span class="catalog-detail-value" style="font-weight:600;color:var(--ap-text);">₦{{ "%.2f"|format(product.price) }}</span>
+                    </div>
+                    {% if product.discount_price %}
+                    <div class="catalog-detail-row">
+                        <span class="catalog-detail-label">Discount Price</span>
+                        <span class="catalog-detail-value strike">₦{{ "%.2f"|format(product.discount_price) }}</span>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
-            <div class="admin-card">
-                <p class="admin-card-title">Flags</p>
-                <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                    {% if product.is_flagship %}<span class="admin-badge admin-badge-amber">Flagship</span>{% endif %}
-                    {% if product.is_new_arrival %}<span class="admin-badge admin-badge-blue">New Arrival</span>{% endif %}
+            <div class="ap-card">
+                <div class="ap-card-header"><h2>Organization</h2></div>
+                <div class="ap-card-body">
+                    <div class="catalog-detail-row">
+                        <span class="catalog-detail-label">Category</span>
+                        <span class="catalog-detail-value">{{ product.category.name if product.category else "Uncategorized" }}</span>
+                    </div>
+                    <div class="catalog-detail-row">
+                        <span class="catalog-detail-label">Retailer</span>
+                        <span class="catalog-detail-value">{{ product.retailer.name if product.retailer else "None" }}</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="admin-card">
-                <p class="admin-card-title">Stock &amp; Info</p>
-                <div class="admin-detail-row">
-                    <span class="admin-detail-label">Stock</span>
-                    <span class="admin-detail-value {% if product.inventory <= 0 %}admin-danger{% endif %}">{{ product.inventory }}</span>
+            <div class="ap-card">
+                <div class="ap-card-header"><h2>Flags</h2></div>
+                <div class="ap-card-body">
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                        {% if product.is_flagship %}<span class="ap-badge ap-badge-amber">Flagship</span>{% endif %}
+                        {% if product.is_new_arrival %}<span class="ap-badge ap-badge-blue">New Arrival</span>{% endif %}
+                    </div>
                 </div>
-                <div class="admin-detail-row">
-                    <span class="admin-detail-label">Rating</span>
-                    <span class="admin-detail-value">{{ "%.1f"|format(product.rating) if product.rating else "—" }}</span>
-                </div>
-                <div class="admin-detail-row">
-                    <span class="admin-detail-label">Created</span>
-                    <span class="admin-detail-value">{{ product.created_at.strftime("%b %d, %Y") if product.created_at else "—" }}</span>
+            </div>
+
+            <div class="ap-card">
+                <div class="ap-card-header"><h2>Stock &amp; Info</h2></div>
+                <div class="ap-card-body">
+                    <div class="catalog-detail-row">
+                        <span class="catalog-detail-label">Stock</span>
+                        <span class="catalog-detail-value {% if product.inventory <= 0 %}danger{% endif %}">{{ product.inventory }}</span>
+                    </div>
+                    <div class="catalog-detail-row">
+                        <span class="catalog-detail-label">Rating</span>
+                        <span class="catalog-detail-value">{{ "%.1f"|format(product.rating) if product.rating else "—" }}</span>
+                    </div>
+                    <div class="catalog-detail-row">
+                        <span class="catalog-detail-label">Created</span>
+                        <span class="catalog-detail-value">{{ product.created_at.strftime("%b %d, %Y") if product.created_at else "—" }}</span>
+                    </div>
                 </div>
             </div>
         </div>

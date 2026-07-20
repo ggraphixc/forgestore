@@ -1,21 +1,23 @@
 <!-- ===== Portal AI Assistant Widget (Vendor / Logistics / Management / Tech) ===== -->
 <style>
-@keyframes portalChatSlideUp {
+@import url('/static/css/admin_portal.css');
+
+@keyframes pawSlideUp {
     from { opacity: 0; transform: translateY(16px) scale(0.97); }
     to   { opacity: 1; transform: translateY(0) scale(1); }
 }
-@keyframes portalChatSlideDown {
+@keyframes pawSlideDown {
     from { opacity: 1; transform: translateY(0) scale(1); }
     to   { opacity: 0; transform: translateY(16px) scale(0.97); }
 }
-@keyframes portalDotBounce {
+@keyframes pawDotBounce {
     0%, 80%, 100% { transform: translateY(0); }
     40% { transform: translateY(-6px); }
 }
 
-.portal-ai-btn {
+.paw-btn {
     position: fixed; bottom: 5.5rem; right: 1.5rem;
-    width: 3.5rem; height: 3.5rem; border-radius: 9999px; border: none; cursor: grab;
+    width: 3.5rem; height: 3.5rem; border-radius: var(--ap-radius-pill); border: none; cursor: grab;
     background: {{ ai_gradient|default('linear-gradient(135deg, #1c1917, #44403c)') }};
     color: {{ ai_color|default('#fbbf24') }};
     display: flex; align-items: center; justify-content: center;
@@ -24,171 +26,172 @@
     touch-action: none; user-select: none;
 }
 @media (max-width: 768px) {
-    .portal-ai-btn { bottom: 6.5rem; right: 1rem; width: 3rem; height: 3rem; }
+    .paw-btn { bottom: 6.5rem; right: 1rem; width: 3rem; height: 3rem; }
 }
-.portal-ai-btn.dragging { cursor: grabbing; transform: scale(1.1); box-shadow: 0 12px 32px rgba(28,25,23,0.45); transition: none; }
-.portal-ai-btn:hover { box-shadow: 0 12px 32px rgba(28,25,23,0.45); }
-.portal-ai-btn:active { transform: scale(0.95); }
-.portal-ai-btn svg { width: 1.375rem; height: 1.375rem; pointer-events: none; }
+.paw-btn.dragging { cursor: grabbing; transform: scale(1.1); box-shadow: 0 12px 32px rgba(28,25,23,0.45); transition: none; }
+.paw-btn:hover { box-shadow: 0 12px 32px rgba(28,25,23,0.45); }
+.paw-btn:active { transform: scale(0.95); }
+.paw-btn svg { width: 1.375rem; height: 1.375rem; pointer-events: none; }
 
-.portal-ai-panel {
+.paw-panel {
     position: fixed; bottom: 9.5rem; right: 1.5rem;
     width: min(calc(100vw - 3rem), 440px); max-height: min(78vh, 640px);
-    background: #fff; border-radius: 1.25rem; overflow: hidden;
+    background: var(--ap-bg-elevated); border-radius: var(--ap-radius-2xl); overflow: hidden;
     box-shadow: 0 25px 60px -12px rgba(28,25,23,0.25);
-    border: 1px solid #e7e5e4; display: none; flex-direction: column;
+    border: 1px solid var(--ap-border); display: none; flex-direction: column;
     z-index: 9999;
 }
+.dark .paw-panel { background: var(--ap-bg-elevated); border-color: var(--ap-border); }
 @media (max-width: 768px) {
-    .portal-ai-panel { bottom: 10.5rem; right: 0.75rem; width: min(calc(100vw - 1.5rem), 400px); max-height: 60vh; }
+    .paw-panel { bottom: 10.5rem; right: 0.75rem; width: min(calc(100vw - 1.5rem), 400px); max-height: 60vh; }
 }
-.portal-ai-panel.open { display: flex; animation: portalChatSlideUp 0.25s ease-out; }
-.portal-ai-panel.closing { animation: portalChatSlideDown 0.2s ease-in forwards; }
+.paw-panel.open { display: flex; animation: pawSlideUp 0.25s ease-out; }
+.paw-panel.closing { animation: pawSlideDown 0.2s ease-in forwards; }
 
-.portal-ai-header {
+.paw-header {
     padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between;
-    background: linear-gradient(135deg, #1c1917, #292524); color: #fff; flex-shrink: 0;
+    background: var(--ap-gradient-dark); color: #fff; flex-shrink: 0;
 }
-.portal-ai-header-left { display: flex; align-items: center; gap: 0.625rem; }
-.portal-ai-header-icon {
-    width: 36px; height: 36px; border-radius: 10px;
+.paw-header-left { display: flex; align-items: center; gap: 0.625rem; }
+.paw-header-icon {
+    width: 36px; height: 36px; border-radius: var(--ap-radius-md);
     background: rgba(251,191,36,0.15); display: flex; align-items: center; justify-content: center;
 }
-.portal-ai-header-icon svg { width: 18px; height: 18px; color: #fbbf24; }
-.portal-ai-header-title { font-weight: 700; font-size: 0.9375rem; }
-.portal-ai-header-sub { font-size: 0.6875rem; color: #a8a29e; }
-.portal-ai-close {
-    width: 32px; height: 32px; border-radius: 8px; border: none; background: rgba(255,255,255,0.08);
-    color: #a8a29e; cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: background 0.2s;
+.paw-header-icon svg { width: 18px; height: 18px; color: #fbbf24; }
+.paw-header-title { font-weight: 700; font-size: 0.9375rem; }
+.paw-header-sub { font-size: 0.6875rem; color: var(--ap-text-muted); }
+.paw-close {
+    width: 32px; height: 32px; border-radius: var(--ap-radius-sm); border: none;
+    background: rgba(255,255,255,0.08); color: var(--ap-text-muted); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: background 0.2s;
 }
-.portal-ai-close:hover { background: rgba(255,255,255,0.15); color: #fff; }
+.paw-close:hover { background: rgba(255,255,255,0.15); color: #fff; }
 
-.portal-ai-messages {
+.paw-messages {
     flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem;
     min-height: 280px; max-height: 50vh;
 }
-.portal-ai-msg {
-    max-width: 85%; padding: 0.75rem 1rem; border-radius: 1rem; font-size: 0.8125rem;
+.paw-msg {
+    max-width: 85%; padding: 0.75rem 1rem; border-radius: var(--ap-radius-lg); font-size: 0.8125rem;
     line-height: 1.6; word-break: break-word;
 }
-.portal-ai-msg--user {
-    align-self: flex-end; background: linear-gradient(135deg, #f59e0b, #d97706);
-    color: #1c1917; border-bottom-right-radius: 4px;
+.paw-msg--user {
+    align-self: flex-end; background: var(--ap-gradient-primary);
+    color: var(--ap-text); border-bottom-right-radius: var(--ap-radius-xs);
 }
-.portal-ai-msg--bot {
-    align-self: flex-start; background: #f5f5f4; color: #1c1917;
-    border-bottom-left-radius: 4px;
+.paw-msg--bot {
+    align-self: flex-start; background: var(--ap-bg); color: var(--ap-text);
+    border-bottom-left-radius: var(--ap-radius-xs);
 }
 
-.portal-ai-loading { display: flex; gap: 4px; padding: 0.75rem 1rem; }
-.portal-ai-dot {
-    width: 7px; height: 7px; border-radius: 50%; background: #a8a29e;
-    animation: portalDotBounce 1.2s ease-in-out infinite;
+.paw-loading { display: flex; gap: 4px; padding: 0.75rem 1rem; }
+.paw-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--ap-text-muted);
+    animation: pawDotBounce 1.2s ease-in-out infinite;
 }
-.portal-ai-dot:nth-child(2) { animation-delay: 0.15s; }
-.portal-ai-dot:nth-child(3) { animation-delay: 0.3s; }
+.paw-dot:nth-child(2) { animation-delay: 0.15s; }
+.paw-dot:nth-child(3) { animation-delay: 0.3s; }
 
-.portal-ai-actions {
-    padding: 0.625rem 1rem; display: flex; flex-wrap: wrap; gap: 0.375rem; border-top: 1px solid #f5f5f4;
-    flex-shrink: 0;
+.paw-actions {
+    padding: 0.625rem 1rem; display: flex; flex-wrap: wrap; gap: 0.375rem;
+    border-top: 1px solid var(--ap-border-light); flex-shrink: 0;
 }
-.portal-ai-action {
-    padding: 0.375rem 0.75rem; border-radius: 9999px; border: 1px solid #e7e5e4;
-    background: #fff; color: #57534e; font-size: 0.6875rem; cursor: pointer;
+.paw-action {
+    padding: 0.375rem 0.75rem; border-radius: var(--ap-radius-pill);
+    border: 1px solid var(--ap-border); background: var(--ap-bg-elevated);
+    color: var(--ap-text-secondary); font-size: 0.6875rem; cursor: pointer;
     transition: all 0.2s; white-space: nowrap;
 }
-.portal-ai-action:hover { background: #fef3c7; border-color: #fbbf24; color: #92400e; }
+.paw-action:hover { background: var(--ap-amber-soft); border-color: var(--ap-primary); color: #92400e; }
 
-.portal-ai-input-wrap {
-    padding: 0.75rem 1rem; border-top: 1px solid #f5f5f4; display: flex; gap: 0.5rem; align-items: flex-end;
-    flex-shrink: 0;
+.paw-input-wrap {
+    padding: 0.75rem 1rem; border-top: 1px solid var(--ap-border-light);
+    display: flex; gap: 0.5rem; align-items: flex-end; flex-shrink: 0;
 }
-.portal-ai-input {
-    flex: 1; padding: 0.625rem 0.875rem; border-radius: 0.75rem; border: 1px solid #e7e5e4;
-    background: #fafaf9; color: #1c1917; font-size: 0.8125rem; resize: none;
-    min-height: 40px; max-height: 96px; outline: none; font-family: inherit;
-    transition: border-color 0.2s;
+.paw-input {
+    flex: 1; padding: 0.625rem 0.875rem; border-radius: var(--ap-radius-lg);
+    border: 1px solid var(--ap-border); background: var(--ap-bg); color: var(--ap-text);
+    font-size: 0.8125rem; resize: none; min-height: 40px; max-height: 96px;
+    outline: none; font-family: var(--ap-font); transition: all var(--ap-transition);
 }
-.portal-ai-input:focus { border-color: #f59e0b; }
-.portal-ai-send {
-    width: 40px; height: 40px; border-radius: 0.75rem; border: none; flex-shrink: 0;
-    background: linear-gradient(135deg, #f59e0b, #d97706); color: #1c1917; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; transition: transform 0.2s;
+.paw-input:focus { border-color: var(--ap-accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+.paw-send {
+    width: 40px; height: 40px; border-radius: var(--ap-radius-lg); border: none; flex-shrink: 0;
+    background: var(--ap-gradient-primary); color: var(--ap-text); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: all var(--ap-transition);
 }
-.portal-ai-send:hover { transform: scale(1.05); }
-.portal-ai-send:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-.portal-ai-send svg { width: 16px; height: 16px; }
+.paw-send:hover { transform: scale(1.05); }
+.paw-send:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.paw-send svg { width: 16px; height: 16px; }
 
-.portal-ai-image-preview { display: none; padding: 8px 12px 0; gap: 8px; flex-wrap: wrap; }
-.portal-ai-image-preview.has-image { display: flex; }
-.portal-ai-attach {
-    width: 32px; height: 32px; border-radius: 8px; border: none;
-    background: #f5f5f4; color: #78716c; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; transition: all 0.2s;
+.paw-image-preview { display: none; padding: 8px 12px 0; gap: 8px; flex-wrap: wrap; }
+.paw-image-preview.has-image { display: flex; }
+.paw-attach {
+    width: 32px; height: 32px; border-radius: var(--ap-radius-sm); border: none;
+    background: var(--ap-bg); color: var(--ap-text-secondary); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s;
 }
-.portal-ai-attach:hover { background: #fef3c7; color: #92400e; }
-.portal-ai-img-thumb {
-    position: relative; display: inline-block; border-radius: 8px;
-    overflow: hidden; border: 1px solid #e7e5e4;
+.paw-attach:hover { background: var(--ap-amber-soft); color: #92400e; }
+.paw-img-thumb {
+    position: relative; display: inline-block; border-radius: var(--ap-radius-sm);
+    overflow: hidden; border: 1px solid var(--ap-border);
 }
-.portal-ai-img-thumb img { display: block; max-height: 60px; max-width: 120px; }
-.portal-ai-img-remove {
+.paw-img-thumb img { display: block; max-height: 60px; max-width: 120px; }
+.paw-img-remove {
     position: absolute; top: 2px; right: 2px; width: 18px; height: 18px;
     border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff; border: none;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
     font-size: 11px; line-height: 1;
 }
-.portal-ai-file-tag {
+.paw-file-tag {
     display: flex; align-items: center; gap: 6px; padding: 4px 8px;
-    border-radius: 6px; border: 1px solid #e7e5e4; background: #fafaf9;
+    border-radius: var(--ap-radius-sm); border: 1px solid var(--ap-border); background: var(--ap-bg);
 }
-.portal-ai-file-tag span { font-size: 11px; color: #57534e; }
+.paw-file-tag span { font-size: 11px; color: var(--ap-text-secondary); }
 </style>
 
 <div id="portal-ai-widget">
-    <button id="portal-ai-toggle" class="portal-ai-btn" onclick="PortalAI.toggle()" aria-label="AI Assistant">
+    <button id="portal-ai-toggle" class="paw-btn" onclick="PortalAI.toggle()" aria-label="AI Assistant">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"/></svg>
     </button>
 
-    <div id="portal-ai-panel" class="portal-ai-panel">
-        <div class="portal-ai-header">
-            <div class="portal-ai-header-left">
-                <div class="portal-ai-header-icon">
+    <div id="portal-ai-panel" class="paw-panel">
+        <div class="paw-header">
+            <div class="paw-header-left">
+                <div class="paw-header-icon">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
                 </div>
                 <div>
-                    <div class="portal-ai-header-title">{{ ai_title|default('ForgeAI Assistant') }}</div>
-                    <div class="portal-ai-header-sub">{{ ai_subtitle|default('Your AI business assistant') }}</div>
+                    <div class="paw-header-title">{{ ai_title|default('ForgeAI Assistant') }}</div>
+                    <div class="paw-header-sub">{{ ai_subtitle|default('Your AI business assistant') }}</div>
                 </div>
             </div>
-            <button class="portal-ai-close" onclick="PortalAI.toggle()" aria-label="Close">
+            <button class="paw-close" onclick="PortalAI.toggle()" aria-label="Close">
                 <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
 
-        <div id="portal-ai-messages" class="portal-ai-messages">
-            <div class="portal-ai-msg portal-ai-msg--bot">
+        <div id="portal-ai-messages" class="paw-messages">
+            <div class="paw-msg paw-msg--bot">
                 {{ ai_greeting|default("Hello! I'm your AI assistant. I can help you analyze data, track performance, and answer questions. What would you like to know?") }}
             </div>
         </div>
 
-        <div id="portal-ai-actions" class="portal-ai-actions">
+        <div id="portal-ai-actions" class="paw-actions">
             {% for action in ai_actions|default([]) %}
-            <button class="portal-ai-action" onclick="PortalAI.send('{{ action.query }}')">{{ action.label }}</button>
+            <button class="paw-action" onclick="PortalAI.send('{{ action.query }}')">{{ action.label }}</button>
             {% endfor %}
         </div>
 
-        <div class="portal-ai-input-area">
-            <div id="portal-ai-image-preview" class="portal-ai-image-preview"></div>
-            <div class="portal-ai-input-wrap">
+        <div class="paw-input-area">
+            <div id="portal-ai-image-preview" class="paw-image-preview"></div>
+            <div class="paw-input-wrap">
                 <input type="file" id="portal-ai-file" accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xlsx" style="display:none;" onchange="PortalAI.onFileSelect(event)">
-                <button type="button" onclick="document.getElementById('portal-ai-file').click()" aria-label="Attach file" class="portal-ai-attach">
+                <button type="button" onclick="document.getElementById('portal-ai-file').click()" aria-label="Attach file" class="paw-attach">
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 </button>
-                <textarea id="portal-ai-input" class="portal-ai-input" rows="1" placeholder="{{ ai_placeholder|default('Ask about your business...') }}" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();PortalAI.submit()}" oninput="PortalAI.autoResize(this)"></textarea>
-                <button id="portal-ai-send" class="portal-ai-send" onclick="PortalAI.submit()" aria-label="Send">
+                <textarea id="portal-ai-input" class="paw-input" rows="1" placeholder="{{ ai_placeholder|default('Ask about your business...') }}" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();PortalAI.submit()}" oninput="PortalAI.autoResize(this)"></textarea>
+                <button id="portal-ai-send" class="paw-send" onclick="PortalAI.submit()" aria-label="Send">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
                 </button>
             </div>
@@ -211,13 +214,13 @@
                 const reader = new FileReader();
                 reader.onload = (ev) => {
                     this.pendingImage = { type: 'image', data: ev.target.result, name: file.name };
-                    preview.innerHTML = '<div class="portal-ai-img-thumb"><img src="' + ev.target.result + '"><button onclick="PortalAI.removeImage()" class="portal-ai-img-remove">&times;</button></div>';
+                    preview.innerHTML = '<div class="paw-img-thumb"><img src="' + ev.target.result + '"><button onclick="PortalAI.removeImage()" class="paw-img-remove">&times;</button></div>';
                     preview.classList.add('has-image');
                 };
                 reader.readAsDataURL(file);
             } else {
                 this.pendingImage = { type: 'file', data: null, name: file.name, mime: file.type };
-                preview.innerHTML = '<div class="portal-ai-file-tag"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><span>' + file.name + '</span><button onclick="PortalAI.removeImage()" class="portal-ai-img-remove" style="position:static;width:16px;height:16px;font-size:10px;">&times;</button></div>';
+                preview.innerHTML = '<div class="paw-file-tag"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><span>' + file.name + '</span><button onclick="PortalAI.removeImage()" class="paw-img-remove" style="position:static;width:16px;height:16px;font-size:10px;">&times;</button></div>';
                 preview.classList.add('has-image');
             }
             e.target.value = '';
@@ -303,7 +306,7 @@
         addMessage(text, role) {
             const container = document.getElementById('portal-ai-messages');
             const div = document.createElement('div');
-            div.className = 'portal-ai-msg portal-ai-msg--' + role;
+            div.className = 'paw-msg paw-msg--' + role;
             div.innerHTML = this.formatResponse(text);
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
@@ -324,9 +327,9 @@
             if (on) {
                 const container = document.getElementById('portal-ai-messages');
                 const dots = document.createElement('div');
-                dots.className = 'portal-ai-loading';
+                dots.className = 'paw-loading';
                 dots.id = 'portal-ai-loading';
-                dots.innerHTML = '<span class="portal-ai-dot"></span><span class="portal-ai-dot"></span><span class="portal-ai-dot"></span>';
+                dots.innerHTML = '<span class="paw-dot"></span><span class="paw-dot"></span><span class="paw-dot"></span>';
                 container.appendChild(dots);
                 container.scrollTop = container.scrollHeight;
             } else {
@@ -348,7 +351,6 @@
 
     window.PortalAI = AI;
 
-    // Drag-to-move
     (function() {
         const btn = document.getElementById('portal-ai-toggle');
         if (!btn) return;

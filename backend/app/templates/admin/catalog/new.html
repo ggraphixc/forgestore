@@ -4,487 +4,191 @@
 
 {% block content %}
 <style>
-  :root {
-    --amber-50: #fffbeb; --amber-100: #fef3c7; --amber-200: #fde68a;
-    --amber-300: #fcd34d; --amber-400: #fbbf24; --amber-500: #f59e0b;
-    --amber-600: #d97706; --amber-700: #b45309;
-    --stone-50: #fafaf9; --stone-100: #f5f5f4; --stone-200: #e7e5e4;
-    --stone-300: #d6d3d1; --stone-400: #a8a29e; --stone-500: #78716c;
-    --stone-600: #57534e; --stone-700: #44403c; --stone-800: #292524;
-    --stone-900: #1c1917;
-    --emerald-50: #ecfdf5; --emerald-100: #d1fae5; --emerald-200: #a7f3d0; --emerald-600: #059669;
-    --blue-50: #eff6ff; --blue-100: #dbeafe; --blue-200: #bfdbfe; --blue-700: #1d4ed8;
-    --red-50: #fef2f2; --red-200: #fecaca; --red-600: #dc2626;
-  }
+@import url('/static/css/admin_portal.css');
 
-  .admin-page {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 32px 24px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color: var(--stone-900);
-  }
+/* ─── new page ─── */
+.catalog-new { max-width: 1000px; margin: 0 auto; }
 
-  .admin-page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 32px;
-  }
-  .admin-page-header h1 {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--stone-900);
-    margin: 0;
-  }
-  .admin-page-header p {
-    font-size: 14px;
-    color: var(--stone-500);
-    margin-top: 4px;
-  }
+/* ─── breadcrumb ─── */
+.catalog-breadcrumb {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.875rem; color: var(--ap-text-muted); margin-bottom: 1.5rem;
+}
+.catalog-breadcrumb a { color: var(--ap-text-muted); text-decoration: none; transition: color var(--ap-transition); }
+.catalog-breadcrumb a:hover { color: var(--ap-primary); }
+.catalog-breadcrumb svg { width: 16px; height: 16px; flex-shrink: 0; }
+.catalog-breadcrumb-current { color: var(--ap-text-secondary); font-weight: 500; }
 
-  .admin-breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: var(--stone-400);
-    margin-bottom: 24px;
-  }
-  .admin-breadcrumb a {
-    color: var(--stone-400);
-    text-decoration: none;
-    transition: color .15s;
-  }
-  .admin-breadcrumb a:hover {
-    color: var(--amber-600);
-  }
-  .admin-breadcrumb svg {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-  }
-  .admin-breadcrumb-current {
-    color: var(--stone-600);
-    font-weight: 500;
-  }
+/* ─── form groups ─── */
+.catalog-form-group { margin-bottom: 1rem; }
+.catalog-form-label {
+  display: block; font-size: 0.6875rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--ap-text-muted); margin-bottom: 0.5rem;
+}
+.catalog-form-textarea {
+  width: 100%; padding: 0.75rem 1rem; background: var(--ap-bg-elevated);
+  border: 1.5px solid var(--ap-border); border-radius: var(--ap-radius-md);
+  font-size: 0.9375rem; color: var(--ap-text); transition: all var(--ap-transition);
+  min-height: 100px; box-sizing: border-box; font-family: var(--ap-font);
+  resize: none; outline: none;
+}
+.catalog-form-textarea:focus {
+  border-color: var(--ap-accent); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+.catalog-form-textarea::placeholder { color: var(--ap-text-muted); }
 
-  .admin-card {
-    background: #fff;
-    border-radius: 16px;
-    border: 1px solid var(--stone-200);
-    padding: 24px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.04);
-    transition: box-shadow .15s;
-  }
-  .admin-card:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,.06);
-  }
+/* ─── slug preview ─── */
+.catalog-slug-preview {
+  padding: 0.625rem 0.75rem; background: var(--ap-bg);
+  border: 1px solid var(--ap-border); border-radius: var(--ap-radius-sm);
+  font-size: 0.875rem; color: var(--ap-text-muted);
+  min-height: 44px; display: flex; align-items: center;
+}
 
-  .admin-card-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  .admin-card-title svg {
-    width: 16px;
-    height: 16px;
-    color: var(--stone-400);
-  }
-  .admin-card-title h2 {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--stone-900);
-    margin: 0;
-  }
+/* ─── checkbox ─── */
+.catalog-checkbox-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 0.5rem; border-radius: var(--ap-radius-sm);
+  cursor: pointer; transition: background var(--ap-transition);
+}
+.catalog-checkbox-row:hover { background: var(--ap-border-light); }
+.catalog-checkbox-row input {
+  width: 18px; height: 18px; border-radius: 4px;
+  border-color: var(--ap-border); accent-color: var(--ap-primary); cursor: pointer;
+}
+.catalog-checkbox-row span { font-size: 0.9375rem; color: var(--ap-text-secondary); }
 
-  .admin-card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
+/* ─── dropzone ─── */
+.catalog-dropzone {
+  border: 2px dashed var(--ap-border); border-radius: var(--ap-radius-md);
+  padding: 1.5rem; text-align: center; cursor: pointer;
+  transition: all var(--ap-transition);
+}
+.catalog-dropzone:hover { border-color: var(--ap-primary); background: rgba(245, 158, 11, 0.04); }
+.catalog-dropzone svg { width: 40px; height: 40px; color: var(--ap-text-muted); margin: 0 auto 12px; transition: color var(--ap-transition); }
+.catalog-dropzone:hover svg { color: var(--ap-primary); }
 
-  .admin-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-  @media (min-width: 1024px) {
-    .admin-grid { grid-template-columns: 2fr 1fr; }
-  }
+/* ─── preview list ─── */
+.catalog-preview-list { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 1rem; }
+.catalog-preview-item {
+  position: relative; width: 80px; height: 80px;
+  border-radius: var(--ap-radius-sm); border: 1px solid var(--ap-border);
+  overflow: hidden; flex-shrink: 0;
+}
+.catalog-preview-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.catalog-preview-item .img-remove {
+  position: absolute; top: 4px; right: 4px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(0,0,0,0.6); color: #fff; border: none;
+  cursor: pointer; display: flex; align-items: center;
+  justify-content: center; font-size: 14px; line-height: 1;
+  padding: 0; opacity: 0; transition: opacity 0.15s;
+}
+.catalog-preview-item:hover .img-remove { opacity: 1; }
 
-  .admin-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
+/* ─── product preview card ─── */
+.catalog-preview-card {
+  position: relative; background: var(--ap-bg-elevated);
+  border: 1px solid var(--ap-border); border-radius: var(--ap-radius-lg);
+  overflow: hidden; max-width: 260px;
+}
+.catalog-preview-img {
+  aspect-ratio: 1; background: var(--ap-bg); overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.catalog-preview-img img { width: 100%; height: 100%; object-fit: cover; }
+.catalog-preview-placeholder { display: flex; align-items: center; justify-content: center; color: var(--ap-text-muted); }
+.catalog-preview-placeholder svg { width: 3rem; height: 3rem; }
+.catalog-preview-body { padding: 0.75rem; display: flex; flex-direction: column; gap: 0.25rem; }
+.catalog-preview-name { font-size: 0.8125rem; font-weight: 600; color: var(--ap-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.catalog-preview-brand { font-size: 0.75rem; color: var(--ap-text-muted); }
+.catalog-preview-prices { display: flex; align-items: baseline; gap: 0.375rem; flex-wrap: wrap; }
+.catalog-preview-price { font-size: 1.125rem; font-weight: 800; color: var(--ap-rose); }
+.catalog-preview-original { font-size: 0.8125rem; color: var(--ap-text-muted); text-decoration: line-through; }
+.catalog-preview-discount {
+  display: inline-flex; align-self: flex-start; background: var(--ap-rose);
+  color: #fff; font-size: 0.625rem; font-weight: 700;
+  padding: 0.1875rem 0.375rem; border-radius: var(--ap-radius-xs); margin-top: 0.25rem;
+}
+.catalog-preview-cart {
+  position: absolute; bottom: 0.75rem; right: 0.75rem;
+  width: 36px; height: 36px; border-radius: 50%; background: var(--ap-bg-elevated);
+  border: 1.5px solid var(--ap-border); display: flex; align-items: center;
+  justify-content: center; box-shadow: var(--ap-shadow-sm);
+}
+.catalog-preview-cart svg { width: 1rem; height: 1rem; color: var(--ap-text); }
 
-  .admin-form-group {
-    margin-bottom: 16px;
-  }
-
-  .admin-form-label {
-    display: block;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .15em;
-    color: var(--stone-500);
-    margin-bottom: 8px;
-  }
-
-  .admin-form-input,
-  .admin-form-select,
-  .admin-form-textarea {
-    width: 100%;
-    padding: 12px 16px;
-    background: #fff;
-    border: 1px solid var(--stone-300);
-    border-radius: 12px;
-    font-size: 14px;
-    color: var(--stone-900);
-    transition: all .15s;
-    min-height: 44px;
-    box-sizing: border-box;
-  }
-  .admin-form-input:focus,
-  .admin-form-select:focus,
-  .admin-form-textarea:focus {
-    outline: none;
-    border-color: var(--amber-500);
-    box-shadow: 0 0 0 3px rgba(245,158,11,.12);
-  }
-  .admin-form-input::placeholder,
-  .admin-form-textarea::placeholder {
-    color: var(--stone-400);
-  }
-  .admin-form-textarea {
-    resize: none;
-    min-height: 100px;
-  }
-  .admin-form-select {
-    cursor: pointer;
-    appearance: auto;
-  }
-
-  .admin-grid-2 {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  @media (min-width: 768px) {
-    .admin-grid-2 { grid-template-columns: 1fr 1fr; }
-  }
-
-  .admin-dropzone {
-    border: 2px dashed var(--stone-300);
-    border-radius: 12px;
-    padding: 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: all .15s;
-  }
-  .admin-dropzone:hover {
-    border-color: rgba(251,191,36,.5);
-    background: rgba(255,251,235,.3);
-  }
-  .admin-dropzone svg {
-    width: 40px;
-    height: 40px;
-    color: var(--stone-300);
-    margin: 0 auto 12px;
-    transition: color .15s;
-  }
-  .admin-dropzone:hover svg {
-    color: var(--amber-500);
-  }
-  .admin-dropzone-title {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--stone-700);
-    transition: color .15s;
-  }
-  .admin-dropzone:hover .admin-dropzone-title {
-    color: var(--stone-900);
-  }
-  .admin-dropzone-sub {
-    font-size: 12px;
-    color: var(--stone-400);
-    margin-top: 4px;
-  }
-
-  .admin-checkbox-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background .15s;
-  }
-  .admin-checkbox-row:hover {
-    background: var(--stone-50);
-  }
-  .admin-checkbox-row input {
-    width: 16px;
-    height: 16px;
-    border-radius: 4px;
-    border-color: var(--stone-300);
-    accent-color: var(--amber-600);
-    cursor: pointer;
-  }
-  .admin-checkbox-row span {
-    font-size: 14px;
-    color: var(--stone-700);
-  }
-
-  .admin-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all .15s;
-    min-height: 44px;
-    text-decoration: none;
-  }
-  .admin-btn svg {
-    width: 16px;
-    height: 16px;
-  }
-  .admin-btn-primary {
-    background: linear-gradient(135deg, var(--stone-800), var(--stone-900));
-    color: #fff;
-  }
-  .admin-btn-primary:hover {
-    background: linear-gradient(135deg, var(--stone-900), #1a1512);
-    box-shadow: 0 4px 12px rgba(0,0,0,.12);
-  }
-  .admin-btn:disabled {
-    opacity: .5;
-    cursor: not-allowed;
-  }
-  .admin-btn-block {
-    width: 100%;
-  }
-
-  .admin-preview-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 16px;
-  }
-  .admin-preview-item {
-    position: relative;
-    width: 80px;
-    height: 80px;
-    border-radius: 8px;
-    border: 1px solid var(--stone-200);
-    overflow: hidden;
-    flex-shrink: 0;
-  }
-  .admin-preview-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  .admin-preview-item .img-remove {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: rgba(0,0,0,0.6);
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    line-height: 1;
-    padding: 0;
-    opacity: 0;
-    transition: opacity 0.15s;
-  }
-  .admin-preview-item:hover .img-remove { opacity: 1; }
-
-  .admin-badge {
-    display: inline-flex;
-    padding: 6px 12px;
-    font-size: 11px;
-    font-weight: 700;
-    border-radius: 9999px;
-  }
-
-  .admin-modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .2s;
-  }
-  .admin-modal.active {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  .admin-modal-content {
-    background: #fff;
-    border-radius: 16px;
-    padding: 32px;
-    max-width: 420px;
-    width: 90%;
-    text-align: center;
-    box-shadow: 0 20px 60px rgba(0,0,0,.2);
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-  .animate-spin {
-    animation: spin 1s linear infinite;
-  }
-
-  @media (max-width: 640px) {
-    .admin-page { padding: 16px; }
-    .admin-card { padding: 16px; }
-    .admin-page-header h1 { font-size: 20px; }
-  }
-
-  /* Product Preview Card */
-  .admin-preview-card {
-    position: relative;
-    background: #fff;
-    border: 1px solid #e7e5e4;
-    border-radius: 0.75rem;
-    overflow: hidden;
-    max-width: 260px;
-  }
-  .admin-preview-img {
-    aspect-ratio: 1;
-    background: #f8f8f8;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .admin-preview-img img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .admin-preview-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #a8a29e;
-  }
-  .admin-preview-placeholder svg { width: 3rem; height: 3rem; }
-  .admin-preview-body { padding: 0.625rem; display: flex; flex-direction: column; gap: 0.1875rem; }
-  .admin-preview-name {
-    font-size: 0.75rem; font-weight: 500; color: #222;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .admin-preview-brand { font-size: 0.6875rem; color: #666; }
-  .admin-preview-prices { display: flex; align-items: baseline; gap: 0.375rem; flex-wrap: wrap; }
-  .admin-preview-price { font-size: 1rem; font-weight: 800; color: #f43f5e; }
-  .admin-preview-original { font-size: 0.75rem; color: #999; text-decoration: line-through; }
-  .admin-preview-discount {
-    display: inline-flex; align-self: flex-start;
-    background: #f43f5e; color: #fff; font-size: 0.5625rem; font-weight: 700;
-    padding: 0.1875rem 0.375rem; border-radius: 0.25rem; margin-top: 0.25rem;
-  }
-  .admin-preview-cart {
-    position: absolute; bottom: 0.625rem; right: 0.625rem;
-    width: 36px; height: 36px; border-radius: 50%; background: #fff;
-    border: 1.5px solid #e5e7eb; display: flex; align-items: center;
-    justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  }
-  .admin-preview-cart svg { width: 1rem; height: 1rem; color: #333; }
+/* ─── spinner ─── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.animate-spin { animation: spin 1s linear infinite; }
 </style>
 
-<div class="admin-page">
-    <nav class="admin-breadcrumb">
+<div class="catalog-new">
+    <nav class="catalog-breadcrumb">
         <a href="/admin/catalog">Catalog</a>
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>
-        <span class="admin-breadcrumb-current">New Product</span>
+        <span class="catalog-breadcrumb-current">New Product</span>
     </nav>
 
-    <div class="admin-page-header">
-        <div>
+    <div class="ap-header">
+        <div class="ap-header-left">
+            <span class="ap-overline">Inventory</span>
             <h1>New Product</h1>
-            <p>Add a new product to your artisan catalog</p>
+            <p class="ap-subtitle">Add a new product to your artisan catalog</p>
         </div>
     </div>
 
-    <form id="product-form" class="admin-grid">
-        <div class="admin-stack">
-            <div class="admin-card">
-                <div class="admin-card-title">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    <h2>Product Images</h2>
+    <form id="product-form" class="ap-grid-2" style="align-items:start;">
+        <div style="display:flex;flex-direction:column;gap:1.5rem;">
+            <div class="ap-card">
+                <div class="ap-card-header"><h2>Product Images</h2></div>
+                <div class="ap-card-body">
+                    <div class="catalog-dropzone" onclick="document.getElementById('image-input').click()">
+                        <input type="file" id="image-input" multiple accept="image/*" class="hidden" style="display:none;">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <p style="font-size:0.9375rem;font-weight:500;color:var(--ap-text-secondary);margin:0;">Click to upload images</p>
+                        <p style="font-size:0.75rem;color:var(--ap-text-muted);margin:4px 0 0;">PNG, JPG up to 5MB</p>
+                    </div>
+                    <div id="image-preview" class="catalog-preview-list"></div>
+                    <input type="hidden" id="images-input" name="images" value="[]">
                 </div>
-                <div class="admin-dropzone" onclick="document.getElementById('image-input').click()">
-                    <input type="file" id="image-input" multiple accept="image/*" class="hidden" style="display:none;">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    <p class="admin-dropzone-title">Click to upload images</p>
-                    <p class="admin-dropzone-sub">PNG, JPG up to 5MB</p>
-                </div>
-                <div id="image-preview" class="admin-preview-list"></div>
-                <input type="hidden" id="images-input" name="images" value="[]">
             </div>
 
             {% if settings.product_video_enabled|default('true') != 'false' %}
-            <div class="admin-card">
-                <div class="admin-card-title">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                    <h2>Product Video</h2>
-                </div>
-                <div class="admin-form-group">
-                    <label class="admin-form-label">Video URL (YouTube, Vimeo, or MP4)</label>
-                    <input type="url" name="video_url" class="admin-form-input" placeholder="https://youtube.com/watch?v=...">
+            <div class="ap-card">
+                <div class="ap-card-header"><h2>Product Video</h2></div>
+                <div class="ap-card-body">
+                    <div class="catalog-form-group">
+                        <label class="catalog-form-label">Video URL (YouTube, Vimeo, or MP4)</label>
+                        <input type="url" name="video_url" class="ap-input" placeholder="https://youtube.com/watch?v=...">
+                    </div>
                 </div>
             </div>
             {% endif %}
 
             <!-- Live Preview Card -->
-            <div class="admin-card">
-                <div class="admin-card-title">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                    <h2>Card Preview</h2>
-                </div>
-                <div class="admin-preview-card" id="preview-card">
-                    <div class="admin-preview-img" id="preview-img">
-                        <div class="admin-preview-placeholder">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <div class="ap-card">
+                <div class="ap-card-header"><h2>Card Preview</h2></div>
+                <div class="ap-card-body">
+                    <div class="catalog-preview-card" id="preview-card">
+                        <div class="catalog-preview-img" id="preview-img">
+                            <div class="catalog-preview-placeholder">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </div>
                         </div>
-                    </div>
-                    <div class="admin-preview-body">
-                        <span class="admin-preview-name" id="preview-name">Product Name</span>
-                        <span class="admin-preview-brand" id="preview-brand"></span>
-                        <div class="admin-preview-prices">
-                            <span class="admin-preview-price" id="preview-price">₦0</span>
-                            <span class="admin-preview-original" id="preview-original" style="display:none;"></span>
+                        <div class="catalog-preview-body">
+                            <span class="catalog-preview-name" id="preview-name">Product Name</span>
+                            <span class="catalog-preview-brand" id="preview-brand"></span>
+                            <div class="catalog-preview-prices">
+                                <span class="catalog-preview-price" id="preview-price">₦0</span>
+                                <span class="catalog-preview-original" id="preview-original" style="display:none;"></span>
+                            </div>
+                            <div class="catalog-preview-discount" id="preview-discount" style="display:none;">-0%</div>
                         </div>
-                        <div class="admin-preview-discount" id="preview-discount" style="display:none;">-0%</div>
-                    </div>
-                    <div class="admin-preview-cart">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+                        <div class="catalog-preview-cart">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -492,131 +196,120 @@
             {% include "admin/catalog/ai_widget.html" %}
         </div>
 
-        <div class="admin-stack">
-            <div class="admin-card">
-                <div class="admin-card-title">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <h2>Basic Information</h2>
-                </div>
-                <div class="admin-stack" style="gap:16px;">
-                    <div class="admin-form-group">
-                        <label class="admin-form-label">Product Name</label>
-                        <input type="text" name="name" required class="admin-form-input" placeholder="e.g. Hand-Carved Oak Bowl" id="input-name">
-                    </div>
-                    <div class="admin-grid-2">
-                        <div class="admin-form-group">
-                            <label class="admin-form-label">URL Slug</label>
-                            <div id="slug-preview" style="padding:10px 12px;background:var(--bg-secondary,#f3f4f6);border:1px solid var(--border,#e5e7eb);border-radius:6px;font-size:0.85rem;color:var(--text-secondary,#6b7280);min-height:40px;display:flex;align-items:center;">
-                                /products/...
+        <div style="display:flex;flex-direction:column;gap:1.5rem;">
+            <div class="ap-card">
+                <div class="ap-card-header"><h2>Basic Information</h2></div>
+                <div class="ap-card-body">
+                    <div style="display:flex;flex-direction:column;gap:1rem;">
+                        <div class="catalog-form-group">
+                            <label class="catalog-form-label">Product Name</label>
+                            <input type="text" name="name" required class="ap-input" placeholder="e.g. Hand-Carved Oak Bowl" id="input-name">
+                        </div>
+                        <div class="ap-grid-2">
+                            <div class="catalog-form-group">
+                                <label class="catalog-form-label">URL Slug</label>
+                                <div id="slug-preview" class="catalog-slug-preview">/products/...</div>
+                                <p style="margin-top:4px;font-size:0.75rem;color:var(--ap-text-muted);">Auto-generated from product name</p>
                             </div>
-                            <p style="margin-top:4px;font-size:0.75rem;color:var(--text-muted,#9ca3af);">Auto-generated from product name</p>
+                            <div class="catalog-form-group">
+                                <label class="catalog-form-label">Brand</label>
+                                <input type="text" name="brand" class="ap-input" placeholder="Optional" id="input-brand">
+                            </div>
                         </div>
-                        <div class="admin-form-group">
-                            <label class="admin-form-label">Brand</label>
-                            <input type="text" name="brand" class="admin-form-input" placeholder="Optional" id="input-brand">
-                        </div>
-                    </div>
-                    <div class="admin-form-group">
-                        <label class="admin-form-label">Description</label>
-                        <textarea name="description" rows="4" class="admin-form-textarea" placeholder="Describe your product..."></textarea>
-                    </div>
-                </div>
-            </div>
-
-            <div class="admin-card">
-                <div class="admin-card-title">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <h2>Pricing &amp; Stock</h2>
-                </div>
-                <div class="admin-stack" style="gap:16px;">
-                    <div class="admin-grid-2">
-                        <div class="admin-form-group">
-                            <label class="admin-form-label">Price (₦)</label>
-                            <input type="number" name="price" step="0.01" min="0" required class="admin-form-input" placeholder="0.00" id="input-price">
-                        </div>
-                        <div class="admin-form-group">
-                            <label class="admin-form-label">Discount Price (₦)</label>
-                            <input type="number" name="discount_price" step="0.01" min="0" class="admin-form-input" placeholder="Optional" id="input-discount">
-                        </div>
-                    </div>
-                    <div class="admin-form-group">
-                        <label class="admin-form-label">Inventory</label>
-                        <input type="number" name="inventory" min="0" value="0" class="admin-form-input" placeholder="0">
-                    </div>
-                </div>
-            </div>
-
-            <div class="admin-card">
-                <div class="admin-card-title">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                    <h2>Organization</h2>
-                </div>
-                <div class="admin-stack" style="gap:16px;">
-                    <div class="admin-grid-2">
-                        <div class="admin-form-group">
-                            <label class="admin-form-label">Category</label>
-                            <select name="category_id" class="admin-form-select">
-                                <option value="">No category</option>
-                                {% for cat in categories %}
-                                <option value="{{ cat.id }}">{{ cat.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="admin-form-group">
-                            <label class="admin-form-label">Sub-Category</label>
-                            <input type="text" name="sub_category" class="admin-form-input" placeholder="e.g. Oak Furniture">
-                        </div>
-                    </div>
-                    <div class="admin-grid-2">
-                        <div class="admin-form-group">
-                            <label class="admin-form-label">Retailer</label>
-                            <select name="retailer_id" class="admin-form-select">
-                                <option value="">No retailer</option>
-                                {% for r in retailers %}
-                                <option value="{{ r.id }}">{{ r.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="admin-form-group">
-                            <label class="admin-form-label">Vendor ID</label>
-                            <input type="text" name="vendor_id" class="admin-form-input" placeholder="Optional vendor reference">
+                        <div class="catalog-form-group">
+                            <label class="catalog-form-label">Description</label>
+                            <textarea name="description" rows="4" class="catalog-form-textarea" placeholder="Describe your product..."></textarea>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="admin-card">
-                <div class="admin-card-title">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                    <h2>Specifications</h2>
-                </div>
-                <div class="admin-stack" style="gap:16px;">
-                    <div class="admin-form-group">
-                        <label class="admin-form-label">Product Specifications</label>
-                        <input type="text" name="specifications" class="admin-form-input" placeholder="e.g. Weight: 2kg, Dimensions: 30x20x10cm, Color: Natural Wood">
-                        <p style="font-size:12px;color:#a8a29e;margin-top:4px;">Comma-separated key-value pairs. Used for product details on the storefront.</p>
+            <div class="ap-card">
+                <div class="ap-card-header"><h2>Pricing &amp; Stock</h2></div>
+                <div class="ap-card-body">
+                    <div style="display:flex;flex-direction:column;gap:1rem;">
+                        <div class="ap-grid-2">
+                            <div class="catalog-form-group">
+                                <label class="catalog-form-label">Price (₦)</label>
+                                <input type="number" name="price" step="0.01" min="0" required class="ap-input" placeholder="0.00" id="input-price">
+                            </div>
+                            <div class="catalog-form-group">
+                                <label class="catalog-form-label">Discount Price (₦)</label>
+                                <input type="number" name="discount_price" step="0.01" min="0" class="ap-input" placeholder="Optional" id="input-discount">
+                            </div>
+                        </div>
+                        <div class="catalog-form-group">
+                            <label class="catalog-form-label">Inventory</label>
+                            <input type="number" name="inventory" min="0" value="0" class="ap-input" placeholder="0">
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="admin-card">
-                <div class="admin-card-title">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <h2>Flags</h2>
+            <div class="ap-card">
+                <div class="ap-card-header"><h2>Organization</h2></div>
+                <div class="ap-card-body">
+                    <div style="display:flex;flex-direction:column;gap:1rem;">
+                        <div class="ap-grid-2">
+                            <div class="catalog-form-group">
+                                <label class="catalog-form-label">Category</label>
+                                <select name="category_id" class="ap-input ap-select">
+                                    <option value="">No category</option>
+                                    {% for cat in categories %}
+                                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="catalog-form-group">
+                                <label class="catalog-form-label">Sub-Category</label>
+                                <input type="text" name="sub_category" class="ap-input" placeholder="e.g. Oak Furniture">
+                            </div>
+                        </div>
+                        <div class="ap-grid-2">
+                            <div class="catalog-form-group">
+                                <label class="catalog-form-label">Retailer</label>
+                                <select name="retailer_id" class="ap-input ap-select">
+                                    <option value="">No retailer</option>
+                                    {% for r in retailers %}
+                                    <option value="{{ r.id }}">{{ r.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="catalog-form-group">
+                                <label class="catalog-form-label">Vendor ID</label>
+                                <input type="text" name="vendor_id" class="ap-input" placeholder="Optional vendor reference">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label class="admin-checkbox-row">
+            </div>
+
+            <div class="ap-card">
+                <div class="ap-card-header"><h2>Specifications</h2></div>
+                <div class="ap-card-body">
+                    <div class="catalog-form-group">
+                        <label class="catalog-form-label">Product Specifications</label>
+                        <input type="text" name="specifications" class="ap-input" placeholder="e.g. Weight: 2kg, Dimensions: 30x20x10cm, Color: Natural Wood">
+                        <p style="font-size:0.75rem;color:var(--ap-text-muted);margin-top:4px;">Comma-separated key-value pairs. Used for product details on the storefront.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ap-card">
+                <div class="ap-card-header"><h2>Flags</h2></div>
+                <div class="ap-card-body">
+                    <label class="catalog-checkbox-row">
                         <input type="checkbox" name="is_new_arrival" value="true">
                         <span>Mark as New Arrival</span>
                     </label>
-                    <label class="admin-checkbox-row">
+                    <label class="catalog-checkbox-row">
                         <input type="checkbox" name="is_flagship" value="true">
                         <span>Feature as Flagship</span>
                     </label>
                 </div>
             </div>
 
-            <button type="submit" class="admin-btn admin-btn-primary admin-btn-block">
+            <button type="submit" class="ap-btn ap-btn-primary" style="width:100%;">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
                 Create Product
             </button>
@@ -625,7 +318,6 @@
 </div>
 
 <script>
-// Live preview update
 function updatePreview() {
     const name = document.getElementById('input-name').value || 'Product Name';
     const brand = document.getElementById('input-brand').value;
@@ -649,14 +341,12 @@ function updatePreview() {
     }
 }
 
-// Auto-slug preview from name
 document.getElementById('input-name').addEventListener('input', function() {
     const slug = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     document.getElementById('slug-preview').textContent = slug ? '/products/' + slug : '/products/...';
     updatePreview();
 });
 
-// Live preview bindings
 ['input-name', 'input-brand', 'input-price', 'input-discount'].forEach(function(id) {
     document.getElementById(id).addEventListener('input', updatePreview);
 });
@@ -718,7 +408,7 @@ document.getElementById('image-input').addEventListener('change', async (e) => {
             const preview = document.getElementById('image-preview');
             data.urls.forEach(url => {
                 const item = document.createElement('div');
-                item.className = 'admin-preview-item';
+                item.className = 'catalog-preview-item';
                 item.innerHTML = '<img src="' + url + '" alt="Preview"><button type="button" class="img-remove" title="Remove">&times;</button>';
                 item.querySelector('.img-remove').addEventListener('click', () => {
                     item.remove();
@@ -733,7 +423,6 @@ document.getElementById('image-input').addEventListener('change', async (e) => {
             const existing = JSON.parse(hiddenInput.value || '[]');
             existing.push(...data.urls);
             hiddenInput.value = JSON.stringify(existing);
-            // Update preview card image
             updatePreviewFirst();
         }
     } catch (err) {
@@ -748,7 +437,7 @@ function updatePreviewFirst() {
     if (arr.length > 0) {
         previewImg.innerHTML = '<img src="' + arr[0] + '" alt="Preview">';
     } else {
-        previewImg.innerHTML = '<div class="admin-preview-placeholder"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>';
+        previewImg.innerHTML = '<div class="catalog-preview-placeholder"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>';
     }
 }
 </script>

@@ -2,91 +2,76 @@
 {% block title %}Flag Queue — {{ settings.site_name|default('ForgeStore') }}{% endblock %}
 {% block content %}
 <style>
-  :root {
-    --primary: {{ settings.primary_color|default('#f59e0b') }};
-    --primary-hover: {{ settings.secondary_color|default('#d97706') }};
-    --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
-    --green: #10b981; --red: #ef4444; --yellow: #f59e0b; --blue: #3b82f6; --orange: #f97316;
-  }
-  .dark { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --muted: #94a3b8; --border: #334155; }
-  .fl-page { max-width: 80rem; margin: 0 auto; padding: 1.5rem; }
-  .fl-page h1 { font-size: 1.75rem; font-weight: 800; color: var(--text); margin-bottom: 0.25rem; }
-  .fl-page .sub { font-size: 0.875rem; color: var(--muted); margin-bottom: 1.5rem; }
-  .fl-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; }
-  .fl-stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; text-align: center; }
-  .fl-stat .num { font-size: 1.75rem; font-weight: 800; }
-  .fl-stat .lbl { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-top: 0.25rem; }
-  .fl-stat.pending .num { color: var(--yellow); }
-  .fl-stat.resolved .num { color: var(--green); }
-  .fl-stat.dismissed .num { color: var(--muted); }
-  .fl-stat.high .num { color: var(--red); }
-  .fl-filters { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-  .fl-filter { padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--muted); transition: all 0.15s; }
-  .fl-filter.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-  .fl-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-bottom: 0.75rem; transition: all 0.15s; }
-  .fl-card:hover { border-color: var(--primary); }
+  @import url('/static/css/admin_portal.css');
+
+  .fl-card { background: var(--ap-bg-elevated); border: 1px solid var(--ap-border); border-radius: var(--ap-radius-xl); padding: 1.25rem; margin-bottom: 0.75rem; transition: all var(--ap-transition); }
+  .fl-card:hover { border-color: var(--ap-primary); box-shadow: var(--ap-shadow-md); }
   .fl-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.75rem; }
   .fl-card-product { display: flex; align-items: center; gap: 0.75rem; }
-  .fl-thumb { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; background: var(--border); flex-shrink: 0; }
-  .fl-card-name { font-weight: 700; font-size: 0.9375rem; color: var(--text); }
-  .fl-card-meta { font-size: 0.75rem; color: var(--muted); margin-top: 0.125rem; }
+  .fl-thumb { width: 56px; height: 56px; border-radius: var(--ap-radius-sm); object-fit: cover; background: var(--ap-border-light); flex-shrink: 0; }
+  .fl-card-name { font-weight: 700; font-size: 0.9375rem; color: var(--ap-text); }
+  .fl-card-meta { font-size: 0.75rem; color: var(--ap-text-muted); margin-top: 0.125rem; }
   .fl-badge { display: inline-block; font-size: 0.6875rem; font-weight: 700; padding: 0.2rem 0.625rem; border-radius: 9999px; }
-  .fl-badge.high { background: #fee2e2; color: #991b1b; }
-  .fl-badge.medium { background: #fef3c7; color: #92400e; }
-  .fl-badge.low { background: #dbeafe; color: #1e40af; }
-  .fl-badge.pending { background: #fef3c7; color: #92400e; }
-  .fl-badge.resolved { background: #d1fae5; color: #065f46; }
-  .fl-badge.dismissed { background: #e2e8f0; color: #475569; }
-  .fl-badge.suspended { background: #fee2e2; color: #991b1b; }
-  .fl-ai-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.75rem; }
-  .fl-ai-box .ai-label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 0.375rem; }
-  .fl-ai-box .ai-text { font-size: 0.8125rem; color: var(--text); line-height: 1.5; }
-  .fl-flag-info { display: flex; gap: 1.5rem; font-size: 0.8125rem; color: var(--text); margin-bottom: 0.75rem; flex-wrap: wrap; }
+  .fl-badge.high { background: var(--ap-red-soft); color: #991b1b; }
+  .fl-badge.medium { background: var(--ap-amber-soft); color: #92400e; }
+  .fl-badge.low { background: var(--ap-blue-soft); color: #1e40af; }
+  .fl-badge.pending { background: var(--ap-amber-soft); color: #92400e; }
+  .fl-badge.resolved { background: var(--ap-emerald-soft); color: #065f46; }
+  .fl-badge.dismissed { background: var(--ap-border-light); color: var(--ap-text-secondary); }
+  .fl-badge.suspended { background: var(--ap-red-soft); color: #991b1b; }
+  .fl-ai-box { background: var(--ap-bg); border: 1px solid var(--ap-border); border-radius: var(--ap-radius-md); padding: 0.75rem; margin-bottom: 0.75rem; }
+  .fl-ai-box .ai-label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--ap-text-muted); margin-bottom: 0.375rem; }
+  .fl-ai-box .ai-text { font-size: 0.8125rem; color: var(--ap-text); line-height: 1.5; }
+  .fl-flag-info { display: flex; gap: 1.5rem; font-size: 0.8125rem; color: var(--ap-text); margin-bottom: 0.75rem; flex-wrap: wrap; }
   .fl-flag-info span { display: flex; align-items: center; gap: 0.375rem; }
-  .fl-flag-info .fl-label { color: var(--muted); font-weight: 600; }
+  .fl-flag-info .fl-label { color: var(--ap-text-muted); font-weight: 600; }
   .fl-actions { display: flex; gap: 0.5rem; align-items: center; }
-  .fl-btn { min-height: 36px; padding: 0.375rem 0.875rem; border-radius: 8px; font-size: 0.8125rem; font-weight: 700; cursor: pointer; border: none; transition: all 0.15s; }
-  .fl-btn-resolve { background: var(--green); color: #fff; }
+  .fl-btn { min-height: 44px; padding: 0.375rem 0.875rem; border-radius: var(--ap-radius-md); font-size: 0.8125rem; font-weight: 700; cursor: pointer; border: none; transition: all var(--ap-transition); display: inline-flex; align-items: center; justify-content: center; }
+  .fl-btn-resolve { background: var(--ap-emerald); color: #fff; }
   .fl-btn-resolve:hover { background: #059669; }
-  .fl-btn-dismiss { background: transparent; color: var(--muted); border: 1px solid var(--border); }
-  .fl-btn-dismiss:hover { background: var(--bg); }
-  .fl-btn-view { background: transparent; color: var(--primary); border: 1px solid var(--border); }
-  .fl-btn-view:hover { background: #fef3c7; }
-  .fl-note { flex: 1; min-width: 200px; padding: 0.375rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8125rem; background: var(--bg); color: var(--text); }
-  .fl-empty { text-align: center; padding: 4rem 1.5rem; color: var(--muted); }
+  .fl-btn-dismiss { background: transparent; color: var(--ap-text-muted); border: 1px solid var(--ap-border); min-height: 44px; }
+  .fl-btn-dismiss:hover { background: var(--ap-bg); }
+  .fl-btn-view { background: transparent; color: var(--ap-primary); border: 1px solid var(--ap-border); min-height: 44px; }
+  .fl-btn-view:hover { background: var(--ap-amber-soft); }
+  .fl-note { flex: 1; min-width: 200px; padding: 0.375rem 0.75rem; border: 1px solid var(--ap-border); border-radius: var(--ap-radius-sm); font-size: 0.8125rem; background: var(--ap-bg); color: var(--ap-text); min-height: 44px; }
+  .fl-empty { text-align: center; padding: 4rem 1.5rem; color: var(--ap-text-muted); }
   .fl-empty svg { width: 3rem; height: 3rem; margin: 0 auto 1rem; opacity: 0.4; }
   .fl-pagination { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; }
-  .fl-page-btn { min-height: 36px; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); }
-  .fl-page-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-  .fl-toast { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 9999; padding: 0.75rem 1.25rem; border-radius: 10px; font-size: 0.875rem; font-weight: 600; color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.2); transition: opacity 0.3s; }
-  .fl-toast.success { background: var(--green); }
-  .fl-toast.error { background: var(--red); }
-  .fl-bulk { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding: 0.75rem 1rem; background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
-  .fl-bulk label { font-size: 0.8125rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+  .fl-page-btn { min-height: 44px; padding: 0.375rem 0.75rem; border-radius: var(--ap-radius-sm); font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: 1px solid var(--ap-border); background: var(--ap-bg-elevated); color: var(--ap-text); display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .fl-page-btn.active { background: var(--ap-primary); color: #fff; border-color: var(--ap-primary); }
+  .fl-toast { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 9999; padding: 0.75rem 1.25rem; border-radius: var(--ap-radius-lg); font-size: 0.875rem; font-weight: 600; color: #fff; box-shadow: var(--ap-shadow-xl); transition: opacity 0.3s; }
+  .fl-toast.success { background: var(--ap-emerald); }
+  .fl-toast.error { background: var(--ap-red); }
+  .fl-bulk { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding: 0.75rem 1rem; background: var(--ap-bg-elevated); border: 1px solid var(--ap-border); border-radius: var(--ap-radius-md); }
+  .fl-bulk label { font-size: 0.8125rem; font-weight: 600; color: var(--ap-text); display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
   @media (max-width: 640px) {
-    .fl-stats { grid-template-columns: repeat(2, 1fr); }
     .fl-card-header { flex-direction: column; }
     .fl-actions { flex-wrap: wrap; }
   }
 </style>
 
-<div class="fl-page">
-  <h1>Flag Queue</h1>
-  <p class="sub">AI-triaged customer product reports — review and take action</p>
+<div class="ap-page">
+  <div class="ap-header">
+    <div class="ap-header-left">
+      <span class="ap-overline">Flags</span>
+      <h1>Flag Queue</h1>
+      <p class="ap-subtitle">AI-triaged customer product reports — review and take action</p>
+    </div>
+  </div>
 
-  <div class="fl-stats" id="flStats"></div>
+  <div class="ap-stats" id="flStats"></div>
 
-  <div class="fl-filters" id="flFilters">
-    <button class="fl-filter active" data-status="PENDING">Pending</button>
-    <button class="fl-filter" data-status="RESOLVED">Resolved</button>
-    <button class="fl-filter" data-status="DISMISSED">Dismissed</button>
+  <div class="ap-tabs" id="flFilters">
+    <button class="ap-tab active" data-status="PENDING">Pending</button>
+    <button class="ap-tab" data-status="RESOLVED">Resolved</button>
+    <button class="ap-tab" data-status="DISMISSED">Dismissed</button>
   </div>
 
   <div class="fl-bulk" id="flBulk" style="display:none;">
     <label><input type="checkbox" id="flSelectAll" onchange="flToggleSelect()"> Select All</label>
     <button class="fl-btn fl-btn-resolve" onclick="flBulkAction('resolve')">Resolve Selected</button>
     <button class="fl-btn fl-btn-dismiss" onclick="flBulkAction('dismiss')">Dismiss Selected</button>
-    <span id="flSelectedCount" style="font-size:0.8125rem;color:var(--muted);"></span>
+    <span id="flSelectedCount" style="font-size:0.8125rem;color:var(--ap-text-muted);"></span>
   </div>
 
   <div id="flList"></div>
@@ -101,10 +86,10 @@ async function flLoadStats() {
   const r = await fetch('/api/admin/flags/stats');
   const d = await r.json();
   document.getElementById('flStats').innerHTML = `
-    <div class="fl-stat pending"><div class="num">${d.pending}</div><div class="lbl">Pending</div></div>
-    <div class="fl-stat resolved"><div class="num">${d.resolved}</div><div class="lbl">Resolved</div></div>
-    <div class="fl-stat dismissed"><div class="num">${d.dismissed}</div><div class="lbl">Dismissed</div></div>
-    <div class="fl-stat high"><div class="num">${d.high_flag_products}</div><div class="lbl">3+ Flags (Auto)</div></div>
+    <div class="ap-stat ap-stat-amber"><div class="ap-stat-icon amber"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div class="ap-stat-label">Pending</div><div class="ap-stat-value">${d.pending}</div></div>
+    <div class="ap-stat ap-stat-emerald"><div class="ap-stat-icon emerald"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div class="ap-stat-label">Resolved</div><div class="ap-stat-value">${d.resolved}</div></div>
+    <div class="ap-stat ap-stat-blue"><div class="ap-stat-icon purple"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg></div><div class="ap-stat-label">Dismissed</div><div class="ap-stat-value">${d.dismissed}</div></div>
+    <div class="ap-stat ap-stat-rose"><div class="ap-stat-icon rose"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg></div><div class="ap-stat-label">3+ Flags (Auto)</div><div class="ap-stat-value">${d.high_flag_products}</div></div>
   `;
 }
 
@@ -116,9 +101,9 @@ async function flLoadQueue(page = 1) {
   document.getElementById('flBulk').style.display = isPending && d.flags.length ? 'flex' : 'none';
 
   if (!d.flags.length) {
-    document.getElementById('flList').innerHTML = `<div class="fl-empty">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
-      <p>No flags in this queue</p>
+    document.getElementById('flList').innerHTML = `<div class="ap-empty">
+      <div class="ap-empty-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg></div>
+      <h3>No flags in this queue</h3>
     </div>`;
     document.getElementById('flPagination').innerHTML = '';
     return;
@@ -130,9 +115,7 @@ async function flLoadQueue(page = 1) {
     const severity = f.flag_count >= 5 ? 'high' : f.flag_count >= 3 ? 'medium' : 'low';
     const severityLabel = f.flag_count >= 5 ? 'HIGH' : f.flag_count >= 3 ? 'MEDIUM' : 'LOW';
 
-    // Extract AI triage from description
     let aiText = '';
-    let vendorMsg = '';
     if (f.description.includes('AI Triage:')) {
       const parts = f.description.split('---');
       aiText = parts[1] ? parts[1].trim() : '';
@@ -160,7 +143,7 @@ async function flLoadQueue(page = 1) {
         <span><span class="fl-label">Date:</span> ${f.created_at ? new Date(f.created_at).toLocaleDateString() : '—'}</span>
       </div>
 
-      ${f.description ? `<div style="font-size:0.8125rem;color:var(--text);margin-bottom:0.75rem;">${f.description.split('---')[0].trim()}</div>` : ''}
+      ${f.description ? `<div style="font-size:0.8125rem;color:var(--ap-text);margin-bottom:0.75rem;">${f.description.split('---')[0].trim()}</div>` : ''}
 
       ${aiText ? `<div class="fl-ai-box">
         <div class="ai-label">AI Triage Analysis</div>
@@ -173,13 +156,12 @@ async function flLoadQueue(page = 1) {
         <button class="fl-btn fl-btn-resolve" onclick="flReview('${f.id}', 'resolve')">Resolve</button>
         <button class="fl-btn fl-btn-dismiss" onclick="flReview('${f.id}', 'dismiss')">Dismiss</button>
       </div>` : `<div class="fl-actions">
-        <span style="font-size:0.75rem;color:var(--muted);">${f.admin_note || ''}</span>
+        <span style="font-size:0.75rem;color:var(--ap-text-muted);">${f.admin_note || ''}</span>
       </div>`}
     </div>`;
   }
   document.getElementById('flList').innerHTML = html;
 
-  // Pagination
   let pag = '';
   if (d.pages > 1) {
     for (let i = 1; i <= d.pages; i++) {
@@ -236,9 +218,9 @@ function flToast(msg, isError) {
   setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
 }
 
-document.querySelectorAll('.fl-filter').forEach(btn => {
+document.querySelectorAll('.ap-tab').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.fl-filter').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.ap-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     flStatus = btn.dataset.status;
     flLoadQueue(1);

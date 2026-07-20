@@ -4,310 +4,19 @@
 
 {% block content %}
 <style>
-  :root {
-    --amber-50: #fffbeb;
-    --amber-100: #fef3c7;
-    --amber-200: #fde68a;
-    --amber-500: #f59e0b;
-    --amber-600: #d97706;
-    --amber-700: #b45309;
-    --stone-50: #fafaf9;
-    --stone-100: #f5f5f4;
-    --stone-200: #e7e5e4;
-    --stone-300: #d6d3d1;
-    --stone-400: #a8a29e;
-    --stone-500: #78716c;
-    --stone-600: #57534e;
-    --stone-700: #44403c;
-    --stone-800: #292524;
-    --stone-900: #1c1917;
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 14px;
-    --radius-xl: 16px;
-    --shadow-sm: 0 1px 2px rgba(0,0,0,.04);
-    --shadow-md: 0 4px 12px rgba(0,0,0,.06);
-    --shadow-lg: 0 8px 24px rgba(0,0,0,.08);
-    --transition-fast: 150ms ease;
-    --transition-base: 200ms ease;
-  }
+@import url('/static/css/admin_portal.css');
 
-  .admin-page {
-    max-width: 820px;
-    margin: 0 auto;
-    padding: 0 1rem 5rem;
-  }
-
-  .admin-page-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 1.5rem 0;
-    flex-wrap: wrap;
-  }
-  .admin-page-header h1 {
-    font-size: 1.625rem;
-    font-weight: 700;
-    color: var(--stone-900);
-    margin: 0;
-    letter-spacing: -0.015em;
-  }
-  .admin-page-header p {
-    font-size: 0.8125rem;
-    color: var(--stone-500);
-    margin: 0.25rem 0 0;
-    line-height: 1.4;
-  }
-
-  .admin-settings-tabs {
-    display: flex;
-    gap: 0.375rem;
-    margin-bottom: 1.75rem;
-    padding: 0.375rem;
-    background: var(--stone-100);
-    border-radius: var(--radius-lg);
-    overflow-x: auto;
-    position: sticky;
-    top: 5rem;
-    z-index: 10;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    border: 1px solid var(--stone-200);
-  }
-  .admin-settings-tabs::-webkit-scrollbar { display: none; }
-
-  .admin-settings-tab {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.5rem 0.875rem;
-    min-height: 44px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border-radius: var(--radius-md);
-    white-space: nowrap;
-    text-decoration: none;
-    transition: all var(--transition-fast);
-    border: 2px solid transparent;
-    flex-shrink: 0;
-    cursor: pointer;
-    user-select: none;
-  }
-  .admin-settings-tab:hover {
-    opacity: 0.85;
-    transform: translateY(-1px);
-  }
-  .admin-settings-tab.active {
-    border-color: var(--stone-800);
-    box-shadow: var(--shadow-md);
-    transform: translateY(-1px);
-  }
-  .admin-settings-tab svg {
-    width: 14px;
-    height: 14px;
-    flex-shrink: 0;
-  }
-
-  .admin-settings-search-wrap {
-    position: relative;
-    margin-bottom: 1.5rem;
-  }
-  .admin-settings-search {
-    width: 100%;
-    padding: 0.75rem 1rem 0.75rem 2.75rem;
-    min-height: 44px;
-    background: #fff;
-    border: 1.5px solid var(--stone-300);
-    border-radius: var(--radius-lg);
-    font-size: 0.875rem;
-    color: var(--stone-900);
-    outline: none;
-    transition: border-color var(--transition-base), box-shadow var(--transition-base);
-    box-sizing: border-box;
-  }
-  .admin-settings-search:focus {
-    border-color: var(--amber-600);
-    box-shadow: 0 0 0 3px rgba(217,119,6,0.15);
-  }
-  .admin-settings-search-icon {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 18px;
-    height: 18px;
-    color: var(--stone-400);
-    pointer-events: none;
-  }
-  .admin-settings-clear-btn {
-    position: absolute;
-    right: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    padding: 0.375rem;
-    min-width: 44px;
-    min-height: 44px;
-    background: none;
-    border: none;
-    color: var(--stone-400);
-    cursor: pointer;
-    border-radius: 50%;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    transition: all var(--transition-fast);
-  }
-  .admin-settings-clear-btn.visible { display: flex; }
-  .admin-settings-clear-btn:hover {
-    color: var(--stone-600);
-    background: var(--stone-100);
-  }
-  .admin-settings-clear-btn svg { width: 16px; height: 16px; }
-
-  .admin-settings-section,
-  .admin-settings-card {
-    background: #fff;
-    border-radius: var(--radius-xl);
-    border: 1px solid var(--stone-200);
-    overflow: hidden;
-    margin-bottom: 1.5rem;
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow var(--transition-base);
-  }
-  .admin-settings-section:hover,
-  .admin-settings-card:hover {
-    box-shadow: var(--shadow-md);
-  }
-  .admin-settings-section.hidden-section { display: none; }
-
-  .admin-settings-section-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--stone-100);
-    background: var(--stone-50);
-  }
-  .admin-settings-section-icon {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    border-radius: var(--radius-md);
-    background: var(--stone-200);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .admin-settings-section-icon svg {
-    width: 18px;
-    height: 18px;
-    color: var(--stone-500);
-  }
-  .admin-settings-section-header h2 {
-    font-size: 0.9375rem;
-    font-weight: 700;
-    color: var(--stone-900);
-    margin: 0;
-  }
-  .admin-settings-section-header p {
-    font-size: 0.75rem;
-    color: var(--stone-400);
-    margin: 0.125rem 0 0;
-    line-height: 1.3;
-  }
-  .admin-settings-section-count {
-    margin-left: auto;
-    font-size: 0.6875rem;
-    color: var(--stone-400);
-    font-family: ui-monospace, monospace;
-    white-space: nowrap;
-  }
-
-  .admin-settings-section-body > div {
-    padding: 1rem 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    border-bottom: 1px solid var(--stone-100);
-    transition: background var(--transition-fast);
-  }
-  .admin-settings-section-body > div:last-child { border-bottom: none; }
-  .admin-settings-section-body > div:hover { background: rgba(250,250,249,0.6); }
-  .admin-settings-section-body > div.hidden-field { display: none; }
-  .admin-settings-section-body > div.disabled-field { opacity: 0.5; pointer-events: none; }
-
-  .admin-settings-group {
+.ap-settings-group {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-  }
-  .admin-settings-group .admin-settings-field {
-    flex: 1;
-    min-width: 0;
-  }
+}
+.ap-settings-group .ap-settings-field { flex: 1; min-width: 0; }
+.ap-settings-control { flex-shrink: 0; }
 
-  .admin-settings-label {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: var(--stone-800);
-    line-height: 1.4;
-  }
-  .admin-settings-desc {
-    font-size: 0.75rem;
-    color: var(--stone-400);
-    margin: 0.125rem 0 0;
-    line-height: 1.4;
-  }
-
-  .admin-settings-input,
-  .admin-settings-select,
-  .admin-settings-textarea {
-    width: 100%;
-    max-width: 340px;
-    padding: 0.625rem 0.875rem;
-    min-height: 44px;
-    background: #fff;
-    border: 1.5px solid var(--stone-300);
-    border-radius: var(--radius-md);
-    font-size: 0.875rem;
-    color: var(--stone-900);
-    outline: none;
-    transition: border-color var(--transition-base), box-shadow var(--transition-base);
-    box-sizing: border-box;
-    line-height: 1.4;
-  }
-  .admin-settings-input:focus,
-  .admin-settings-select:focus,
-  .admin-settings-textarea:focus {
-    border-color: var(--amber-600);
-    box-shadow: 0 0 0 3px rgba(217,119,6,0.15);
-  }
-  .admin-settings-input::placeholder { color: var(--stone-400); }
-
-  .admin-settings-select {
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2378716c' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 6l3.5 4 3.5-4z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0.75rem center;
-    padding-right: 2.25rem;
-  }
-
-  .admin-settings-textarea {
-    min-height: 72px;
-    resize: vertical;
-    font-family: ui-monospace, SFMono-Regular, monospace;
-  }
-
-  .admin-settings-input.mono,
-  .admin-settings-select.mono {
-    font-family: ui-monospace, SFMono-Regular, monospace;
-  }
-
-  .admin-settings-toggle {
+.ap-settings-toggle {
     position: relative;
     display: inline-flex;
     align-items: center;
@@ -315,281 +24,92 @@
     min-width: 44px;
     min-height: 44px;
     justify-content: flex-end;
-  }
-  .admin-settings-toggle input {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-  .admin-settings-toggle-track {
-    width: 48px;
-    height: 26px;
-    background: var(--stone-300);
-    border-radius: 9999px;
-    position: relative;
-    transition: background 0.25s ease;
-    flex-shrink: 0;
-  }
-  .admin-settings-toggle input:checked + .admin-settings-toggle-track {
-    background: var(--amber-600);
-  }
-  .admin-settings-toggle-knob {
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 20px;
-    height: 20px;
-    background: #fff;
-    border: 2px solid var(--stone-400);
-    border-radius: 9999px;
-    transition: all 0.25s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+}
+.ap-settings-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+.ap-settings-toggle-track {
+    width: 48px; height: 26px;
+    background: var(--ap-border); border-radius: 9999px;
+    position: relative; transition: background 0.25s ease; flex-shrink: 0;
+}
+.ap-settings-toggle input:checked + .ap-settings-toggle-track { background: var(--ap-primary); }
+.ap-settings-toggle-knob {
+    position: absolute; top: 3px; left: 3px;
+    width: 20px; height: 20px;
+    background: #fff; border: 2px solid var(--ap-text-muted);
+    border-radius: 9999px; transition: all 0.25s ease;
+    display: flex; align-items: center; justify-content: center;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  }
-  .admin-settings-toggle input:checked + .admin-settings-toggle-track .admin-settings-toggle-knob {
-    transform: translateX(22px);
-    border-color: #fff;
-  }
-  .admin-settings-toggle-knob::after {
-    content: '';
-    width: 8px;
-    height: 8px;
-    border-radius: 9999px;
-    background: var(--stone-300);
-    transition: background 0.25s;
-  }
-  .admin-settings-toggle input:checked + .admin-settings-toggle-track .admin-settings-toggle-knob::after {
-    background: var(--amber-600);
-  }
+}
+.ap-settings-toggle input:checked + .ap-settings-toggle-track .ap-settings-toggle-knob {
+    transform: translateX(22px); border-color: #fff;
+}
+.ap-settings-toggle-knob::after {
+    content: ''; width: 8px; height: 8px;
+    border-radius: 9999px; background: var(--ap-border); transition: background 0.25s;
+}
+.ap-settings-toggle input:checked + .ap-settings-toggle-track .ap-settings-toggle-knob::after {
+    background: var(--ap-primary);
+}
 
-  .admin-settings-password-wrap {
-    position: relative;
-    max-width: 340px;
-    width: 100%;
-  }
-  .admin-settings-password-wrap .admin-settings-input {
-    width: 100%;
-    padding-right: 2.75rem;
-  }
-  .admin-settings-eye-btn {
-    position: absolute;
-    right: 0.5rem;
-    top: 50%;
-    transform: translateY(-50%);
-    padding: 0.5rem;
-    min-width: 44px;
-    min-height: 44px;
-    background: none;
-    border: none;
-    color: var(--stone-400);
-    cursor: pointer;
-    border-radius: var(--radius-sm);
-    transition: color var(--transition-fast);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .admin-settings-eye-btn:hover { color: var(--stone-600); }
-  .admin-settings-eye-btn svg { width: 18px; height: 18px; }
+.ap-settings-password-wrap { position: relative; max-width: 340px; width: 100%; }
+.ap-settings-password-wrap .ap-input { width: 100%; padding-right: 2.75rem; }
+.ap-settings-eye-btn {
+    position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%);
+    padding: 0.5rem; min-width: 44px; min-height: 44px;
+    background: none; border: none; color: var(--ap-text-muted);
+    cursor: pointer; border-radius: var(--ap-radius-sm);
+    transition: color var(--ap-transition); display: flex; align-items: center; justify-content: center;
+}
+.ap-settings-eye-btn:hover { color: var(--ap-text-secondary); }
+.ap-settings-eye-btn svg { width: 18px; height: 18px; }
+.ap-settings-eye-hint { font-size: 0.6875rem; color: var(--ap-text-muted); text-align: right; margin-top: 0.25rem; }
+.ap-settings-eye-hint.set { color: var(--ap-emerald); }
 
-  .admin-settings-eye-hint {
-    font-size: 0.6875rem;
-    color: var(--stone-400);
-    text-align: right;
-    margin-top: 0.25rem;
-  }
-  .admin-settings-eye-hint.set { color: #16a34a; }
+.ap-settings-color-wrap { display: flex; align-items: center; gap: 10px; width: 100%; flex-wrap: wrap; }
+.ap-settings-color-swatch {
+    width: 44px; height: 44px; border-radius: var(--ap-radius-md);
+    border: 2px solid var(--ap-border); cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s; flex-shrink: 0;
+}
+.ap-settings-color-swatch:hover { border-color: var(--ap-primary); box-shadow: 0 0 0 3px rgba(245,158,11,0.15); }
+.ap-settings-color-native { position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none; }
+.ap-settings-color-text { width: 100px !important; flex-shrink: 0; font-size: 0.8125rem !important; font-family: var(--ap-font-mono) !important; }
+.ap-settings-color-presets { display: flex; gap: 5px; flex-wrap: wrap; }
+.ap-settings-color-preset {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid rgba(0,0,0,0.08); cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.15s; padding: 0;
+}
+.ap-settings-color-preset:hover { transform: scale(1.25); box-shadow: 0 2px 8px rgba(0,0,0,0.18); }
 
-  .admin-settings-color-wrap {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    flex-wrap: wrap;
-  }
-  .admin-settings-color-swatch {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    border: 2px solid #e7e5e4;
-    cursor: pointer;
-    transition: border-color 0.15s, box-shadow 0.15s;
-    flex-shrink: 0;
-  }
-  .admin-settings-color-swatch:hover {
-    border-color: var(--amber-500);
-    box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
-  }
-  .admin-settings-color-native {
-    position: absolute;
-    width: 0;
-    height: 0;
-    opacity: 0;
-    pointer-events: none;
-  }
-  .admin-settings-color-text {
-    width: 100px !important;
-    flex-shrink: 0;
-    font-size: 0.8125rem !important;
-  }
-  .admin-settings-color-presets {
-    display: flex;
-    gap: 5px;
-    flex-wrap: wrap;
-  }
-  .admin-settings-color-preset {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    border: 1.5px solid rgba(0,0,0,0.08);
-    cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.15s;
-    padding: 0;
-  }
-  .admin-settings-color-preset:hover {
-    transform: scale(1.25);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-  }
-
-  .admin-settings-save-section {
-    padding: 0.875rem 1.5rem;
-    background: var(--stone-50);
-    border-top: 1px solid var(--stone-100);
-    display: flex;
-    justify-content: flex-end;
-  }
-  .admin-settings-save-section button {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.5rem 1rem;
-    min-height: 44px;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: var(--stone-600);
-    background: #fff;
-    border: 1.5px solid var(--stone-200);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-  }
-  .admin-settings-save-section button:hover {
-    background: var(--stone-800);
-    color: #fff;
-    border-color: var(--stone-800);
-    box-shadow: var(--shadow-md);
-  }
-  .admin-settings-save-section button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .admin-settings-save {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.25rem;
-    min-height: 44px;
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: #fff;
-    background: linear-gradient(135deg, var(--stone-700), var(--stone-800));
-    border: none;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all var(--transition-base);
-    box-shadow: var(--shadow-md);
-    white-space: nowrap;
-  }
-  .admin-settings-save:hover {
-    background: linear-gradient(135deg, var(--stone-800), var(--stone-900));
-    box-shadow: var(--shadow-lg);
-    transform: translateY(-1px);
-  }
-  .admin-settings-save:active {
-    transform: translateY(0);
-  }
-  .admin-settings-save:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-  }
-  .admin-settings-save svg { width: 18px; height: 18px; }
-  .admin-settings-save .animate-spin {
-    animation: spin 1s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .admin-settings-control {
-    flex-shrink: 0;
-  }
-
-  @media (max-width: 640px) {
-    .admin-page {
-      padding: 0 0.75rem 4rem;
-    }
-    .admin-page-header {
-      padding: 1rem 0;
-    }
-    .admin-page-header h1 {
-      font-size: 1.375rem;
-    }
-    .admin-settings-section-body > div {
-      padding: 0.875rem 1rem;
-    }
-    .admin-settings-section-header {
-      padding: 0.875rem 1rem;
-    }
-    .admin-settings-save-section {
-      padding: 0.75rem 1rem !important;
-    }
-    .admin-settings-group {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 0.75rem;
-    }
-    .admin-settings-input,
-    .admin-settings-select,
-    .admin-settings-textarea {
-      max-width: 100%;
-    }
-    .admin-settings-password-wrap {
-      max-width: 100%;
-    }
-    .admin-settings-tabs {
-      margin-left: -0.75rem;
-      margin-right: -0.75rem;
-      border-radius: 0;
-      padding: 0.375rem 0.75rem;
-    }
-  }
-  @media (min-width: 641px) {
-    .admin-settings-group {
-      flex-direction: row;
-    }
-  }
+.ap-settings-section-body > div {
+    padding: 1rem 1.5rem; display: flex; flex-direction: column; gap: 0.25rem;
+    border-bottom: 1px solid var(--ap-border-light); transition: background var(--ap-transition);
+}
+.ap-settings-section-body > div:last-child { border-bottom: none; }
+.ap-settings-section-body > div:hover { background: rgba(99, 102, 241, 0.02); }
+.ap-settings-section-body > div.hidden-field { display: none; }
+.ap-settings-section-body > div.disabled-field { opacity: 0.5; pointer-events: none; }
 </style>
 
-<div class="admin-page">
-    <div class="admin-page-header">
-        <div>
+<div class="ap-page" style="max-width:820px;">
+    <div class="ap-header">
+        <div class="ap-header-left">
+            <span class="ap-overline">System</span>
             <h1>Settings</h1>
-            <p>Manage all site configuration, organized by category</p>
+            <p class="ap-subtitle">Manage all site configuration, organized by category</p>
         </div>
-        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-            <button type="button" onclick="exportSettings()" class="admin-settings-save" style="background:#fff;color:var(--stone-700);border:1.5px solid var(--stone-200);box-shadow:var(--shadow-sm);">
+        <div class="ap-header-actions">
+            <button type="button" onclick="exportSettings()" class="ap-btn ap-btn-outline">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 Export
             </button>
-            <label style="display:inline-flex;align-items:center;gap:0.375rem;padding:0.625rem 1.25rem;min-height:44px;font-size:0.875rem;font-weight:700;color:#fff;background:linear-gradient(135deg, var(--stone-700), var(--stone-800));border:none;border-radius:var(--radius-md);cursor:pointer;box-shadow:var(--shadow-md);white-space:nowrap;">
+            <label class="ap-btn ap-btn-outline" style="cursor:pointer;">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                 Import
                 <input type="file" accept=".json" onchange="importSettings(this)" style="display:none;">
             </label>
-            <button onclick="saveAllSettings()" id="save-all-btn" class="admin-settings-save">
+            <button onclick="saveAllSettings()" id="save-all-btn" class="ap-btn ap-btn-primary">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 Save All Changes
             </button>
@@ -597,30 +117,30 @@
     </div>
 
     <!-- Category nav tabs -->
-    <div class="admin-settings-tabs" id="settings-tabs">
+    <div class="ap-tabs" id="settings-tabs">
         {% set categories_info = {
-            'global': {'icon': 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z', 'label': 'Global', 'color': '#dbeafe', 'text': '#1d4ed8'},
-            'design': {'icon': 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01', 'label': 'Design', 'color': '#ede9fe', 'text': '#7c3aed'},
-            'technical': {'icon': 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z', 'label': 'Technical', 'color': '#cffafe', 'text': '#0891b2'},
-            'optional': {'icon': 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z', 'label': 'Optional', 'color': '#d1fae5', 'text': '#059669'},
-            'developer': {'icon': 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4', 'label': 'Developer', 'color': '#ffe4e6', 'text': '#e11d48'},
-            'logistics': {'icon': 'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0', 'label': 'Logistics', 'color': '#fef3c7', 'text': '#d97706'},
-            'other': {'icon': 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4', 'label': 'Other', 'color': '#f5f5f4', 'text': '#57534e'},
+            'global': {'icon': 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z', 'label': 'Global'},
+            'design': {'icon': 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01', 'label': 'Design'},
+            'technical': {'icon': 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z', 'label': 'Technical'},
+            'optional': {'icon': 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z', 'label': 'Optional'},
+            'developer': {'icon': 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4', 'label': 'Developer'},
+            'logistics': {'icon': 'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0', 'label': 'Logistics'},
+            'other': {'icon': 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4', 'label': 'Other'},
         } %}
         {% for cat_id, cat_info in categories_info.items() %}
-        <a href="#section-{{ cat_id }}" class="admin-settings-tab" style="background: {{ cat_info.color }}; color: {{ cat_info.text }};" data-tab="{{ cat_id }}">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ cat_info.icon }}"/></svg>
+        <a href="#section-{{ cat_id }}" class="ap-tab" data-tab="{{ cat_id }}">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ cat_info.icon }}"/></svg>
             {{ cat_info.label }}
         </a>
         {% endfor %}
     </div>
 
     <!-- Search / Filter -->
-    <div class="admin-settings-search-wrap">
-        <svg class="admin-settings-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        <input type="text" id="settings-search" class="admin-settings-search" placeholder="Search settings..." oninput="filterSettings(this.value)">
-        <button type="button" class="admin-settings-clear-btn" id="settings-clear-btn" onclick="document.getElementById('settings-search').value=''; filterSettings('');">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    <div class="ap-search" style="margin-bottom:1.5rem;">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" id="settings-search" class="ap-input" placeholder="Search settings..." oninput="filterSettings(this.value)">
+        <button type="button" id="settings-clear-btn" onclick="document.getElementById('settings-search').value=''; filterSettings('');" class="ap-btn ap-btn-ghost ap-btn-icon" style="position:absolute;right:0.375rem;top:50%;transform:translateY(-50%);display:none;">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
     </div>
 
@@ -658,80 +178,80 @@
         {% for cat_id, cat_settings in categorized_settings.items() %}
         {% set is_disabled = not accessible_categories.get(cat_id, false) %}
         {% set label_key = cat_id ~ '_desc' %}
-        <section id="section-{{ cat_id }}" class="admin-settings-section admin-settings-card" data-category="{{ cat_id }}">
-            <!-- Section header -->
-            <div class="admin-settings-section-header">
-                <div class="admin-settings-section-icon">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ category_icons[cat_id] }}"/></svg>
+        <section id="section-{{ cat_id }}" class="ap-card ap-settings-section" data-category="{{ cat_id }}" style="margin-bottom:1.5rem;">
+            <div class="ap-card-header" style="padding:1rem 1.5rem;">
+                <div style="display:flex;align-items:center;gap:0.75rem;flex:1;min-width:0;">
+                    <div style="width:40px;height:40px;min-width:40px;border-radius:var(--ap-radius-md);background:var(--ap-bg);display:flex;align-items:center;justify-content:center;">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px;color:var(--ap-text-muted);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ category_icons[cat_id] }}"/></svg>
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <h3 style="font-size:1rem;font-weight:700;color:var(--ap-text);margin:0;">{{ category_labels.get(cat_id, cat_id|title) }}</h3>
+                        <p style="font-size:0.75rem;color:var(--ap-text-muted);margin:0.125rem 0 0;line-height:1.3;">{{ category_labels.get(label_key, '') }}</p>
+                    </div>
                 </div>
-                <div style="flex:1; min-width:0;">
-                    <h2>{{ category_labels.get(cat_id, cat_id|title) }}</h2>
-                    <p>{{ category_labels.get(label_key, '') }}</p>
-                </div>
-                <span class="admin-settings-section-count">{{ cat_settings|length }} settings</span>
+                <span style="font-size:0.6875rem;color:var(--ap-text-muted);font-family:var(--ap-font-mono);white-space:nowrap;">{{ cat_settings|length }} settings</span>
             </div>
 
-            <!-- Settings fields -->
-            <div class="admin-settings-section-body">
+            <div class="ap-settings-section-body">
                 {% for s in cat_settings %}
                 <div data-search="{{ s.label|lower }} {{ s.key|lower }} {{ s.description|default('', true)|lower }} {{ s.value|lower }}">
-                    <div class="admin-settings-group">
-                        <div class="admin-settings-field">
-                            <label for="setting-{{ s.key }}" class="admin-settings-label">{{ s.label }}</label>
+                    <div class="ap-settings-group">
+                        <div class="ap-settings-field">
+                            <label for="setting-{{ s.key }}" style="font-size:0.875rem;font-weight:600;color:var(--ap-text);line-height:1.4;">{{ s.label }}</label>
                             {% if s.description %}
-                            <p class="admin-settings-desc">{{ s.description }}</p>
+                            <p style="font-size:0.75rem;color:var(--ap-text-muted);margin:0.125rem 0 0;line-height:1.4;">{{ s.description }}</p>
                             {% endif %}
                         </div>
-                        <div class="admin-settings-control">
+                        <div class="ap-settings-control">
                             {% if s.type == 'select' and s.options %}
-                            <select id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" class="admin-settings-select admin-settings-input">
+                            <select id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" class="ap-input ap-select" style="max-width:340px;">
                                 {% for opt in s.options %}
                                 <option value="{{ opt.value }}" {% if s.value|string == opt.value|string %}selected{% endif %}>{{ opt.label }}</option>
                                 {% endfor %}
                             </select>
                             {% elif s.type == 'boolean' %}
-                            <label class="admin-settings-toggle">
+                            <label class="ap-settings-toggle">
                                 <input type="checkbox" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" {% if s.value == 'true' or s.value == True %}checked{% endif %}>
-                                <span class="admin-settings-toggle-track"><span class="admin-settings-toggle-knob"></span></span>
+                                <span class="ap-settings-toggle-track"><span class="ap-settings-toggle-knob"></span></span>
                             </label>
                             {% elif s.type == 'password' %}
-                            <div class="admin-settings-password-wrap">
-                                <input type="password" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="admin-settings-input mono" autocomplete="off">
-                                <button type="button" class="admin-settings-eye-btn" onclick="togglePasswordVisibility('setting-{{ s.key }}', this)" title="Show/hide value">
+                            <div class="ap-settings-password-wrap">
+                                <input type="password" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="ap-input" style="font-family:var(--ap-font-mono);" autocomplete="off">
+                                <button type="button" class="ap-settings-eye-btn" onclick="togglePasswordVisibility('setting-{{ s.key }}', this)" title="Show/hide value">
                                     <svg class="eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                     <svg class="eye-closed" style="display:none;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/></svg>
                                 </button>
                             </div>
-                            <p class="admin-settings-eye-hint {% if s.value %}set{% endif %}">{% if s.value %}Key is set{% else %}Not configured{% endif %}</p>
+                            <p class="ap-settings-eye-hint {% if s.value %}set{% endif %}">{% if s.value %}Key is set{% else %}Not configured{% endif %}</p>
                             {% elif s.type == 'json' %}
-                            <textarea id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" rows="4" class="admin-settings-textarea admin-settings-input mono" placeholder='{"key": "value"}' onblur="formatJsonField(this)">{{ s.value }}</textarea>
-                            <p class="admin-settings-eye-hint">JSON format</p>
+                            <textarea id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" rows="4" class="ap-input" style="min-height:72px;resize:vertical;font-family:var(--ap-font-mono);max-width:340px;" placeholder='{"key": "value"}' onblur="formatJsonField(this)">{{ s.value }}</textarea>
+                            <p class="ap-settings-eye-hint">JSON format</p>
                             {% elif s.type == 'textarea' %}
-                            <textarea id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" rows="2" class="admin-settings-textarea admin-settings-input">{{ s.value }}</textarea>
+                            <textarea id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" rows="2" class="ap-input" style="min-height:72px;resize:vertical;max-width:340px;">{{ s.value }}</textarea>
                             {% elif s.type == 'number' %}
-                            <input type="number" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="admin-settings-input mono">
+                            <input type="number" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="ap-input" style="max-width:340px;font-family:var(--ap-font-mono);">
                             {% elif s.type == 'color' %}
-                            <div class="admin-settings-color-wrap">
-                                <div class="admin-settings-color-swatch" id="swatch-{{ s.key }}" style="background:{{ s.value }};" onclick="document.getElementById('colorpick-{{ s.key }}').click()"></div>
-                                <input type="color" id="colorpick-{{ s.key }}" value="{{ s.value }}" class="admin-settings-color-native" onchange="syncColorInput('{{ s.key }}', this.value)">
-                                <input type="text" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="admin-settings-input mono admin-settings-color-text" maxlength="7" oninput="syncColorSwatch('{{ s.key }}', this.value)" placeholder="#000000">
-                                <div class="admin-settings-color-presets" id="presets-{{ s.key }}">
-                                    <button type="button" class="admin-settings-color-preset" style="background:#f59e0b" onclick="applyColorPreset('{{ s.key }}','#f59e0b')" title="#f59e0b"></button>
-                                    <button type="button" class="admin-settings-color-preset" style="background:#3b82f6" onclick="applyColorPreset('{{ s.key }}','#3b82f6')" title="#3b82f6"></button>
-                                    <button type="button" class="admin-settings-color-preset" style="background:#10b981" onclick="applyColorPreset('{{ s.key }}','#10b981')" title="#10b981"></button>
-                                    <button type="button" class="admin-settings-color-preset" style="background:#8b5cf6" onclick="applyColorPreset('{{ s.key }}','#8b5cf6')" title="#8b5cf6"></button>
-                                    <button type="button" class="admin-settings-color-preset" style="background:#ef4444" onclick="applyColorPreset('{{ s.key }}','#ef4444')" title="#ef4444"></button>
-                                    <button type="button" class="admin-settings-color-preset" style="background:#1c1917" onclick="applyColorPreset('{{ s.key }}','#1c1917')" title="#1c1917"></button>
-                                    <button type="button" class="admin-settings-color-preset" style="background:#78716c" onclick="applyColorPreset('{{ s.key }}','#78716c')" title="#78716c"></button>
-                                    <button type="button" class="admin-settings-color-preset" style="background:#ffffff;border:1px solid #e7e5e4" onclick="applyColorPreset('{{ s.key }}','#ffffff')" title="#ffffff"></button>
+                            <div class="ap-settings-color-wrap">
+                                <div class="ap-settings-color-swatch" id="swatch-{{ s.key }}" style="background:{{ s.value }};" onclick="document.getElementById('colorpick-{{ s.key }}').click()"></div>
+                                <input type="color" id="colorpick-{{ s.key }}" value="{{ s.value }}" class="ap-settings-color-native" onchange="syncColorInput('{{ s.key }}', this.value)">
+                                <input type="text" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="ap-input ap-settings-color-text" maxlength="7" oninput="syncColorSwatch('{{ s.key }}', this.value)" placeholder="#000000">
+                                <div class="ap-settings-color-presets" id="presets-{{ s.key }}">
+                                    <button type="button" class="ap-settings-color-preset" style="background:#f59e0b" onclick="applyColorPreset('{{ s.key }}','#f59e0b')" title="#f59e0b"></button>
+                                    <button type="button" class="ap-settings-color-preset" style="background:#3b82f6" onclick="applyColorPreset('{{ s.key }}','#3b82f6')" title="#3b82f6"></button>
+                                    <button type="button" class="ap-settings-color-preset" style="background:#10b981" onclick="applyColorPreset('{{ s.key }}','#10b981')" title="#10b981"></button>
+                                    <button type="button" class="ap-settings-color-preset" style="background:#8b5cf6" onclick="applyColorPreset('{{ s.key }}','#8b5cf6')" title="#8b5cf6"></button>
+                                    <button type="button" class="ap-settings-color-preset" style="background:#ef4444" onclick="applyColorPreset('{{ s.key }}','#ef4444')" title="#ef4444"></button>
+                                    <button type="button" class="ap-settings-color-preset" style="background:#0f172a" onclick="applyColorPreset('{{ s.key }}','#0f172a')" title="#0f172a"></button>
+                                    <button type="button" class="ap-settings-color-preset" style="background:#475569" onclick="applyColorPreset('{{ s.key }}','#475569')" title="#475569"></button>
+                                    <button type="button" class="ap-settings-color-preset" style="background:#ffffff;border:1px solid var(--ap-border)" onclick="applyColorPreset('{{ s.key }}','#ffffff')" title="#ffffff"></button>
                                 </div>
                             </div>
                             {% elif s.type == 'file' %}
                             <div style="display:flex;flex-direction:column;gap:8px;width:100%;">
                                 {% if s.value %}
                                 <div id="file-preview-{{ s.key }}" style="display:flex;align-items:center;gap:8px;">
-                                    <img src="{{ s.value }}" alt="{{ s.label }}" style="max-width:80px;max-height:40px;border-radius:6px;border:1px solid #e7e5e4;object-fit:cover;">
-                                    <button type="button" onclick="clearSettingFile('{{ s.key }}')" style="padding:4px 8px;font-size:11px;color:#dc2626;background:none;border:1px solid #fecaca;border-radius:6px;cursor:pointer;">Remove</button>
+                                    <img src="{{ s.value }}" alt="{{ s.label }}" style="max-width:80px;max-height:40px;border-radius:var(--ap-radius-sm);border:1px solid var(--ap-border);object-fit:cover;">
+                                    <button type="button" onclick="clearSettingFile('{{ s.key }}')" style="padding:4px 8px;font-size:11px;color:var(--ap-red);background:none;border:1px solid rgba(239,68,68,0.2);border-radius:var(--ap-radius-sm);cursor:pointer;">Remove</button>
                                 </div>
                                 {% else %}
                                 <div id="file-preview-{{ s.key }}" style="display:none;"></div>
@@ -740,7 +260,7 @@
                                 <input type="hidden" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}">
                             </div>
                             {% else %}
-                            <input type="text" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="admin-settings-input">
+                            <input type="text" id="setting-{{ s.key }}" name="{{ s.key }}" data-setting="{{ s.key }}" value="{{ s.value }}" class="ap-input" style="max-width:340px;">
                             {% endif %}
                         </div>
                     </div>
@@ -748,9 +268,8 @@
                 {% endfor %}
             </div>
 
-            <!-- Section save button -->
-            <div class="admin-settings-save-section">
-                <button type="button" onclick="saveSection('{{ cat_id }}')">
+            <div style="padding:0.875rem 1.5rem;background:var(--ap-bg);border-top:1px solid var(--ap-border-light);display:flex;justify-content:flex-end;">
+                <button type="button" onclick="saveSection('{{ cat_id }}')" class="ap-btn ap-btn-outline ap-btn-sm">
                     Save {{ category_labels.get(cat_id, cat_id|title) }}
                 </button>
             </div>
@@ -794,7 +313,7 @@ async function handleSettingFileUpload(key, input) {
     const hidden = document.getElementById('setting-' + key);
     const reader = new FileReader();
     reader.onload = function(ev) {
-        preview.innerHTML = '<img src="' + ev.target.result + '" alt="Preview" style="max-width:80px;max-height:40px;border-radius:6px;border:1px solid #e7e5e4;object-fit:cover;"> <button type="button" onclick="clearSettingFile(\'' + key + '\')" style="padding:4px 8px;font-size:11px;color:#dc2626;background:none;border:1px solid #fecaca;border-radius:6px;cursor:pointer;">Remove</button>';
+        preview.innerHTML = '<img src="' + ev.target.result + '" alt="Preview" style="max-width:80px;max-height:40px;border-radius:var(--ap-radius-sm);border:1px solid var(--ap-border);object-fit:cover;"> <button type="button" onclick="clearSettingFile(\'' + key + '\')" style="padding:4px 8px;font-size:11px;color:var(--ap-red);background:none;border:1px solid rgba(239,68,68,0.2);border-radius:var(--ap-radius-sm);cursor:pointer;">Remove</button>';
         preview.style.display = 'flex';
     };
     reader.readAsDataURL(file);
@@ -886,7 +405,7 @@ function formatJsonField(el) {
 function filterSettings(query) {
     const q = query.toLowerCase().trim();
     const clearBtn = document.getElementById('settings-clear-btn');
-    if (clearBtn) clearBtn.classList.toggle('visible', q.length > 0);
+    if (clearBtn) clearBtn.style.display = q.length > 0 ? 'flex' : 'none';
 
     document.querySelectorAll('[data-category]').forEach(section => {
         let hasVisible = false;
@@ -900,35 +419,31 @@ function filterSettings(query) {
     });
 }
 
-// ── Custom Confirmation Modal ──
 function showConfirmModal(message) {
     return new Promise(resolve => {
         const existing = document.getElementById('settings-confirm-modal');
         if (existing) existing.remove();
         const overlay = document.createElement('div');
         overlay.id = 'settings-confirm-modal';
-        overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);animation:fadeIn .2s;';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);animation:apFadeIn .2s;';
         overlay.innerHTML = `
-            <div style="background:#fff;border-radius:16px;box-shadow:0 25px 50px rgba(0,0,0,0.25);max-width:440px;width:90%;padding:28px 28px 20px;animation:slideUp .25s;">
+            <div style="background:var(--ap-bg-elevated);border-radius:var(--ap-radius-xl);box-shadow:0 25px 50px rgba(0,0,0,0.25);max-width:440px;width:90%;padding:28px 28px 20px;animation:apSlideUp .25s;">
                 <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:20px;">
-                    <div style="flex-shrink:0;width:40px;height:40px;border-radius:10px;background:#fef3c7;display:flex;align-items:center;justify-content:center;">
-                        <svg width="22" height="22" fill="none" stroke="#d97706" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <div style="flex-shrink:0;width:40px;height:40px;border-radius:var(--ap-radius-md);background:var(--ap-amber-soft);display:flex;align-items:center;justify-content:center;">
+                        <svg width="22" height="22" fill="none" stroke="var(--ap-primary)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
                     <div>
-                        <h3 style="margin:0 0 6px;font-size:16px;font-weight:700;color:#1c1917;">Are you sure?</h3>
-                        <p style="margin:0;font-size:14px;color:#57534e;line-height:1.6;white-space:pre-line;">${message}</p>
+                        <h3 style="margin:0 0 6px;font-size:16px;font-weight:700;color:var(--ap-text);">Are you sure?</h3>
+                        <p style="margin:0;font-size:14px;color:var(--ap-text-secondary);line-height:1.6;white-space:pre-line;">${message}</p>
                     </div>
                 </div>
                 <div style="display:flex;gap:10px;justify-content:flex-end;">
-                    <button id="confirm-cancel-btn" style="padding:10px 20px;border-radius:10px;border:1.5px solid #e7e5e4;background:#fff;color:#57534e;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;">Cancel</button>
-                    <button id="confirm-ok-btn" style="padding:10px 20px;border-radius:10px;border:none;background:#1c1917;color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;">Continue</button>
+                    <button id="confirm-cancel-btn" class="ap-btn ap-btn-outline" style="min-height:40px;padding:8px 16px;font-size:14px;">Cancel</button>
+                    <button id="confirm-ok-btn" class="ap-btn ap-btn-primary" style="min-height:40px;padding:8px 16px;font-size:14px;">Continue</button>
                 </div>
             </div>
         `;
         document.body.appendChild(overlay);
-        const style = document.createElement('style');
-        style.textContent = '@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}';
-        document.head.appendChild(style);
         overlay.querySelector('#confirm-ok-btn').onclick = () => { overlay.remove(); resolve(true); };
         overlay.querySelector('#confirm-cancel-btn').onclick = () => { overlay.remove(); resolve(false); };
         overlay.addEventListener('click', e => { if (e.target === overlay) { overlay.remove(); resolve(false); } });
@@ -1029,9 +544,8 @@ async function saveAllSettings() {
     }
 }
 
-// Highlight active tab on scroll
 (function() {
-    const tabs = document.querySelectorAll('.admin-settings-tab');
+    const tabs = document.querySelectorAll('.ap-tab');
     const sections = document.querySelectorAll('[data-category]');
     if (!tabs.length || !sections.length) return;
 

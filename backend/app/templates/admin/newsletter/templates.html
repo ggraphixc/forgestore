@@ -2,108 +2,53 @@
 {% block title %}Email Templates — {{ settings.site_name|default("ForgeStore") }} Admin{% endblock %}
 {% block content %}
 <style>
-  :root {
-    --admin-amber-50: #fffbeb; --admin-amber-100: #fef3c7; --admin-amber-200: #fde68a;
-    --admin-amber-300: #fcd34d; --admin-amber-400: #fbbf24; --admin-amber-500: #f59e0b;
-    --admin-amber-600: #d97706; --admin-amber-700: #b45309; --admin-amber-800: #92400e;
-    --admin-stone-50: #fafaf9; --admin-stone-100: #f5f5f4; --admin-stone-200: #e7e5e4;
-    --admin-stone-300: #d6d3d1; --admin-stone-400: #a8a29e; --admin-stone-500: #78716c;
-    --admin-stone-600: #57534e; --admin-stone-700: #44403c; --admin-stone-800: #292524;
-    --admin-stone-900: #1c1917; --admin-stone-950: #0c0a09;
-    --admin-emerald-50: #ecfdf5; --admin-emerald-100: #d1fae5; --admin-emerald-500: #10b981;
-    --admin-emerald-600: #059669; --admin-emerald-700: #047857;
-    --admin-red-50: #fef2f2; --admin-red-100: #fee2e2; --admin-red-200: #fecaca;
-    --admin-red-500: #ef4444; --admin-red-600: #dc2626; --admin-red-700: #b91c1c;
-    --admin-radius: 0.75rem; --admin-radius-lg: 1rem;
-    --admin-shadow: 0 1px 2px rgba(0,0,0,0.04); --admin-shadow-lg: 0 25px 50px -12px rgba(0,0,0,0.25);
-    --admin-touch: 44px;
-  }
-  .admin-tm-page { max-width: 56rem; margin: 0 auto; padding: 1.5rem; }
-  .admin-tm-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
-  .admin-tm-header h1 { font-size: 1.5rem; font-weight: 800; color: var(--admin-stone-900); }
-  @media (min-width: 768px) { .admin-tm-header h1 { font-size: 1.875rem; } }
-  .admin-tm-header p { font-size: 0.875rem; color: var(--admin-stone-500); margin-top: 0.25rem; }
-  .admin-tm-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: var(--admin-radius); cursor: pointer; transition: all 0.2s; min-height: var(--admin-touch); border: none; }
-  .admin-tm-btn-primary { background: linear-gradient(135deg, var(--admin-stone-800), var(--admin-stone-900)); color: #fff; }
-  .admin-tm-btn-primary:hover { background: linear-gradient(135deg, var(--admin-stone-900), var(--admin-stone-950)); }
-  .admin-tm-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
-  @media (min-width: 768px) { .admin-tm-grid { grid-template-columns: repeat(2, 1fr); } }
-  .admin-tm-card { background: #fff; border-radius: var(--admin-radius-lg); border: 1px solid var(--admin-stone-200); overflow: hidden; box-shadow: var(--admin-shadow); transition: box-shadow 0.2s; }
-  .admin-tm-card:hover { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.07); }
-  .admin-tm-card-body { padding: 1.25rem; }
-  .admin-tm-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.75rem; }
-  .admin-tm-card-title { font-size: 0.875rem; font-weight: 700; color: var(--admin-stone-900); }
-  .admin-tm-card-subject { font-size: 0.75rem; color: var(--admin-stone-400); margin-top: 0.125rem; }
-  .admin-tm-card-actions { display: flex; gap: 0.25rem; }
-  .admin-tm-action-btn { padding: 0.375rem; color: var(--admin-stone-400); border: none; background: none; border-radius: 0.5rem; cursor: pointer; transition: all 0.15s; min-height: var(--admin-touch); min-width: var(--admin-touch); display: flex; align-items: center; justify-content: center; }
-  .admin-tm-action-btn:hover { color: var(--admin-amber-600); background: var(--admin-amber-50); }
-  .admin-tm-action-btn.danger:hover { color: var(--admin-red-600); background: var(--admin-red-50); }
-  .admin-tm-card-preview { font-size: 0.75rem; color: var(--admin-stone-400); font-family: monospace; background: var(--admin-stone-50); border-radius: 0.5rem; padding: 0.625rem; margin-bottom: 0.75rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .admin-tm-card-footer { display: flex; align-items: center; justify-content: space-between; font-size: 0.625rem; color: var(--admin-stone-400); }
-  .admin-tm-empty { grid-column: 1 / -1; background: #fff; border-radius: var(--admin-radius-lg); border: 1px solid var(--admin-stone-200); box-shadow: var(--admin-shadow); padding: 4rem 1.5rem; text-align: center; }
-  .admin-tm-empty-icon { width: 3.5rem; height: 3.5rem; background: linear-gradient(135deg, var(--admin-stone-100), var(--admin-stone-200)); border-radius: var(--admin-radius); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
-  .admin-tm-empty h3 { font-size: 0.875rem; font-weight: 700; color: var(--admin-stone-900); margin-bottom: 0.25rem; }
-  .admin-tm-empty p { font-size: 0.875rem; color: var(--admin-stone-400); }
-  .admin-tm-modal-overlay { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.25); display: none; align-items: center; justify-content: center; padding: 1rem; }
-  .admin-tm-modal-overlay.show { display: flex; }
-  .admin-tm-modal { background: #fff; border-radius: var(--admin-radius-lg); box-shadow: var(--admin-shadow-lg); max-width: 42rem; width: 100%; max-height: 90vh; overflow-y: auto; }
-  .admin-tm-modal-head { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; border-bottom: 1px solid var(--admin-stone-100); }
-  .admin-tm-modal-head h3 { font-size: 0.875rem; font-weight: 700; color: var(--admin-stone-900); }
-  .admin-tm-modal-close { padding: 0.25rem; color: var(--admin-stone-400); border: none; background: none; cursor: pointer; border-radius: 0.5rem; min-height: var(--admin-touch); min-width: var(--admin-touch); display: flex; align-items: center; justify-content: center; }
-  .admin-tm-modal-close:hover { color: var(--admin-stone-600); }
-  .admin-tm-modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
-  .admin-tm-modal-footer { display: flex; justify-content: flex-end; gap: 0.5rem; padding: 1rem 1.5rem; border-top: 1px solid var(--admin-stone-100); background: rgba(250,250,249,0.5); }
-  .admin-tm-input, .admin-tm-textarea { width: 100%; padding: 0.625rem 1rem; background: #fff; border: 1px solid var(--admin-stone-300); border-radius: var(--admin-radius); font-size: 0.875rem; transition: all 0.2s; }
-  .admin-tm-input:focus, .admin-tm-textarea:focus { outline: none; box-shadow: 0 0 0 3px rgba(245,158,11,0.1); border-color: var(--admin-amber-500); }
-  .admin-tm-textarea { font-family: monospace; resize: vertical; padding: 0.75rem 1rem; }
-  .admin-tm-label { display: block; font-size: 0.875rem; font-weight: 600; color: var(--admin-stone-800); margin-bottom: 0.375rem; }
-  .admin-tm-btn-cancel { padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; color: var(--admin-stone-600); background: #fff; border: 1px solid var(--admin-stone-200); border-radius: var(--admin-radius); cursor: pointer; min-height: var(--admin-touch); }
-  .admin-tm-btn-cancel:hover { background: var(--admin-stone-50); }
-  .admin-tm-btn-save { padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 700; color: #fff; background: var(--admin-stone-800); border: none; border-radius: var(--admin-radius); cursor: pointer; min-height: var(--admin-touch); }
-  .admin-tm-btn-save:hover { background: var(--admin-stone-900); }
+  @import url('/static/css/admin_portal.css');
 </style>
 
-<div class="admin-tm-page">
-    <div class="admin-tm-header">
-        <div>
+<div class="ap-page" style="max-width:56rem">
+    <div class="ap-header">
+        <div class="ap-header-left">
+            <span class="ap-overline">Newsletter</span>
             <h1>Email Templates</h1>
-            <p>Create and manage reusable broadcast templates</p>
+            <p class="ap-subtitle">Create and manage reusable broadcast templates</p>
         </div>
-        <button onclick="openCreateModal()" class="admin-tm-btn admin-tm-btn-primary">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            New Template
-        </button>
+        <div class="ap-header-actions">
+            <button onclick="openCreateModal()" class="ap-btn ap-btn-primary">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                New Template
+            </button>
+        </div>
     </div>
 
-    <div class="admin-tm-grid" id="templates-container">
+    <div class="ap-grid-2" id="templates-container">
         {% for t in templates %}
-        <div class="admin-tm-card" id="template-card-{{ t.id }}">
-            <div class="admin-tm-card-body">
-                <div class="admin-tm-card-top">
+        <div class="ap-card" id="template-card-{{ t.id }}" style="animation:apSlideUp 0.4s ease-out both;animation-delay:{{ loop.index0 * 60 }}ms">
+            <div class="ap-card-body">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:0.75rem">
                     <div>
-                        <h3 class="admin-tm-card-title">{{ t.name }}</h3>
-                        <p class="admin-tm-card-subject">{{ t.subject }}</p>
+                        <h3 style="font-size:0.9375rem;font-weight:700;color:var(--ap-text);margin:0">{{ t.name }}</h3>
+                        <p style="font-size:0.8125rem;color:var(--ap-text-secondary);margin-top:0.125rem">{{ t.subject }}</p>
                     </div>
-                    <div class="admin-tm-card-actions">
-                        <button onclick="openEditModal('{{ t.id }}', '{{ t.name|escapejs }}', '{{ t.subject|escapejs }}', '{{ t.content|escapejs }}')" class="admin-tm-action-btn" title="Edit">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    <div style="display:flex;gap:0.25rem">
+                        <button onclick="openEditModal('{{ t.id }}', '{{ t.name|escapejs }}', '{{ t.subject|escapejs }}', '{{ t.content|escapejs }}')" style="padding:0.375rem;color:var(--ap-text-muted);border:none;background:none;border-radius:var(--ap-radius-sm);cursor:pointer;transition:all 0.15s;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center" title="Edit">
+                            <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                         </button>
-                        <button onclick="deleteTemplate('{{ t.id }}')" class="admin-tm-action-btn danger" title="Delete">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        <button onclick="deleteTemplate('{{ t.id }}')" style="padding:0.375rem;color:var(--ap-text-muted);border:none;background:none;border-radius:var(--ap-radius-sm);cursor:pointer;transition:all 0.15s;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center" title="Delete">
+                            <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         </button>
                     </div>
                 </div>
-                <div class="admin-tm-card-preview">{{ t.content[:150] }}{% if t.content|length > 150 %}...{% endif %}</div>
-                <div class="admin-tm-card-footer">
+                <div style="font-size:0.8125rem;color:var(--ap-text-secondary);font-family:var(--ap-font-mono);background:var(--ap-bg);border-radius:var(--ap-radius-sm);padding:0.625rem;margin-bottom:0.75rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ t.content[:150] }}{% if t.content|length > 150 %}...{% endif %}</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;font-size:0.75rem;color:var(--ap-text-muted)">
                     <span>Used in {{ t.campaign_count }} campaign(s)</span>
                     <span>{{ t.updated_at.strftime('%b %d, %Y') if t.updated_at else '—' }}</span>
                 </div>
             </div>
         </div>
         {% else %}
-        <div class="admin-tm-empty">
-            <div class="admin-tm-empty-icon">
-                <svg class="w-7 h-7" style="color:var(--admin-stone-400)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="ap-empty" style="grid-column:1/-1">
+            <div class="ap-empty-icon">
+                <svg style="width:1.75rem;height:1.75rem" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
             </div>
@@ -114,32 +59,32 @@
     </div>
 </div>
 
-<div id="template-modal" class="admin-tm-modal-overlay" onclick="if(event.target===this)closeModal()">
-    <div class="admin-tm-modal" onclick="event.stopPropagation()">
-        <div class="admin-tm-modal-head">
+<div id="template-modal" class="ap-modal-backdrop" style="display:none" onclick="if(event.target===this)closeModal()">
+    <div class="ap-modal" style="max-width:42rem" onclick="event.stopPropagation()">
+        <div class="ap-modal-header">
             <h3 id="modal-title">Create Template</h3>
-            <button onclick="closeModal()" class="admin-tm-modal-close">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            <button onclick="closeModal()" class="ap-btn ap-btn-ghost ap-btn-icon" style="min-height:36px;min-width:36px;width:36px;height:36px">
+                <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
-        <div class="admin-tm-modal-body">
+        <div class="ap-modal-body">
             <input type="hidden" id="edit-template-id" value="">
-            <div>
-                <label class="admin-tm-label">Template Name *</label>
-                <input type="text" id="template-name" class="admin-tm-input" placeholder="e.g. Weekly Newsletter, Sale Announcement">
+            <div style="margin-bottom:1rem">
+                <label style="display:block;font-size:0.9375rem;font-weight:600;color:var(--ap-text);margin-bottom:0.375rem">Template Name *</label>
+                <input type="text" id="template-name" class="ap-input" placeholder="e.g. Weekly Newsletter, Sale Announcement">
+            </div>
+            <div style="margin-bottom:1rem">
+                <label style="display:block;font-size:0.9375rem;font-weight:600;color:var(--ap-text);margin-bottom:0.375rem">Subject Line *</label>
+                <input type="text" id="template-subject" class="ap-input" placeholder="e.g. New Collection Just Dropped!">
             </div>
             <div>
-                <label class="admin-tm-label">Subject Line *</label>
-                <input type="text" id="template-subject" class="admin-tm-input" placeholder="e.g. New Collection Just Dropped!">
-            </div>
-            <div>
-                <label class="admin-tm-label">HTML Content *</label>
-                <textarea id="template-content" rows="8" class="admin-tm-textarea" placeholder="<h1>Your email content here...</h1>"></textarea>
+                <label style="display:block;font-size:0.9375rem;font-weight:600;color:var(--ap-text);margin-bottom:0.375rem">HTML Content *</label>
+                <textarea id="template-content" rows="8" class="ap-input" style="font-family:var(--ap-font-mono);resize:vertical;padding:0.75rem 1rem" placeholder="<h1>Your email content here...</h1>"></textarea>
             </div>
         </div>
-        <div class="admin-tm-modal-footer">
-            <button onclick="closeModal()" class="admin-tm-btn-cancel">Cancel</button>
-            <button onclick="saveTemplate()" id="save-template-btn" class="admin-tm-btn-save">Save Template</button>
+        <div class="ap-modal-footer">
+            <button onclick="closeModal()" class="ap-btn ap-btn-ghost">Cancel</button>
+            <button onclick="saveTemplate()" id="save-template-btn" class="ap-btn ap-btn-primary">Save Template</button>
         </div>
     </div>
 </div>
@@ -214,17 +159,13 @@ async function deleteTemplate(id) {
 }
 
 function showToast(message, type) {
-    const existing = document.querySelector('.admin-toast');
+    const existing = document.querySelector('.ap-toast');
     if (existing) existing.remove();
     const toast = document.createElement('div');
-    toast.className = 'admin-toast';
-    toast.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:100;padding:0.75rem 1.25rem;border-radius:0.75rem;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);font-size:0.875rem;font-weight:500;color:#fff;transition:opacity 0.3s;opacity:0';
-    const colors = { success: 'var(--admin-emerald-600)', error: 'var(--admin-red-600)', warning: 'var(--admin-amber-600)' };
-    toast.style.background = colors[type] || 'var(--admin-stone-700)';
+    toast.className = 'ap-toast ' + type;
     toast.textContent = message;
     document.body.appendChild(toast);
-    requestAnimationFrame(() => toast.style.opacity = '1');
-    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 4000);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 4000);
 }
 </script>
 {% endblock %}

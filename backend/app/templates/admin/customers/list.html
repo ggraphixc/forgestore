@@ -2,422 +2,183 @@
 {% block title %}Customers — {{ settings.site_name|default("ForgeStore") }} Admin{% endblock %}
 {% block content %}
 <style>
-  :root {
-    --amber-50: #fffbeb;
-    --amber-100: #fef3c7;
-    --amber-200: #fde68a;
-    --amber-500: #f59e0b;
-    --amber-600: #d97706;
-    --amber-700: #b45309;
-    --stone-50: #fafaf9;
-    --stone-100: #f5f5f4;
-    --stone-200: #e7e5e4;
-    --stone-300: #d6d3d1;
-    --stone-400: #a8a29e;
-    --stone-500: #78716c;
-    --stone-600: #57534e;
-    --stone-700: #44403c;
-    --stone-900: #1c1917;
-    --emerald-50: #ecfdf5;
-    --emerald-200: #a7f3d0;
-    --emerald-600: #059669;
-    --red-50: #fef2f2;
-    --red-200: #fecaca;
-    --red-700: #b91c1c;
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 14px;
-    --radius-full: 9999px;
-    --shadow-sm: 0 1px 2px rgba(0,0,0,.04);
-    --shadow-md: 0 4px 12px rgba(0,0,0,.06);
-    --shadow-lg: 0 8px 24px rgba(0,0,0,.08);
-    --transition-fast: 150ms ease;
-    --transition-base: 200ms ease;
-  }
+@import url('/static/css/admin_portal.css');
 
-  .admin-page {
-    max-width: 56rem;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 2rem 1rem;
-  }
+.ap-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--ap-amber-soft), var(--ap-border));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ap-text-secondary);
+  flex-shrink: 0;
+}
 
-  .admin-page-header {
+.ap-action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.625rem;
+  min-height: 44px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ap-text-secondary);
+  text-decoration: none;
+  border-radius: var(--ap-radius-sm);
+  transition: all var(--ap-transition);
+  border: 1px solid transparent;
+}
+.ap-action-link:hover {
+  color: var(--ap-primary);
+  background: var(--ap-amber-soft);
+  border-color: var(--ap-amber-soft);
+}
+.ap-action-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.625rem;
+  min-height: 44px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ap-red);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--ap-radius-sm);
+  cursor: pointer;
+  transition: all var(--ap-transition);
+}
+.ap-action-danger:hover {
+  background: var(--ap-red-soft);
+  border-color: var(--ap-red-soft);
+}
+
+.ap-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.ap-modal-overlay.active {
+  display: flex;
+}
+.ap-modal-dialog {
+  background: var(--ap-bg-elevated);
+  border-radius: var(--ap-radius-2xl);
+  padding: 2rem;
+  width: 100%;
+  max-width: 24rem;
+  box-shadow: var(--ap-shadow-xl);
+  animation: apSlideUp 0.25s ease-out;
+}
+.ap-modal-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  background: var(--ap-red-soft);
+  border-radius: var(--ap-radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+}
+
+.ap-mobile-email {
+  display: none;
+}
+.ap-mobile-meta {
+  display: none;
+}
+.ap-hide-mobile {
+  display: table-cell;
+}
+@media (max-width: 639px) {
+  .ap-hide-mobile { display: none !important; }
+  .ap-mobile-email {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.7rem;
+    color: var(--ap-text-muted);
+  }
+  .ap-mobile-meta {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-  .admin-page-header h1 {
-    font-size: 1.75rem;
-    font-weight: 900;
-    color: var(--stone-900);
-    margin: 0;
-    letter-spacing: -0.025em;
-  }
-  .admin-page-header p {
-    font-size: 0.875rem;
-    color: var(--stone-500);
-    margin: 0.25rem 0 0;
-  }
-
-  .admin-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem;
-    margin-bottom: 1.5rem;
+    margin-top: 0.375rem;
+    font-size: 0.65rem;
+    color: var(--ap-text-muted);
   }
-  .admin-stat-card {
-    background: #fff;
-    border: 1px solid var(--stone-200);
-    border-radius: var(--radius-lg);
-    padding: 1rem 1.25rem;
-    box-shadow: var(--shadow-sm);
-    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-  }
-  .admin-stat-card:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-  }
-  .admin-stat-card .stat-label {
-    font-size: 0.625rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    color: var(--stone-400);
-    margin-bottom: 0.375rem;
-  }
-  .admin-stat-card .stat-value {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--stone-900);
-    letter-spacing: -0.025em;
-  }
-  .admin-stat-card .stat-value.accent {
-    color: var(--amber-600);
-  }
-
-  .admin-search {
-    position: relative;
-    margin-bottom: 1rem;
-  }
-  .admin-search input {
-    width: 100%;
-    padding: 0.75rem 1rem 0.75rem 2.75rem;
-    min-height: 44px;
-    background: #fff;
-    border: 1px solid var(--stone-200);
-    border-radius: var(--radius-lg);
-    font-size: 0.875rem;
-    color: var(--stone-900);
-    outline: none;
-    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-    box-sizing: border-box;
-  }
-  .admin-search input:focus {
-    border-color: var(--amber-500);
-    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
-  }
-  .admin-search input::placeholder {
-    color: var(--stone-400);
-  }
-  .admin-search svg {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 1rem;
-    height: 1rem;
-    color: var(--stone-500);
-    pointer-events: none;
-  }
-
-  .admin-table-container {
-    background: #fff;
-    border: 1px solid var(--stone-200);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-  }
-  .admin-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.875rem;
-  }
-  .admin-table th {
-    text-align: left;
-    padding: 0.875rem 1.25rem;
-    font-size: 0.625rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    color: var(--stone-400);
-    background: var(--stone-50);
-    border-bottom: 1px solid var(--stone-100);
-  }
-  .admin-table td {
-    padding: 0.875rem 1.25rem;
-    border-bottom: 1px solid var(--stone-50);
-    color: var(--stone-900);
-    vertical-align: middle;
-  }
-  .admin-table tr:last-child td {
-    border-bottom: none;
-  }
-  .admin-table tbody tr {
-    transition: background var(--transition-fast);
-  }
-  .admin-table tbody tr:hover {
-    background: rgba(255,251,235,.2);
-  }
-
-  .admin-avatar {
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: var(--radius-full);
-    background: linear-gradient(135deg, var(--amber-100), var(--stone-200));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--stone-600);
-    flex-shrink: 0;
-  }
-
-  .admin-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px 8px;
-    border-radius: var(--radius-full);
-    font-size: 0.625rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    border: 1px solid;
-  }
-  .admin-badge--amber {
-    background: var(--amber-50);
-    color: var(--amber-700);
-    border-color: var(--amber-200);
-  }
-  .admin-badge--stone {
-    background: var(--stone-100);
-    color: var(--stone-500);
-    border-color: var(--stone-200);
-  }
-
-  .admin-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1rem;
-    min-height: 44px;
-    background: var(--amber-500);
-    color: #fff;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    border: none;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    text-decoration: none;
-  }
-  .admin-btn:hover {
-    background: var(--amber-600);
-    box-shadow: var(--shadow-sm);
-  }
-  .admin-btn--outline {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1rem;
-    min-height: 44px;
-    background: #fff;
-    color: var(--stone-600);
-    font-size: 0.75rem;
-    font-weight: 600;
-    border: 1px solid var(--stone-200);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    text-decoration: none;
-  }
-  .admin-btn--outline:hover {
-    background: var(--stone-50);
-    border-color: var(--stone-300);
-  }
-
-  .admin-action-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.375rem 0.625rem;
-    min-height: 36px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--stone-500);
-    text-decoration: none;
-    border-radius: var(--radius-sm);
-    transition: all var(--transition-fast);
-    border: 1px solid transparent;
-  }
-  .admin-action-link:hover {
-    color: var(--amber-700);
-    background: var(--amber-50);
-    border-color: var(--amber-200);
-  }
-  .admin-action-danger {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.375rem 0.625rem;
-    min-height: 36px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--red-700);
-    background: none;
-    border: 1px solid transparent;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-  }
-  .admin-action-danger:hover {
-    background: var(--red-50);
-    border-color: var(--red-200);
-  }
-
-  .admin-modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.45);
-    backdrop-filter: blur(4px);
-    z-index: 50;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-  }
-  .admin-modal.active {
-    display: flex;
-  }
-  .admin-modal-dialog {
-    background: #fff;
-    border-radius: var(--radius-lg);
-    padding: 1.75rem;
-    width: 100%;
-    max-width: 24rem;
-    box-shadow: var(--shadow-lg);
-  }
-  .admin-modal-icon {
-    width: 3rem;
-    height: 3rem;
-    background: var(--red-50);
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1rem;
-  }
-  .admin-empty {
-    padding: 4rem 2rem;
-    text-align: center;
-  }
-  .admin-empty-icon {
-    width: 4rem;
-    height: 4rem;
-    background: linear-gradient(135deg, var(--amber-100), var(--stone-100));
-    border-radius: var(--radius-lg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1rem;
-    box-shadow: inset 0 0 0 1px var(--stone-200);
-  }
-  .mobile-email {
-    display: none;
-  }
-  .mobile-meta {
-    display: none;
-  }
-  .hide-mobile {
-    display: table-cell;
-  }
-  @media (min-width: 640px) {
-    .admin-stats-grid {
-      grid-template-columns: repeat(4, 1fr);
-    }
-  }
-  @media (max-width: 639px) {
-    .admin-page { padding: 1.5rem 0.75rem; }
-    .hide-mobile { display: none !important; }
-    .mobile-email {
-      display: block;
-      margin-top: 0.25rem;
-      font-size: 0.7rem;
-      color: var(--stone-500);
-    }
-    .mobile-meta {
-      display: flex;
-      gap: 0.75rem;
-      margin-top: 0.375rem;
-      font-size: 0.65rem;
-      color: var(--stone-400);
-    }
-  }
+}
 </style>
 
-<div class="admin-page">
-  <div class="admin-page-header">
-    <div>
+<div class="ap-page">
+  <div class="ap-header">
+    <div class="ap-header-left">
       <h1>Customers</h1>
-      <p>Manage your customer accounts</p>
+      <p class="ap-subtitle">Manage your customer accounts</p>
     </div>
   </div>
 
-  <div class="admin-stats-grid">
-    <div class="admin-stat-card">
-      <p class="stat-label">Total Customers</p>
-      <p class="stat-value" id="statTotal">{{ customers|length }}</p>
+  <div class="ap-stats">
+    <div class="ap-stat ap-stat-amber">
+      <div class="ap-stat-icon amber">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </div>
+      <div class="ap-stat-label">Total Customers</div>
+      <div class="ap-stat-value" id="statTotal">{{ customers|length }}</div>
     </div>
-    <div class="admin-stat-card">
-      <p class="stat-label">With Orders</p>
-      <p class="stat-value accent" id="statWithOrders">{{ customers|selectattr('order_count')|list|length }}</p>
+    <div class="ap-stat ap-stat-blue">
+      <div class="ap-stat-icon blue">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </div>
+      <div class="ap-stat-label">With Orders</div>
+      <div class="ap-stat-value" id="statWithOrders">{{ customers|selectattr('order_count')|list|length }}</div>
     </div>
-    <div class="admin-stat-card">
-      <p class="stat-label">This Month</p>
-      <p class="stat-value" id="statThisMonth">{{ customers|selectattr('created_at')|selectattr('created_at', 'ge', month_start)|list|length if month_start is defined else '—' }}</p>
+    <div class="ap-stat ap-stat-emerald">
+      <div class="ap-stat-icon emerald">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      </div>
+      <div class="ap-stat-label">This Month</div>
+      <div class="ap-stat-value" id="statThisMonth">{{ customers|selectattr('created_at')|selectattr('created_at', 'ge', month_start)|list|length if month_start is defined else '—' }}</div>
     </div>
-    <div class="admin-stat-card">
-      <p class="stat-label">Avg Orders</p>
-      <p class="stat-value" id="statAvgOrders">
+    <div class="ap-stat ap-stat-rose">
+      <div class="ap-stat-icon rose">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      </div>
+      <div class="ap-stat-label">Avg Orders</div>
+      <div class="ap-stat-value" id="statAvgOrders">
         {% set total_orders = customers|map(attribute='order_count')|select('number')|list %}
         {{ '%.1f'|format(total_orders|sum / total_orders|length) if total_orders|length else '0' }}
-      </p>
+      </div>
     </div>
   </div>
 
-  <div class="admin-search">
+  <div class="ap-search" style="margin-bottom:1rem;">
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
     <input
       id="searchInput"
       type="text"
+      class="ap-input"
       placeholder="Search by name or email..."
       autocomplete="off"
     />
   </div>
 
-  <div class="admin-table-container">
-    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
-      <table class="admin-table" style="min-width:520px;">
+  <div class="ap-card">
+    <div class="ap-table-wrap">
+      <table class="ap-table" style="min-width:520px;">
         <thead>
           <tr>
             <th>Customer</th>
-            <th class="hide-mobile">Email</th>
-            <th class="hide-mobile">Joined</th>
+            <th class="ap-hide-mobile">Email</th>
+            <th class="ap-hide-mobile">Joined</th>
             <th style="text-align:center;">Orders</th>
             <th style="text-align:right;">Actions</th>
           </tr>
@@ -427,35 +188,35 @@
           <tr data-name="{{ (customer.name or '')|lower }}" data-email="{{ (customer.email or '')|lower }}">
             <td>
               <div style="display:flex;align-items:center;gap:0.75rem;">
-                <div class="admin-avatar">{{ customer.name[0]|upper if customer.name else '?' }}</div>
+                <div class="ap-avatar">{{ customer.name[0]|upper if customer.name else '?' }}</div>
                 <div>
-                  <span style="font-weight:600;font-size:0.875rem;display:block;">{{ customer.name or 'Unknown' }}</span>
-                  <span class="mobile-email">{{ customer.email }}</span>
-                  <span class="mobile-meta">
+                  <span style="font-weight:600;font-size:0.9375rem;display:block;">{{ customer.name or 'Unknown' }}</span>
+                  <span class="ap-mobile-email">{{ customer.email }}</span>
+                  <span class="ap-mobile-meta">
                     <span>{{ customer.created_at.strftime('%b %d, %Y') if customer.created_at else '—' }}</span>
                     <span>{{ customer.order_count or 0 }} orders</span>
                   </span>
                 </div>
               </div>
             </td>
-            <td class="hide-mobile" style="color:var(--stone-500);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ customer.email }}</td>
-            <td class="hide-mobile" style="color:var(--stone-500);white-space:nowrap;">{{ customer.created_at.strftime('%b %d, %Y') if customer.created_at else '—' }}</td>
+            <td class="ap-hide-mobile" style="color:var(--ap-text-secondary);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ customer.email }}</td>
+            <td class="ap-hide-mobile" style="color:var(--ap-text-secondary);white-space:nowrap;">{{ customer.created_at.strftime('%b %d, %Y') if customer.created_at else '—' }}</td>
             <td style="text-align:center;">
               {% if customer.order_count %}
-              <span class="admin-badge admin-badge--amber">{{ customer.order_count }}</span>
+              <span class="ap-badge ap-badge-amber">{{ customer.order_count }}</span>
               {% else %}
-              <span style="font-size:0.75rem;color:var(--stone-300);">—</span>
+              <span style="font-size:0.75rem;color:var(--ap-text-muted);">—</span>
               {% endif %}
             </td>
             <td style="text-align:right;">
               <div style="display:flex;align-items:center;justify-content:flex-end;gap:0.375rem;">
-                <a href="/admin/customers/{{ customer.id }}" class="admin-action-link" title="View customer details">
+                <a href="/admin/customers/{{ customer.id }}" class="ap-action-link" title="View customer details">
                   <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                   View
                 </a>
                 <button
                   onclick="confirmDelete('{{ customer.id }}', '{{ (customer.name or 'Unknown')|e }}')"
-                  class="admin-action-danger"
+                  class="ap-action-danger"
                   title="Delete customer">
                   <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                 </button>
@@ -465,12 +226,12 @@
           {% else %}
           <tr>
             <td colspan="5">
-              <div class="admin-empty">
-                <div class="admin-empty-icon">
-                  <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--stone-500);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <div class="ap-empty">
+                <div class="ap-empty-icon">
+                  <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 </div>
-                <p style="font-size:1rem;font-weight:600;color:var(--stone-900);margin:0 0 0.25rem;">No customers yet</p>
-                <p style="font-size:0.875rem;color:var(--stone-500);margin:0;">Customers will appear here once they register.</p>
+                <h3>No customers yet</h3>
+                <p>Customers will appear here once they register.</p>
               </div>
             </td>
           </tr>
@@ -480,22 +241,22 @@
     </div>
   </div>
 
-  <p id="noResults" style="display:none;text-align:center;font-size:0.875rem;color:var(--stone-500);padding:2.5rem 0;">No customers match your search.</p>
+  <p id="noResults" style="display:none;text-align:center;font-size:0.9375rem;color:var(--ap-text-secondary);padding:2.5rem 0;">No customers match your search.</p>
 </div>
 
-<div id="deleteOverlay" class="admin-modal" onclick="cancelDelete(event)">
-  <div class="admin-modal-dialog" onclick="event.stopPropagation()">
-    <div class="admin-modal-icon">
-      <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--red-700);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+<div id="deleteOverlay" class="ap-modal-overlay" onclick="cancelDelete(event)">
+  <div class="ap-modal-dialog" onclick="event.stopPropagation()">
+    <div class="ap-modal-icon">
+      <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--ap-red);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
     </div>
-    <h3 style="font-size:1.125rem;font-weight:700;color:var(--stone-900);text-align:center;margin:0 0 0.375rem;">Delete Customer</h3>
-    <p style="font-size:0.875rem;color:var(--stone-500);text-align:center;margin:0 0 1.5rem;">
-      Are you sure you want to delete <strong id="deleteName" style="color:var(--stone-900);"></strong>?
-      <br><span style="font-size:0.75rem;color:var(--stone-400);">This action cannot be undone.</span>
+    <h3 style="font-size:1.125rem;font-weight:700;color:var(--ap-text);text-align:center;margin:0 0 0.375rem;">Delete Customer</h3>
+    <p style="font-size:0.9375rem;color:var(--ap-text-secondary);text-align:center;margin:0 0 1.5rem;">
+      Are you sure you want to delete <strong id="deleteName" style="color:var(--ap-text);"></strong>?
+      <br><span style="font-size:0.75rem;color:var(--ap-text-muted);">This action cannot be undone.</span>
     </p>
     <div style="display:flex;gap:0.75rem;">
-      <button onclick="cancelDelete()" class="admin-btn--outline" style="flex:1;justify-content:center;">Cancel</button>
-      <button onclick="executeDelete()" class="admin-btn" style="flex:1;justify-content:center;background:var(--red-700);">Delete</button>
+      <button onclick="cancelDelete()" class="ap-btn ap-btn-outline" style="flex:1;justify-content:center;">Cancel</button>
+      <button onclick="executeDelete()" class="ap-btn ap-btn-danger" style="flex:1;justify-content:center;">Delete</button>
     </div>
   </div>
 </div>
@@ -517,7 +278,7 @@
 
   function executeDelete() {
     if (!deleteTargetId) return;
-    var btn = document.querySelector('.admin-modal-dialog button:last-child');
+    var btn = document.querySelector('.ap-modal-dialog button:last-child');
     btn.disabled = true;
     btn.textContent = 'Deleting...';
 
@@ -558,7 +319,7 @@
     document.getElementById('statTotal').textContent = total;
     var withOrders = 0;
     rows.forEach(function(r) {
-      var badge = r.querySelector('.admin-badge--amber');
+      var badge = r.querySelector('.ap-badge-amber');
       if (badge) withOrders++;
     });
     document.getElementById('statWithOrders').textContent = withOrders;

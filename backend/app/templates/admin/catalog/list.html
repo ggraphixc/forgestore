@@ -4,452 +4,111 @@
 
 {% block content %}
 <style>
-/* ─── admin-catalog design system ─── */
-:root {
-  --admin-amber-50: #fffbeb;
-  --admin-amber-100: #fef3c7;
-  --admin-amber-200: #fde68a;
-  --admin-amber-500: #f59e0b;
-  --admin-amber-600: #d97706;
-  --admin-amber-700: #b45309;
-  --admin-stone-50: #fafaf9;
-  --admin-stone-100: #f5f5f4;
-  --admin-stone-200: #e7e5e4;
-  --admin-stone-300: #d6d3d1;
-  --admin-stone-400: #a8a29e;
-  --admin-stone-500: #78716c;
-  --admin-stone-600: #57534e;
-  --admin-stone-700: #44403c;
-  --admin-stone-800: #292524;
-  --admin-stone-900: #1c1917;
-  --admin-emerald-50: #ecfdf5;
-  --admin-emerald-200: #a7f3d0;
-  --admin-emerald-600: #059669;
-  --admin-emerald-700: #047857;
-  --admin-red-50: #fef2f2;
-  --admin-red-200: #fecaca;
-  --admin-red-500: #ef4444;
-  --admin-red-600: #dc2626;
-  --admin-red-700: #b91c1c;
-  --admin-radius-sm: 6px;
-  --admin-radius-md: 10px;
-  --admin-radius-lg: 14px;
-  --admin-radius-xl: 16px;
-  --admin-shadow-sm: 0 1px 3px rgba(0,0,0,.06);
-  --admin-shadow-md: 0 4px 12px rgba(0,0,0,.08);
-  --admin-shadow-lg: 0 8px 24px rgba(0,0,0,.1);
-  --admin-transition-fast: 150ms ease;
-  --admin-transition-base: 200ms ease;
-}
+@import url('/static/css/admin_portal.css');
 
-/* ─── page layout ─── */
-.admin-catalog-page {
-  max-width: 80rem;
-  margin: 0 auto;
-  padding: 2rem 1rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-/* ─── header ─── */
-.admin-catalog-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2rem;
-  gap: 1rem;
-}
-
-.admin-catalog-header-title {
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: var(--admin-stone-900);
-  margin: 0;
-  line-height: 1.2;
-  letter-spacing: -0.025em;
-}
-
-.admin-catalog-header-subtitle {
-  font-size: 0.875rem;
-  color: var(--admin-stone-500);
-  margin: 0.25rem 0 0;
-}
-
-/* ─── primary action button ─── */
-.admin-catalog-add-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 20px;
-  background: var(--admin-stone-900);
-  color: #fff;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  border: none;
-  border-radius: var(--admin-radius-lg);
-  cursor: pointer;
-  transition: all var(--admin-transition-base);
-  text-decoration: none;
-  box-shadow: 0 2px 8px rgba(0,0,0,.12);
-  min-height: 44px;
-  white-space: nowrap;
-}
-
-.admin-catalog-add-btn:hover {
-  background: var(--admin-stone-800);
-  box-shadow: var(--admin-shadow-md);
-  transform: translateY(-1px);
-}
-
-.admin-catalog-add-btn svg {
-  width: 16px;
-  height: 16px;
-}
-
-.admin-catalog-add-btn .admin-catalog-hide-mobile {
-  display: inline;
-}
-
-.admin-catalog-add-btn .admin-catalog-show-mobile {
-  display: none;
-}
-
-/* ─── table wrapper ─── */
-.admin-catalog-table-wrap {
-  background: #fff;
-  border-radius: var(--admin-radius-lg);
-  border: 1px solid var(--admin-stone-200);
-  overflow: hidden;
-  box-shadow: var(--admin-shadow-sm);
-  transition: box-shadow var(--admin-transition-base);
-}
-
-.admin-catalog-table-wrap:hover {
-  box-shadow: var(--admin-shadow-md);
-}
-
-/* ─── table ─── */
-.admin-catalog-table {
-  width: 100%;
-  min-width: 560px;
-  font-size: 0.8125rem;
-  border-collapse: collapse;
-}
-
-.admin-catalog-table thead {
-  background: var(--admin-stone-50);
-}
-
-.admin-catalog-table th {
-  text-align: left;
-  padding: 14px 24px;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--admin-stone-400);
-  border-bottom: 1px solid var(--admin-stone-200);
-  white-space: nowrap;
-  user-select: none;
-}
-
-.admin-catalog-table td {
-  padding: 14px 24px;
-  border-bottom: 1px solid var(--admin-stone-100);
-  color: var(--admin-stone-900);
-  vertical-align: middle;
-}
-
-.admin-catalog-table tbody tr {
-  transition: background var(--admin-transition-fast);
-}
-
-.admin-catalog-table tbody tr:hover {
-  background: var(--admin-amber-50);
-}
-
-.admin-catalog-table tbody tr:last-child td {
-  border-bottom: none;
-}
+/* ─── page overrides ─── */
+.ap-catalog-page { max-width: 80rem; margin: 0 auto; }
 
 /* ─── product cell ─── */
-.admin-catalog-product-cell {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-width: 0;
+.catalog-product-cell {
+  display: flex; align-items: center; gap: 14px; min-width: 0;
 }
-
-.admin-catalog-product-img {
-  width: 40px;
-  height: 40px;
-  background: var(--admin-stone-100);
-  border-radius: var(--admin-radius-md);
-  overflow: hidden;
-  flex-shrink: 0;
-  border: 1px solid var(--admin-stone-200);
-}
-
-.admin-catalog-product-img img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.admin-catalog-product-img-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
+.catalog-product-img {
+  width: 44px; height: 44px; background: var(--ap-border-light);
+  border-radius: var(--ap-radius-md); overflow: hidden; flex-shrink: 0;
+  border: 1px solid var(--ap-border); display: flex; align-items: center;
   justify-content: center;
-  color: var(--admin-stone-300);
+}
+.catalog-product-img img { width: 100%; height: 100%; object-fit: cover; }
+.catalog-product-img svg { width: 20px; height: 20px; color: var(--ap-text-muted); }
+.catalog-product-info { min-width: 0; }
+.catalog-product-name {
+  font-weight: 600; color: var(--ap-text); text-decoration: none;
+  font-size: 0.9375rem; display: block; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+  transition: color var(--ap-transition); line-height: 1.4;
+}
+.catalog-product-name:hover { color: var(--ap-primary); }
+.catalog-product-brand {
+  font-size: 0.75rem; color: var(--ap-text-muted); overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; margin: 0;
 }
 
-.admin-catalog-product-img-placeholder svg {
-  width: 18px;
-  height: 18px;
+/* ─── flag badge inline ─── */
+.catalog-flag-badge {
+  display: inline-flex; align-items: center; gap: 0.25rem;
+  font-size: 0.6875rem; font-weight: 700; color: var(--ap-red);
+  background: var(--ap-red-soft); padding: 0.15rem 0.5rem;
+  border-radius: var(--ap-radius-pill); margin-top: 0.25rem;
 }
 
-.admin-catalog-product-info {
-  min-width: 0;
-}
+/* ─── category ─── */
+.catalog-category { color: var(--ap-text-secondary); font-size: 0.8125rem; white-space: nowrap; }
 
-.admin-catalog-product-name {
-  font-weight: 600;
-  color: var(--admin-stone-900);
-  text-decoration: none;
-  font-size: 0.875rem;
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  transition: color var(--admin-transition-fast);
-  line-height: 1.4;
+/* ─── price ─── */
+.catalog-price {
+  font-weight: 600; color: var(--ap-text); text-align: right;
+  font-size: 0.9375rem; white-space: nowrap; font-feature-settings: 'tnum';
 }
-
-.admin-catalog-product-name:hover {
-  color: var(--admin-amber-700);
-}
-
-.admin-catalog-product-brand {
-  font-size: 0.6875rem;
-  color: var(--admin-stone-400);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin: 0;
-}
-
-/* ─── category column ─── */
-.admin-catalog-category-cell {
-  color: var(--admin-stone-500);
-  font-size: 0.75rem;
-  white-space: nowrap;
-}
-
-/* ─── price column ─── */
-.admin-catalog-price {
-  font-weight: 600;
-  color: var(--admin-stone-900);
-  text-align: right;
-  font-size: 0.875rem;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-
-.admin-catalog-price-old {
-  display: block;
-  font-size: 0.6875rem;
-  color: var(--admin-red-500);
-  text-decoration: line-through;
-  font-weight: 400;
-  margin-top: 2px;
+.catalog-price-old {
+  display: block; font-size: 0.75rem; color: var(--ap-red);
+  text-decoration: line-through; font-weight: 400; margin-top: 2px;
 }
 
 /* ─── stock badge ─── */
-.admin-catalog-stock-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 12px;
-  border-radius: 9999px;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  min-width: 44px;
-  letter-spacing: 0.02em;
+.catalog-stock {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0.25rem 0.75rem; border-radius: var(--ap-radius-pill);
+  font-size: 0.75rem; font-weight: 600; min-width: 44px; letter-spacing: 0.02em;
 }
 
-.admin-catalog-stock-badge--in-stock {
-  background: var(--admin-emerald-50);
-  color: var(--admin-emerald-700);
-  border: 1px solid var(--admin-emerald-200);
+/* ─── actions ─── */
+.catalog-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.catalog-action-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; color: var(--ap-text-muted);
+  border: none; background: none; border-radius: var(--ap-radius-md);
+  cursor: pointer; transition: all var(--ap-transition); text-decoration: none;
 }
-
-.admin-catalog-stock-badge--low-stock {
-  background: var(--admin-amber-50);
-  color: var(--admin-amber-700);
-  border: 1px solid var(--admin-amber-200);
-}
-
-.admin-catalog-stock-badge--out-of-stock {
-  background: var(--admin-red-50);
-  color: var(--admin-red-700);
-  border: 1px solid var(--admin-red-200);
-}
-
-/* ─── action buttons ─── */
-.admin-catalog-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-}
-
-.admin-catalog-action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  color: var(--admin-stone-400);
-  border: none;
-  background: none;
-  border-radius: var(--admin-radius-md);
-  cursor: pointer;
-  transition: all var(--admin-transition-fast);
-  text-decoration: none;
-  position: relative;
-}
-
-.admin-catalog-action-btn:hover {
-  background: var(--admin-stone-100);
-  color: var(--admin-stone-900);
-}
-
-.admin-catalog-action-btn--delete:hover {
-  background: var(--admin-red-50);
-  color: var(--admin-red-600);
-}
-
-.admin-catalog-action-btn svg {
-  width: 16px;
-  height: 16px;
-}
-
-/* ─── empty state ─── */
-.admin-catalog-empty {
-  background: #fff;
-  border-radius: var(--admin-radius-lg);
-  border: 1px solid var(--admin-stone-200);
-  padding: 64px 32px;
-  text-align: center;
-  box-shadow: var(--admin-shadow-sm);
-}
-
-.admin-catalog-empty-icon {
-  width: 88px;
-  height: 88px;
-  background: var(--admin-stone-50);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 24px;
-  border: 1px solid var(--admin-stone-200);
-}
-
-.admin-catalog-empty-icon svg {
-  width: 40px;
-  height: 40px;
-  color: var(--admin-stone-300);
-}
-
-.admin-catalog-empty h3 {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--admin-stone-900);
-  margin: 0 0 6px;
-}
-
-.admin-catalog-empty p {
-  font-size: 0.875rem;
-  color: var(--admin-stone-500);
-  margin: 0 0 28px;
-}
+.catalog-action-btn:hover { background: var(--ap-border-light); color: var(--ap-text); }
+.catalog-action-btn--delete:hover { background: var(--ap-red-soft); color: var(--ap-red); }
+.catalog-action-btn svg { width: 18px; height: 18px; }
 
 /* ─── responsive ─── */
 @media (max-width: 768px) {
-  .admin-catalog-page {
-    padding: 1.25rem 0.75rem;
-  }
-
-  .admin-catalog-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .admin-catalog-table th,
-  .admin-catalog-table td {
-    padding: 12px 16px;
-  }
-
-  .admin-catalog-add-btn .admin-catalog-hide-mobile {
-    display: none;
-  }
-
-  .admin-catalog-add-btn .admin-catalog-show-mobile {
-    display: inline;
-  }
-
-  .admin-catalog-hide-md {
-    display: none !important;
-  }
+  .catalog-hide-md { display: none !important; }
 }
-
 @media (max-width: 640px) {
-  .admin-catalog-header-title {
-    font-size: 1.375rem;
-  }
-
-  .admin-catalog-product-img {
-    width: 32px;
-    height: 32px;
-  }
-
-  .admin-catalog-product-name {
-    font-size: 0.8125rem;
-  }
-
-  .admin-catalog-hide-sm {
-    display: none !important;
-  }
+  .catalog-hide-sm { display: none !important; }
 }
 </style>
 
-<div class="admin-catalog-page">
-    <div class="admin-catalog-header">
-        <div>
-            <h1 class="admin-catalog-header-title">Catalog</h1>
-            <p class="admin-catalog-header-subtitle">{{ products|length }} product(s) total</p>
+<div class="ap-catalog-page">
+    <div class="ap-header">
+        <div class="ap-header-left">
+            <span class="ap-overline">Inventory</span>
+            <h1>Catalog</h1>
+            <p class="ap-subtitle">{{ products|length }} product(s) total</p>
         </div>
-        <a href="/admin/catalog/new" class="admin-catalog-add-btn">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            <span class="admin-catalog-hide-mobile">Add Product</span><span class="admin-catalog-show-mobile">Add</span>
-        </a>
+        <div class="ap-header-actions">
+            <a href="/admin/catalog/new" class="ap-btn ap-btn-primary">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span class="catalog-hide-mobile">Add Product</span><span class="catalog-show-mobile" style="display:none;">Add</span>
+            </a>
+        </div>
     </div>
 
     {% if products %}
-    <div class="admin-catalog-table-wrap">
-        <div style="overflow-x:auto">
-            <table class="admin-catalog-table">
+    <div class="ap-card">
+        <div class="ap-table-wrap">
+            <table class="ap-table">
                 <thead>
                     <tr>
                         <th>Product</th>
-                        <th class="admin-catalog-hide-md">Category</th>
-                        <th class="admin-catalog-hide-md" style="display:none">Retailer</th>
+                        <th class="catalog-hide-md">Category</th>
+                        <th class="catalog-hide-md" style="display:none">Retailer</th>
                         <th style="text-align:right">Price</th>
-                        <th class="admin-catalog-hide-sm" style="text-align:center">Stock</th>
+                        <th class="catalog-hide-sm" style="text-align:center">Stock</th>
                         <th style="text-align:right">Actions</th>
                     </tr>
                 </thead>
@@ -457,50 +116,48 @@
                     {% for product in products %}
                     <tr>
                         <td>
-                            <div class="admin-catalog-product-cell">
-                                <div class="admin-catalog-product-img">
+                            <div class="catalog-product-cell">
+                                <div class="catalog-product-img">
                                     {% if product.images and product.images|length > 0 %}
                                     <img src="{{ product.images[0] }}" alt="">
                                     {% else %}
-                                    <div class="admin-catalog-product-img-placeholder">
-                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                    </div>
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                     {% endif %}
                                 </div>
-                                <div class="admin-catalog-product-info">
-                                    <a href="/admin/catalog/{{ product.id }}" class="admin-catalog-product-name">{{ product.name }}</a>
+                                <div class="catalog-product-info">
+                                    <a href="/admin/catalog/{{ product.id }}" class="catalog-product-name">{{ product.name }}</a>
                                     {% if flag_counts.get(product.id, 0) > 0 %}
-                                    <span style="display:inline-flex;align-items:center;gap:0.25rem;font-size:0.6875rem;font-weight:700;color:#dc2626;background:#fee2e2;padding:0.15rem 0.5rem;border-radius:9999px;margin-top:0.25rem;">
+                                    <span class="catalog-flag-badge">
                                         <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
                                         {{ flag_counts[product.id] }} flag{{ 's' if flag_counts[product.id] != 1 }}
                                     </span>
                                     {% endif %}
-                                    {% if product.brand %}<p class="admin-catalog-product-brand">{{ product.brand }}</p>{% endif %}
+                                    {% if product.brand %}<p class="catalog-product-brand">{{ product.brand }}</p>{% endif %}
                                 </div>
                             </div>
                         </td>
-                        <td class="admin-catalog-category-cell admin-catalog-hide-md">{{ categories.get(product.category_id, '—') }}</td>
-                        <td class="admin-catalog-category-cell admin-catalog-hide-md" style="display:none">{{ retailers.get(product.retailer_id, '—') }}</td>
-                        <td class="admin-catalog-price">
+                        <td class="catalog-category catalog-hide-md">{{ categories.get(product.category_id, '—') }}</td>
+                        <td class="catalog-category catalog-hide-md" style="display:none">{{ retailers.get(product.retailer_id, '—') }}</td>
+                        <td class="catalog-price">
                             ₦{{ "{:,.2f}".format(product.price) }}
                             {% if product.discount_price %}
-                            <span class="admin-catalog-price-old">₦{{ "{:,.2f}".format(product.discount_price) }}</span>
+                            <span class="catalog-price-old">₦{{ "{:,.2f}".format(product.discount_price) }}</span>
                             {% endif %}
                         </td>
-                        <td class="admin-catalog-hide-sm" style="text-align:center">
-                            <span class="admin-catalog-stock-badge
-                                {% if product.inventory > 10 %}admin-catalog-stock-badge--in-stock
-                                {% elif product.inventory > 0 %}admin-catalog-stock-badge--low-stock
-                                {% else %}admin-catalog-stock-badge--out-of-stock{% endif %}">
+                        <td class="catalog-hide-sm" style="text-align:center">
+                            <span class="catalog-stock ap-badge
+                                {% if product.inventory > 10 %}ap-badge-emerald
+                                {% elif product.inventory > 0 %}ap-badge-amber
+                                {% else %}ap-badge-red{% endif %}">
                                 {{ product.inventory }}
                             </span>
                         </td>
                         <td>
-                            <div class="admin-catalog-actions">
-                                <a href="/admin/catalog/{{ product.id }}/edit" class="admin-catalog-action-btn" title="Edit">
+                            <div class="catalog-actions">
+                                <a href="/admin/catalog/{{ product.id }}/edit" class="catalog-action-btn" title="Edit">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </a>
-                                <button onclick="deleteProduct('{{ product.id }}')" class="admin-catalog-action-btn admin-catalog-action-btn--delete" title="Delete">
+                                <button onclick="deleteProduct('{{ product.id }}')" class="catalog-action-btn catalog-action-btn--delete" title="Delete">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 </button>
                             </div>
@@ -512,13 +169,18 @@
         </div>
     </div>
     {% else %}
-    <div class="admin-catalog-empty">
-        <div class="admin-catalog-empty-icon">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+    <div class="ap-card">
+        <div class="ap-empty">
+            <div class="ap-empty-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="40" height="40"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </div>
+            <h3>No products yet</h3>
+            <p>Get started by adding your first product</p>
+            <a href="/admin/catalog/new" class="ap-btn ap-btn-primary">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Add Product
+            </a>
         </div>
-        <h3>No products yet</h3>
-        <p>Get started by adding your first product</p>
-        <a href="/admin/catalog/new" class="admin-catalog-add-btn">Add Product</a>
     </div>
     {% endif %}
 </div>

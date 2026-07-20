@@ -2,216 +2,225 @@
 {% block title %}Ad Campaigns — {{ settings.site_name|default("ForgeStore") }}{% endblock %}
 {% block content %}
 <style>
-:root {
-  --amber-50: #fffbeb;
-  --amber-100: #fef3c7;
-  --amber-200: #fde68a;
-  --amber-500: #f59e0b;
-  --amber-600: #d97706;
-  --amber-700: #b45309;
-  --stone-50: #fafaf9;
-  --stone-100: #f5f5f4;
-  --stone-200: #e7e5e4;
-  --stone-300: #d6d3d1;
-  --stone-400: #a8a29e;
-  --stone-500: #78716c;
-  --stone-600: #57534e;
-  --stone-700: #44403c;
-  --stone-800: #292524;
-  --stone-900: #1c1917;
-  --emerald-500: #10b981;
-  --emerald-600: #059669;
-  --emerald-100: #d1fae5;
-  --red-500: #ef4444;
-  --red-600: #dc2626;
-  --red-100: #fee2e2;
-  --blue-500: #3b82f6;
-  --blue-600: #2563eb;
-  --blue-100: #dbeafe;
-  --purple-500: #a855f7;
-  --purple-600: #9333ea;
-  --purple-100: #f3e8ff;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 16px;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,.06);
-  --shadow-md: 0 4px 12px rgba(0,0,0,.08);
-  --transition-fast: 150ms ease;
-  --transition-base: 200ms ease;
-}
+@import url('/static/css/admin_portal.css');
 
-.ra-container { max-width: 896px; margin: 0 auto; padding: 24px 16px; }
-.ra-header { margin-bottom: 32px; }
-.ra-back { display: inline-flex; align-items: center; gap: 6px; font-size: 0.875rem; color: var(--stone-500); text-decoration: none; margin-bottom: 12px; transition: color var(--transition-fast); }
-.ra-back:hover { color: var(--stone-900); }
-.ra-title { font-size: 1.75rem; font-weight: 900; color: var(--stone-900); margin: 0; }
-@media (min-width: 640px) { .ra-title { font-size: 1.875rem; } }
-.ra-subtitle { font-size: 0.875rem; color: var(--stone-500); margin-top: 4px; }
-.ra-card { background: #fff; border: 1px solid var(--stone-200); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 32px; box-shadow: var(--shadow-sm); }
-.ra-card-title { font-size: 0.875rem; font-weight: 700; color: var(--stone-900); margin: 0 0 16px 0; }
-.ra-alert { padding: 16px; border-radius: var(--radius-lg); margin-bottom: 24px; }
-.ra-alert-amber { background: rgba(217, 119, 6, 0.05); border: 1px solid rgba(217, 119, 6, 0.2); }
-.ra-alert-row { display: flex; align-items: flex-start; gap: 12px; }
-.ra-alert-icon { width: 20px; height: 20px; color: var(--amber-600); flex-shrink: 0; margin-top: 2px; }
-.ra-alert-title { font-size: 0.875rem; font-weight: 600; color: var(--amber-600); margin: 0; }
-.ra-alert-text { font-size: 0.75rem; color: var(--amber-600); margin-top: 4px; opacity: 0.8; }
-.ra-alert-link { display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 600; color: var(--amber-600); text-decoration: none; margin-top: 8px; }
-.ra-alert-link:hover { text-decoration: underline; }
-.ra-stats { display: grid; grid-template-columns: repeat(1, 1fr); gap: 16px; margin-bottom: 32px; }
-@media (min-width: 640px) { .ra-stats { grid-template-columns: repeat(3, 1fr); } }
-.ra-stat-value { font-size: 1.5rem; font-weight: 700; color: var(--stone-900); margin: 0; }
-.ra-stat-label { font-size: 0.75rem; color: var(--stone-500); margin-top: 2px; }
-.ra-stat-value.emerald { color: var(--emerald-600); }
-.ra-stat-value.amber { color: var(--amber-600); }
-.ra-form-group { margin-bottom: 20px; }
-.ra-form-label { display: block; font-size: 0.875rem; font-weight: 500; color: var(--stone-900); margin-bottom: 6px; }
-.ra-form-hint { font-size: 0.75rem; color: var(--stone-400); margin-top: 4px; }
-.ra-input, .ra-select, .ra-textarea { width: 100%; padding: 10px 14px; font-size: 0.875rem; border: 1px solid var(--stone-200); border-radius: var(--radius-lg); background: #fff; color: var(--stone-900); min-height: 44px; transition: all var(--transition-base); }
-.ra-input:focus, .ra-select:focus, .ra-textarea:focus { outline: none; border-color: var(--amber-600); box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2); }
-.ra-textarea { resize: vertical; min-height: 80px; }
-.ra-radio-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
-@media (min-width: 640px) { .ra-radio-grid { grid-template-columns: 1fr 1fr; } }
-.ra-radio-label { position: relative; cursor: pointer; display: block; }
-.ra-radio-input { position: absolute; opacity: 0; width: 0; height: 0; }
-.ra-radio-card { padding: 16px; border-radius: var(--radius-lg); border: 2px solid var(--stone-200); background: #fff; transition: all var(--transition-base); }
-.ra-radio-input:checked + .ra-radio-card { border-color: var(--amber-600); background: rgba(217, 119, 6, 0.05); }
-.ra-radio-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
-.ra-radio-icon { width: 32px; height: 32px; color: var(--amber-600); }
-.ra-radio-badge { font-size: 0.75rem; font-weight: 700; color: var(--amber-600); background: rgba(217, 119, 6, 0.1); padding: 2px 8px; border-radius: 9999px; }
-.ra-radio-title { font-size: 0.875rem; font-weight: 700; color: var(--stone-900); margin: 0; }
-.ra-radio-desc { font-size: 0.75rem; color: var(--stone-500); margin-top: 4px; }
-.ra-duration-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-.ra-duration-card { padding: 12px; border-radius: var(--radius-lg); border: 2px solid var(--stone-200); background: #fff; text-align: center; cursor: pointer; transition: all var(--transition-base); }
-.ra-radio-input:checked + .ra-duration-card { border-color: var(--amber-600); background: rgba(217, 119, 6, 0.05); }
-.ra-duration-title { font-size: 0.875rem; font-weight: 700; color: var(--stone-900); margin: 0; }
-.ra-duration-save { font-size: 0.75rem; color: var(--emerald-600); }
-.ra-duration-label { font-size: 0.75rem; color: var(--stone-400); }
-.ra-price-summary { padding: 16px; background: var(--stone-100); border-radius: var(--radius-lg); border: 1px solid var(--stone-200); }
-.ra-price-row { display: flex; justify-content: space-between; align-items: center; }
-.ra-price-label { font-size: 0.875rem; color: var(--stone-500); }
-.ra-price-value { font-size: 1.5rem; font-weight: 700; color: var(--amber-600); }
-.ra-price-breakdown { font-size: 0.75rem; color: var(--stone-400); margin-top: 4px; }
-.ra-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; font-size: 0.875rem; font-weight: 500; border-radius: var(--radius-md); border: none; cursor: pointer; min-height: 44px; transition: all var(--transition-base); }
-.ra-btn-primary { background: var(--amber-600); color: white; }
-.ra-btn-primary:hover { background: var(--amber-700); }
-.ra-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-.ra-btn-ghost { background: transparent; color: var(--stone-500); border: 1px solid var(--stone-200); }
-.ra-btn-ghost:hover { background: var(--stone-100); }
-.ra-btn-row { display: flex; align-items: center; gap: 12px; padding-top: 8px; }
-.ra-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: ra-spin 1s linear infinite; }
-@keyframes ra-spin { to { transform: rotate(360deg); } }
-.ra-error { font-size: 0.875rem; color: var(--red-600); }
-.ra-table { width: 100%; font-size: 0.875rem; border-collapse: collapse; }
-.ra-table th { text-align: left; padding: 12px 0; font-weight: 600; font-size: 0.75rem; color: var(--stone-500); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--stone-200); }
-.ra-table td { padding: 12px 0; border-bottom: 1px solid rgba(231, 229, 228, 0.5); color: var(--stone-500); }
-.ra-table .mono { font-family: monospace; }
-.ra-badge { display: inline-flex; align-items: center; padding: 4px 10px; font-size: 0.75rem; font-weight: 700; border-radius: 9999px; }
-.ra-badge-shop { background: rgba(37, 99, 235, 0.1); color: var(--blue-600); }
-.ra-badge-product { background: rgba(147, 51, 234, 0.1); color: var(--purple-600); }
-.ra-badge-active { background: rgba(5, 150, 105, 0.1); color: var(--emerald-600); }
-.ra-badge-paid { background: rgba(217, 119, 6, 0.1); color: var(--amber-600); }
-.ra-badge-expired { background: var(--stone-100); color: var(--stone-400); }
-.ra-badge-pending { background: var(--stone-100); color: var(--stone-500); }
-.ra-section-divider { margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--stone-200); }
-.ra-section-header { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
-@media (max-width: 640px) { .ra-section-header { flex-direction: column; align-items: flex-start; } }
-.ra-section-title { font-size: 1.25rem; font-weight: 700; color: var(--stone-900); margin: 0; }
-.ra-section-subtitle { font-size: 0.875rem; color: var(--stone-500); margin-top: 4px; }
-.ra-btn-gradient { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: linear-gradient(135deg, #d97706, #ea580c); color: white; font-size: 0.875rem; font-weight: 700; border-radius: var(--radius-lg); border: none; cursor: pointer; min-height: 44px; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25); transition: all var(--transition-base); }
-.ra-btn-gradient:hover { box-shadow: 0 6px 16px rgba(217, 119, 6, 0.35); background: linear-gradient(135deg, #b45309, #dc2626); }
-.ra-promo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
-@media (min-width: 640px) { .ra-promo-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 1024px) { .ra-promo-grid { grid-template-columns: repeat(6, 1fr); } }
-.ra-promo-btn { padding: 16px; background: #fff; border-radius: var(--radius-lg); border: 1px solid var(--stone-200); cursor: pointer; text-align: center; transition: all var(--transition-base); }
-.ra-promo-btn:hover { box-shadow: var(--shadow-md); }
-.ra-promo-icon-wrap { width: 40px; height: 40px; margin: 0 auto 8px; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; transition: transform var(--transition-base); }
-.ra-promo-btn:hover .ra-promo-icon-wrap { transform: scale(1.1); }
-.ra-promo-icon { width: 20px; height: 20px; }
-.ra-promo-label { font-size: 0.75rem; font-weight: 600; color: var(--stone-900); }
-.ra-promo-card-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
-@media (min-width: 768px) { .ra-promo-card-grid { grid-template-columns: repeat(2, 1fr); } }
-.ra-promo-card { background: #fff; border-radius: var(--radius-lg); border: 1px solid var(--stone-200); overflow: hidden; transition: box-shadow var(--transition-base); }
-.ra-promo-card:hover { box-shadow: var(--shadow-md); }
-.ra-promo-card-img { aspect-ratio: 16/9; background: var(--stone-100); overflow: hidden; }
-.ra-promo-card-img img { width: 100%; height: 100%; object-fit: cover; }
-.ra-promo-card-body { padding: 16px; }
-.ra-promo-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
-.ra-promo-card-title { font-size: 0.875rem; font-weight: 700; color: var(--stone-900); margin: 0; }
-.ra-promo-card-badges { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
-.ra-promo-badge-sm { padding: 2px 8px; font-size: 10px; font-weight: 700; border-radius: 9999px; }
-.ra-promo-card-stats { display: flex; gap: 16px; font-size: 11px; color: var(--stone-500); margin-top: 8px; }
-.ra-empty-promo { text-align: center; padding: 48px 16px; background: var(--stone-100); border-radius: var(--radius-lg); border: 1px dashed var(--stone-300); }
-.ra-empty-promo-icon { width: 48px; height: 48px; margin: 0 auto 12px; color: var(--stone-300); }
-.ra-empty-promo-text { font-size: 0.875rem; color: var(--stone-500); margin-bottom: 12px; }
-.ra-empty-promo-link { font-size: 0.875rem; font-weight: 600; color: var(--amber-600); text-decoration: none; background: none; border: none; cursor: pointer; }
-.ra-empty-promo-link:hover { text-decoration: underline; }
-.ra-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); z-index: 50; display: none; align-items: center; justify-content: center; padding: 16px; }
-.ra-modal-overlay.show { display: flex; }
-.ra-modal { background: #fff; border-radius: var(--radius-lg); max-width: 512px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
-.ra-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid var(--stone-200); }
-.ra-modal-title { font-size: 1.125rem; font-weight: 700; color: var(--stone-900); margin: 0; }
-.ra-modal-close { padding: 6px; background: transparent; border: none; color: var(--stone-400); cursor: pointer; border-radius: var(--radius-md); min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
-.ra-modal-close:hover { background: var(--stone-100); color: var(--stone-900); }
-.ra-modal-body { padding: 24px; }
-.ra-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.ra-submit-btn { flex: 1; padding: 10px 16px; background: linear-gradient(135deg, #d97706, #ea580c); color: white; font-size: 0.875rem; font-weight: 700; border-radius: var(--radius-lg); border: none; cursor: pointer; min-height: 44px; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25); transition: all var(--transition-base); }
-.ra-submit-btn:hover { box-shadow: 0 6px 16px rgba(217, 119, 6, 0.35); }
-.ra-cancel-btn { flex: 1; padding: 10px 16px; font-size: 0.875rem; font-weight: 600; color: var(--stone-500); background: var(--stone-100); border-radius: var(--radius-lg); border: none; cursor: pointer; min-height: 44px; }
-.ra-cancel-btn:hover { background: var(--stone-200); }
-.ra-payment-modal { position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); }
-.ra-payment-modal.show { display: flex; }
-.ra-payment-card { background: #fff; border-radius: 16px; padding: 32px; max-width: 448px; width: 100%; margin: 0 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
-.ra-payment-icon-wrap { width: 64px; height: 64px; background: rgba(5, 150, 105, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
-.ra-payment-icon { width: 32px; height: 32px; color: var(--emerald-600); }
-.ra-payment-title { font-size: 1.125rem; font-weight: 700; color: var(--stone-900); text-align: center; margin: 0 0 8px 0; }
-.ra-payment-text { font-size: 0.875rem; color: var(--stone-500); text-align: center; margin-bottom: 24px; }
-.ra-payment-btn { display: flex; align-items: center; justify-content: center; width: 100%; padding: 10px 16px; background: var(--amber-600); color: white; font-size: 0.875rem; font-weight: 500; border-radius: var(--radius-md); border: none; cursor: pointer; min-height: 44px; text-decoration: none; margin-bottom: 12px; }
-.ra-payment-ref { font-size: 0.75rem; color: var(--stone-400); text-align: center; }
-.ra-payment-ref .mono { font-family: monospace; }
-.ra-badge-red { background: rgba(220, 38, 38, 0.1); color: #dc2626; }
-.ra-badge-orange { background: rgba(234, 88, 12, 0.1); color: #ea580c; }
-.ra-badge-rose { background: rgba(225, 29, 72, 0.1); color: #e11d48; }
-.ra-badge-purple { background: rgba(147, 51, 234, 0.1); color: #9333ea; }
-.ra-badge-blue { background: rgba(37, 99, 235, 0.1); color: #2563eb; }
-.ra-badge-amber { background: rgba(217, 119, 6, 0.1); color: #d97706; }
-.ra-badge-stone { background: var(--stone-100); color: var(--stone-500); }
-.ra-icon-bg-red { background: rgba(220, 38, 38, 0.1); }
-.ra-icon-bg-orange { background: rgba(234, 88, 12, 0.1); }
-.ra-icon-bg-rose { background: rgba(225, 29, 72, 0.1); }
-.ra-icon-bg-purple { background: rgba(147, 51, 234, 0.1); }
-.ra-icon-bg-blue { background: rgba(37, 99, 235, 0.1); }
-.ra-icon-bg-amber { background: rgba(217, 119, 6, 0.1); }
-.ra-icon-text-red { color: #dc2626; }
-.ra-icon-text-orange { color: #ea580c; }
-.ra-icon-text-rose { color: #e11d48; }
-.ra-icon-text-purple { color: #9333ea; }
-.ra-icon-text-blue { color: #2563eb; }
-.ra-icon-text-amber { color: #d97706; }
+.ap-breadcrumb { display:flex; align-items:center; gap:8px; font-size:0.875rem; color:var(--ap-text-muted); margin-bottom:1.5rem; }
+.ap-breadcrumb a { color:var(--ap-text-muted); text-decoration:none; transition:color var(--ap-transition); }
+.ap-breadcrumb a:hover { color:var(--ap-primary); }
+.ap-breadcrumb svg { width:16px; height:16px; flex-shrink:0; }
+.ap-breadcrumb-current { color:var(--ap-text-secondary); font-weight:500; }
+.ap-alert { padding:1rem 1.25rem; border-radius:var(--ap-radius-lg); margin-bottom:1.5rem; }
+.ap-alert-amber { background:rgba(217,119,6,0.05); border:1px solid rgba(217,119,6,0.2); }
+.ap-alert-row { display:flex; align-items:flex-start; gap:0.75rem; }
+.ap-alert-icon { width:1.25rem; height:1.25rem; color:var(--ap-amber); flex-shrink:0; margin-top:2px; }
+.ap-alert-title { font-size:0.9375rem; font-weight:600; color:var(--ap-amber); margin:0; }
+.ap-alert-text { font-size:0.75rem; color:var(--ap-amber); margin-top:0.25rem; opacity:0.8; }
+.ap-alert-link { display:inline-flex; align-items:center; gap:0.25rem; font-size:0.75rem; font-weight:600; color:var(--ap-amber); text-decoration:none; margin-top:0.5rem; }
+.ap-alert-link:hover { text-decoration:underline; }
+.ap-form-group { margin-bottom:1.25rem; }
+.ap-form-label { display:block; font-size:0.9375rem; font-weight:500; color:var(--ap-text); margin-bottom:0.375rem; }
+.ap-form-hint { font-size:0.75rem; color:var(--ap-text-muted); margin-top:0.25rem; }
+.ap-textarea {
+  width:100%; padding:0.625rem 0.875rem; font-size:0.9375rem;
+  border:1.5px solid var(--ap-border); border-radius:var(--ap-radius-md);
+  background:var(--ap-bg-elevated); color:var(--ap-text);
+  min-height:44px; transition:all var(--ap-transition); resize:vertical;
+  font-family:var(--ap-font);
+}
+.ap-textarea:focus { outline:none; border-color:var(--ap-accent); box-shadow:0 0 0 3px rgba(99,102,241,0.12); }
+.ap-radio-grid { display:grid; grid-template-columns:1fr; gap:1rem; }
+@media(min-width:640px) { .ap-radio-grid { grid-template-columns:1fr 1fr; } }
+.ap-radio-label { position:relative; cursor:pointer; display:block; }
+.ap-radio-input { position:absolute; opacity:0; width:0; height:0; }
+.ap-radio-card {
+  padding:1rem; border-radius:var(--ap-radius-lg);
+  border:2px solid var(--ap-border); background:var(--ap-bg-elevated);
+  transition:all var(--ap-transition);
+}
+.ap-radio-input:checked + .ap-radio-card { border-color:var(--ap-primary); background:rgba(245,158,11,0.03); }
+.ap-radio-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:0.5rem; }
+.ap-radio-icon { width:2rem; height:2rem; color:var(--ap-primary); }
+.ap-radio-badge { font-size:0.75rem; font-weight:700; color:var(--ap-primary); background:var(--ap-amber-soft); padding:0.125rem 0.5rem; border-radius:var(--ap-radius-pill); }
+.ap-radio-title { font-size:0.9375rem; font-weight:700; color:var(--ap-text); margin:0; }
+.ap-radio-desc { font-size:0.75rem; color:var(--ap-text-muted); margin-top:0.25rem; }
+.ap-duration-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:0.75rem; }
+.ap-duration-card {
+  padding:0.75rem; border-radius:var(--ap-radius-lg);
+  border:2px solid var(--ap-border); background:var(--ap-bg-elevated);
+  text-align:center; cursor:pointer; transition:all var(--ap-transition);
+}
+.ap-radio-input:checked + .ap-duration-card { border-color:var(--ap-primary); background:rgba(245,158,11,0.03); }
+.ap-duration-title { font-size:0.9375rem; font-weight:700; color:var(--ap-text); margin:0; }
+.ap-duration-save { font-size:0.75rem; color:var(--ap-emerald); }
+.ap-duration-label { font-size:0.75rem; color:var(--ap-text-muted); }
+.ap-price-summary {
+  padding:1rem; background:var(--ap-bg); border-radius:var(--ap-radius-lg);
+  border:1px solid var(--ap-border);
+}
+.ap-price-row { display:flex; justify-content:space-between; align-items:center; }
+.ap-price-label { font-size:0.9375rem; color:var(--ap-text-muted); }
+.ap-price-value { font-size:1.5rem; font-weight:700; color:var(--ap-primary); }
+.ap-price-breakdown { font-size:0.75rem; color:var(--ap-text-muted); margin-top:0.25rem; }
+.ap-btn-row { display:flex; align-items:center; gap:0.75rem; padding-top:0.5rem; }
+.ap-table-full { width:100%; font-size:0.9375rem; border-collapse:separate; border-spacing:0; }
+.ap-table-full th {
+  text-align:left; padding:0.75rem 0; font-weight:600; font-size:0.75rem;
+  color:var(--ap-text-muted); text-transform:uppercase; letter-spacing:0.05em;
+  border-bottom:1px solid var(--ap-border);
+}
+.ap-table-full td {
+  padding:0.75rem 0; border-bottom:1px solid var(--ap-border-light);
+  color:var(--ap-text-secondary);
+}
+.ap-table-full .mono { font-family:var(--ap-font-mono); }
+.ap-section-divider { margin-top:2.5rem; padding-top:2rem; border-top:1px solid var(--ap-border); }
+.ap-section-header {
+  display:flex; flex-direction:row; align-items:center; justify-content:space-between;
+  gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap;
+}
+@media(max-width:640px) { .ap-section-header { flex-direction:column; align-items:flex-start; } }
+.ap-section-title { font-size:1.25rem; font-weight:700; color:var(--ap-text); margin:0; }
+.ap-section-subtitle { font-size:0.9375rem; color:var(--ap-text-secondary); margin-top:0.25rem; }
+.ap-btn-gradient {
+  display:inline-flex; align-items:center; gap:0.5rem;
+  padding:0.625rem 1rem; background:var(--ap-gradient-primary);
+  color:white; font-size:0.875rem; font-weight:700;
+  border-radius:var(--ap-radius-lg); border:none; cursor:pointer;
+  min-height:44px; box-shadow:var(--ap-shadow-primary);
+  transition:all var(--ap-transition);
+}
+.ap-btn-gradient:hover { box-shadow:0 6px 16px -3px rgba(217,119,6,0.35); transform:translateY(-1px); }
+.ap-promo-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:0.75rem; margin-bottom:1.5rem; }
+@media(min-width:640px) { .ap-promo-grid { grid-template-columns:repeat(3,1fr); } }
+@media(min-width:1024px) { .ap-promo-grid { grid-template-columns:repeat(6,1fr); } }
+.ap-promo-btn {
+  padding:1rem; background:var(--ap-bg-elevated); border-radius:var(--ap-radius-lg);
+  border:1px solid var(--ap-border); cursor:pointer; text-align:center;
+  transition:all var(--ap-transition);
+}
+.ap-promo-btn:hover { box-shadow:var(--ap-shadow-md); transform:translateY(-1px); }
+.ap-promo-icon-wrap {
+  width:2.5rem; height:2.5rem; margin:0 auto 0.5rem; border-radius:var(--ap-radius-lg);
+  display:flex; align-items:center; justify-content:center;
+  transition:transform var(--ap-transition-bounce);
+}
+.ap-promo-btn:hover .ap-promo-icon-wrap { transform:scale(1.1); }
+.ap-promo-icon { width:1.25rem; height:1.25rem; }
+.ap-promo-label { font-size:0.75rem; font-weight:600; color:var(--ap-text); }
+.ap-promo-card-grid { display:grid; grid-template-columns:1fr; gap:1rem; }
+@media(min-width:768px) { .ap-promo-card-grid { grid-template-columns:repeat(2,1fr); } }
+.ap-promo-card {
+  background:var(--ap-bg-elevated); border-radius:var(--ap-radius-lg);
+  border:1px solid var(--ap-border); overflow:hidden;
+  transition:box-shadow var(--ap-transition);
+}
+.ap-promo-card:hover { box-shadow:var(--ap-shadow-md); }
+.ap-promo-card-img { aspect-ratio:16/9; background:var(--ap-bg); overflow:hidden; }
+.ap-promo-card-img img { width:100%; height:100%; object-fit:cover; }
+.ap-promo-card-body { padding:1rem; }
+.ap-promo-card-header { display:flex; align-items:flex-start; justify-content:space-between; gap:0.5rem; margin-bottom:0.5rem; }
+.ap-promo-card-title { font-size:0.9375rem; font-weight:700; color:var(--ap-text); margin:0; }
+.ap-promo-card-badges { display:flex; gap:0.375rem; margin-top:0.25rem; flex-wrap:wrap; }
+.ap-promo-badge-sm { padding:0.125rem 0.5rem; font-size:10px; font-weight:700; border-radius:var(--ap-radius-pill); }
+.ap-promo-card-stats { display:flex; gap:1rem; font-size:11px; color:var(--ap-text-muted); margin-top:0.5rem; }
+.ap-empty-promo {
+  text-align:center; padding:3rem 1rem; background:var(--ap-bg);
+  border-radius:var(--ap-radius-lg); border:1px dashed var(--ap-border);
+}
+.ap-empty-promo-icon { width:3rem; height:3rem; margin:0 auto 0.75rem; color:var(--ap-text-muted); }
+.ap-empty-promo-text { font-size:0.9375rem; color:var(--ap-text-secondary); margin-bottom:0.75rem; }
+.ap-empty-promo-link { font-size:0.9375rem; font-weight:600; color:var(--ap-primary); text-decoration:none; background:none; border:none; cursor:pointer; }
+.ap-empty-promo-link:hover { text-decoration:underline; }
+.ap-modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.5);
+  backdrop-filter:blur(4px); z-index:50; display:none;
+  align-items:center; justify-content:center; padding:1rem;
+}
+.ap-modal-overlay.show { display:flex; }
+.ap-form-row { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
+.ap-cancel-btn {
+  flex:1; padding:0.625rem 1rem; font-size:0.9375rem; font-weight:600;
+  color:var(--ap-text-secondary); background:var(--ap-bg);
+  border-radius:var(--ap-radius-lg); border:none; cursor:pointer;
+  min-height:44px; transition:all var(--ap-transition);
+}
+.ap-cancel-btn:hover { background:var(--ap-border-light); }
+.ap-payment-modal {
+  position:fixed; inset:0; z-index:50; display:none;
+  align-items:center; justify-content:center;
+  background:rgba(0,0,0,0.5); backdrop-filter:blur(4px);
+}
+.ap-payment-modal.show { display:flex; }
+.ap-payment-card {
+  background:var(--ap-bg-elevated); border-radius:var(--ap-radius-2xl);
+  padding:2rem; max-width:448px; width:100%; margin:0 1rem;
+  box-shadow:var(--ap-shadow-xl);
+}
+.ap-payment-icon-wrap {
+  width:4rem; height:4rem; background:rgba(16,185,129,0.1);
+  border-radius:50%; display:flex; align-items:center;
+  justify-content:center; margin:0 auto 1rem;
+}
+.ap-payment-icon { width:2rem; height:2rem; color:var(--ap-emerald); }
+.ap-payment-title { font-size:1.125rem; font-weight:700; color:var(--ap-text); text-align:center; margin:0 0 0.5rem 0; }
+.ap-payment-text { font-size:0.9375rem; color:var(--ap-text-secondary); text-align:center; margin-bottom:1.5rem; }
+.ap-payment-btn {
+  display:flex; align-items:center; justify-content:center;
+  width:100%; padding:0.625rem 1rem; background:var(--ap-primary);
+  color:white; font-size:0.9375rem; font-weight:500;
+  border-radius:var(--ap-radius-md); border:none; cursor:pointer;
+  min-height:44px; text-decoration:none; margin-bottom:0.75rem;
+  transition:all var(--ap-transition);
+}
+.ap-payment-btn:hover { background:var(--ap-primary-hover); }
+.ap-payment-ref { font-size:0.75rem; color:var(--ap-text-muted); text-align:center; }
+.ap-payment-ref .mono { font-family:var(--ap-font-mono); }
+.ap-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; }
+.ap-badge-orange { background:rgba(234,88,12,0.1); color:#ea580c; }
+.ap-badge-rose { background:rgba(225,29,72,0.1); color:#e11d48; }
+.ap-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; }
+.ap-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; }
+.ap-badge-stone { background:var(--ap-bg); color:var(--ap-text-muted); }
+.ap-icon-bg-red { background:rgba(220,38,38,0.1); }
+.ap-icon-bg-orange { background:rgba(234,88,12,0.1); }
+.ap-icon-bg-rose { background:rgba(225,29,72,0.1); }
+.ap-icon-bg-purple { background:rgba(147,51,234,0.1); }
+.ap-icon-bg-blue { background:rgba(37,99,235,0.1); }
+.ap-icon-bg-amber { background:rgba(217,119,6,0.1); }
+.ap-icon-text-red { color:#dc2626; }
+.ap-icon-text-orange { color:#ea580c; }
+.ap-icon-text-rose { color:#e11d48; }
+.ap-icon-text-purple { color:#9333ea; }
+.ap-icon-text-blue { color:#2563eb; }
+.ap-icon-text-amber { color:#d97706; }
 </style>
 
-<div class="ra-container">
-    <div class="ra-header">
-        <a href="/admin/dashboard" class="ra-back">
+<div class="ap-page" style="max-width:896px;">
+    <div style="margin-bottom:2rem;">
+        <a href="/admin/dashboard" class="ap-btn ap-btn-ghost" style="margin-bottom:1rem;padding-left:0;min-height:auto;">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m7 7l-7-7 7-7"/></svg>
             Back to Dashboard
         </a>
-        <h1 class="ra-title">Ad Campaigns</h1>
-        <p class="ra-subtitle">Promote your shop or products with paid advertising campaigns</p>
+        <div class="ap-header" style="margin-bottom:0;">
+            <div class="ap-header-left">
+                <h1>Ad Campaigns</h1>
+                <p class="ap-subtitle">Promote your shop or products with paid advertising campaigns</p>
+            </div>
+        </div>
     </div>
 
     {% if not retailer %}
-    <div class="ra-card" style="text-align:center;padding:32px">
-        <div style="width:64px;height:64px;background:rgba(217,119,6,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
-            <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber-600)">
+    <div class="ap-card" style="text-align:center;padding:2rem;margin-bottom:2rem;">
+        <div style="width:4rem;height:4rem;background:var(--ap-amber-soft);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
+            <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--ap-amber);">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
         </div>
-        <h3 style="font-size:1.125rem;font-weight:700;color:var(--stone-900);margin:0 0 8px 0">No Retailer Selected</h3>
-        <p style="font-size:0.875rem;color:var(--stone-500);margin-bottom:24px">Select a retailer to manage their ad campaigns.</p>
+        <h3 style="font-size:1.125rem;font-weight:700;color:var(--ap-text);margin:0 0 0.5rem 0">No Retailer Selected</h3>
+        <p style="font-size:0.9375rem;color:var(--ap-text-secondary);margin-bottom:1.5rem">Select a retailer to manage their ad campaigns.</p>
         {% if all_retailers %}
         <div style="max-width:320px;margin:0 auto">
-            <select onchange="window.location.href='/admin/retailer/ads?retailer_id=' + this.value" class="ra-select">
+            <select onchange="window.location.href='/admin/retailer/ads?retailer_id=' + this.value" class="ap-input ap-select">
                 <option value="">Choose a retailer...</option>
                 {% for r in all_retailers %}
                 <option value="{{ r.id }}" {% if selected_retailer_id == r.id %}selected{% endif %}>{{ r.name }}</option>
@@ -224,40 +233,44 @@
 
     {% if not retailer %}
     {% if all_retailers %}
-    <div class="ra-card">
-        <h2 class="ra-card-title">All Retailer Campaigns</h2>
-        <div style="overflow-x:auto">
-            <table class="ra-table">
-                <thead>
-                    <tr>
-                        <th>Retailer</th>
-                        <th>Type</th>
-                        <th>Status</th>
-                        <th>Created</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for c in campaigns %}
-                    <tr>
-                        <td>{{ all_retailers|selectattr('id', 'equalto', c.retailer_id)|map(attribute='name')|first|default('Unknown') }}</td>
-                        <td>
-                            <span class="ra-badge {% if c.ad_type == 'SHOP' %}ra-badge-shop{% else %}ra-badge-product{% endif %}">
-                                {{ c.ad_type }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="ra-badge {% if c.status == 'ACTIVE' %}ra-badge-active{% elif c.status == 'PAID' %}ra-badge-paid{% elif c.status == 'EXPIRED' %}ra-badge-expired{% else %}ra-badge-pending{% endif %}">
-                                {{ c.status }}
-                            </span>
-                        </td>
-                        <td style="font-size:0.75rem;color:var(--stone-400)">{{ c.created_at.strftime('%b %d, %Y') if c.created_at else '—' }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="ap-card">
+        <div class="ap-card-header">
+            <h2>All Retailer Campaigns</h2>
+        </div>
+        <div class="ap-card-body" style="padding:0;">
+            <div class="ap-table-wrap">
+                <table class="ap-table">
+                    <thead>
+                        <tr>
+                            <th>Retailer</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in campaigns %}
+                        <tr>
+                            <td>{{ all_retailers|selectattr('id', 'equalto', c.retailer_id)|map(attribute='name')|first|default('Unknown') }}</td>
+                            <td>
+                                <span class="ap-badge {% if c.ad_type == 'SHOP' %}ap-badge-blue{% else %}ap-badge-purple{% endif %}">
+                                    {{ c.ad_type }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="ap-badge {% if c.status == 'ACTIVE' %}ap-badge-emerald{% elif c.status == 'PAID' %}ap-badge-amber{% elif c.status == 'EXPIRED' %}ap-badge-stone{% else %}ap-badge-stone{% endif %}">
+                                    {{ c.status }}
+                                </span>
+                            </td>
+                            <td style="font-size:0.75rem;color:var(--ap-text-muted)">{{ c.created_at.strftime('%b %d, %Y') if c.created_at else '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% if not campaigns %}
-            <div style="text-align:center;padding:32px 0">
-                <p style="font-size:0.875rem;color:var(--stone-500)">No campaigns across all retailers.</p>
+            <div style="text-align:center;padding:2rem 0">
+                <p style="font-size:0.9375rem;color:var(--ap-text-secondary)">No campaigns across all retailers.</p>
             </div>
             {% endif %}
         </div>
@@ -265,198 +278,204 @@
     {% endif %}
     {% else %}
 
-    <div class="ra-stats">
-        <div class="ra-card" style="padding:16px;margin:0">
-            <p class="ra-stat-value">{{ campaigns|length }}</p>
-            <p class="ra-stat-label">Total Campaigns</p>
+    <div class="ap-stats" style="margin-bottom:2rem;">
+        <div class="ap-stat ap-stat-amber">
+            <p class="ap-stat-value">{{ campaigns|length }}</p>
+            <p class="ap-stat-label">Total Campaigns</p>
         </div>
-        <div class="ra-card" style="padding:16px;margin:0">
-            <p class="ra-stat-value emerald">{{ campaigns|selectattr('status', 'equalto', 'ACTIVE')|list|length }}</p>
-            <p class="ra-stat-label">Active</p>
+        <div class="ap-stat ap-stat-emerald">
+            <p class="ap-stat-value">{{ campaigns|selectattr('status', 'equalto', 'ACTIVE')|list|length }}</p>
+            <p class="ap-stat-label">Active</p>
         </div>
-        <div class="ra-card" style="padding:16px;margin:0">
-            <p class="ra-stat-value amber">{{ campaigns|selectattr('status', 'equalto', 'PAID')|list|length + campaigns|selectattr('status', 'equalto', 'PENDING')|list|length }}</p>
-            <p class="ra-stat-label">Pending / Awaiting</p>
+        <div class="ap-stat ap-stat-blue">
+            <p class="ap-stat-value">{{ campaigns|selectattr('status', 'equalto', 'PAID')|list|length + campaigns|selectattr('status', 'equalto', 'PENDING')|list|length }}</p>
+            <p class="ap-stat-label">Pending / Awaiting</p>
         </div>
     </div>
 
-    <div class="ra-card">
-        <h2 class="ra-card-title">Create New Campaign</h2>
+    <div class="ap-card" style="margin-bottom:2rem;">
+        <div class="ap-card-body">
+            <h2 style="font-size:1.0625rem;font-weight:700;color:var(--ap-text);margin:0 0 1.25rem 0;">Create New Campaign</h2>
 
-        {% if not retailer.paystack_subaccount_code %}
-        <div class="ra-alert ra-alert-amber">
-            <div class="ra-alert-row">
-                <svg class="ra-alert-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <div>
-                    <p class="ra-alert-title">Bank account not set up yet</p>
-                    <p class="ra-alert-text">Please set up your banking details first to enable subaccount-based split payments.</p>
-                    <a href="/admin/retailer/banking" class="ra-alert-link">Set up banking &rarr;</a>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-        <form id="ad-create-form">
-            <div class="ra-form-group">
-                <label class="ra-form-label">Ad Type</label>
-                <div class="ra-radio-grid">
-                    <label class="ra-radio-label">
-                        <input type="radio" name="ad_type" value="SHOP" checked class="ra-radio-input">
-                        <div class="ra-radio-card">
-                            <div class="ra-radio-header">
-                                <svg class="ra-radio-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                                </svg>
-                                <span class="ra-radio-badge">{{ ad_pricing.SHOP.price_per_month // 100 }}K ₦/mo</span>
-                            </div>
-                            <h4 class="ra-radio-title">Shop Banner Ad</h4>
-                            <p class="ra-radio-desc">Your shop banner will be featured on the homepage and marketplace</p>
-                        </div>
-                    </label>
-                    <label class="ra-radio-label">
-                        <input type="radio" name="ad_type" value="PRODUCT" class="ra-radio-input">
-                        <div class="ra-radio-card">
-                            <div class="ra-radio-header">
-                                <svg class="ra-radio-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                                </svg>
-                                <span class="ra-radio-badge">{{ ad_pricing.PRODUCT.price_per_month // 100 }}K ₦/mo</span>
-                            </div>
-                            <h4 class="ra-radio-title">Product Promotion Ad</h4>
-                            <p class="ra-radio-desc">Promote a specific product with a dedicated banner ad</p>
-                        </div>
-                    </label>
-                </div>
-            </div>
-
-            <div id="product-selection" class="ra-form-group" style="display:none">
-                <label for="product_id" class="ra-form-label">Select Product</label>
-                <select id="product_id" name="product_id" class="ra-select">
-                    <option value="">Choose a product...</option>
-                    {% for p in products %}
-                    <option value="{{ p.id }}">{{ p.name }} — {{ ad_pricing.PRODUCT.price_per_month // 100 }}K ₦/mo</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="ra-form-group">
-                <label for="duration_months" class="ra-form-label">Duration</label>
-                <div class="ra-duration-grid">
-                    <label class="ra-radio-label">
-                        <input type="radio" name="duration_months" value="1" checked class="ra-radio-input">
-                        <div class="ra-duration-card">
-                            <p class="ra-duration-title">1 Month</p>
-                            <p class="ra-duration-label">Standard</p>
-                        </div>
-                    </label>
-                    <label class="ra-radio-label">
-                        <input type="radio" name="duration_months" value="3" class="ra-radio-input">
-                        <div class="ra-duration-card">
-                            <p class="ra-duration-title">3 Months</p>
-                            <p class="ra-duration-save">Save 10%</p>
-                        </div>
-                    </label>
-                    <label class="ra-radio-label">
-                        <input type="radio" name="duration_months" value="6" class="ra-radio-input">
-                        <div class="ra-duration-card">
-                            <p class="ra-duration-title">6 Months</p>
-                            <p class="ra-duration-save">Save 20%</p>
-                        </div>
-                    </label>
-                </div>
-            </div>
-
-            <div class="ra-form-group">
-                <div class="ra-price-summary">
-                    <div class="ra-price-row">
-                        <span class="ra-price-label">Total</span>
-                        <span id="total-price" class="ra-price-value">₦10,000</span>
-                    </div>
-                    <p id="price-breakdown" class="ra-price-breakdown">₦10,000/month × 1 month</p>
-                </div>
-            </div>
-
-            <div class="ra-btn-row">
-                <button type="submit" id="ad-submit-btn" class="ra-btn ra-btn-primary">
-                    <span id="ad-btn-text">Initialize Payment</span>
-                    <svg id="ad-btn-spinner" class="ra-spinner" style="display:none" fill="none" viewBox="0 0 24 24"></svg>
-                </button>
-                <span id="ad-error" class="ra-error" style="display:none"></span>
-            </div>
-        </form>
-
-        <div id="ad-payment-modal" class="ra-payment-modal">
-            <div class="ra-payment-card">
-                <div class="ra-payment-icon-wrap">
-                    <svg class="ra-payment-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            {% if not retailer.paystack_subaccount_code %}
+            <div class="ap-alert ap-alert-amber">
+                <div class="ap-alert-row">
+                    <svg class="ap-alert-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
+                    <div>
+                        <p class="ap-alert-title">Bank account not set up yet</p>
+                        <p class="ap-alert-text">Please set up your banking details first to enable subaccount-based split payments.</p>
+                        <a href="/admin/retailer/banking" class="ap-alert-link">Set up banking &rarr;</a>
+                    </div>
                 </div>
-                <h3 class="ra-payment-title">Payment Initialized</h3>
-                <p class="ra-payment-text">You'll be redirected to complete your payment.</p>
-                <a id="payment-redirect-link" href="#" target="_blank" class="ra-payment-btn">Proceed to Payment</a>
-                <p class="ra-payment-ref">Reference: <span id="payment-reference" class="mono"></span></p>
+            </div>
+            {% endif %}
+
+            <form id="ad-create-form">
+                <div class="ap-form-group">
+                    <label class="ap-form-label">Ad Type</label>
+                    <div class="ap-radio-grid">
+                        <label class="ap-radio-label">
+                            <input type="radio" name="ad_type" value="SHOP" checked class="ap-radio-input">
+                            <div class="ap-radio-card">
+                                <div class="ap-radio-header">
+                                    <svg class="ap-radio-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                    </svg>
+                                    <span class="ap-radio-badge">{{ ad_pricing.SHOP.price_per_month // 100 }}K &#8358;/mo</span>
+                                </div>
+                                <h4 class="ap-radio-title">Shop Banner Ad</h4>
+                                <p class="ap-radio-desc">Your shop banner will be featured on the homepage and marketplace</p>
+                            </div>
+                        </label>
+                        <label class="ap-radio-label">
+                            <input type="radio" name="ad_type" value="PRODUCT" class="ap-radio-input">
+                            <div class="ap-radio-card">
+                                <div class="ap-radio-header">
+                                    <svg class="ap-radio-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                    </svg>
+                                    <span class="ap-radio-badge">{{ ad_pricing.PRODUCT.price_per_month // 100 }}K &#8358;/mo</span>
+                                </div>
+                                <h4 class="ap-radio-title">Product Promotion Ad</h4>
+                                <p class="ap-radio-desc">Promote a specific product with a dedicated banner ad</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="product-selection" class="ap-form-group" style="display:none">
+                    <label for="product_id" class="ap-form-label">Select Product</label>
+                    <select id="product_id" name="product_id" class="ap-input ap-select">
+                        <option value="">Choose a product...</option>
+                        {% for p in products %}
+                        <option value="{{ p.id }}">{{ p.name }} — {{ ad_pricing.PRODUCT.price_per_month // 100 }}K &#8358;/mo</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="ap-form-group">
+                    <label for="duration_months" class="ap-form-label">Duration</label>
+                    <div class="ap-duration-grid">
+                        <label class="ap-radio-label">
+                            <input type="radio" name="duration_months" value="1" checked class="ap-radio-input">
+                            <div class="ap-duration-card">
+                                <p class="ap-duration-title">1 Month</p>
+                                <p class="ap-duration-label">Standard</p>
+                            </div>
+                        </label>
+                        <label class="ap-radio-label">
+                            <input type="radio" name="duration_months" value="3" class="ap-radio-input">
+                            <div class="ap-duration-card">
+                                <p class="ap-duration-title">3 Months</p>
+                                <p class="ap-duration-save">Save 10%</p>
+                            </div>
+                        </label>
+                        <label class="ap-radio-label">
+                            <input type="radio" name="duration_months" value="6" class="ap-radio-input">
+                            <div class="ap-duration-card">
+                                <p class="ap-duration-title">6 Months</p>
+                                <p class="ap-duration-save">Save 20%</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="ap-form-group">
+                    <div class="ap-price-summary">
+                        <div class="ap-price-row">
+                            <span class="ap-price-label">Total</span>
+                            <span id="total-price" class="ap-price-value">&#8358;10,000</span>
+                        </div>
+                        <p id="price-breakdown" class="ap-price-breakdown">&#8358;10,000/month x 1 month</p>
+                    </div>
+                </div>
+
+                <div class="ap-btn-row">
+                    <button type="submit" id="ad-submit-btn" class="ap-btn ap-btn-primary">
+                        <span id="ad-btn-text">Initialize Payment</span>
+                        <svg id="ad-btn-spinner" class="ap-banking-spinner" style="display:none" fill="none" viewBox="0 0 24 24"></svg>
+                    </button>
+                    <span id="ad-error" style="font-size:0.9375rem;color:var(--ap-red);display:none"></span>
+                </div>
+            </form>
+
+            <div id="ad-payment-modal" class="ap-payment-modal">
+                <div class="ap-payment-card">
+                    <div class="ap-payment-icon-wrap">
+                        <svg class="ap-payment-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="ap-payment-title">Payment Initialized</h3>
+                    <p class="ap-payment-text">You'll be redirected to complete your payment.</p>
+                    <a id="payment-redirect-link" href="#" target="_blank" class="ap-payment-btn">Proceed to Payment</a>
+                    <p class="ap-payment-ref">Reference: <span id="payment-reference" class="mono"></span></p>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="ra-card">
-        <h2 class="ra-card-title">Campaign History</h2>
-        {% if campaigns %}
-        <div style="overflow-x:auto">
-            <table class="ra-table">
-                <thead>
-                    <tr>
-                        <th>Type</th>
-                        <th>Status</th>
-                        <th>Clicks</th>
-                        <th>Impressions</th>
-                        <th>Created</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for c in campaigns %}
-                    <tr>
-                        <td>
-                            <span class="ra-badge {% if c.ad_type == 'SHOP' %}ra-badge-shop{% else %}ra-badge-product{% endif %}">
-                                {{ c.ad_type }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="ra-badge {% if c.status == 'ACTIVE' %}ra-badge-active{% elif c.status == 'PAID' %}ra-badge-paid{% elif c.status == 'EXPIRED' %}ra-badge-expired{% else %}ra-badge-pending{% endif %}">
-                                {{ c.status }}
-                            </span>
-                        </td>
-                        <td class="mono">{{ c.clicks }}</td>
-                        <td class="mono">{{ c.impressions }}</td>
-                        <td style="font-size:0.75rem;color:var(--stone-400)">{{ c.created_at.strftime('%b %d, %Y') if c.created_at else '—' }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="ap-card">
+        <div class="ap-card-header">
+            <h2>Campaign History</h2>
         </div>
-        {% else %}
-        <div style="text-align:center;padding:32px 0">
-            <p style="font-size:0.875rem;color:var(--stone-500)">No campaigns yet. Create your first one above!</p>
+        <div class="ap-card-body" style="padding:0;">
+            {% if campaigns %}
+            <div class="ap-table-wrap">
+                <table class="ap-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Clicks</th>
+                            <th>Impressions</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in campaigns %}
+                        <tr>
+                            <td>
+                                <span class="ap-badge {% if c.ad_type == 'SHOP' %}ap-badge-blue{% else %}ap-badge-purple{% endif %}">
+                                    {{ c.ad_type }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="ap-badge {% if c.status == 'ACTIVE' %}ap-badge-emerald{% elif c.status == 'PAID' %}ap-badge-amber{% elif c.status == 'EXPIRED' %}ap-badge-stone{% else %}ap-badge-stone{% endif %}">
+                                    {{ c.status }}
+                                </span>
+                            </td>
+                            <td class="mono">{{ c.clicks }}</td>
+                            <td class="mono">{{ c.impressions }}</td>
+                            <td style="font-size:0.75rem;color:var(--ap-text-muted)">{{ c.created_at.strftime('%b %d, %Y') if c.created_at else '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:2rem 0">
+                <p style="font-size:0.9375rem;color:var(--ap-text-secondary)">No campaigns yet. Create your first one above!</p>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
 
-    <div class="ra-section-divider">
-        <div class="ra-section-header">
+    <div class="ap-section-divider">
+        <div class="ap-section-header">
             <div>
-                <h2 class="ra-section-title">Promotional Ads</h2>
-                <p class="ra-section-subtitle">Create flash sales, holiday deals, festival promos, and banner posts</p>
+                <h2 class="ap-section-title">Promotional Ads</h2>
+                <p class="ap-section-subtitle">Create flash sales, holiday deals, festival promos, and banner posts</p>
             </div>
-            <button onclick="openPromoModal()" class="ra-btn-gradient">
+            <button onclick="openPromoModal()" class="ap-btn-gradient">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Create Promo Ad
             </button>
         </div>
 
-        <div class="ra-promo-grid">
+        <div class="ap-promo-grid">
             {% set promo_types = [
                 {'key': 'FLASH_SALE', 'label': 'Flash Sale', 'color': 'red', 'icon': 'M13 10V3L4 14h7v7l9-11h-7z'},
                 {'key': 'SUPER_SALE', 'label': 'Super Sale', 'color': 'orange', 'icon': 'M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z'},
@@ -466,49 +485,49 @@
                 {'key': 'PROMO', 'label': 'General', 'color': 'amber', 'icon': 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z'},
             ] %}
             {% for pt in promo_types %}
-            <button onclick="openPromoModal('{{ pt.key }}')" class="ra-promo-btn">
-                <div class="ra-promo-icon-wrap ra-icon-bg-{{ pt.color }}">
-                    <svg class="ra-promo-icon ra-icon-text-{{ pt.color }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ pt.icon }}"/></svg>
+            <button onclick="openPromoModal('{{ pt.key }}')" class="ap-promo-btn">
+                <div class="ap-promo-icon-wrap ap-icon-bg-{{ pt.color }}">
+                    <svg class="ap-promo-icon ap-icon-text-{{ pt.color }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ pt.icon }}"/></svg>
                 </div>
-                <p class="ra-promo-label">{{ pt.label }}</p>
+                <p class="ap-promo-label">{{ pt.label }}</p>
             </button>
             {% endfor %}
         </div>
 
         {% if promo_ads is defined and promo_ads %}
-        <div class="ra-promo-card-grid">
+        <div class="ap-promo-card-grid">
             {% for ad in promo_ads %}
-            <div class="ra-promo-card">
+            <div class="ap-promo-card">
                 {% if ad.banner_url %}
-                <div class="ra-promo-card-img">
+                <div class="ap-promo-card-img">
                     <img src="{{ ad.banner_url }}" alt="{{ ad.title }}">
                 </div>
                 {% endif %}
-                <div class="ra-promo-card-body">
-                    <div class="ra-promo-card-header">
+                <div class="ap-promo-card-body">
+                    <div class="ap-promo-card-header">
                         <div>
-                            <h4 class="ra-promo-card-title">{{ ad.title }}</h4>
-                            <div class="ra-promo-card-badges">
-                                <span class="ra-promo-badge-sm
-                                    {% if ad.ad_subtype == 'FLASH_SALE' %}ra-badge-red
-                                    {% elif ad.ad_subtype == 'SUPER_SALE' %}ra-badge-orange
-                                    {% elif ad.ad_subtype == 'HOT_WEEK' %}ra-badge-rose
-                                    {% elif ad.ad_subtype == 'FESTIVAL' %}ra-badge-purple
-                                    {% elif ad.ad_subtype == 'SEASONAL_SALE' %}ra-badge-blue
-                                    {% else %}ra-badge-amber{% endif %}">
+                            <h4 class="ap-promo-card-title">{{ ad.title }}</h4>
+                            <div class="ap-promo-card-badges">
+                                <span class="ap-promo-badge-sm
+                                    {% if ad.ad_subtype == 'FLASH_SALE' %}ap-badge-red
+                                    {% elif ad.ad_subtype == 'SUPER_SALE' %}ap-badge-orange
+                                    {% elif ad.ad_subtype == 'HOT_WEEK' %}ap-badge-rose
+                                    {% elif ad.ad_subtype == 'FESTIVAL' %}ap-badge-purple
+                                    {% elif ad.ad_subtype == 'SEASONAL_SALE' %}ap-badge-blue
+                                    {% else %}ap-badge-amber{% endif %}">
                                     {{ ad.ad_subtype|replace('_', ' ') }}
                                 </span>
-                                <span class="ra-promo-badge-sm ra-badge-stone">{{ ad.banner_type }}</span>
+                                <span class="ap-promo-badge-sm ap-badge-stone">{{ ad.banner_type }}</span>
                             </div>
                         </div>
-                        <span class="ra-promo-badge-sm
-                            {% if ad.status == 'ACTIVE' %}ra-badge-active
-                            {% elif ad.status == 'INACTIVE' %}ra-badge-stone
-                            {% else %}ra-badge-red{% endif %}">
+                        <span class="ap-promo-badge-sm
+                            {% if ad.status == 'ACTIVE' %}ap-badge-emerald
+                            {% elif ad.status == 'INACTIVE' %}ap-badge-stone
+                            {% else %}ap-badge-red{% endif %}">
                             {{ ad.status }}
                         </span>
                     </div>
-                    <div class="ra-promo-card-stats">
+                    <div class="ap-promo-card-stats">
                         <span>{{ ad.clicks }} clicks</span>
                         <span>{{ ad.impressions }} views</span>
                         {% if ad.start_date %}
@@ -520,39 +539,39 @@
             {% endfor %}
         </div>
         {% else %}
-        <div class="ra-empty-promo">
-            <svg class="ra-empty-promo-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="ap-empty-promo">
+            <svg class="ap-empty-promo-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
             </svg>
-            <p class="ra-empty-promo-text">No promotional ads yet</p>
-            <button onclick="openPromoModal()" class="ra-empty-promo-link">Create your first promo ad</button>
+            <p class="ap-empty-promo-text">No promotional ads yet</p>
+            <button onclick="openPromoModal()" class="ap-empty-promo-link">Create your first promo ad</button>
         </div>
         {% endif %}
     </div>
     {% endif %}
 </div>
 
-<div id="promo-create-modal" class="ra-modal-overlay">
-    <div class="ra-modal">
-        <div class="ra-modal-header">
-            <h3 class="ra-modal-title" id="promo-modal-title">Create Promo Ad</h3>
-            <button onclick="closePromoModal()" class="ra-modal-close">
+<div id="promo-create-modal" class="ap-modal-overlay">
+    <div class="ap-modal">
+        <div class="ap-modal-header">
+            <h3 id="promo-modal-title">Create Promo Ad</h3>
+            <button onclick="closePromoModal()" class="ap-modal-close" style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:none;background:none;border-radius:var(--ap-radius-md);cursor:pointer;color:var(--ap-text-muted);">
                 <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
-        <form id="promo-ad-form" class="ra-modal-body" onsubmit="return savePromoAd(event)">
+        <form id="promo-ad-form" class="ap-modal-body" onsubmit="return savePromoAd(event)">
             <input type="hidden" id="promo-ad-id" value="">
 
-            <div class="ra-form-group">
-                <label class="ra-form-label">Title *</label>
-                <input type="text" id="promo-title" required class="ra-input" placeholder="e.g. Black Friday Flash Sale">
+            <div class="ap-form-group">
+                <label class="ap-form-label">Title *</label>
+                <input type="text" id="promo-title" required class="ap-input" placeholder="e.g. Black Friday Flash Sale">
             </div>
 
-            <div class="ra-form-row">
-                <div class="ra-form-group">
-                    <label class="ra-form-label">Event Type *</label>
-                    <select id="promo-ad_subtype" class="ra-select">
+            <div class="ap-form-row">
+                <div class="ap-form-group">
+                    <label class="ap-form-label">Event Type *</label>
+                    <select id="promo-ad_subtype" class="ap-input ap-select">
                         <option value="PROMO">General Promo</option>
                         <option value="FLASH_SALE">Flash Sale</option>
                         <option value="SUPER_SALE">Super Sale</option>
@@ -561,9 +580,9 @@
                         <option value="SEASONAL_SALE">Seasonal Sale</option>
                     </select>
                 </div>
-                <div class="ra-form-group">
-                    <label class="ra-form-label">Banner Format *</label>
-                    <select id="promo-banner_type" class="ra-select">
+                <div class="ap-form-group">
+                    <label class="ap-form-label">Banner Format *</label>
+                    <select id="promo-banner_type" class="ap-input ap-select">
                         <option value="banner">Banner</option>
                         <option value="poster">Poster</option>
                         <option value="flyer">Flyer</option>
@@ -571,40 +590,40 @@
                 </div>
             </div>
 
-            <div class="ra-form-group">
-                <label class="ra-form-label">Banner Image *</label>
-                <input type="file" id="promo-banner_file" accept="image/*" class="ra-input" style="padding:0.625rem;" onchange="handleRetailerBannerUpload(this)">
+            <div class="ap-form-group">
+                <label class="ap-form-label">Banner Image *</label>
+                <input type="file" id="promo-banner_file" accept="image/*" class="ap-input" style="padding:0.625rem;" onchange="handleRetailerBannerUpload(this)">
                 <input type="hidden" id="promo-banner_url" required>
-                <div id="promo-banner-preview" style="display:none;margin-top:8px;">
-                    <img id="promo-banner-preview-img" src="" alt="Preview" style="max-width:200px;max-height:120px;border-radius:8px;border:1px solid #e7e5e4;object-fit:cover;">
-                    <button type="button" onclick="clearRetailerBanner()" style="margin-left:8px;padding:4px 8px;font-size:11px;color:#dc2626;background:none;border:1px solid #fecaca;border-radius:6px;cursor:pointer;">Remove</button>
+                <div id="promo-banner-preview" style="display:none;margin-top:0.5rem;">
+                    <img id="promo-banner-preview-img" src="" alt="Preview" style="max-width:200px;max-height:120px;border-radius:var(--ap-radius-md);border:1px solid var(--ap-border);object-fit:cover;">
+                    <button type="button" onclick="clearRetailerBanner()" style="margin-left:0.5rem;padding:0.25rem 0.5rem;font-size:11px;color:var(--ap-red);background:none;border:1px solid var(--ap-red-soft);border-radius:var(--ap-radius-sm);cursor:pointer;">Remove</button>
                 </div>
             </div>
 
-            <div class="ra-form-group">
-                <label class="ra-form-label">Target URL</label>
-                <input type="url" id="promo-target_url" class="ra-input" placeholder="https://example.com/promotion">
+            <div class="ap-form-group">
+                <label class="ap-form-label">Target URL</label>
+                <input type="url" id="promo-target_url" class="ap-input" placeholder="https://example.com/promotion">
             </div>
 
-            <div class="ra-form-row">
-                <div class="ra-form-group">
-                    <label class="ra-form-label">Start Date</label>
-                    <input type="date" id="promo-start_date" class="ra-input">
+            <div class="ap-form-row">
+                <div class="ap-form-group">
+                    <label class="ap-form-label">Start Date</label>
+                    <input type="date" id="promo-start_date" class="ap-input">
                 </div>
-                <div class="ra-form-group">
-                    <label class="ra-form-label">End Date</label>
-                    <input type="date" id="promo-end_date" class="ra-input">
+                <div class="ap-form-group">
+                    <label class="ap-form-label">End Date</label>
+                    <input type="date" id="promo-end_date" class="ap-input">
                 </div>
             </div>
 
-            <div class="ra-form-group">
-                <label class="ra-form-label">Notes</label>
-                <textarea id="promo-note" rows="2" class="ra-textarea" placeholder="Internal notes about this promotion"></textarea>
+            <div class="ap-form-group">
+                <label class="ap-form-label">Notes</label>
+                <textarea id="promo-note" rows="2" class="ap-textarea" placeholder="Internal notes about this promotion"></textarea>
             </div>
 
-            <div style="display:flex;gap:12px;padding-top:8px">
-                <button type="submit" id="promo-submit-btn" class="ra-submit-btn">Save Promo Ad</button>
-                <button type="button" onclick="closePromoModal()" class="ra-cancel-btn">Cancel</button>
+            <div style="display:flex;gap:0.75rem;padding-top:0.5rem">
+                <button type="submit" id="promo-submit-btn" class="ap-btn ap-btn-primary" style="flex:1;">Save Promo Ad</button>
+                <button type="button" onclick="closePromoModal()" class="ap-cancel-btn">Cancel</button>
             </div>
         </form>
     </div>
@@ -664,8 +683,8 @@ function updatePrice() {
   else if (months >= 3) discount = 0.1;
   total = total * (1 - discount);
 
-  document.getElementById('total-price').textContent = '₦' + total.toLocaleString();
-  let breakdown = '₦' + pricePerMonth.toLocaleString() + '/month × ' + months + ' month' + (months > 1 ? 's' : '');
+  document.getElementById('total-price').textContent = '\u20A6' + total.toLocaleString();
+  let breakdown = '\u20A6' + pricePerMonth.toLocaleString() + '/month \u00D7 ' + months + ' month' + (months > 1 ? 's' : '');
   if (discount > 0) {
     breakdown += ' (' + (discount * 100) + '% discount applied)';
   }

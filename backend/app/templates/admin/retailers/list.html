@@ -4,513 +4,82 @@
 
 {% block content %}
 <style>
-  :root {
-    --amber-50: #fffbeb;
-    --amber-100: #fef3c7;
-    --amber-200: #fde68a;
-    --amber-500: #f59e0b;
-    --amber-600: #d97706;
-    --amber-700: #b45309;
-    --stone-50: #fafaf9;
-    --stone-100: #f5f5f4;
-    --stone-200: #e7e5e4;
-    --stone-300: #d6d3d1;
-    --stone-400: #a8a29e;
-    --stone-500: #78716c;
-    --stone-600: #57534e;
-    --stone-700: #44403c;
-    --stone-900: #1c1917;
-    --emerald-50: #ecfdf5;
-    --emerald-200: #a7f3d0;
-    --emerald-600: #059669;
-    --red-50: #fef2f2;
-    --red-200: #fecaca;
-    --red-700: #b91c1c;
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 14px;
-    --radius-full: 9999px;
-    --shadow-sm: 0 1px 2px rgba(0,0,0,.04);
-    --shadow-md: 0 4px 12px rgba(0,0,0,.06);
-    --shadow-lg: 0 8px 24px rgba(0,0,0,.08);
-    --transition-fast: 150ms ease;
-    --transition-base: 200ms ease;
-  }
+@import url('/static/css/admin_portal.css');
 
-  .admin-page {
-    max-width: 72rem;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 2rem 1rem;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    color: var(--stone-900);
-  }
-
-  .admin-page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-  .admin-page-header h1 {
-    font-size: 1.75rem;
-    font-weight: 900;
-    color: var(--stone-900);
-    margin: 0;
-    letter-spacing: -0.025em;
-  }
-  .admin-page-header p {
-    font-size: 0.875rem;
-    color: var(--stone-500);
-    margin: 0.25rem 0 0;
-  }
-  .admin-page-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  .admin-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-    margin-bottom: 2rem;
-  }
-  .admin-stat-card {
-    background: #fff;
-    border: 1px solid var(--stone-200);
-    border-radius: var(--radius-lg);
-    padding: 1.25rem;
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow var(--transition-base), border-color var(--transition-base);
-  }
-  .admin-stat-card:hover {
-    box-shadow: var(--shadow-md);
-    border-color: var(--stone-300);
-  }
-  .admin-stat-card-label {
-    font-size: 0.625rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    color: var(--stone-400);
-    margin: 0 0 0.5rem;
-  }
-  .admin-stat-card-value {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--stone-900);
-    margin: 0;
-    letter-spacing: -0.025em;
-  }
-  .admin-stat-card-sub {
-    font-size: 0.75rem;
-    color: var(--stone-500);
-    margin: 0.25rem 0 0;
-  }
-
-  .admin-table-container {
-    background: #fff;
-    border: 1px solid var(--stone-200);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-  }
-  .admin-table-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  .admin-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.875rem;
-  }
-  .admin-table thead {
-    background: var(--stone-50);
-    border-bottom: 1px solid var(--stone-100);
-  }
-  .admin-table th {
-    text-align: left;
-    padding: 0.75rem 1.25rem;
-    font-size: 0.625rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    color: var(--stone-400);
-    white-space: nowrap;
-  }
-  .admin-table td {
-    padding: 0.875rem 1.25rem;
-    border-bottom: 1px solid var(--stone-50);
-    color: var(--stone-900);
-    vertical-align: middle;
-  }
-  .admin-table tr:last-child td {
-    border-bottom: none;
-  }
-  .admin-table tr:hover td {
-    background: rgba(255,251,235,.2);
-  }
-  .admin-table td.name-cell {
-    display: flex;
-    align-items: center;
-    gap: 0.875rem;
-  }
-
-  .admin-retailer-avatar {
-    width: 2.75rem;
-    height: 2.75rem;
-    background: linear-gradient(135deg, var(--amber-100), var(--stone-100));
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: inset 0 0 0 1px var(--stone-200);
-  }
-  .admin-retailer-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .admin-retailer-avatar-fallback {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--stone-500);
-  }
-  .admin-retailer-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-    min-width: 0;
-  }
-  .admin-retailer-info-name {
-    font-weight: 600;
-    color: var(--stone-900);
-    text-decoration: none;
-    transition: color var(--transition-fast);
-  }
-  .admin-retailer-info-name:hover {
-    color: var(--amber-600);
-  }
-  .admin-retailer-info-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    flex-wrap: wrap;
-  }
-  .admin-retailer-info-meta span {
-    font-size: 0.75rem;
-    color: var(--stone-500);
-  }
-  .admin-retailer-meta-pill {
-    background: var(--stone-100);
-    padding: 0.125rem 0.5rem;
-    border-radius: var(--radius-full);
-    font-size: 0.7rem;
-    color: var(--stone-500);
-  }
-  .admin-retailer-rating {
-    font-size: 0.75rem;
-    color: var(--amber-700);
-    font-weight: 600;
-  }
-
-  .admin-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 2px 8px;
-    border-radius: var(--radius-full);
-    font-size: 0.625rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    line-height: 1.4;
-    border: 1px solid;
-  }
-  .admin-badge--active {
-    background: var(--emerald-50);
-    color: var(--emerald-600);
-    border-color: var(--emerald-200);
-  }
-  .admin-badge--inactive {
-    background: var(--red-50);
-    color: var(--red-700);
-    border-color: var(--red-200);
-  }
-  .admin-badge--pending {
-    background: var(--amber-50);
-    color: var(--amber-700);
-    border-color: var(--amber-200);
-  }
-
-  .admin-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.125rem;
-    min-height: 44px;
-    background: var(--amber-500);
-    color: #fff;
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    border: none;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    text-decoration: none;
-    white-space: nowrap;
-  }
-  .admin-btn:hover {
-    background: var(--amber-600);
-    box-shadow: var(--shadow-sm);
-    transform: translateY(-1px);
-  }
-  .admin-btn:active {
-    transform: translateY(0);
-  }
-  .admin-btn svg {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-  }
-  .admin-btn--outline {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.125rem;
-    min-height: 44px;
-    background: #fff;
-    color: var(--stone-600);
-    font-size: 0.8rem;
-    font-weight: 600;
-    border: 1px solid var(--stone-200);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    text-decoration: none;
-    white-space: nowrap;
-  }
-  .admin-btn--outline:hover {
-    background: var(--stone-50);
-    border-color: var(--stone-300);
-  }
-  .admin-btn--outline svg {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-  }
-
-  .admin-action-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.375rem 0.75rem;
-    min-height: 36px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--stone-500);
-    text-decoration: none;
-    border-radius: var(--radius-sm);
-    transition: all var(--transition-fast);
-  }
-  .admin-action-link:hover {
-    color: var(--amber-700);
-    background: var(--amber-50);
-  }
-  .admin-action-danger {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.375rem 0.75rem;
-    min-height: 36px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--red-700);
-    background: none;
-    border: none;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-  }
-  .admin-action-danger:hover {
-    background: var(--red-50);
-  }
-
-  .admin-search-wrap {
-    position: relative;
-    max-width: 320px;
-  }
-  .admin-search-wrap svg {
-    position: absolute;
-    left: 0.875rem;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 16px;
-    height: 16px;
-    color: var(--stone-500);
-    pointer-events: none;
-  }
-  .admin-search-input {
-    width: 100%;
-    padding: 0.625rem 0.875rem 0.625rem 2.5rem;
-    min-height: 44px;
-    background: #fff;
-    border: 1px solid var(--stone-200);
-    border-radius: var(--radius-md);
-    font-size: 0.875rem;
-    color: var(--stone-900);
-    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-    box-sizing: border-box;
-  }
-  .admin-search-input:focus {
-    outline: none;
-    border-color: var(--amber-500);
-    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
-  }
-  .admin-search-input::placeholder {
-    color: var(--stone-400);
-  }
-
-  .admin-empty {
-    background: #fff;
-    border: 1px solid var(--stone-200);
-    border-radius: var(--radius-lg);
-    padding: 4rem 2rem;
-    text-align: center;
-    box-shadow: var(--shadow-sm);
-  }
-  .admin-empty-icon {
-    width: 4.5rem;
-    height: 4.5rem;
-    background: linear-gradient(135deg, var(--amber-100), var(--stone-200));
-    border-radius: var(--radius-lg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.25rem;
-    box-shadow: inset 0 0 0 1px var(--stone-200);
-  }
-  .admin-empty-icon svg {
-    width: 32px;
-    height: 32px;
-    color: var(--stone-500);
-  }
-  .admin-empty h3 {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: var(--stone-900);
-    margin: 0 0 0.375rem;
-  }
-  .admin-empty p {
-    font-size: 0.875rem;
-    color: var(--stone-500);
-    margin: 0 0 1.5rem;
-  }
-
-  .admin-modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(4px);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-  }
-  .admin-modal-overlay.open {
-    display: flex;
-  }
-  .admin-modal {
-    background: #fff;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-    width: 100%;
-    max-width: 32rem;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-  .admin-modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--stone-100);
-  }
-  .admin-modal-header h3 {
-    font-size: 1rem;
-    font-weight: 700;
-    margin: 0;
-    color: var(--stone-900);
-  }
-  .admin-modal-close {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border: none;
-    background: none;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    color: var(--stone-500);
-    transition: all var(--transition-fast);
-  }
-  .admin-modal-close:hover {
-    background: var(--stone-100);
-    color: var(--stone-900);
-  }
-  .admin-modal-body {
-    padding: 1.5rem;
-  }
-  .admin-modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
-    padding: 1rem 1.5rem;
-    border-top: 1px solid var(--stone-100);
-  }
-
-  .hide-mobile {
-    display: table-cell;
-  }
-
-  @media (max-width: 768px) {
-    .admin-page { padding: 1.5rem 0.75rem; }
-    .admin-page-header { margin-bottom: 1.5rem; }
-    .admin-stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .admin-stat-card-value { font-size: 1.25rem; }
-    .hide-mobile { display: none !important; }
-  }
-  @media (max-width: 480px) {
-    .admin-stats-grid { grid-template-columns: 1fr; }
-    .admin-page-header { flex-direction: column; align-items: flex-start; }
-    .admin-page-header-actions { width: 100%; }
-    .admin-search-wrap { max-width: 100%; }
-  }
+.ap-retailer-row-name {
+  display: flex; align-items: center; gap: 0.875rem;
+}
+.ap-retailer-avatar {
+  width: 2.75rem; height: 2.75rem;
+  background: var(--ap-amber-soft);
+  border-radius: var(--ap-radius-md);
+  overflow: hidden; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid var(--ap-border);
+  transition: transform var(--ap-transition-bounce);
+}
+.ap-retailer-avatar:hover { transform: scale(1.08); }
+.ap-retailer-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.ap-retailer-avatar-fallback { font-size: 1rem; font-weight: 700; color: var(--ap-text-muted); }
+.ap-retailer-info { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.ap-retailer-info-name {
+  font-weight: 600; color: var(--ap-text); text-decoration: none;
+  transition: color var(--ap-transition); font-size: 0.9375rem;
+}
+.ap-retailer-info-name:hover { color: var(--ap-primary); }
+.ap-retailer-info-meta { display: flex; align-items: center; gap: 0.625rem; flex-wrap: wrap; }
+.ap-retailer-info-meta span { font-size: 0.75rem; color: var(--ap-text-muted); }
+.ap-retailer-rating { font-size: 0.8125rem; color: var(--ap-amber); font-weight: 600; }
+.ap-retailer-pill {
+  background: var(--ap-bg); padding: 0.125rem 0.5rem;
+  border-radius: var(--ap-radius-pill); font-size: 0.6875rem;
+  color: var(--ap-text-muted); font-weight: 500;
+  border: 1px solid var(--ap-border-light);
+}
+.ap-action-group { display: flex; align-items: center; gap: 0.25rem; }
+.ap-action-link {
+  display: inline-flex; align-items: center; gap: 0.25rem;
+  padding: 0.375rem 0.75rem; min-height: 44px;
+  font-size: 0.8125rem; font-weight: 500;
+  color: var(--ap-text-secondary); text-decoration: none;
+  border-radius: var(--ap-radius-sm); transition: all var(--ap-transition);
+}
+.ap-action-link:hover { color: var(--ap-primary); background: var(--ap-amber-soft); }
+.ap-action-danger {
+  display: inline-flex; align-items: center; gap: 0.25rem;
+  padding: 0.375rem 0.75rem; min-height: 44px;
+  font-size: 0.8125rem; font-weight: 500;
+  color: var(--ap-red); background: none; border: none;
+  border-radius: var(--ap-radius-sm); cursor: pointer;
+  transition: all var(--ap-transition);
+}
+.ap-action-danger:hover { background: var(--ap-red-soft); }
+.ap-modal-close {
+  display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border: none; background: none;
+  border-radius: var(--ap-radius-md); cursor: pointer;
+  color: var(--ap-text-muted); transition: all var(--ap-transition);
+}
+.ap-modal-close:hover { background: var(--ap-bg); color: var(--ap-text); }
+.ap-modal-backdrop { display: none; }
+.ap-modal-backdrop.open { display: flex; }
+.hide-mobile { display: table-cell; }
+@media (max-width: 768px) { .hide-mobile { display: none !important; } }
 </style>
 
-<div class="admin-page">
-  <div class="admin-page-header">
-    <div>
+<div class="ap-page">
+  <div class="ap-header">
+    <div class="ap-header-left">
+      <span class="ap-overline">Marketplace</span>
       <h1>Retailers</h1>
-      <p>{{ retailers|length }} artisan shop(s)</p>
+      <p class="ap-subtitle">{{ retailers|length }} artisan shop(s)</p>
     </div>
-    <div class="admin-page-header-actions">
-      <div class="admin-search-wrap">
+    <div class="ap-header-actions">
+      <div class="ap-search">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        <input type="text" class="admin-search-input" placeholder="Search retailers..." id="retailer-search">
+        <input type="text" class="ap-input" placeholder="Search retailers..." id="retailer-search">
       </div>
-      <a href="/admin/retailers/new" class="admin-btn">
+      <a href="/admin/retailers/new" class="ap-btn ap-btn-primary">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         <span class="hide-mobile">Add Retailer</span>
       </a>
@@ -518,28 +87,40 @@
   </div>
 
   {% if retailers %}
-  <div class="admin-stats-grid">
-    <div class="admin-stat-card">
-      <p class="admin-stat-card-label">Total Retailers</p>
-      <p class="admin-stat-card-value">{{ retailers|length }}</p>
+  <div class="ap-stats">
+    <div class="ap-stat ap-stat-amber">
+      <div class="ap-stat-icon amber">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+      </div>
+      <p class="ap-stat-label">Total Retailers</p>
+      <p class="ap-stat-value">{{ retailers|length }}</p>
     </div>
-    <div class="admin-stat-card">
-      <p class="admin-stat-card-label">Active</p>
-      <p class="admin-stat-card-value">{{ retailers|selectattr('is_active')|list|length }}</p>
+    <div class="ap-stat ap-stat-emerald">
+      <div class="ap-stat-icon emerald">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <p class="ap-stat-label">Active</p>
+      <p class="ap-stat-value">{{ retailers|selectattr('is_active')|list|length }}</p>
     </div>
-    <div class="admin-stat-card">
-      <p class="admin-stat-card-label">Total Products</p>
-      <p class="admin-stat-card-value">{{ product_counts.values()|sum }}</p>
+    <div class="ap-stat ap-stat-blue">
+      <div class="ap-stat-icon blue">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+      </div>
+      <p class="ap-stat-label">Total Products</p>
+      <p class="ap-stat-value">{{ product_counts.values()|sum }}</p>
     </div>
-    <div class="admin-stat-card">
-      <p class="admin-stat-card-label">Avg Rating</p>
-      <p class="admin-stat-card-value">{{ "%.1f"|format((retailers|map(attribute='rating')|sum / retailers|length) if retailers else 0) }}</p>
+    <div class="ap-stat ap-stat-rose">
+      <div class="ap-stat-icon purple">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+      </div>
+      <p class="ap-stat-label">Avg Rating</p>
+      <p class="ap-stat-value">{{ "%.1f"|format((retailers|map(attribute='rating')|sum / retailers|length) if retailers else 0) }}</p>
     </div>
   </div>
 
-  <div class="admin-table-container">
-    <div class="admin-table-wrap">
-      <table class="admin-table">
+  <div class="ap-card">
+    <div class="ap-table-wrap">
+      <table class="ap-table">
         <thead>
           <tr>
             <th>Retailer</th>
@@ -553,37 +134,37 @@
           {% for r in retailers %}
           <tr>
             <td>
-              <div class="admin-table td.name-cell">
-                <div class="admin-retailer-avatar">
+              <div class="ap-retailer-row-name">
+                <div class="ap-retailer-avatar">
                   {% if r.logo_url %}
                   <img src="{{ r.logo_url }}" alt="">
                   {% else %}
-                  <span class="admin-retailer-avatar-fallback">{{ r.name[0] }}</span>
+                  <span class="ap-retailer-avatar-fallback">{{ r.name[0] }}</span>
                   {% endif %}
                 </div>
-                <div class="admin-retailer-info">
-                  <a href="/admin/retailers/{{ r.slug }}" class="admin-retailer-info-name">{{ r.name }}</a>
-                  <div class="admin-retailer-info-meta">
+                <div class="ap-retailer-info">
+                  <a href="/admin/retailers/{{ r.slug }}" class="ap-retailer-info-name">{{ r.name }}</a>
+                  <div class="ap-retailer-info-meta">
                     {% if r.location %}<span>{{ r.location }}</span>{% endif %}
-                    <span class="admin-retailer-meta-pill">{{ product_counts.get(r.id, 0) }} products</span>
+                    <span class="ap-retailer-pill">{{ product_counts.get(r.id, 0) }} products</span>
                   </div>
                 </div>
               </div>
             </td>
             <td class="hide-mobile" style="font-weight:600;">{{ product_counts.get(r.id, 0) }}</td>
-            <td class="hide-mobile"><span class="admin-retailer-rating">★ {{ "%.1f"|format(r.rating) }}</span></td>
+            <td class="hide-mobile"><span class="ap-retailer-rating">&#9733; {{ "%.1f"|format(r.rating) }}</span></td>
             <td>
               {% if r.is_active %}
-              <span class="admin-badge admin-badge--active">Active</span>
+              <span class="ap-badge ap-badge-emerald"><span class="ap-badge-dot"></span> Active</span>
               {% else %}
-              <span class="admin-badge admin-badge--inactive">Inactive</span>
+              <span class="ap-badge ap-badge-red"><span class="ap-badge-dot"></span> Inactive</span>
               {% endif %}
             </td>
             <td class="hide-mobile">
-              <div style="display:flex;align-items:center;gap:0.25rem;">
-                <a href="/admin/retailers/{{ r.slug }}" class="admin-action-link">View</a>
-                <a href="/admin/retailers/{{ r.slug }}/edit" class="admin-action-link">Edit</a>
-                <button onclick="confirmAction('Delete this retailer?').then(ok=>{if(ok)deleteRetailer('{{ r.id }}')})" class="admin-action-danger">Delete</button>
+              <div class="ap-action-group">
+                <a href="/admin/retailers/{{ r.slug }}" class="ap-action-link">View</a>
+                <a href="/admin/retailers/{{ r.slug }}/edit" class="ap-action-link">Edit</a>
+                <button onclick="confirmAction('Delete this retailer?').then(ok=>{if(ok)deleteRetailer('{{ r.id }}')})" class="ap-action-danger">Delete</button>
               </div>
             </td>
           </tr>
@@ -593,34 +174,36 @@
     </div>
   </div>
   {% else %}
-  <div class="admin-empty">
-    <div class="admin-empty-icon">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+  <div class="ap-card">
+    <div class="ap-empty">
+      <div class="ap-empty-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:2rem;height:2rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+      </div>
+      <h3>No retailers yet</h3>
+      <p>Start by adding an artisan shop to your marketplace</p>
+      <a href="/admin/retailers/new" class="ap-btn ap-btn-primary">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Add Retailer
+      </a>
     </div>
-    <h3>No retailers yet</h3>
-    <p>Start by adding an artisan shop to your marketplace</p>
-    <a href="/admin/retailers/new" class="admin-btn">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-      Add Retailer
-    </a>
   </div>
   {% endif %}
 </div>
 
-<div class="admin-modal-overlay" id="delete-modal">
-  <div class="admin-modal">
-    <div class="admin-modal-header">
+<div class="ap-modal-backdrop" id="delete-modal">
+  <div class="ap-modal">
+    <div class="ap-modal-header">
       <h3>Delete Retailer</h3>
-      <button class="admin-modal-close" onclick="closeDeleteModal()">
+      <button class="ap-modal-close" onclick="closeDeleteModal()">
         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
-    <div class="admin-modal-body">
-      <p style="margin:0;color:var(--stone-500);font-size:0.875rem;">This action cannot be undone. All retailer data will be permanently removed.</p>
+    <div class="ap-modal-body">
+      <p style="margin:0;color:var(--ap-text-secondary);font-size:0.9375rem;">This action cannot be undone. All retailer data will be permanently removed.</p>
     </div>
-    <div class="admin-modal-footer">
-      <button class="admin-btn--outline" onclick="closeDeleteModal()">Cancel</button>
-      <button class="admin-btn" id="confirm-delete-btn" style="background:var(--red-700);">Delete</button>
+    <div class="ap-modal-footer">
+      <button class="ap-btn ap-btn-ghost" onclick="closeDeleteModal()">Cancel</button>
+      <button class="ap-btn ap-btn-danger" id="confirm-delete-btn">Delete</button>
     </div>
   </div>
 </div>
@@ -628,7 +211,7 @@
 <script>
 document.getElementById('retailer-search')?.addEventListener('input', function(e) {
   const q = e.target.value.toLowerCase();
-  document.querySelectorAll('.admin-table tbody tr').forEach(row => {
+  document.querySelectorAll('.ap-table tbody tr').forEach(row => {
     const text = row.textContent.toLowerCase();
     row.style.display = text.includes(q) ? '' : 'none';
   });

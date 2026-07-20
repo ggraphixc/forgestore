@@ -2,154 +2,79 @@
 {% block title %}Newsletter Subscribers — {{ settings.site_name|default("ForgeStore") }} Admin{% endblock %}
 {% block content %}
 <style>
-  :root {
-    --admin-amber-50: #fffbeb; --admin-amber-100: #fef3c7; --admin-amber-200: #fde68a;
-    --admin-amber-300: #fcd34d; --admin-amber-400: #fbbf24; --admin-amber-500: #f59e0b;
-    --admin-amber-600: #d97706; --admin-amber-700: #b45309; --admin-amber-800: #92400e;
-    --admin-stone-50: #fafaf9; --admin-stone-100: #f5f5f4; --admin-stone-200: #e7e5e4;
-    --admin-stone-300: #d6d3d1; --admin-stone-400: #a8a29e; --admin-stone-500: #78716c;
-    --admin-stone-600: #57534e; --admin-stone-700: #44403c; --admin-stone-800: #292524;
-    --admin-stone-900: #1c1917; --admin-stone-950: #0c0a09;
-    --admin-emerald-50: #ecfdf5; --admin-emerald-100: #d1fae5; --admin-emerald-500: #10b981;
-    --admin-emerald-600: #059669; --admin-emerald-700: #047857;
-    --admin-red-50: #fef2f2; --admin-red-100: #fee2e2; --admin-red-200: #fecaca;
-    --admin-red-500: #ef4444; --admin-red-600: #dc2626; --admin-red-700: #b91c1c;
-    --admin-radius: 0.75rem; --admin-radius-lg: 1rem;
-    --admin-shadow: 0 1px 2px rgba(0,0,0,0.04); --admin-shadow-lg: 0 25px 50px -12px rgba(0,0,0,0.25);
-    --admin-touch: 44px;
-  }
-  .admin-nl-page { max-width: 80rem; margin: 0 auto; padding: 1.5rem; }
-  .admin-nl-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
-  .admin-nl-header h1 { font-size: 1.5rem; font-weight: 800; color: var(--admin-stone-900); }
-  @media (min-width: 768px) { .admin-nl-header h1 { font-size: 1.875rem; } }
-  .admin-nl-header p { font-size: 0.875rem; color: var(--admin-stone-500); margin-top: 0.25rem; }
-  .admin-nl-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-  .admin-nl-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.625rem 1rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: var(--admin-radius); cursor: pointer; transition: all 0.2s; min-height: var(--admin-touch); text-decoration: none; border: none; }
-  .admin-nl-btn-primary { background: linear-gradient(135deg, var(--admin-stone-800), var(--admin-stone-900)); color: #fff; }
-  .admin-nl-btn-primary:hover { background: linear-gradient(135deg, var(--admin-stone-900), var(--admin-stone-950)); }
-  .admin-nl-btn-secondary { background: #fff; color: var(--admin-stone-700); border: 1px solid var(--admin-stone-300); }
-  .admin-nl-btn-secondary:hover { background: var(--admin-amber-50); color: var(--admin-amber-700); border-color: var(--admin-amber-300); }
-  .admin-nl-btn-ghost { background: transparent; color: var(--admin-stone-700); border: 1px solid var(--admin-stone-300); }
-  .admin-nl-btn-ghost:hover { background: var(--admin-stone-50); }
-  .admin-nl-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 2rem; }
-  @media (min-width: 768px) { .admin-nl-stats { grid-template-columns: repeat(4, 1fr); } }
-  .admin-nl-stat-card { background: #fff; border-radius: var(--admin-radius); border: 1px solid var(--admin-stone-200); padding: 1.25rem; box-shadow: var(--admin-shadow); }
-  .admin-nl-stat-card .num { font-size: 1.5rem; font-weight: 700; color: var(--admin-stone-900); }
-  .admin-nl-stat-card .lbl { font-size: 0.75rem; color: var(--admin-stone-400); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.25rem; }
-  .admin-nl-tabs { display: flex; align-items: center; gap: 0.25rem; margin-bottom: 1rem; background: var(--admin-stone-100); border-radius: var(--admin-radius); padding: 0.25rem; width: fit-content; }
-  .admin-nl-tab { padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 0.5rem; border: none; background: transparent; color: var(--admin-stone-500); cursor: pointer; transition: all 0.2s; min-height: var(--admin-touch); }
-  .admin-nl-tab.active { background: #fff; color: var(--admin-stone-900); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-  .admin-nl-tab:hover { color: var(--admin-stone-900); }
-  .admin-nl-table-card { background: #fff; border-radius: var(--admin-radius-lg); border: 1px solid var(--admin-stone-200); overflow: hidden; box-shadow: var(--admin-shadow); }
-  .admin-nl-table-wrap { overflow-x: auto; }
-  .admin-nl-table { width: 100%; }
-  .admin-nl-table th { text-align: left; padding: 1rem 1.5rem; font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: var(--admin-stone-400); border-bottom: 1px solid var(--admin-stone-100); background: rgba(250,250,249,0.5); }
-  .admin-nl-table td { padding: 1rem 1.5rem; border-bottom: 1px solid var(--admin-stone-50); }
-  .admin-nl-table tr:hover { background: rgba(255,251,235,0.2); }
-  .admin-nl-badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.625rem; font-weight: 600; }
-  .admin-nl-badge-emerald { background: var(--admin-emerald-50); color: var(--admin-emerald-700); border: 1px solid var(--admin-emerald-100); }
-  .admin-nl-badge-amber { background: var(--admin-amber-50); color: var(--admin-amber-700); border: 1px solid var(--admin-amber-100); }
-  .admin-nl-badge-red { background: var(--admin-red-50); color: var(--admin-red-700); border: 1px solid var(--admin-red-100); }
-  .admin-nl-badge-dot { width: 6px; height: 6px; border-radius: 50%; }
-  .admin-nl-tag { display: inline-flex; align-items: center; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.5625rem; font-weight: 600; background: var(--admin-stone-100); color: var(--admin-stone-600); border: 1px solid var(--admin-stone-200); }
-  .admin-nl-avatar { width: 2.25rem; height: 2.25rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 700; flex-shrink: 0; }
-  .admin-nl-empty { text-align: center; padding: 4rem 1.5rem; }
-  .admin-nl-empty-icon { width: 3rem; height: 3rem; background: linear-gradient(135deg, var(--admin-stone-100), var(--admin-stone-200)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; }
-  .admin-nl-empty p { font-size: 0.875rem; color: var(--admin-stone-400); }
-  .admin-nl-modal-overlay { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.25); display: none; align-items: center; justify-content: center; padding: 1rem; }
-  .admin-nl-modal-overlay.show { display: flex; }
-  .admin-nl-modal { background: #fff; border-radius: var(--admin-radius-lg); box-shadow: var(--admin-shadow-lg); max-width: 32rem; width: 100%; padding: 1.5rem; }
-  .admin-nl-modal-lg { max-width: 36rem; }
-  .admin-nl-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-  .admin-nl-modal-head h3 { font-size: 0.875rem; font-weight: 700; color: var(--admin-stone-900); }
-  .admin-nl-modal-close { padding: 0.25rem; color: var(--admin-stone-400); border: none; background: transparent; cursor: pointer; border-radius: 0.5rem; transition: color 0.15s; min-height: var(--admin-touch); min-width: var(--admin-touch); display: flex; align-items: center; justify-content: center; }
-  .admin-nl-modal-close:hover { color: var(--admin-stone-600); }
-  .admin-nl-input { width: 100%; padding: 0.625rem 1rem; background: #fff; border: 1px solid var(--admin-stone-300); border-radius: var(--admin-radius); font-size: 0.875rem; transition: all 0.2s; min-height: var(--admin-touch); }
-  .admin-nl-input:focus { outline: none; box-shadow: 0 0 0 3px rgba(245,158,11,0.1); border-color: var(--admin-amber-500); }
-  .admin-nl-textarea { width: 100%; padding: 0.75rem 1rem; background: #fff; border: 1px solid var(--admin-stone-300); border-radius: var(--admin-radius); font-size: 0.875rem; font-family: monospace; resize: vertical; transition: all 0.2s; }
-  .admin-nl-textarea:focus { outline: none; box-shadow: 0 0 0 3px rgba(245,158,11,0.1); border-color: var(--admin-amber-500); }
-  .admin-nl-dropzone { border: 2px dashed var(--admin-stone-300); border-radius: var(--admin-radius); padding: 2rem; text-align: center; cursor: pointer; transition: all 0.2s; }
-  .admin-nl-dropzone:hover, .admin-nl-dropzone.active { border-color: var(--admin-amber-400); background: rgba(255,251,235,0.3); }
-  .admin-nl-dropzone p { font-size: 0.875rem; color: var(--admin-stone-500); }
-  .admin-nl-form-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
-  .admin-nl-form-label { display: block; font-size: 0.875rem; font-weight: 600; color: var(--admin-stone-800); margin-bottom: 0.375rem; }
-  .admin-nl-form-help { font-size: 0.75rem; color: var(--admin-stone-400); margin-top: 0.25rem; }
-  .admin-nl-code { font-family: monospace; color: var(--admin-amber-700); background: var(--admin-amber-50); padding: 0.125rem 0.25rem; border-radius: 0.25rem; font-size: 0.75rem; }
-  .admin-nl-modal-footer { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; }
-  .admin-nl-pending-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--admin-stone-100); background: rgba(255,251,235,0.3); }
-  .admin-nl-pending-row { display: flex; align-items: center; justify-content: space-between; }
-  .admin-nl-tag-edit { padding: 0.125rem; color: var(--admin-stone-300); transition: color 0.15s; cursor: pointer; background: none; border: none; }
-  .admin-nl-tag-edit:hover { color: var(--admin-amber-600); }
-  .admin-nl-action-btn { padding: 0.5rem; color: var(--admin-stone-400); border-radius: 0.5rem; transition: all 0.15s; cursor: pointer; background: none; border: none; min-height: var(--admin-touch); min-width: var(--admin-touch); display: flex; align-items: center; justify-content: center; }
-  .admin-nl-action-btn:hover { color: var(--admin-red-600); background: var(--admin-red-50); }
-  .admin-nl-resend-btn { padding: 0.375rem 0.625rem; font-size: 0.625rem; font-weight: 600; color: var(--admin-amber-700); background: var(--admin-amber-50); border: 1px solid var(--admin-amber-200); border-radius: 0.5rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; min-height: var(--admin-touch); transition: all 0.2s; }
-  .admin-nl-resend-btn:hover { background: var(--admin-amber-100); }
-  .admin-nl-cleanup-btn { padding: 0.375rem 0.75rem; font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--admin-red-600); background: var(--admin-red-50); border: 1px solid var(--admin-red-200); border-radius: 0.5rem; cursor: pointer; min-height: var(--admin-touch); transition: all 0.2s; }
-  .admin-nl-cleanup-btn:hover { background: var(--admin-red-100); }
-  @media (max-width: 640px) {
-    .admin-nl-header { flex-direction: column; align-items: flex-start; }
-    .admin-nl-actions { width: 100%; }
-    .admin-nl-actions .admin-nl-btn { flex: 1; }
-  }
+  @import url('/static/css/admin_portal.css');
 </style>
 
-<div class="admin-nl-page">
-    <div class="admin-nl-header">
-        <div>
-            <h1>Newsletter Subscribers</h1>
-            <p>{{ subscribers|length }} subscriber(s)</p>
+<div class="ap-page">
+    <div class="ap-header">
+        <div class="ap-header-left">
+            <span class="ap-overline">Newsletter</span>
+            <h1>Subscribers</h1>
+            <p class="ap-subtitle">{{ subscribers|length }} subscriber(s)</p>
         </div>
-        <div class="admin-nl-actions">
-            <a href="/admin/newsletter/broadcast" class="admin-nl-btn admin-nl-btn-primary">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+        <div class="ap-header-actions">
+            <a href="/admin/newsletter/broadcast" class="ap-btn ap-btn-primary">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                 Send Newsletter
             </a>
-            <button onclick="openImportModal()" class="admin-nl-btn admin-nl-btn-secondary">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+            <button onclick="openImportModal()" class="ap-btn ap-btn-outline">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
                 Import CSV
             </button>
-            <button onclick="exportCSV()" class="admin-nl-btn admin-nl-btn-ghost">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <button onclick="exportCSV()" class="ap-btn ap-btn-ghost">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 Export CSV
             </button>
         </div>
     </div>
 
-    <div class="admin-nl-stats">
-        <div class="admin-nl-stat-card">
-            <div class="num">{{ subscribers|length }}</div>
-            <div class="lbl">Total</div>
+    <div class="ap-stats">
+        <div class="ap-stat ap-stat-amber">
+            <div class="ap-stat-icon amber">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            </div>
+            <div class="ap-stat-label">Total</div>
+            <div class="ap-stat-value">{{ subscribers|length }}</div>
         </div>
-        <div class="admin-nl-stat-card">
-            <div class="num" style="color:var(--admin-emerald-600)">{{ confirmed_count }}</div>
-            <div class="lbl">Confirmed</div>
+        <div class="ap-stat ap-stat-emerald">
+            <div class="ap-stat-icon emerald">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div class="ap-stat-label">Confirmed</div>
+            <div class="ap-stat-value">{{ confirmed_count }}</div>
         </div>
-        <div class="admin-nl-stat-card">
-            <div class="num" style="color:var(--admin-amber-500)">{{ pending_count }}</div>
-            <div class="lbl">Pending</div>
+        <div class="ap-stat ap-stat-blue">
+            <div class="ap-stat-icon amber">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div class="ap-stat-label">Pending</div>
+            <div class="ap-stat-value">{{ pending_count }}</div>
         </div>
-        <div class="admin-nl-stat-card">
-            <div class="num" style="color:{% if expired_count > 0 %}var(--admin-red-500){% else %}var(--admin-stone-400){% endif %}">{{ expired_count }}</div>
-            <div class="lbl">Expired</div>
+        <div class="ap-stat ap-stat-rose">
+            <div class="ap-stat-icon rose">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+            </div>
+            <div class="ap-stat-label">Expired</div>
+            <div class="ap-stat-value" style="color:{% if expired_count > 0 %}var(--ap-red){% else %}var(--ap-text-muted){% endif %}">{{ expired_count }}</div>
         </div>
     </div>
 
-    <div class="admin-nl-tabs">
-        <button onclick="switchTab('all')" id="tab-all" class="admin-nl-tab active">All Subscribers</button>
-        <button onclick="switchTab('pending')" id="tab-pending" class="admin-nl-tab">
+    <div class="ap-tabs">
+        <button onclick="switchTab('all')" id="tab-all" class="ap-tab active">All Subscribers</button>
+        <button onclick="switchTab('pending')" id="tab-pending" class="ap-tab">
             Pending Confirmations
-            {% if pending_count > 0 %}<span style="margin-left:0.375rem;display:inline-flex;align-items:center;justify-content:center;width:1rem;height:1rem;border-radius:50%;background:var(--admin-amber-400);color:#fff;font-size:8px;font-weight:700">{{ pending_count }}</span>{% endif %}
+            {% if pending_count > 0 %}<span style="margin-left:0.375rem;display:inline-flex;align-items:center;justify-content:center;width:1.25rem;height:1.25rem;border-radius:50%;background:var(--ap-amber);color:#fff;font-size:10px;font-weight:700">{{ pending_count }}</span>{% endif %}
         </button>
         {% if expired_count > 0 %}
-        <button onclick="cleanupExpired()" class="admin-nl-tab" style="color:var(--admin-red-500);margin-left:0.5rem" title="Remove {{ expired_count }} expired unconfirmed subscribers">
+        <button onclick="cleanupExpired()" class="ap-tab" style="color:var(--ap-red)" title="Remove {{ expired_count }} expired unconfirmed subscribers">
             Cleanup Expired ({{ expired_count }})
         </button>
         {% endif %}
     </div>
 
-    <div id="view-all" class="admin-nl-table-card">
-        <div class="admin-nl-table-wrap">
-            <table class="admin-nl-table">
+    <div id="view-all" class="ap-card">
+        <div class="ap-table-wrap">
+            <table class="ap-table">
                 <thead>
                     <tr>
                         <th>Email</th>
@@ -164,21 +89,21 @@
                     <tr id="sub-row-{{ sub.id }}">
                         <td>
                             <div style="display:flex;align-items:center;gap:0.75rem">
-                                <div class="admin-nl-avatar" style="{% if sub.confirmed %}background:var(--admin-emerald-100);color:var(--admin-emerald-700){% else %}background:var(--admin-stone-100);color:var(--admin-stone-400){% endif %}">
+                                <div style="width:2.25rem;height:2.25rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.875rem;font-weight:700;flex-shrink:0;{% if sub.confirmed %}background:var(--ap-emerald-soft);color:var(--ap-emerald){% else %}background:var(--ap-border-light);color:var(--ap-text-muted){% endif %}">
                                     {{ sub.email[0]|upper }}
                                 </div>
-                                <span style="font-size:0.875rem;font-weight:500;color:var(--admin-stone-900)">{{ sub.email }}</span>
+                                <span style="font-size:0.9375rem;font-weight:500;color:var(--ap-text)">{{ sub.email }}</span>
                             </div>
                         </td>
                         <td>
                             {% if sub.confirmed %}
-                            <span class="admin-nl-badge admin-nl-badge-emerald">
-                                <span class="admin-nl-badge-dot" style="background:var(--admin-emerald-500)"></span>
+                            <span class="ap-badge ap-badge-emerald">
+                                <span class="ap-badge-dot"></span>
                                 Confirmed
                             </span>
                             {% else %}
-                            <span class="admin-nl-badge admin-nl-badge-amber">
-                                <span class="admin-nl-badge-dot" style="background:var(--admin-amber-400)"></span>
+                            <span class="ap-badge ap-badge-amber">
+                                <span class="ap-badge-dot"></span>
                                 Pending
                             </span>
                             {% endif %}
@@ -187,20 +112,20 @@
                             <div style="display:flex;flex-wrap:wrap;gap:0.25rem">
                                 {% if sub.tags and sub.tags|length > 0 %}
                                     {% for tag in sub.tags %}
-                                    <span class="admin-nl-tag">{{ tag }}</span>
+                                    <span class="ap-badge ap-badge-purple" style="padding:0.125rem 0.375rem;font-size:0.625rem">{{ tag }}</span>
                                     {% endfor %}
                                 {% else %}
-                                    <span style="font-size:0.625rem;color:var(--admin-stone-300);font-style:italic">—</span>
+                                    <span style="font-size:0.625rem;color:var(--ap-text-muted);font-style:italic">—</span>
                                 {% endif %}
-                                <button onclick="editTags('{{ sub.id }}', '{{ sub.email }}')" class="admin-nl-tag-edit" title="Edit tags">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                <button onclick="editTags('{{ sub.id }}', '{{ sub.email }}')" style="padding:0.25rem;color:var(--ap-text-muted);transition:color 0.15s;cursor:pointer;background:none;border:none;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center" title="Edit tags">
+                                    <svg style="width:0.75rem;height:0.75rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                 </button>
                             </div>
                         </td>
-                        <td class="sm-cell" style="display:none;font-size:0.875rem;color:var(--admin-stone-400)">{{ sub.created_at.strftime('%b %d, %Y') if sub.created_at else '—' }}</td>
+                        <td class="sm-cell" style="display:none;font-size:0.875rem;color:var(--ap-text-secondary)">{{ sub.created_at.strftime('%b %d, %Y') if sub.created_at else '—' }}</td>
                         <td style="text-align:right">
-                            <button onclick="deleteSubscriber('{{ sub.id }}')" class="admin-nl-action-btn" title="Unsubscribe">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button onclick="deleteSubscriber('{{ sub.id }}')" style="padding:0.5rem;color:var(--ap-text-muted);border-radius:var(--ap-radius-md);transition:all 0.15s;cursor:pointer;background:none;border:none;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center" title="Unsubscribe">
+                                <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                 </svg>
                             </button>
@@ -209,13 +134,14 @@
                     {% else %}
                     <tr>
                         <td colspan="5">
-                            <div class="admin-nl-empty">
-                                <div class="admin-nl-empty-icon">
-                                    <svg class="w-6 h-6" style="color:var(--admin-stone-400)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="ap-empty">
+                                <div class="ap-empty-icon">
+                                    <svg style="width:1.5rem;height:1.5rem" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                     </svg>
                                 </div>
-                                <p>No subscribers yet</p>
+                                <h3>No subscribers yet</h3>
+                                <p>Import a CSV or wait for signups to appear here.</p>
                             </div>
                         </td>
                     </tr>
@@ -225,22 +151,20 @@
         </div>
     </div>
 
-    <div id="view-pending" class="admin-nl-table-card" style="display:none">
-        <div class="admin-nl-pending-header">
-            <div class="admin-nl-pending-row">
-                <div>
-                    <h2 style="font-size:0.875rem;font-weight:700;color:var(--admin-stone-900)">Pending Confirmations</h2>
-                    <p style="font-size:0.75rem;color:var(--admin-stone-400);margin-top:0.125rem">These subscribers haven't confirmed their email yet</p>
-                </div>
-                <div style="display:flex;align-items:center;gap:0.5rem">
-                    {% if expired_count > 0 %}
-                    <button onclick="cleanupExpired()" class="admin-nl-cleanup-btn">Cleanup Expired</button>
-                    {% endif %}
-                </div>
+    <div id="view-pending" class="ap-card" style="display:none">
+        <div class="ap-card-header">
+            <div>
+                <h2 style="font-size:0.9375rem;font-weight:700;color:var(--ap-text);margin:0">Pending Confirmations</h2>
+                <p style="font-size:0.8125rem;color:var(--ap-text-secondary);margin-top:0.125rem">These subscribers haven't confirmed their email yet</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.5rem">
+                {% if expired_count > 0 %}
+                <button onclick="cleanupExpired()" class="ap-btn ap-btn-danger ap-btn-sm">Cleanup Expired</button>
+                {% endif %}
             </div>
         </div>
-        <div class="admin-nl-table-wrap">
-            <table class="admin-nl-table">
+        <div class="ap-table-wrap">
+            <table class="ap-table">
                 <thead>
                     <tr>
                         <th>Email</th>
@@ -255,35 +179,35 @@
                     <tr id="pending-row-{{ sub.id }}">
                         <td>
                             <div style="display:flex;align-items:center;gap:0.75rem">
-                                <div class="admin-nl-avatar" style="background:var(--admin-stone-100);color:var(--admin-stone-400)">
+                                <div style="width:2.25rem;height:2.25rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.875rem;font-weight:700;flex-shrink:0;background:var(--ap-border-light);color:var(--ap-text-muted)">
                                     {{ sub.email[0]|upper }}
                                 </div>
-                                <span style="font-size:0.875rem;font-weight:500;color:var(--admin-stone-900)">{{ sub.email }}</span>
+                                <span style="font-size:0.9375rem;font-weight:500;color:var(--ap-text)">{{ sub.email }}</span>
                             </div>
                         </td>
                         <td>
                             {% if sub.confirm_expires_at and sub.confirm_expires_at < now() %}
-                            <span class="admin-nl-badge admin-nl-badge-red">
-                                <span class="admin-nl-badge-dot" style="background:var(--admin-red-500)"></span>
+                            <span class="ap-badge ap-badge-red">
+                                <span class="ap-badge-dot"></span>
                                 Expired
                             </span>
                             {% else %}
-                            <span class="admin-nl-badge admin-nl-badge-amber">
-                                <span class="admin-nl-badge-dot" style="background:var(--admin-amber-400)"></span>
+                            <span class="ap-badge ap-badge-amber">
+                                <span class="ap-badge-dot"></span>
                                 Waiting
                             </span>
                             {% endif %}
                         </td>
-                        <td class="sm-cell" style="display:none;font-size:0.875rem;color:var(--admin-stone-400)">{{ sub.created_at.strftime('%b %d, %Y') if sub.created_at else '—' }}</td>
-                        <td class="md-cell" style="display:none;font-size:0.875rem;color:var(--admin-stone-400)">{{ sub.confirm_expires_at.strftime('%b %d, %Y %H:%M') if sub.confirm_expires_at else '—' }}</td>
+                        <td class="sm-cell" style="display:none;font-size:0.875rem;color:var(--ap-text-secondary)">{{ sub.created_at.strftime('%b %d, %Y') if sub.created_at else '—' }}</td>
+                        <td class="md-cell" style="display:none;font-size:0.875rem;color:var(--ap-text-secondary)">{{ sub.confirm_expires_at.strftime('%b %d, %Y %H:%M') if sub.confirm_expires_at else '—' }}</td>
                         <td style="text-align:right">
                             <div style="display:flex;align-items:center;justify-content:flex-end;gap:0.25rem">
-                                <button onclick="resendConfirmation('{{ sub.id }}')" class="admin-nl-resend-btn" title="Re-send confirmation email">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                <button onclick="resendConfirmation('{{ sub.id }}')" style="padding:0.375rem 0.625rem;font-size:0.75rem;font-weight:600;color:var(--ap-amber);background:var(--ap-amber-soft);border:1px solid rgba(245,158,11,0.2);border-radius:var(--ap-radius-sm);cursor:pointer;display:inline-flex;align-items:center;gap:0.25rem;min-height:44px;transition:all 0.2s" title="Re-send confirmation email">
+                                    <svg style="width:0.75rem;height:0.75rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                                     Re-send
                                 </button>
-                                <button onclick="deleteSubscriber('{{ sub.id }}')" class="admin-nl-action-btn" title="Remove">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                <button onclick="deleteSubscriber('{{ sub.id }}')" style="padding:0.5rem;color:var(--ap-text-muted);border-radius:var(--ap-radius-md);transition:all 0.15s;cursor:pointer;background:none;border:none;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center" title="Remove">
+                                    <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 </button>
                             </div>
                         </td>
@@ -291,13 +215,13 @@
                     {% else %}
                     <tr>
                         <td colspan="5">
-                            <div class="admin-nl-empty">
-                                <div class="admin-nl-empty-icon" style="background:linear-gradient(135deg,var(--admin-amber-50),var(--admin-amber-100))">
-                                    <svg class="w-6 h-6" style="color:var(--admin-amber-400)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="ap-empty">
+                                <div class="ap-empty-icon" style="background:var(--ap-amber-soft)">
+                                    <svg style="width:1.5rem;height:1.5rem;color:var(--ap-amber)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
                                 </div>
-                                <p style="font-weight:500;color:var(--admin-stone-700)">All caught up!</p>
+                                <h3>All caught up!</h3>
                                 <p>No pending confirmations.</p>
                             </div>
                         </td>
@@ -317,15 +241,15 @@ function switchTab(tab) {
     currentTab = tab;
     document.getElementById('view-all').style.display = tab === 'all' ? '' : 'none';
     document.getElementById('view-pending').style.display = tab === 'pending' ? '' : 'none';
-    document.getElementById('tab-all').className = tab === 'all' ? 'admin-nl-tab active' : 'admin-nl-tab';
-    document.getElementById('tab-pending').className = tab === 'pending' ? 'admin-nl-tab active' : 'admin-nl-tab';
+    document.getElementById('tab-all').className = tab === 'all' ? 'ap-tab active' : 'ap-tab';
+    document.getElementById('tab-pending').className = tab === 'pending' ? 'ap-tab active' : 'ap-tab';
 }
 
 async function resendConfirmation(id) {
     const btn = event.currentTarget;
     btn.disabled = true;
     const originalText = btn.innerHTML;
-    btn.innerHTML = '<svg class="animate-spin w-3 h-3" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Sending...';
+    btn.innerHTML = '<svg class="animate-spin" style="width:0.75rem;height:0.75rem" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Sending...';
     try {
         const res = await fetch('/api/admin/newsletter/resend-confirmation', {
             method: 'POST',
@@ -351,7 +275,7 @@ async function cleanupExpired() {
     const btn = event.currentTarget;
     btn.disabled = true;
     const original = btn.innerHTML;
-    btn.innerHTML = '<svg class="animate-spin w-3 h-3" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>';
+    btn.innerHTML = '<svg class="animate-spin" style="width:0.75rem;height:0.75rem" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>';
     try {
         const res = await fetch('/api/admin/newsletter/cleanup-expired', { method: 'DELETE' });
         const data = await res.json();
@@ -376,7 +300,7 @@ function editTags(id, email) {
     const title = document.getElementById('tag-modal-title');
     title.textContent = 'Tags for ' + email;
     const row = document.getElementById('sub-row-' + id);
-    const tagSpans = row.querySelectorAll('.admin-nl-tag');
+    const tagSpans = row.querySelectorAll('.ap-badge-purple');
     const tags = Array.from(tagSpans).map(s => s.textContent.trim());
     input.value = tags.join(', ');
     overlay.classList.add('show');
@@ -415,7 +339,7 @@ async function deleteSubscriber(id) {
     if (!await confirmAction('Unsubscribe this email? This action cannot be undone.')) return;
     const btn = event.currentTarget;
     btn.disabled = true;
-    btn.innerHTML = '<svg class="animate-spin w-4 h-4" style="color:var(--admin-stone-400)" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>';
+    btn.innerHTML = '<svg class="animate-spin" style="width:1rem;height:1rem;color:var(--ap-text-muted)" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>';
     try {
         const res = await fetch('/api/admin/newsletter-subscribers/' + id, { method: 'DELETE' });
         const data = await res.json();
@@ -430,7 +354,7 @@ async function deleteSubscriber(id) {
         showToast('Network error', 'error');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>';
+        btn.innerHTML = '<svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>';
     }
 }
 
@@ -528,29 +452,28 @@ async function submitImport() {
         const resultsEl = document.getElementById('import-results');
         resultsEl.classList.remove('hidden');
         if (data.detail) {
-            resultsEl.innerHTML = '<div style="padding:1rem;border-radius:var(--admin-radius);background:var(--admin-red-50);border:1px solid var(--admin-red-200);font-size:0.875rem;color:var(--admin-red-700)"><strong>Error:</strong> ' + data.detail + '</div>';
+            resultsEl.innerHTML = '<div style="padding:1rem;border-radius:var(--ap-radius-md);background:var(--ap-red-soft);border:1px solid rgba(239,68,68,0.2);font-size:0.9375rem;color:#991b1b"><strong>Error:</strong> ' + data.detail + '</div>';
             return;
         }
         const imported = data.imported || 0;
-        let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem">';
-        html += '<div style="padding:0.75rem;border-radius:var(--admin-radius);background:var(--admin-emerald-50);border:1px solid var(--admin-emerald-100);text-align:center"><p style="font-size:1.25rem;font-weight:700;color:var(--admin-emerald-700)">' + (data.imported||0) + '</p><p style="font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--admin-emerald-600)">Imported</p></div>';
-        html += '<div style="padding:0.75rem;border-radius:var(--admin-radius);background:var(--admin-amber-50);border:1px solid var(--admin-amber-100);text-align:center"><p style="font-size:1.25rem;font-weight:700;color:var(--admin-amber-700)">' + (data.duplicates||0) + '</p><p style="font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--admin-amber-600)">Duplicates</p></div>';
-        html += '<div style="padding:0.75rem;border-radius:var(--admin-radius);background:var(--admin-red-50);border:1px solid var(--admin-red-100);text-align:center"><p style="font-size:1.25rem;font-weight:700;color:var(--admin-red-700)">' + (data.errors||0) + '</p><p style="font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--admin-red-600)">Errors</p></div>';
+        let html = '<div class="ap-grid-3" style="gap:0.75rem">';
+        html += '<div style="padding:0.75rem;border-radius:var(--ap-radius-md);background:var(--ap-emerald-soft);border:1px solid rgba(16,185,129,0.2);text-align:center"><p style="font-size:1.25rem;font-weight:700;color:var(--ap-emerald)">' + (data.imported||0) + '</p><p style="font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--ap-emerald)">Imported</p></div>';
+        html += '<div style="padding:0.75rem;border-radius:var(--ap-radius-md);background:var(--ap-amber-soft);border:1px solid rgba(245,158,11,0.2);text-align:center"><p style="font-size:1.25rem;font-weight:700;color:#92400e">' + (data.duplicates||0) + '</p><p style="font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#92400e">Duplicates</p></div>';
+        html += '<div style="padding:0.75rem;border-radius:var(--ap-radius-md);background:var(--ap-red-soft);border:1px solid rgba(239,68,68,0.2);text-align:center"><p style="font-size:1.25rem;font-weight:700;color:#991b1b">' + (data.errors||0) + '</p><p style="font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#991b1b">Errors</p></div>';
         html += '</div>';
-        html += '<p style="font-size:0.75rem;color:var(--admin-stone-500);text-align:center;margin-top:0.75rem">Processed ' + (data.total||0) + ' row(s) total</p>';
+        html += '<p style="font-size:0.8125rem;color:var(--ap-text-secondary);text-align:center;margin-top:0.75rem">Processed ' + (data.total||0) + ' row(s) total</p>';
         if (data.error_details && data.error_details.length > 0) {
-            html += '<div style="margin-top:0.5rem;padding:0.75rem;border-radius:var(--admin-radius);background:var(--admin-red-50);border:1px solid var(--admin-red-200)"><p style="font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--admin-red-600);margin-bottom:0.25rem">Errors</p><ul style="font-size:0.75rem;color:var(--admin-red-700);list-style:disc;padding-left:1.25rem">';
+            html += '<div style="margin-top:0.5rem;padding:0.75rem;border-radius:var(--ap-radius-md);background:var(--ap-red-soft);border:1px solid rgba(239,68,68,0.2)"><p style="font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#991b1b;margin-bottom:0.25rem">Errors</p><ul style="font-size:0.8125rem;color:#991b1b;list-style:disc;padding-left:1.25rem">';
             for (const err of data.error_details.slice(0, 10)) { html += '<li>' + err + '</li>'; }
             html += '</ul></div>';
         }
-        html += '</div>';
         resultsEl.innerHTML = html;
         if (imported > 0) {
             showToast('Imported ' + imported + ' subscriber(s)', 'success');
             setTimeout(() => location.reload(), 2000);
         }
     } catch {
-        document.getElementById('import-results').innerHTML = '<div style="padding:1rem;border-radius:var(--admin-radius);background:var(--admin-red-50);border:1px solid var(--admin-red-200);font-size:0.875rem;color:var(--admin-red-700)"><strong>Network error:</strong> Could not reach the server</div>';
+        document.getElementById('import-results').innerHTML = '<div style="padding:1rem;border-radius:var(--ap-radius-md);background:var(--ap-red-soft);border:1px solid rgba(239,68,68,0.2);font-size:0.9375rem;color:#991b1b"><strong>Network error:</strong> Could not reach the server</div>';
         document.getElementById('import-results').classList.remove('hidden');
     } finally {
         btn.disabled = false;
@@ -559,53 +482,51 @@ async function submitImport() {
 }
 
 function showToast(message, type) {
-    const existing = document.querySelector('.admin-toast');
+    const existing = document.querySelector('.ap-toast');
     if (existing) existing.remove();
     const toast = document.createElement('div');
-    toast.className = 'admin-toast';
-    toast.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:100;padding:0.75rem 1.25rem;border-radius:var(--admin-radius);box-shadow:var(--admin-shadow-lg);font-size:0.875rem;font-weight:500;color:#fff;transition:opacity 0.3s;opacity:0';
-    const colors = { success: 'var(--admin-emerald-600)', error: 'var(--admin-red-600)', warning: 'var(--admin-amber-600)' };
-    toast.style.background = colors[type] || 'var(--admin-stone-700)';
+    toast.className = 'ap-toast ' + type;
     toast.textContent = message;
     document.body.appendChild(toast);
-    requestAnimationFrame(() => toast.style.opacity = '1');
-    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 4000);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 4000);
 }
 </script>
 
-<div id="import-modal-overlay" class="admin-nl-modal-overlay" onclick="if(event.target===this)closeImportModal()">
-    <div class="admin-nl-modal admin-nl-modal-lg" onclick="event.stopPropagation()">
-        <div class="admin-nl-modal-head">
+<div id="import-modal-overlay" class="ap-modal-backdrop" style="display:none" onclick="if(event.target===this)closeImportModal()">
+    <div class="ap-modal" style="max-width:36rem" onclick="event.stopPropagation()">
+        <div class="ap-modal-header">
             <h3>Import Subscribers from CSV</h3>
-            <button onclick="closeImportModal()" class="admin-nl-modal-close">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            <button onclick="closeImportModal()" class="ap-btn ap-btn-ghost ap-btn-icon" style="min-height:36px;min-width:36px;width:36px;height:36px">
+                <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
-        <p style="font-size:0.75rem;color:var(--admin-stone-400);margin-bottom:0.75rem">Upload a CSV file with subscriber emails. Required column: <span class="admin-nl-code">Email</span>. Optional: <span class="admin-nl-code">Tags</span>, <span class="admin-nl-code">Confirmed</span>. Duplicate emails are automatically skipped.</p>
-        <div class="admin-nl-form-row" style="margin-bottom:1rem">
-            <button onclick="downloadSampleCSV()" class="admin-nl-resend-btn">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                Download Sample CSV
-            </button>
-            <span style="font-size:0.625rem;color:var(--admin-stone-400)">Expected format: Email, Tags, Confirmed</span>
+        <div class="ap-modal-body">
+            <p style="font-size:0.8125rem;color:var(--ap-text-secondary);margin-bottom:0.75rem">Upload a CSV file with subscriber emails. Required column: <code style="font-family:var(--ap-font-mono);color:var(--ap-accent);background:var(--ap-purple-soft);padding:0.125rem 0.375rem;border-radius:var(--ap-radius-xs);font-size:0.8125rem">Email</code>. Optional: <code style="font-family:var(--ap-font-mono);color:var(--ap-accent);background:var(--ap-purple-soft);padding:0.125rem 0.375rem;border-radius:var(--ap-radius-xs);font-size:0.8125rem">Tags</code>, <code style="font-family:var(--ap-font-mono);color:var(--ap-accent);background:var(--ap-purple-soft);padding:0.125rem 0.375rem;border-radius:var(--ap-radius-xs);font-size:0.8125rem">Confirmed</code>. Duplicate emails are automatically skipped.</p>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:1rem">
+                <button onclick="downloadSampleCSV()" class="ap-btn ap-btn-outline ap-btn-sm">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Download Sample CSV
+                </button>
+                <span style="font-size:0.75rem;color:var(--ap-text-muted)">Expected: Email, Tags, Confirmed</span>
+            </div>
+            <div id="import-dropzone" style="border:2px dashed var(--ap-border);border-radius:var(--ap-radius-md);padding:2rem;text-align:center;cursor:pointer;transition:all 0.2s"
+                 onclick="document.getElementById('import-file-input').click()"
+                 ondragover="event.preventDefault(); this.style.borderColor='var(--ap-accent)'; this.style.background='rgba(99,102,241,0.03)'"
+                 ondragleave="event.preventDefault(); this.style.borderColor='var(--ap-border)'; this.style.background=''; this.querySelector('p').textContent='Drop CSV file here or click to browse'"
+                 ondrop="handleImportDrop(event)">
+                <svg style="width:2.5rem;height:2.5rem;color:var(--ap-text-muted);margin:0 auto 0.5rem" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+                <p style="font-size:0.9375rem;color:var(--ap-text-secondary)">Drop CSV file here or click to browse</p>
+                <p style="font-size:0.75rem;color:var(--ap-text-muted);margin-top:0.25rem">.csv files only</p>
+                <input id="import-file-input" type="file" accept=".csv" style="display:none" onchange="onImportFileInput()">
+            </div>
+            <div id="import-results" style="margin-top:1rem" class="hidden"></div>
         </div>
-        <div id="import-dropzone" class="admin-nl-dropzone"
-             onclick="document.getElementById('import-file-input').click()"
-             ondragover="event.preventDefault(); this.classList.add('active')"
-             ondragleave="event.preventDefault(); this.classList.remove('active'); this.querySelector('p').textContent='Drop CSV file here or click to browse'"
-             ondrop="handleImportDrop(event)">
-            <svg class="w-10 h-10" style="color:var(--admin-stone-300);margin:0 auto 0.5rem" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-            </svg>
-            <p>Drop CSV file here or click to browse</p>
-            <p style="font-size:0.625rem;color:var(--admin-stone-300);margin-top:0.25rem">.csv files only</p>
-            <input id="import-file-input" type="file" accept=".csv" class="hidden" onchange="onImportFileInput()">
-        </div>
-        <div id="import-results" style="margin-top:1rem" class="hidden"></div>
-        <div class="admin-nl-modal-footer">
-            <button onclick="closeImportModal()" class="admin-nl-btn admin-nl-btn-ghost">Cancel</button>
-            <button id="import-submit-btn" onclick="submitImport()" class="admin-nl-btn admin-nl-btn-primary" style="display:inline-flex;align-items:center;gap:0.5rem">
-                <svg id="import-spinner" class="hidden animate-spin w-4 h-4" viewBox="0 0 24 24">
+        <div class="ap-modal-footer">
+            <button onclick="closeImportModal()" class="ap-btn ap-btn-ghost">Cancel</button>
+            <button id="import-submit-btn" onclick="submitImport()" class="ap-btn ap-btn-primary" style="display:inline-flex;align-items:center;gap:0.5rem">
+                <svg id="import-spinner" style="display:none;width:1rem;height:1rem" class="animate-spin" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                 </svg>
@@ -615,20 +536,22 @@ function showToast(message, type) {
     </div>
 </div>
 
-<div id="tag-modal-overlay" class="admin-nl-modal-overlay" onclick="if(event.target===this)closeTagModal()">
-    <div class="admin-nl-modal" style="max-width:28rem" onclick="event.stopPropagation()">
-        <div class="admin-nl-modal-head">
+<div id="tag-modal-overlay" class="ap-modal-backdrop" style="display:none" onclick="if(event.target===this)closeTagModal()">
+    <div class="ap-modal" style="max-width:28rem" onclick="event.stopPropagation()">
+        <div class="ap-modal-header">
             <h3 id="tag-modal-title">Edit Tags</h3>
-            <button onclick="closeTagModal()" class="admin-nl-modal-close">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            <button onclick="closeTagModal()" class="ap-btn ap-btn-ghost ap-btn-icon" style="min-height:36px;min-width:36px;width:36px;height:36px">
+                <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
-        <p style="font-size:0.75rem;color:var(--admin-stone-400);margin-bottom:0.75rem">Enter comma-separated tags (e.g. <span class="admin-nl-code">vip, repeat, new</span>)</p>
-        <input id="tag-input" type="text" class="admin-nl-input" placeholder="vip, repeat, new" onkeydown="if(event.key==='Enter')saveTags()">
-        <p style="font-size:0.625rem;color:var(--admin-stone-400);margin-top:0.375rem">Available tags: <span style="font-family:monospace">new, vip, repeat, inactive</span></p>
-        <div class="admin-nl-modal-footer">
-            <button onclick="closeTagModal()" class="admin-nl-btn admin-nl-btn-ghost">Cancel</button>
-            <button onclick="saveTags()" class="admin-nl-btn admin-nl-btn-primary">Save Tags</button>
+        <div class="ap-modal-body">
+            <p style="font-size:0.8125rem;color:var(--ap-text-secondary);margin-bottom:0.75rem">Enter comma-separated tags (e.g. <code style="font-family:var(--ap-font-mono);color:var(--ap-accent);background:var(--ap-purple-soft);padding:0.125rem 0.375rem;border-radius:var(--ap-radius-xs);font-size:0.8125rem">vip, repeat, new</code>)</p>
+            <input id="tag-input" type="text" class="ap-input" placeholder="vip, repeat, new" onkeydown="if(event.key==='Enter')saveTags()">
+            <p style="font-size:0.75rem;color:var(--ap-text-muted);margin-top:0.375rem">Available tags: <span style="font-family:var(--ap-font-mono)">new, vip, repeat, inactive</span></p>
+        </div>
+        <div class="ap-modal-footer">
+            <button onclick="closeTagModal()" class="ap-btn ap-btn-ghost">Cancel</button>
+            <button onclick="saveTags()" class="ap-btn ap-btn-primary">Save Tags</button>
         </div>
     </div>
 </div>

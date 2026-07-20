@@ -2,82 +2,39 @@
 {% block title %}Ads Pricing & Provider — {{ settings.site_name|default("ForgeStore") }} Admin{% endblock %}
 {% block content %}
 <style>
-  :root {
-    --amber-50: #fffbeb; --amber-100: #fef3c7; --amber-500: #f59e0b; --amber-600: #d97706;
-    --stone-50: #fafaf9; --stone-100: #f5f5f4; --stone-200: #e7e5e4; --stone-300: #d6d3d1;
-    --stone-400: #a8a29e; --stone-500: #78716c; --stone-600: #57534e; --stone-700: #44403c;
-    --stone-800: #292524; --stone-900: #1c1917;
-  }
-  .sp-page { max-width: 64rem; margin: 0 auto; padding: 1.5rem; }
-  .sp-breadcrumb { display: inline-flex; align-items: center; gap: 0.375rem; font-size: 0.875rem; color: var(--stone-500); text-decoration: none; margin-bottom: 0.75rem; min-height: 44px; }
-  .sp-breadcrumb:hover { color: var(--stone-700); }
-  .sp-header { margin-bottom: 2rem; }
-  .sp-header h1 { font-size: 1.5rem; font-weight: 900; color: var(--stone-900); }
-  @media (min-width: 640px) { .sp-header h1 { font-size: 1.875rem; } }
-  .sp-header p { font-size: 0.875rem; color: var(--stone-500); margin-top: 0.25rem; }
-  .sp-form { display: flex; flex-direction: column; gap: 2rem; }
-  .sp-card { background: #fff; border-radius: 1rem; border: 1px solid var(--stone-200); overflow: hidden; }
-  .sp-card-head { padding: 1rem 1.5rem; border-bottom: 1px solid var(--stone-100); background: var(--stone-50); }
-  .sp-card-head h2 { font-size: 0.875rem; font-weight: 700; color: var(--stone-900); }
-  .sp-card-head p { font-size: 0.75rem; color: var(--stone-500); margin-top: 0.125rem; }
-  .sp-card-body { padding: 1.5rem; }
-  .sp-radio-card { display: block; cursor: pointer; }
-  .sp-radio-card input { position: absolute; opacity: 0; width: 0; height: 0; }
-  .sp-radio-card .inner { padding: 1rem; border-radius: 0.75rem; border: 2px solid var(--stone-200); background: #fff; transition: all 0.2s; }
-  .sp-radio-card input:checked + .inner { border-color: var(--amber-500); background: var(--amber-50); }
-  .sp-radio-card .inner h4 { font-size: 0.875rem; font-weight: 700; color: var(--stone-900); }
-  .sp-radio-card .inner p { font-size: 0.75rem; color: var(--stone-500); margin-top: 0.25rem; }
-  .sp-pricing-row { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--stone-50); border-radius: 0.75rem; border: 1px solid var(--stone-100); }
-  .sp-pricing-icon { width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .sp-pricing-info { flex: 1; min-width: 0; }
-  .sp-pricing-info p { font-size: 0.875rem; font-weight: 600; color: var(--stone-900); }
-  .sp-pricing-info small { font-size: 0.75rem; color: var(--stone-500); }
-  .sp-pricing-input { display: flex; align-items: center; gap: 0.5rem; }
-  .sp-pricing-input span { font-size: 0.75rem; color: var(--stone-500); }
-  .sp-input { padding: 0.5rem 0.75rem; font-size: 0.875rem; border: 1px solid var(--stone-200); border-radius: 0.75rem; background: #fff; color: var(--stone-900); font-family: monospace; min-height: 44px; }
-  .sp-input:focus { outline: none; box-shadow: 0 0 0 3px rgba(245,158,11,0.15); border-color: var(--amber-500); }
-  .sp-input-sm { width: 6rem; }
-  .sp-input-xs { width: 5rem; }
-  .sp-divider { border-top: 1px solid var(--stone-100); }
-  .sp-setting-row { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; gap: 1rem; }
-  .sp-setting-row + .sp-setting-row { border-top: 1px solid var(--stone-100); }
-  .sp-toggle { position: relative; display: inline-flex; align-items: center; cursor: pointer; min-height: 44px; }
-  .sp-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
-  .sp-toggle .track { position: relative; width: 2.75rem; height: 1.5rem; background: var(--stone-200); border-radius: 9999px; transition: all 0.2s; }
-  .sp-toggle input:checked + .track { background: var(--amber-600); }
-  .sp-toggle .track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 1.25rem; height: 1.25rem; background: #fff; border: 1px solid var(--stone-300); border-radius: 50%; transition: all 0.2s; }
-  .sp-toggle input:checked + .track::after { transform: translateX(100%); border-color: #fff; }
-  .sp-promo-grid { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
-  @media (min-width: 640px) { .sp-promo-grid { grid-template-columns: repeat(2, 1fr); } }
-  .sp-promo-card { padding: 1rem; background: var(--stone-50); border-radius: 0.75rem; border: 1px solid var(--stone-100); }
-  .sp-promo-head { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
-  .sp-badge { display: inline-flex; align-items: center; padding: 0.25rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; }
-  .sp-save-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, var(--stone-800), var(--stone-900)); color: #fff; font-size: 0.875rem; font-weight: 700; border-radius: 0.75rem; border: none; cursor: pointer; transition: all 0.2s; min-height: 44px; }
-  .sp-save-btn:hover { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-  .sp-save-btn:disabled { opacity: 0.5; }
+@import url('/static/css/admin_portal.css');
 </style>
 
-<div class="sp-page">
-  <a href="/admin/dashboard" class="sp-breadcrumb">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m7 7l-7-7 7-7"/></svg>
+<div class="ap-page">
+  <a href="/admin/dashboard" style="display:inline-flex;align-items:center;gap:0.375rem;font-size:0.875rem;color:var(--ap-text-secondary);text-decoration:none;min-height:44px;margin-bottom:0.75rem;transition:color var(--ap-transition)">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="1rem" height="1rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m7 7l-7-7 7-7"/></svg>
     Back to Dashboard
   </a>
-  <div class="sp-header">
-    <h1>Ads Pricing & Provider</h1>
-    <p>Configure advertising pricing, providers, and promotional ad toggles.</p>
+
+  <div class="ap-header">
+    <div class="ap-header-left">
+      <span class="ap-overline">Configuration</span>
+      <h1>Ads Pricing & Provider</h1>
+      <p class="ap-subtitle">Configure advertising pricing, providers, and promotional ad toggles.</p>
+    </div>
   </div>
 
-  <form id="ads-settings-form" class="sp-form">
-    <div class="sp-card">
-      <div class="sp-card-head"><h2>Ad Provider</h2><p>Choose which ad system to use</p></div>
-      <div class="sp-card-body">
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem">
+  <form id="ads-settings-form" style="display:flex;flex-direction:column;gap:1.5rem">
+    <div class="ap-card">
+      <div class="ap-card-header">
+        <div>
+          <h2>Ad Provider</h2>
+          <p style="font-size:0.8125rem;color:var(--ap-text-muted);margin-top:0.125rem">Choose which ad system to use</p>
+        </div>
+      </div>
+      <div class="ap-card-body">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem">
           {% for pid, pinfo in ad_providers.items() %}
-          <label class="sp-radio-card">
-            <input type="radio" name="ads_default_provider" value="{{ pid }}" {% if site_settings.get('ads_default_provider', 'internal') == pid %}checked{% endif %}>
-            <div class="inner">
-              <h4>{{ pinfo.label }}</h4>
-              <p>{{ pinfo.description }}</p>
+          <label style="display:block;cursor:pointer">
+            <input type="radio" name="ads_default_provider" value="{{ pid }}" {% if site_settings.get('ads_default_provider', 'internal') == pid %}checked{% endif %} style="position:absolute;opacity:0;width:0;height:0">
+            <div style="padding:1rem;border-radius:var(--ap-radius-md);border:2px solid var(--ap-border);background:var(--ap-bg-elevated);transition:all var(--ap-transition)" class="provider-card">
+              <div style="font-size:0.9375rem;font-weight:700;color:var(--ap-text)">{{ pinfo.label }}</div>
+              <div style="font-size:0.8125rem;color:var(--ap-text-muted);margin-top:0.25rem">{{ pinfo.description }}</div>
             </div>
           </label>
           {% endfor %}
@@ -85,44 +42,54 @@
       </div>
     </div>
 
-    <div class="sp-card">
-      <div class="sp-card-head"><h2>Campaign Ad Pricing</h2><p>Monthly pricing for shop and product ad campaigns</p></div>
-      <div class="sp-card-body" style="display:flex;flex-direction:column;gap:1rem">
+    <div class="ap-card">
+      <div class="ap-card-header">
+        <div>
+          <h2>Campaign Ad Pricing</h2>
+          <p style="font-size:0.8125rem;color:var(--ap-text-muted);margin-top:0.125rem">Monthly pricing for shop and product ad campaigns</p>
+        </div>
+      </div>
+      <div class="ap-card-body" style="display:flex;flex-direction:column;gap:1rem">
         {% for atype, pdata in ad_pricing.items() %}
-        <div class="sp-pricing-row">
-          <div class="sp-pricing-icon {% if atype == 'SHOP' %}style="background:var(--blue-100);color:#1d4ed8"{% elif atype == 'PRODUCT' %}style="background:var(--purple-100);color:#7e22ce"{% else %}style="background:var(--amber-100);color:#b45309"{% endif %}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+        <div style="display:flex;align-items:center;gap:1rem;padding:1rem;background:var(--ap-bg);border-radius:var(--ap-radius-md);border:1px solid var(--ap-border-light)">
+          <div style="width:2.5rem;height:2.5rem;border-radius:var(--ap-radius-md);display:flex;align-items:center;justify-content:center;flex-shrink:0;background:{% if atype == 'SHOP' %}var(--ap-blue-soft);color:var(--ap-blue){% elif atype == 'PRODUCT' %}var(--ap-purple-soft);color:var(--ap-purple){% else %}var(--ap-amber-soft);color:var(--ap-amber){% endif %}">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="1.25rem" height="1.25rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
           </div>
-          <div class="sp-pricing-info">
-            <p>{{ pdata.label }}</p>
-            <small>{{ atype }} type</small>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.9375rem;font-weight:600;color:var(--ap-text)">{{ pdata.label }}</div>
+            <div style="font-size:0.8125rem;color:var(--ap-text-muted)">{{ atype }} type</div>
           </div>
-          <div class="sp-pricing-input">
-            <span>₦</span>
-            <input type="number" name="pricing_{{ atype }}" value="{{ pdata.price_per_month }}" class="sp-input sp-input-sm">
-            <span>/mo</span>
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <span style="font-size:0.875rem;color:var(--ap-text-muted)">₦</span>
+            <input type="number" name="pricing_{{ atype }}" value="{{ pdata.price_per_month }}" class="ap-input" style="width:6rem;text-align:right;font-family:var(--ap-font-mono);min-height:44px">
+            <span style="font-size:0.8125rem;color:var(--ap-text-muted)">/mo</span>
           </div>
         </div>
         {% endfor %}
       </div>
     </div>
 
-    <div class="sp-card">
-      <div class="sp-card-head"><h2>Promotional Ads Pricing</h2><p>Per-day pricing for promotional ad types</p></div>
-      <div class="sp-card-body">
-        <div class="sp-promo-grid">
-          {% set subtype_colors = {'PROMO': 'amber', 'FLASH_SALE': 'red', 'SUPER_SALE': 'orange', 'HOT_WEEK': 'rose', 'FESTIVAL': 'purple', 'SEASONAL_SALE': 'blue'} %}
+    <div class="ap-card">
+      <div class="ap-card-header">
+        <div>
+          <h2>Promotional Ads Pricing</h2>
+          <p style="font-size:0.8125rem;color:var(--ap-text-muted);margin-top:0.125rem">Per-day pricing for promotional ad types</p>
+        </div>
+      </div>
+      <div class="ap-card-body">
+        <div class="ap-grid-2">
+          {% set subtype_colors = {'PROMO': 'amber', 'FLASH_SALE': 'red', 'SUPER_SALE': 'rose', 'HOT_WEEK': 'rose', 'FESTIVAL': 'purple', 'SEASONAL_SALE': 'blue'} %}
           {% for stype, pdata in promo_pricing.items() %}
-          {% set color = subtype_colors.get(stype, 'stone') %}
-          <div class="sp-promo-card">
-            <div class="sp-promo-head">
-              <span class="sp-badge" style="background:var(--{{ color }}-100);color:var(--{{ color }}-700)">{{ stype }}</span>
-              <span style="font-size:0.75rem;color:var(--stone-500)">{{ subtype_counts.get(stype, 0) }} ads created</span>
+          {% set color = subtype_colors.get(stype, 'purple') %}
+          <div style="padding:1rem;background:var(--ap-bg);border-radius:var(--ap-radius-md);border:1px solid var(--ap-border-light)">
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem">
+              <span class="ap-badge ap-badge-{{ color }}"><span class="ap-badge-dot"></span>{{ stype }}</span>
+              <span style="font-size:0.8125rem;color:var(--ap-text-muted)">{{ subtype_counts.get(stype, 0) }} ads created</span>
             </div>
-            <div class="sp-pricing-input">
-              <span>₦</span>
-              <input type="number" name="promo_price_{{ stype }}" value="{{ pdata.price_per_day }}" class="sp-input sp-input-xs">
-              <span>/day</span>
+            <div style="display:flex;align-items:center;gap:0.5rem">
+              <span style="font-size:0.875rem;color:var(--ap-text-muted)">₦</span>
+              <input type="number" name="promo_price_{{ stype }}" value="{{ pdata.price_per_day }}" class="ap-input" style="width:5rem;text-align:right;font-family:var(--ap-font-mono);min-height:44px">
+              <span style="font-size:0.8125rem;color:var(--ap-text-muted)">/day</span>
             </div>
           </div>
           {% endfor %}
@@ -130,29 +97,55 @@
       </div>
     </div>
 
-    <div class="sp-card">
-      <div class="sp-card-head"><h2>General Settings</h2><p>Configure ad behavior and limits</p></div>
+    <div class="ap-card">
+      <div class="ap-card-header">
+        <div>
+          <h2>General Settings</h2>
+          <p style="font-size:0.8125rem;color:var(--ap-text-muted);margin-top:0.125rem">Configure ad behavior and limits</p>
+        </div>
+      </div>
       <div>
-        <div class="sp-setting-row">
-          <div><p style="font-size:0.875rem;font-weight:600;color:var(--stone-900)">Auto-Approve Ads</p><p style="font-size:0.75rem;color:var(--stone-500)">Automatically activate ads after payment</p></div>
-          <label class="sp-toggle"><input type="checkbox" name="ads_auto_approve" {% if site_settings.get('ads_auto_approve') == 'true' %}checked{% endif %}><span class="track"></span></label>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:1px solid var(--ap-border-light);min-height:44px">
+          <div>
+            <div style="font-size:0.9375rem;font-weight:600;color:var(--ap-text)">Auto-Approve Ads</div>
+            <div style="font-size:0.8125rem;color:var(--ap-text-muted)">Automatically activate ads after payment</div>
+          </div>
+          <label style="position:relative;display:inline-flex;align-items:center;cursor:pointer;min-height:44px">
+            <input type="checkbox" name="ads_auto_approve" {% if site_settings.get('ads_auto_approve') == 'true' %}checked{% endif %} style="position:absolute;opacity:0;width:0;height:0">
+            <span style="position:relative;width:2.75rem;height:1.5rem;background:var(--ap-border);border-radius:var(--ap-radius-pill);transition:all var(--ap-transition)"></span>
+          </label>
         </div>
-        <div class="sp-setting-row">
-          <div><p style="font-size:0.875rem;font-weight:600;color:var(--stone-900)">Max Campaign Duration</p><p style="font-size:0.75rem;color:var(--stone-500)">Maximum days for a single ad campaign</p></div>
-          <input type="number" name="ads_max_duration_days" value="{{ site_settings.get('ads_max_duration_days', '90') }}" class="sp-input sp-input-xs" style="text-align:right">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:1px solid var(--ap-border-light);min-height:44px">
+          <div>
+            <div style="font-size:0.9375rem;font-weight:600;color:var(--ap-text)">Max Campaign Duration</div>
+            <div style="font-size:0.8125rem;color:var(--ap-text-muted)">Maximum days for a single ad campaign</div>
+          </div>
+          <input type="number" name="ads_max_duration_days" value="{{ site_settings.get('ads_max_duration_days', '90') }}" class="ap-input" style="width:5rem;text-align:right;font-family:var(--ap-font-mono);min-height:44px">
         </div>
-        <div class="sp-setting-row">
-          <div><p style="font-size:0.875rem;font-weight:600;color:var(--stone-900)">Minimum Ad Budget</p><p style="font-size:0.75rem;color:var(--stone-500)">Minimum amount required to create an ad campaign</p></div>
-          <div class="sp-pricing-input"><span>₦</span><input type="number" name="ads_min_budget" value="{{ site_settings.get('ads_min_budget', '1000') }}" class="sp-input sp-input-sm" style="text-align:right"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:1px solid var(--ap-border-light);min-height:44px">
+          <div>
+            <div style="font-size:0.9375rem;font-weight:600;color:var(--ap-text)">Minimum Ad Budget</div>
+            <div style="font-size:0.8125rem;color:var(--ap-text-muted)">Minimum amount required to create an ad campaign</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <span style="font-size:0.875rem;color:var(--ap-text-muted)">₦</span>
+            <input type="number" name="ads_min_budget" value="{{ site_settings.get('ads_min_budget', '1000') }}" class="ap-input" style="width:6rem;text-align:right;font-family:var(--ap-font-mono);min-height:44px">
+          </div>
         </div>
-        <div class="sp-setting-row" style="flex-direction:column;align-items:flex-start">
-          <p style="font-size:0.875rem;font-weight:600;color:var(--stone-900);margin-bottom:0.75rem">Promotional Ad Types</p>
-          <div class="sp-promo-grid" style="width:100%">
+        <div style="padding:1rem 1.5rem">
+          <div style="font-size:0.9375rem;font-weight:600;color:var(--ap-text);margin-bottom:0.75rem">Promotional Ad Types</div>
+          <div class="ap-grid-2" style="width:100%">
             {% set toggles = [('promo_ads_enabled', 'Enable Promo Ads', 'Allow creation of general promo ads'), ('promo_flash_sale_enabled', 'Flash Sales', 'Allow flash sale promotional ads'), ('promo_hot_week_enabled', 'Hot Weeks', 'Allow hot week promotional ads'), ('promo_festival_enabled', 'Festival Sales', 'Allow festival promotional ads')] %}
             {% for key, label, desc in toggles %}
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;background:var(--stone-50);border-radius:0.75rem">
-              <div><p style="font-size:0.75rem;font-weight:600;color:var(--stone-900)">{{ label }}</p><p style="font-size:10px;color:var(--stone-500)">{{ desc }}</p></div>
-              <label class="sp-toggle"><input type="checkbox" name="{{ key }}" {% if site_settings.get(key, 'true') == 'true' %}checked{% endif %}><span class="track"></span></label>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;background:var(--ap-bg);border-radius:var(--ap-radius-md);border:1px solid var(--ap-border-light);min-height:44px">
+              <div>
+                <div style="font-size:0.8125rem;font-weight:600;color:var(--ap-text)">{{ label }}</div>
+                <div style="font-size:0.75rem;color:var(--ap-text-muted)">{{ desc }}</div>
+              </div>
+              <label style="position:relative;display:inline-flex;align-items:center;cursor:pointer;min-height:44px">
+                <input type="checkbox" name="{{ key }}" {% if site_settings.get(key, 'true') == 'true' %}checked{% endif %} style="position:absolute;opacity:0;width:0;height:0">
+                <span style="position:relative;width:2.75rem;height:1.5rem;background:var(--ap-border);border-radius:var(--ap-radius-pill);transition:all var(--ap-transition)"></span>
+              </label>
             </div>
             {% endfor %}
           </div>
@@ -161,8 +154,8 @@
     </div>
 
     <div style="display:flex;justify-content:flex-end">
-      <button type="button" onclick="saveAdsSettings()" id="save-ads-btn" class="sp-save-btn">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+      <button type="button" onclick="saveAdsSettings()" id="save-ads-btn" class="ap-btn ap-btn-primary ap-btn-lg">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="1rem" height="1rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
         Save Ads Settings
       </button>
     </div>
@@ -194,19 +187,26 @@ async function saveAdsSettings() {
     try { result = JSON.parse(text); } catch(e) { showToast('Server error: ' + text.substring(0, 100), 'error'); return; }
     if (result.success) { showToast('Ads settings saved successfully!', 'success'); } else { showToast(result.detail || 'Failed to save', 'error'); }
   } catch(e) { showToast('Network error: ' + e.message, 'error'); }
-  finally { btn.disabled = false; btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Save Ads Settings'; }
+  finally { btn.disabled = false; btn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="1rem" height="1rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Save Ads Settings'; }
 }
 function showToast(message, type) {
   const existing = document.querySelector('.admin-toast');
   if (existing) existing.remove();
   const toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:100;padding:0.75rem 1.25rem;border-radius:0.75rem;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);font-size:0.875rem;font-weight:500;color:#fff;transition:opacity 0.3s;opacity:0';
-  const colors = { success: 'var(--emerald-600)', error: 'var(--red-600)', warning: 'var(--amber-600)' };
-  toast.style.background = colors[type] || 'var(--stone-700)';
+  toast.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:100;padding:0.75rem 1.25rem;border-radius:var(--ap-radius-lg);box-shadow:var(--ap-shadow-xl);font-size:0.875rem;font-weight:500;color:#fff;transition:opacity 0.3s;opacity:0';
+  const colors = { success: 'var(--ap-emerald)', error: 'var(--ap-red)', warning: 'var(--ap-amber)' };
+  toast.style.background = colors[type] || 'var(--ap-text)';
   toast.textContent = message;
   document.body.appendChild(toast);
   requestAnimationFrame(() => toast.style.opacity = '1');
   setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 4000);
 }
 </script>
+<style>
+.dark .provider-card { background: var(--ap-bg-elevated); }
+input[type="radio"]:checked + .provider-card { border-color: var(--ap-primary); background: var(--ap-amber-soft); }
+input[type="checkbox"]:checked + span { background: var(--ap-primary); }
+input[type="checkbox"]:checked + span::after { content:''; position:absolute; top:2px; left:2px; width:1.25rem; height:1.25rem; background:#fff; border-radius:50%; transition:all var(--ap-transition); transform:translateX(100%); }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
 {% endblock %}

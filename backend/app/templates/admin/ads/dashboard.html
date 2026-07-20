@@ -1,182 +1,142 @@
 {% extends "admin/base.html" %}
 {% block title %}Ads Dashboard — {{ settings.site_name|default("ForgeStore") }} Admin{% endblock %}
-{% block page_title %}Ads Dashboard{% endblock %}
-
 {% block content %}
 <style>
-  :root {
-    --ads-primary: #f59e0b; --ads-primary-dark: #d97706;
-    --ads-bg: #fafaf9; --ads-card: #ffffff;
-    --ads-border: #e7e5e4; --ads-text: #1c1917; --ads-muted: #78716c;
-    --ads-green: #16a34a; --ads-red: #dc2626; --ads-blue: #2563eb;
-    --ads-purple: #7c3aed; --ads-radius: 12px;
-  }
-  .dark { --ads-bg: #1c1917; --ads-card: #292524; --ads-border: #44403c; --ads-text: #fafaf9; --ads-muted: #a8a29e; }
-  .ads-wrap { max-width: 1200px; margin: 0 auto; padding: 1rem; }
-  .ads-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
-  .ads-stat { background: var(--ads-card); border: 1px solid var(--ads-border); border-radius: var(--ads-radius); padding: 1rem; }
-  .ads-stat-label { font-size: 0.75rem; color: var(--ads-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
-  .ads-stat-value { font-size: 1.5rem; font-weight: 700; color: var(--ads-text); }
-  .ads-stat-value.green { color: var(--ads-green); }
-  .ads-stat-value.amber { color: var(--ads-primary); }
-  .ads-stat-value.red { color: var(--ads-red); }
-
-  .ads-tabs { display: flex; gap: 4px; background: var(--ads-card); border: 1px solid var(--ads-border); border-radius: var(--ads-radius); padding: 4px; margin-bottom: 1rem; overflow-x: auto; }
-  .ads-tab { padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: none; background: transparent; color: var(--ads-muted); white-space: nowrap; transition: all 0.15s; }
-  .ads-tab.active { background: var(--ads-primary); color: #fff; }
-  .ads-tab:hover:not(.active) { background: var(--ads-border); color: var(--ads-text); }
-  .ads-tab-content { display: none; }
-  .ads-tab-content.active { display: block; }
-
-  .ads-panel { background: var(--ads-card); border: 1px solid var(--ads-border); border-radius: var(--ads-radius); padding: 1rem; }
-  .ads-panel-header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
-  .ads-panel-title { font-size: 1rem; font-weight: 700; color: var(--ads-text); }
-  .ads-btn { padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: 1px solid var(--ads-border); background: var(--ads-card); color: var(--ads-text); min-height: 36px; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
-  .ads-btn-primary { background: var(--ads-primary); color: #fff; border-color: var(--ads-primary); }
-  .ads-btn-primary:hover { background: var(--ads-primary-dark); }
-  .ads-btn-sm { padding: 4px 10px; font-size: 0.75rem; min-height: 28px; }
-  .ads-btn-green { color: var(--ads-green); border-color: var(--ads-green); }
-  .ads-btn-red { color: var(--ads-red); border-color: var(--ads-red); }
-  .ads-btn-red:hover { background: #fef2f2; }
-  .ads-select { padding: 0.4rem 0.75rem; border-radius: 8px; border: 1px solid var(--ads-border); background: var(--ads-card); color: var(--ads-text); font-size: 0.8125rem; min-height: 36px; }
-
-  .ads-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
-  .ads-table th { text-align: left; padding: 0.5rem 0.75rem; color: var(--ads-muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; border-bottom: 1px solid var(--ads-border); }
-  .ads-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--ads-border); color: var(--ads-text); vertical-align: middle; }
-  .ads-table tr:last-child td { border-bottom: none; }
-  .ads-badge { padding: 2px 8px; border-radius: 999px; font-size: 0.6875rem; font-weight: 600; }
-  .ads-badge-active { background: #dcfce7; color: #166534; }
-  .ads-badge-pending { background: #fef9c3; color: #854d0e; }
-  .ads-badge-expired { background: #f3f4f6; color: #6b7280; }
-  .ads-badge-inactive { background: #fef2f2; color: #991b1b; }
-  .ads-empty { text-align: center; padding: 2rem; color: var(--ads-muted); }
-  .ads-empty svg { width: 48px; height: 48px; margin: 0 auto 0.75rem; opacity: 0.4; }
-
-  .ads-promo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
-  .ads-promo-card { background: var(--ads-card); border: 1px solid var(--ads-border); border-radius: var(--ads-radius); overflow: hidden; }
-  .ads-promo-img { height: 140px; background: #f5f5f4; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-  .ads-promo-img img { width: 100%; height: 100%; object-fit: cover; }
-  .ads-promo-img .placeholder { color: var(--ads-muted); font-size: 0.75rem; }
-  .ads-promo-body { padding: 0.75rem; }
-  .ads-promo-title { font-weight: 600; font-size: 0.875rem; color: var(--ads-text); margin-bottom: 4px; }
-  .ads-promo-meta { font-size: 0.75rem; color: var(--ads-muted); display: flex; gap: 8px; flex-wrap: wrap; }
-  .ads-promo-actions { display: flex; gap: 6px; padding: 0.75rem; border-top: 1px solid var(--ads-border); }
-  .ads-platform-badge { background: var(--ads-primary); color: #fff; font-size: 0.625rem; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
-  .ads-vendor-badge { background: var(--ads-blue); color: #fff; font-size: 0.625rem; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
-
-  .ads-modal-overlay { position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
-  .ads-modal-overlay.show { display: flex; }
-  .ads-modal { background: var(--ads-card); border-radius: var(--ads-radius); width: 90%; max-width: 520px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-  .ads-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--ads-border); }
-  .ads-modal-title { font-weight: 700; font-size: 1rem; color: var(--ads-text); }
-  .ads-modal-close { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--ads-muted); min-width: 36px; min-height: 36px; display: flex; align-items: center; justify-content: center; }
-  .ads-modal-body { padding: 1rem; }
-  .ads-modal-footer { padding: 1rem; border-top: 1px solid var(--ads-border); display: flex; justify-content: flex-end; gap: 8px; }
-  .ads-form-group { margin-bottom: 0.75rem; }
-  .ads-form-label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--ads-muted); margin-bottom: 4px; }
-  .ads-form-input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--ads-border); border-radius: 8px; font-size: 0.8125rem; background: var(--ads-card); color: var(--ads-text); min-height: 36px; box-sizing: border-box; }
-  .ads-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-
-  .ads-chart-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 0.75rem; margin-top: 1rem; }
-  .ads-chart-card { background: var(--ads-card); border: 1px solid var(--ads-border); border-radius: var(--ads-radius); padding: 1rem; }
-  .ads-chart-title { font-size: 0.8125rem; font-weight: 600; color: var(--ads-text); margin-bottom: 0.75rem; }
-  .ads-bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 120px; }
-  .ads-bar { flex: 1; background: var(--ads-primary); border-radius: 4px 4px 0 0; min-width: 20px; position: relative; transition: height 0.3s; }
-  .ads-bar:hover { opacity: 0.8; }
-  .ads-bar-label { position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); font-size: 0.625rem; color: var(--ads-muted); white-space: nowrap; }
-  .ads-bar-value { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 0.625rem; color: var(--ads-text); font-weight: 600; white-space: nowrap; }
-
-  @media (max-width: 640px) {
-    .ads-stats { grid-template-columns: repeat(2, 1fr); }
-    .ads-form-row { grid-template-columns: 1fr; }
-    .ads-promo-grid { grid-template-columns: 1fr; }
-    .ads-table { font-size: 0.75rem; }
-    .hide-mobile { display: none !important; }
-  }
+@import url('/static/css/admin_portal.css');
 </style>
 
-<div class="ads-wrap">
+<div class="ap-page">
   <!-- Stats -->
-  <div class="ads-stats" id="stats-container">
-    <div class="ads-stat"><div class="ads-stat-label">Total Campaigns</div><div class="ads-stat-value" id="stat-total">-</div></div>
-    <div class="ads-stat"><div class="ads-stat-label">Active</div><div class="ads-stat-value green" id="stat-active">-</div></div>
-    <div class="ads-stat"><div class="ads-stat-label">Total Clicks</div><div class="ads-stat-value amber" id="stat-clicks">-</div></div>
-    <div class="ads-stat"><div class="ads-stat-label">Impressions</div><div class="ads-stat-value" id="stat-impressions">-</div></div>
-    <div class="ads-stat"><div class="ads-stat-label">CTR</div><div class="ads-stat-value" id="stat-ctr">-</div></div>
-    <div class="ads-stat"><div class="ads-stat-label">Promo Ads</div><div class="ads-stat-value" id="stat-promos">-</div></div>
+  <div class="ap-stats" id="stats-container">
+    <div class="ap-stat ap-stat-blue">
+      <div class="ap-stat-icon blue">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg>
+      </div>
+      <div class="ap-stat-label">Total Campaigns</div>
+      <div class="ap-stat-value" id="stat-total">-</div>
+    </div>
+    <div class="ap-stat ap-stat-emerald">
+      <div class="ap-stat-icon emerald">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <div class="ap-stat-label">Active</div>
+      <div class="ap-stat-value" id="stat-active">-</div>
+    </div>
+    <div class="ap-stat ap-stat-amber">
+      <div class="ap-stat-icon amber">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/></svg>
+      </div>
+      <div class="ap-stat-label">Total Clicks</div>
+      <div class="ap-stat-value" id="stat-clicks">-</div>
+    </div>
+    <div class="ap-stat">
+      <div class="ap-stat-icon purple">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+      </div>
+      <div class="ap-stat-label">Impressions</div>
+      <div class="ap-stat-value" id="stat-impressions">-</div>
+    </div>
+    <div class="ap-stat">
+      <div class="ap-stat-icon rose">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+      </div>
+      <div class="ap-stat-label">CTR</div>
+      <div class="ap-stat-value" id="stat-ctr">-</div>
+    </div>
+    <div class="ap-stat">
+      <div class="ap-stat-icon cyan">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+      </div>
+      <div class="ap-stat-label">Promo Ads</div>
+      <div class="ap-stat-value" id="stat-promos">-</div>
+    </div>
   </div>
 
   <!-- Tabs -->
-  <div class="ads-tabs">
-    <button class="ads-tab active" onclick="switchTab('campaigns', this)">Campaigns</button>
-    <button class="ads-tab" onclick="switchTab('promos', this)">Promo Ads</button>
-    <button class="ads-tab" onclick="switchTab('analytics', this)">Analytics</button>
+  <div class="ap-tabs">
+    <button class="ap-tab active" onclick="switchTab('campaigns', this)">Campaigns</button>
+    <button class="ap-tab" onclick="switchTab('promos', this)">Promo Ads</button>
+    <button class="ap-tab" onclick="switchTab('analytics', this)">Analytics</button>
   </div>
 
   <!-- CAMPAIGNS TAB -->
-  <div class="ads-tab-content active" id="tab-campaigns">
-    <div class="ads-panel">
-      <div class="ads-panel-header">
-        <span class="ads-panel-title">Ad Campaigns</span>
-        <select class="ads-select" id="campaign-retailer-filter" onchange="filterCampaigns()">
+  <div id="tab-campaigns" style="display:block">
+    <div class="ap-card">
+      <div class="ap-card-header">
+        <h2>Ad Campaigns</h2>
+        <select class="ap-input ap-select" style="width:auto;min-height:40px;padding:0.5rem 2.5rem 0.5rem 0.75rem" id="campaign-retailer-filter" onchange="filterCampaigns()">
           <option value="">All Retailers</option>
         </select>
       </div>
-      <div id="campaigns-list"></div>
+      <div class="ap-card-body flush">
+        <div id="campaigns-list"></div>
+      </div>
     </div>
   </div>
 
   <!-- PROMO ADS TAB -->
-  <div class="ads-tab-content" id="tab-promos">
-    <div class="ads-panel">
-      <div class="ads-panel-header">
-        <span class="ads-panel-title">Promo Ads</span>
-        <button class="ads-btn ads-btn-primary" onclick="openPromoModal()">+ Create Promo</button>
+  <div id="tab-promos" style="display:none">
+    <div class="ap-card">
+      <div class="ap-card-header">
+        <h2>Promo Ads</h2>
+        <button class="ap-btn ap-btn-primary ap-btn-sm" onclick="openPromoModal()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Create Promo
+        </button>
       </div>
-      <div id="promo-filter-bar" style="display:flex;gap:8px;margin-bottom:0.75rem;flex-wrap:wrap;">
-        <select class="ads-select" id="promo-type-filter" onchange="filterPromos()">
-          <option value="">All Types</option>
-          <option value="PROMO">General Promo</option>
-          <option value="FLASH_SALE">Flash Sale</option>
-          <option value="SUPER_SALE">Super Sale</option>
-          <option value="HOT_WEEK">Hot Week</option>
-          <option value="FESTIVAL">Festival</option>
-          <option value="SEASONAL_SALE">Seasonal</option>
-        </select>
-        <select class="ads-select" id="promo-scope-filter" onchange="filterPromos()">
-          <option value="">All Scope</option>
-          <option value="platform">Platform Only</option>
-          <option value="vendor">Vendor Only</option>
-        </select>
+      <div class="ap-card-body">
+        <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap">
+          <select class="ap-input ap-select" style="width:auto;min-height:40px;padding:0.5rem 2.5rem 0.5rem 0.75rem" id="promo-type-filter" onchange="filterPromos()">
+            <option value="">All Types</option>
+            <option value="PROMO">General Promo</option>
+            <option value="FLASH_SALE">Flash Sale</option>
+            <option value="SUPER_SALE">Super Sale</option>
+            <option value="HOT_WEEK">Hot Week</option>
+            <option value="FESTIVAL">Festival</option>
+            <option value="SEASONAL_SALE">Seasonal</option>
+          </select>
+          <select class="ap-input ap-select" style="width:auto;min-height:40px;padding:0.5rem 2.5rem 0.5rem 0.75rem" id="promo-scope-filter" onchange="filterPromos()">
+            <option value="">All Scope</option>
+            <option value="platform">Platform Only</option>
+            <option value="vendor">Vendor Only</option>
+          </select>
+        </div>
+        <div class="ap-grid-3" id="promos-grid"></div>
       </div>
-      <div class="ads-promo-grid" id="promos-grid"></div>
     </div>
   </div>
 
   <!-- ANALYTICS TAB -->
-  <div class="ads-tab-content" id="tab-analytics">
-    <div id="analytics-loading" style="text-align:center;padding:2rem;color:var(--ads-muted);">Loading analytics...</div>
+  <div id="tab-analytics" style="display:none">
+    <div id="analytics-loading" class="ap-empty">
+      <div class="ap-empty-icon">
+        <svg width="2rem" height="2rem" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="animation:apSpin 1s linear infinite"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"></circle><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" opacity="0.75"></path></svg>
+      </div>
+      <h3>Loading analytics...</h3>
+    </div>
     <div id="analytics-content" style="display:none;"></div>
   </div>
 </div>
 
 <!-- PROMO CREATE/EDIT MODAL -->
-<div class="ads-modal-overlay" id="promo-modal">
-  <div class="ads-modal">
-    <div class="ads-modal-header">
-      <span class="ads-modal-title" id="promo-modal-title">Create Promo Ad</span>
-      <button class="ads-modal-close" onclick="closePromoModal()">&times;</button>
+<div class="ap-modal-backdrop" id="promo-modal" style="display:none">
+  <div class="ap-modal">
+    <div class="ap-modal-header">
+      <h3 id="promo-modal-title">Create Promo Ad</h3>
+      <button class="ap-btn ap-btn-ghost ap-btn-icon" onclick="closePromoModal()" style="min-height:44px;min-width:44px">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
     </div>
-    <div class="ads-modal-body">
+    <div class="ap-modal-body">
       <input type="hidden" id="promo-id">
-      <div class="ads-form-group">
-        <label class="ads-form-label">Title *</label>
-        <input type="text" id="promo-title" class="ads-form-input" placeholder="e.g. Summer Flash Sale">
+      <div style="margin-bottom:1rem">
+        <label style="display:block;font-size:0.8125rem;font-weight:600;color:var(--ap-text-secondary);margin-bottom:0.375rem">Title *</label>
+        <input type="text" id="promo-title" class="ap-input" placeholder="e.g. Summer Flash Sale">
       </div>
-      <div class="ads-form-row">
-        <div class="ads-form-group">
-          <label class="ads-form-label">Type *</label>
-          <select id="promo-subtype" class="ads-form-input">
+      <div class="ap-grid-2">
+        <div style="margin-bottom:1rem">
+          <label style="display:block;font-size:0.8125rem;font-weight:600;color:var(--ap-text-secondary);margin-bottom:0.375rem">Type *</label>
+          <select id="promo-subtype" class="ap-input ap-select">
             <option value="PROMO">General Promo</option>
             <option value="FLASH_SALE">Flash Sale</option>
             <option value="SUPER_SALE">Super Sale</option>
@@ -185,27 +145,27 @@
             <option value="SEASONAL_SALE">Seasonal Sale</option>
           </select>
         </div>
-        <div class="ads-form-group">
-          <label class="ads-form-label">Banner Type *</label>
-          <select id="promo-banner-type" class="ads-form-input">
+        <div style="margin-bottom:1rem">
+          <label style="display:block;font-size:0.8125rem;font-weight:600;color:var(--ap-text-secondary);margin-bottom:0.375rem">Banner Type *</label>
+          <select id="promo-banner-type" class="ap-input ap-select">
             <option value="banner">Banner</option>
             <option value="poster">Poster</option>
             <option value="flyer">Flyer</option>
           </select>
         </div>
       </div>
-      <div class="ads-form-group">
-        <label class="ads-form-label">Banner Image *</label>
-        <input type="file" id="promo-banner-file" accept="image/*" class="ads-form-input" style="padding:0.4rem;" onchange="handlePromoUpload(this)">
+      <div style="margin-bottom:1rem">
+        <label style="display:block;font-size:0.8125rem;font-weight:600;color:var(--ap-text-secondary);margin-bottom:0.375rem">Banner Image *</label>
+        <input type="file" id="promo-banner-file" accept="image/*" class="ap-input" style="padding:0.5rem" onchange="handlePromoUpload(this)">
         <input type="hidden" id="promo-banner-url">
-        <div id="promo-banner-preview" style="display:none;margin-top:6px;">
-          <img id="promo-banner-preview-img" src="" alt="" style="max-width:200px;max-height:100px;border-radius:8px;border:1px solid var(--ads-border);object-fit:cover;">
-          <button type="button" onclick="clearPromoBanner()" style="margin-left:6px;padding:3px 8px;font-size:11px;color:#dc2626;background:none;border:1px solid #fecaca;border-radius:6px;cursor:pointer;">Remove</button>
+        <div id="promo-banner-preview" style="display:none;margin-top:8px">
+          <img id="promo-banner-preview-img" src="" alt="" style="max-width:200px;max-height:100px;border-radius:var(--ap-radius-md);border:1px solid var(--ap-border);object-fit:cover">
+          <button type="button" onclick="clearPromoBanner()" class="ap-btn ap-btn-ghost ap-btn-sm" style="margin-left:8px;color:var(--ap-red)">Remove</button>
         </div>
       </div>
-      <div class="ads-form-group">
-        <label class="ads-form-label">Target URL (optional)</label>
-        <select id="promo-target-preset" class="ads-form-input" onchange="handleTargetPreset()">
+      <div style="margin-bottom:1rem">
+        <label style="display:block;font-size:0.8125rem;font-weight:600;color:var(--ap-text-secondary);margin-bottom:0.375rem">Target URL (optional)</label>
+        <select id="promo-target-preset" class="ap-input ap-select" onchange="handleTargetPreset()">
           <option value="">No target</option>
           <option value="homepage">Homepage</option>
           <option value="marketplace">Marketplace</option>
@@ -219,36 +179,38 @@
           <option value="automotive">Category: Automotive</option>
           <option value="custom">Custom URL...</option>
         </select>
-        <input type="url" id="promo-target-custom" class="ads-form-input" placeholder="https://example.com/page" style="display:none;margin-top:6px;">
+        <input type="url" id="promo-target-custom" class="ap-input" placeholder="https://example.com/page" style="display:none;margin-top:6px">
         <input type="hidden" id="promo-target-url">
       </div>
-      <div class="ads-form-row">
-        <div class="ads-form-group">
-          <label class="ads-form-label">Start Date</label>
-          <input type="date" id="promo-start-date" class="ads-form-input">
+      <div class="ap-grid-2">
+        <div style="margin-bottom:1rem">
+          <label style="display:block;font-size:0.8125rem;font-weight:600;color:var(--ap-text-secondary);margin-bottom:0.375rem">Start Date</label>
+          <input type="date" id="promo-start-date" class="ap-input">
         </div>
-        <div class="ads-form-group">
-          <label class="ads-form-label">End Date</label>
-          <input type="date" id="promo-end-date" class="ads-form-input">
+        <div style="margin-bottom:1rem">
+          <label style="display:block;font-size:0.8125rem;font-weight:600;color:var(--ap-text-secondary);margin-bottom:0.375rem">End Date</label>
+          <input type="date" id="promo-end-date" class="ap-input">
         </div>
       </div>
-      <div class="ads-form-group">
-        <label class="ads-form-label">Assign to Vendor (optional — leave empty for platform promo)</label>
-        <select id="promo-retailer-id" class="ads-form-input">
+      <div style="margin-bottom:1rem">
+        <label style="display:block;font-size:0.8125rem;font-weight:600;color:var(--ap-text-secondary);margin-bottom:0.375rem">Assign to Vendor (optional — leave empty for platform promo)</label>
+        <select id="promo-retailer-id" class="ap-input ap-select">
           <option value="">Platform Promo (admin)</option>
         </select>
       </div>
-      <div class="ads-form-group">
-        <label class="ads-form-label">Notes</label>
-        <input type="text" id="promo-note" class="ads-form-input" placeholder="Internal notes...">
+      <div style="margin-bottom:1rem">
+        <label style="display:block;font-size:0.8125rem;font-weight:600;color:var(--ap-text-secondary);margin-bottom:0.375rem">Notes</label>
+        <input type="text" id="promo-note" class="ap-input" placeholder="Internal notes...">
       </div>
     </div>
-    <div class="ads-modal-footer">
-      <button class="ads-btn" onclick="closePromoModal()">Cancel</button>
-      <button class="ads-btn ads-btn-primary" id="promo-save-btn" onclick="savePromo()">Save</button>
+    <div class="ap-modal-footer">
+      <button class="ap-btn ap-btn-outline" onclick="closePromoModal()">Cancel</button>
+      <button class="ap-btn ap-btn-primary" id="promo-save-btn" onclick="savePromo()">Save</button>
     </div>
   </div>
 </div>
+
+<style>@keyframes apSpin { to { transform: rotate(360deg); } }</style>
 
 <script>
 // ─── DATA ────────────────────────────────────────────────────────────
@@ -279,10 +241,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ─── TABS ────────────────────────────────────────────────────────────
 function switchTab(tab, el) {
-  document.querySelectorAll('.ads-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.ads-tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.ap-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('[id^="tab-"]').forEach(t => t.style.display = 'none');
   if (el) el.classList.add('active');
-  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('tab-' + tab).style.display = 'block';
   if (tab === 'analytics') loadAnalytics();
 }
 
@@ -338,25 +300,27 @@ function renderCampaigns() {
   if (filter) list = list.filter(c => c.retailer_id === filter);
   const el = document.getElementById('campaigns-list');
   if (!list.length) {
-    el.innerHTML = '<div class="ads-empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg><p>No campaigns found</p></div>';
+    el.innerHTML = '<div class="ap-empty"><div class="ap-empty-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="2rem" height="2rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg></div><h3>No campaigns found</h3></div>';
     return;
   }
-  let html = '<table class="ads-table"><thead><tr><th>Retailer</th><th>Type</th><th>Status</th><th class="hide-mobile">Clicks</th><th class="hide-mobile">Impressions</th><th>Actions</th></tr></thead><tbody>';
+  let html = '<div class="ap-table-wrap"><table class="ap-table"><thead><tr><th>Retailer</th><th>Type</th><th>Status</th><th class="hide-mobile">Clicks</th><th class="hide-mobile">Impressions</th><th>Actions</th></tr></thead><tbody>';
   list.forEach(c => {
-    const badge = c.status === 'ACTIVE' ? 'ads-badge-active' : c.status === 'PENDING' ? 'ads-badge-pending' : 'ads-badge-expired';
+    const badge = c.status === 'ACTIVE' ? 'ap-badge-emerald' : c.status === 'PENDING' ? 'ap-badge-amber' : 'ap-badge-purple';
     html += `<tr>
-      <td>${retailersMap[c.retailer_id] || 'Platform'}</td>
+      <td style="font-weight:500">${retailersMap[c.retailer_id] || 'Platform'}</td>
       <td>${c.ad_type}</td>
-      <td><span class="ads-badge ${badge}">${c.status}</span></td>
-      <td class="hide-mobile">${(c.clicks||0).toLocaleString()}</td>
-      <td class="hide-mobile">${(c.impressions||0).toLocaleString()}</td>
+      <td><span class="ap-badge ${badge}"><span class="ap-badge-dot"></span>${c.status}</span></td>
+      <td class="hide-mobile" style="font-family:var(--ap-font-mono);font-size:0.8125rem">${(c.clicks||0).toLocaleString()}</td>
+      <td class="hide-mobile" style="font-family:var(--ap-font-mono);font-size:0.8125rem">${(c.impressions||0).toLocaleString()}</td>
       <td>
-        ${c.status === 'PENDING' ? `<button class="ads-btn ads-btn-sm ads-btn-green" onclick="activateCampaign('${c.id}')">Activate</button>` : ''}
-        ${c.status === 'ACTIVE' ? `<button class="ads-btn ads-btn-sm ads-btn-red" onclick="expireCampaign('${c.id}')">Expire</button>` : ''}
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${c.status === 'PENDING' ? `<button class="ap-btn ap-btn-success ap-btn-sm" onclick="activateCampaign('${c.id}')">Activate</button>` : ''}
+          ${c.status === 'ACTIVE' ? `<button class="ap-btn ap-btn-danger ap-btn-sm" onclick="expireCampaign('${c.id}')">Expire</button>` : ''}
+        </div>
       </td>
     </tr>`;
   });
-  html += '</tbody></table>';
+  html += '</tbody></table></div>';
   el.innerHTML = html;
 }
 
@@ -407,28 +371,28 @@ function renderPromos() {
 
   const el = document.getElementById('promos-grid');
   if (!list.length) {
-    el.innerHTML = '<div class="ads-empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg><p>No promo ads found</p></div>';
+    el.innerHTML = '<div class="ap-empty" style="grid-column:1/-1"><div class="ap-empty-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="2rem" height="2rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg></div><h3>No promo ads found</h3></div>';
     return;
   }
   el.innerHTML = list.map(p => {
-    const badge = p.status === 'ACTIVE' ? 'ads-badge-active' : p.status === 'INACTIVE' ? 'ads-badge-inactive' : 'ads-badge-expired';
-    const scope = p.retailer_id ? `<span class="ads-vendor-badge">${retailersMap[p.retailer_id] || 'Vendor'}</span>` : '<span class="ads-platform-badge">Platform</span>';
+    const badge = p.status === 'ACTIVE' ? 'ap-badge-emerald' : p.status === 'INACTIVE' ? 'ap-badge-red' : 'ap-badge-purple';
+    const scope = p.retailer_id ? `<span class="ap-badge ap-badge-blue"><span class="ap-badge-dot"></span>${retailersMap[p.retailer_id] || 'Vendor'}</span>` : '<span class="ap-badge ap-badge-amber"><span class="ap-badge-dot"></span>Platform</span>';
     const dates = p.start_date ? `${new Date(p.start_date).toLocaleDateString()} - ${p.end_date ? new Date(p.end_date).toLocaleDateString() : '...'}` : '';
-    return `<div class="ads-promo-card">
-      <div class="ads-promo-img">${p.banner_url ? '<img src="'+p.banner_url+'" alt="'+p.title+'">' : '<span class="placeholder">No image</span>'}</div>
-      <div class="ads-promo-body">
-        <div class="ads-promo-title">${p.title}</div>
-        <div class="ads-promo-meta">
-          <span class="ads-badge ${badge}">${p.status}</span>
+    return `<div class="ap-card" style="overflow:hidden">
+      <div style="height:140px;background:var(--ap-bg);overflow:hidden;display:flex;align-items:center;justify-content:center">${p.banner_url ? '<img src="'+p.banner_url+'" alt="'+p.title+'" style="width:100%;height:100%;object-fit:cover">' : '<span style="color:var(--ap-text-muted);font-size:0.8125rem">No image</span>'}</div>
+      <div style="padding:1rem">
+        <div style="font-weight:600;font-size:0.9375rem;color:var(--ap-text);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px">
+          <span class="ap-badge ${badge}"><span class="ap-badge-dot"></span>${p.status}</span>
           ${scope}
-          <span>${p.ad_subtype}</span>
-          ${dates ? '<span>'+dates+'</span>' : ''}
+          <span style="font-size:0.8125rem;color:var(--ap-text-secondary)">${p.ad_subtype}</span>
         </div>
+        ${dates ? '<div style="font-size:0.8125rem;color:var(--ap-text-muted);margin-bottom:6px">'+dates+'</div>' : ''}
       </div>
-      <div class="ads-promo-actions">
-        <button class="ads-btn ads-btn-sm" onclick="editPromo('${p.id}')">Edit</button>
-        ${p.status === 'ACTIVE' ? `<button class="ads-btn ads-btn-sm ads-btn-red" onclick="togglePromoStatus('${p.id}','INACTIVE')">Deactivate</button>` : `<button class="ads-btn ads-btn-sm ads-btn-green" onclick="togglePromoStatus('${p.id}','ACTIVE')">Activate</button>`}
-        <button class="ads-btn ads-btn-sm ads-btn-red" onclick="deletePromo('${p.id}')" style="margin-left:auto;">Delete</button>
+      <div style="display:flex;gap:6px;padding:0.75rem 1rem;border-top:1px solid var(--ap-border-light)">
+        <button class="ap-btn ap-btn-outline ap-btn-sm" onclick="editPromo('${p.id}')">Edit</button>
+        ${p.status === 'ACTIVE' ? `<button class="ap-btn ap-btn-danger ap-btn-sm" onclick="togglePromoStatus('${p.id}','INACTIVE')">Deactivate</button>` : `<button class="ap-btn ap-btn-success ap-btn-sm" onclick="togglePromoStatus('${p.id}','ACTIVE')">Activate</button>`}
+        <button class="ap-btn ap-btn-ghost ap-btn-sm" onclick="deletePromo('${p.id}')" style="margin-left:auto;color:var(--ap-red)">Delete</button>
       </div>
     </div>`;
   }).join('');
@@ -478,7 +442,7 @@ function clearPromoBanner() {
 }
 
 function openPromoModal(id) {
-  document.getElementById('promo-modal').classList.add('show');
+  document.getElementById('promo-modal').style.display = 'flex';
   if (!id) {
     document.getElementById('promo-modal-title').textContent = 'Create Promo Ad';
     document.getElementById('promo-id').value = '';
@@ -499,7 +463,7 @@ function openPromoModal(id) {
 }
 
 function closePromoModal() {
-  document.getElementById('promo-modal').classList.remove('show');
+  document.getElementById('promo-modal').style.display = 'none';
 }
 
 function editPromo(id) {
@@ -517,7 +481,6 @@ function editPromo(id) {
   } else {
     document.getElementById('promo-banner-preview').style.display = 'none';
   }
-  // Target URL
   let matchedPreset = '';
   for (const [key, url] of Object.entries(TARGET_URLS)) {
     if (p.target_url === url) { matchedPreset = key; break; }
@@ -540,14 +503,13 @@ function editPromo(id) {
   document.getElementById('promo-end-date').value = p.end_date ? p.end_date.slice(0,10) : '';
   document.getElementById('promo-retailer-id').value = p.retailer_id || '';
   document.getElementById('promo-note').value = p.note || '';
-  document.getElementById('promo-modal').classList.add('show');
+  document.getElementById('promo-modal').style.display = 'flex';
 }
 
 async function savePromo() {
   const id = document.getElementById('promo-id').value;
   const bannerUrl = document.getElementById('promo-banner-url').value;
   if (!bannerUrl) { showToast('Please upload a banner image', 'error'); return; }
-  // Resolve target URL from custom field if needed
   let targetUrl = document.getElementById('promo-target-url').value;
   if (document.getElementById('promo-target-preset').value === 'custom') {
     targetUrl = document.getElementById('promo-target-custom').value;
@@ -614,7 +576,7 @@ async function loadAnalytics() {
     el.style.display = '';
     renderAnalytics(d);
   } catch(e) {
-    loading.innerHTML = '<p style="color:var(--ads-red);">Failed to load analytics</p>';
+    loading.innerHTML = '<div class="ap-empty"><div class="ap-empty-icon" style="background:var(--ap-red-soft);color:var(--ap-red)"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="2rem" height="2rem"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><h3>Failed to load analytics</h3><p style="color:var(--ap-red)">Please try again later</p></div>';
   }
 }
 
@@ -626,54 +588,50 @@ function renderAnalytics(d) {
   document.getElementById('stat-impressions').textContent = (ov.total_impressions || 0).toLocaleString();
   document.getElementById('stat-ctr').textContent = (ov.ctr || 0).toFixed(1) + '%';
 
-  let html = '<div class="ads-chart-container">';
+  let html = '<div class="ap-grid-3">';
 
-  // By Type
   const byType = d.by_type || [];
   if (byType.length) {
     const maxType = Math.max(...byType.map(t => t.count || 0), 1);
-    html += '<div class="ads-chart-card"><div class="ads-chart-title">Campaigns by Type</div><div class="ads-bar-chart">';
+    html += '<div class="ap-card"><div class="ap-card-header"><h3>Campaigns by Type</h3></div><div class="ap-card-body"><div style="display:flex;align-items:flex-end;gap:6px;height:120px">';
     byType.forEach(t => {
       const h = Math.max(((t.count||0)/maxType)*100, 4);
-      html += `<div class="ads-bar" style="height:${h}%"><div class="ads-bar-value">${t.count}</div><div class="ads-bar-label">${t.ad_type}</div></div>`;
+      html += `<div style="flex:1;background:var(--ap-gradient-accent);border-radius:var(--ap-radius-xs) var(--ap-radius-xs) 0 0;height:${h}%;min-width:20px;position:relative" title="${t.count} ${t.ad_type}"><div style="position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:0.6875rem;color:var(--ap-text);font-weight:600;white-space:nowrap">${t.count}</div><div style="position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:0.625rem;color:var(--ap-text-muted);white-space:nowrap">${t.ad_type}</div></div>';
     });
-    html += '</div></div>';
+    html += '</div></div></div>';
   }
 
-  // By Status
   const byStatus = d.by_status || [];
   if (byStatus.length) {
     const maxSt = Math.max(...byStatus.map(s => s.count || 0), 1);
-    const statusColors = {ACTIVE:'#16a34a',PENDING:'#f59e0b',EXPIRED:'#6b7280',PAID:'#2563eb'};
-    html += '<div class="ads-chart-card"><div class="ads-chart-title">Campaigns by Status</div><div class="ads-bar-chart">';
+    const statusColors = {ACTIVE:'var(--ap-emerald)',PENDING:'var(--ap-amber)',EXPIRED:'var(--ap-text-muted)',PAID:'var(--ap-blue)'};
+    html += '<div class="ap-card"><div class="ap-card-header"><h3>Campaigns by Status</h3></div><div class="ap-card-body"><div style="display:flex;align-items:flex-end;gap:6px;height:120px">';
     byStatus.forEach(s => {
       const h = Math.max(((s.count||0)/maxSt)*100, 4);
-      html += `<div class="ads-bar" style="height:${h}%;background:${statusColors[s.status]||'var(--ads-primary)'}"><div class="ads-bar-value">${s.count}</div><div class="ads-bar-label">${s.status}</div></div>`;
+      html += `<div style="flex:1;background:${statusColors[s.status]||'var(--ap-primary)'};border-radius:var(--ap-radius-xs) var(--ap-radius-xs) 0 0;height:${h}%;min-width:20px;position:relative" title="${s.count} ${s.status}"><div style="position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:0.6875rem;color:var(--ap-text);font-weight:600;white-space:nowrap">${s.count}</div><div style="position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:0.625rem;color:var(--ap-text-muted);white-space:nowrap">${s.status}</div></div>';
     });
-    html += '</div></div>';
+    html += '</div></div></div>';
   }
 
-  // Monthly Trend
   const monthly = d.monthly_trend || [];
   if (monthly.length) {
     const maxM = Math.max(...monthly.map(m => m.impressions || 0), 1);
-    html += '<div class="ads-chart-card" style="grid-column:1/-1;"><div class="ads-chart-title">Monthly Trend (6 months)</div><div class="ads-bar-chart" style="height:140px;">';
+    html += '<div class="ap-card" style="grid-column:1/-1"><div class="ap-card-header"><h3>Monthly Trend (6 months)</h3></div><div class="ap-card-body"><div style="display:flex;align-items:flex-end;gap:8px;height:140px">';
     monthly.forEach(m => {
       const h = Math.max(((m.impressions||0)/maxM)*100, 4);
       const label = m.month || '';
-      html += `<div class="ads-bar" style="height:${h}%"><div class="ads-bar-value">${(m.impressions||0).toLocaleString()}</div><div class="ads-bar-label">${label}</div></div>`;
+      html += `<div style="flex:1;background:var(--ap-gradient-primary);border-radius:var(--ap-radius-xs) var(--ap-radius-xs) 0 0;height:${h}%;min-width:20px;position:relative" title="${(m.impressions||0).toLocaleString()} impressions"><div style="position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:0.6875rem;color:var(--ap-text);font-weight:600;white-space:nowrap">${(m.impressions||0).toLocaleString()}</div><div style="position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:0.625rem;color:var(--ap-text-muted);white-space:nowrap">${label}</div></div>`;
     });
-    html += '</div></div>';
+    html += '</div></div></div>';
   }
 
-  // Top Retailers
   const topR = d.top_retailers || [];
   if (topR.length) {
-    html += '<div class="ads-chart-card" style="grid-column:1/-1;"><div class="ads-chart-title">Top Retailers by Campaigns</div><table class="ads-table"><thead><tr><th>Retailer</th><th>Campaigns</th><th>Clicks</th><th>Impressions</th></tr></thead><tbody>';
+    html += '<div class="ap-card" style="grid-column:1/-1"><div class="ap-card-header"><h3>Top Retailers by Campaigns</h3></div><div class="ap-card-body flush"><div class="ap-table-wrap"><table class="ap-table"><thead><tr><th>Retailer</th><th>Campaigns</th><th>Clicks</th><th>Impressions</th></tr></thead><tbody>';
     topR.forEach(r => {
-      html += `<tr><td>${r.name || r.retailer_id}</td><td>${r.campaigns||0}</td><td>${(r.clicks||0).toLocaleString()}</td><td>${(r.impressions||0).toLocaleString()}</td></tr>`;
+      html += `<tr><td style="font-weight:500">${r.name || r.retailer_id}</td><td style="font-family:var(--ap-font-mono)">${r.campaigns||0}</td><td style="font-family:var(--ap-font-mono)">${(r.clicks||0).toLocaleString()}</td><td style="font-family:var(--ap-font-mono)">${(r.impressions||0).toLocaleString()}</td></tr>`;
     });
-    html += '</tbody></table></div>';
+    html += '</tbody></table></div></div></div>';
   }
 
   html += '</div>';

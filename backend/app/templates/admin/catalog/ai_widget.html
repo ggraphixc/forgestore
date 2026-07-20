@@ -1,430 +1,222 @@
 <!-- AI Product Description Generator Widget -->
 <style>
-/* ─── admin-ai-widget design system ─── */
-:root {
-  --admin-ai-amber-50: #fffbeb;
-  --admin-ai-amber-100: #fef3c7;
-  --admin-ai-amber-200: #fde68a;
-  --admin-ai-amber-500: #f59e0b;
-  --admin-ai-amber-600: #d97706;
-  --admin-ai-amber-700: #b45309;
-  --admin-ai-orange-500: #f97316;
-  --admin-ai-orange-600: #ea580c;
-  --admin-ai-stone-50: #fafaf9;
-  --admin-ai-stone-100: #f5f5f4;
-  --admin-ai-stone-200: #e7e5e4;
-  --admin-ai-stone-300: #d6d3d1;
-  --admin-ai-stone-400: #a8a29e;
-  --admin-ai-stone-500: #78716c;
-  --admin-ai-stone-600: #57534e;
-  --admin-ai-stone-800: #292524;
-  --admin-ai-stone-900: #1c1917;
-  --admin-ai-radius-sm: 6px;
-  --admin-ai-radius-md: 10px;
-  --admin-ai-radius-lg: 14px;
-  --admin-ai-shadow-sm: 0 1px 3px rgba(0,0,0,.06);
-  --admin-ai-shadow-md: 0 4px 12px rgba(0,0,0,.08);
-  --admin-ai-transition-fast: 150ms ease;
-  --admin-ai-transition-base: 200ms ease;
-}
+@import url('/static/css/admin_portal.css');
 
 /* ─── widget container ─── */
-.admin-ai-widget {
-  background: linear-gradient(135deg, var(--admin-ai-amber-50) 0%, #fff7ed 100%);
-  border: 1px solid var(--admin-ai-amber-200);
-  border-radius: var(--admin-ai-radius-lg);
-  padding: 28px;
-  transition: box-shadow var(--admin-ai-transition-base);
-  margin-bottom: 24px;
+.ai-widget {
+  background: linear-gradient(135deg, var(--ap-amber-soft) 0%, #fff7ed 100%);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: var(--ap-radius-xl);
+  padding: 1.75rem;
+  transition: box-shadow var(--ap-transition);
+  margin-bottom: 1.5rem;
   position: relative;
   overflow: hidden;
 }
-
-.admin-ai-widget::before {
+.dark .ai-widget {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(249, 115, 22, 0.05) 100%);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+.ai-widget::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: 0; left: 0; right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--admin-ai-amber-500), var(--admin-ai-orange-500), var(--admin-ai-amber-500));
+  background: linear-gradient(90deg, var(--ap-amber), var(--ap-primary), var(--ap-amber));
 }
-
-.admin-ai-widget:hover {
-  box-shadow: var(--admin-ai-shadow-md);
-}
+.ai-widget:hover { box-shadow: var(--ap-shadow-md); }
 
 /* ─── header ─── */
-.admin-ai-widget-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 4px;
+.ai-widget-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 4px;
+}
+.ai-widget-icon {
+  width: 36px; height: 36px;
+  background: var(--ap-gradient-primary);
+  border-radius: var(--ap-radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; box-shadow: var(--ap-shadow-primary);
+}
+.ai-widget-icon svg { width: 18px; height: 18px; color: #fff; }
+.ai-widget-header h2 {
+  font-size: 1rem; font-weight: 700; color: var(--ap-text);
+  margin: 0; letter-spacing: -0.01em;
+}
+.ai-widget-desc {
+  font-size: 0.875rem; color: var(--ap-text-muted);
+  margin: 0 0 1.25rem 46px; line-height: 1.4;
 }
 
-.admin-ai-widget-header-icon {
-  width: 32px;
-  height: 32px;
-  background: var(--admin-ai-amber-500);
-  border-radius: var(--admin-ai-radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.admin-ai-widget-header-icon svg {
-  width: 16px;
-  height: 16px;
-  color: #fff;
-}
-
-.admin-ai-widget-header h2 {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: var(--admin-ai-stone-900);
-  margin: 0;
-  letter-spacing: -0.01em;
-}
-
-.admin-ai-widget-desc {
-  font-size: 0.8125rem;
-  color: var(--admin-ai-stone-500);
-  margin: 0 0 20px 42px;
-  line-height: 1.4;
-}
-
-/* ─── fields layout ─── */
-.admin-ai-widget-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.admin-ai-widget-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
+/* ─── fields ─── */
+.ai-widget-fields { display: flex; flex-direction: column; gap: 0.875rem; }
+.ai-widget-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.875rem; }
 
 /* ─── labels ─── */
-.admin-ai-widget-label {
-  display: block;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--admin-ai-stone-500);
-  margin-bottom: 6px;
+.ai-widget-label {
+  display: block; font-size: 0.6875rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--ap-text-muted); margin-bottom: 0.375rem;
 }
 
 /* ─── inputs ─── */
-.admin-ai-widget-input,
-.admin-ai-widget-select {
-  width: 100%;
-  padding: 0 14px;
-  background: #fff;
-  border: 1px solid var(--admin-ai-stone-300);
-  border-radius: var(--admin-ai-radius-md);
-  font-size: 0.8125rem;
-  color: var(--admin-ai-stone-900);
-  transition: all var(--admin-ai-transition-fast);
-  min-height: 44px;
-  box-sizing: border-box;
-  font-family: inherit;
+.ai-widget-input,
+.ai-widget-select {
+  width: 100%; padding: 0 0.875rem;
+  background: var(--ap-bg-elevated);
+  border: 1.5px solid var(--ap-border);
+  border-radius: var(--ap-radius-md);
+  font-size: 0.875rem; color: var(--ap-text);
+  transition: all var(--ap-transition);
+  min-height: 44px; box-sizing: border-box;
+  font-family: var(--ap-font); outline: none;
 }
-
-.admin-ai-widget-input::placeholder {
-  color: var(--admin-ai-stone-400);
+.ai-widget-input::placeholder { color: var(--ap-text-muted); }
+.ai-widget-input:focus,
+.ai-widget-select:focus {
+  border-color: var(--ap-accent);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
-
-.admin-ai-widget-input:focus,
-.admin-ai-widget-select:focus {
-  outline: none;
-  border-color: var(--admin-ai-amber-500);
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
-}
-
-.admin-ai-widget-select {
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2378716c' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+.ai-widget-select {
+  cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 36px;
+  background-position: right 0.75rem center;
+  padding-right: 2.5rem;
 }
 
-/* ─── image preview strip ─── */
-.admin-ai-widget-images {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 4px 0;
-}
-
-.admin-ai-widget-images:empty {
-  display: none;
-}
-
-.admin-ai-widget-img-thumb {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--admin-ai-radius-sm);
-  object-fit: cover;
-  border: 2px solid var(--admin-ai-amber-200);
+/* ─── image strip ─── */
+.ai-widget-images { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0; }
+.ai-widget-images:empty { display: none; }
+.ai-widget-img-thumb {
+  width: 48px; height: 48px; border-radius: var(--ap-radius-sm);
+  object-fit: cover; border: 2px solid var(--ap-primary);
   flex-shrink: 0;
 }
-
-.admin-ai-widget-img-count {
-  font-size: 0.6875rem;
-  color: var(--admin-ai-stone-500);
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.ai-widget-img-count {
+  font-size: 0.75rem; color: var(--ap-text-muted);
+  display: flex; align-items: center; gap: 4px;
 }
+.ai-widget-img-count svg { width: 14px; height: 14px; color: var(--ap-primary); }
 
-.admin-ai-widget-img-count svg {
-  width: 14px;
-  height: 14px;
-  color: var(--admin-ai-amber-500);
+/* ─── buttons ─── */
+.ai-widget-btns { display: flex; gap: 0.625rem; align-items: center; }
+
+.ai-widget-generate-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px; padding: 0 1.25rem;
+  background: var(--ap-gradient-primary);
+  color: #fff; font-size: 0.875rem; font-weight: 700;
+  letter-spacing: 0.02em; border: none;
+  border-radius: var(--ap-radius-md);
+  cursor: pointer; transition: all var(--ap-transition);
+  box-shadow: var(--ap-shadow-primary);
+  min-height: 44px; position: relative; overflow: hidden;
 }
-
-/* ─── buttons row ─── */
-.admin-ai-widget-btns {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-/* ─── generate button ─── */
-.admin-ai-widget-generate-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 20px;
-  background: linear-gradient(135deg, var(--admin-ai-amber-500), var(--admin-ai-orange-500));
-  color: #fff;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  border: none;
-  border-radius: var(--admin-ai-radius-md);
-  cursor: pointer;
-  transition: all var(--admin-ai-transition-fast);
-  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
-  min-height: 44px;
-  position: relative;
-  overflow: hidden;
-}
-
-.admin-ai-widget-generate-btn::after {
+.ai-widget-generate-btn::after {
   content: '';
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0;
   background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
   pointer-events: none;
 }
-
-.admin-ai-widget-generate-btn:hover {
-  background: linear-gradient(135deg, var(--admin-ai-amber-600), var(--admin-ai-orange-600));
-  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.35);
+.ai-widget-generate-btn:hover {
+  box-shadow: 0 6px 20px -3px rgba(245, 158, 11, 0.4);
   transform: translateY(-1px);
 }
+.ai-widget-generate-btn:active { transform: translateY(0); }
+.ai-widget-generate-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+.ai-widget-generate-btn svg { width: 16px; height: 16px; position: relative; }
 
-.admin-ai-widget-generate-btn:active {
-  transform: translateY(0);
+.ai-widget-retry-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px; padding: 0 1rem;
+  background: var(--ap-bg-elevated); color: var(--ap-text-secondary);
+  font-size: 0.875rem; font-weight: 600;
+  border: 1.5px solid var(--ap-border); border-radius: var(--ap-radius-md);
+  cursor: pointer; transition: all var(--ap-transition); min-height: 44px;
 }
+.ai-widget-retry-btn:hover { background: var(--ap-border-light); border-color: var(--ap-text-muted); }
+.ai-widget-retry-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.ai-widget-retry-btn svg { width: 16px; height: 16px; }
 
-.admin-ai-widget-generate-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+.ai-widget-retry-info { font-size: 0.75rem; color: var(--ap-text-muted); }
+
+/* ─── result ─── */
+.ai-widget-result { display: none; margin-top: 0.25rem; }
+.ai-widget-result.visible { display: block; animation: aiFadeIn 0.3s ease; }
+@keyframes aiFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.ai-widget-output-wrap { position: relative; }
+.ai-widget-output {
+  width: 100%; padding: 0.875rem;
+  background: var(--ap-bg-elevated);
+  border: 1.5px solid var(--ap-border);
+  border-radius: var(--ap-radius-md);
+  font-size: 0.875rem; color: var(--ap-text);
+  transition: all var(--ap-transition);
+  resize: vertical; min-height: 120px;
+  box-sizing: border-box; font-family: var(--ap-font);
+  line-height: 1.6; outline: none;
 }
-
-.admin-ai-widget-generate-btn svg {
-  width: 14px;
-  height: 14px;
-  position: relative;
-}
-
-/* ─── retry button ─── */
-.admin-ai-widget-retry-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 0 16px;
-  background: #fff;
-  color: var(--admin-ai-stone-600);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  border: 1px solid var(--admin-ai-stone-300);
-  border-radius: var(--admin-ai-radius-md);
-  cursor: pointer;
-  transition: all var(--admin-ai-transition-fast);
-  min-height: 44px;
-}
-
-.admin-ai-widget-retry-btn:hover {
-  background: var(--admin-ai-stone-50);
-  border-color: var(--admin-ai-stone-400);
-}
-
-.admin-ai-widget-retry-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.admin-ai-widget-retry-btn svg {
-  width: 14px;
-  height: 14px;
-}
-
-.admin-ai-widget-retry-info {
-  font-size: 0.6875rem;
-  color: var(--admin-ai-stone-400);
-}
-
-/* ─── result area ─── */
-.admin-ai-widget-result {
-  display: none;
-  margin-top: 4px;
-}
-
-.admin-ai-widget-result.visible {
-  display: block;
-  animation: admin-ai-fadeIn 0.3s ease;
-}
-
-@keyframes admin-ai-fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.admin-ai-widget-output-wrap {
-  position: relative;
-}
-
-.admin-ai-widget-output {
-  width: 100%;
-  padding: 14px;
-  background: #fff;
-  border: 1px solid var(--admin-ai-stone-300);
-  border-radius: var(--admin-ai-radius-md);
-  font-size: 0.8125rem;
-  color: var(--admin-ai-stone-900);
-  transition: all var(--admin-ai-transition-fast);
-  resize: vertical;
-  min-height: 120px;
-  box-sizing: border-box;
-  font-family: inherit;
-  line-height: 1.6;
-}
-
-.admin-ai-widget-output:focus {
-  outline: none;
-  border-color: var(--admin-ai-amber-500);
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+.ai-widget-output:focus {
+  border-color: var(--ap-accent);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 /* ─── use button ─── */
-.admin-ai-widget-use-btn {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  padding: 6px 14px;
-  background: var(--admin-ai-stone-900);
-  color: #fff;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  border: none;
-  border-radius: var(--admin-ai-radius-sm);
-  cursor: pointer;
-  transition: all var(--admin-ai-transition-fast);
+.ai-widget-use-btn {
+  position: absolute; bottom: 10px; right: 10px;
+  padding: 0.375rem 0.875rem;
+  background: var(--ap-gradient-dark); color: #fff;
+  font-size: 0.75rem; font-weight: 700;
+  letter-spacing: 0.04em; border: none;
+  border-radius: var(--ap-radius-sm);
+  cursor: pointer; transition: all var(--ap-transition);
   min-height: 32px;
 }
+.ai-widget-use-btn:hover { box-shadow: var(--ap-shadow-sm); transform: translateY(-1px); }
 
-.admin-ai-widget-use-btn:hover {
-  background: var(--admin-ai-stone-800);
-  box-shadow: var(--admin-ai-shadow-sm);
-}
-
-/* ─── image analysis badge ─── */
-.admin-ai-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+/* ─── badge ─── */
+.ai-widget-badge {
+  display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 8px;
   background: rgba(245, 158, 11, 0.12);
-  color: var(--admin-ai-amber-700);
-  font-size: 0.625rem;
-  font-weight: 700;
-  border-radius: 999px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  color: var(--ap-primary); font-size: 0.6875rem;
+  font-weight: 700; border-radius: var(--ap-radius-pill);
+  text-transform: uppercase; letter-spacing: 0.05em;
 }
-
-.admin-ai-badge svg {
-  width: 10px;
-  height: 10px;
-}
+.ai-widget-badge svg { width: 12px; height: 12px; }
 
 /* ─── responsive ─── */
 @media (max-width: 640px) {
-  .admin-ai-widget {
-    padding: 20px;
-    margin-bottom: 16px;
-  }
-
-  .admin-ai-widget-row {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-ai-widget-desc {
-    margin-left: 0;
-    margin-top: 8px;
-  }
-
-  .admin-ai-widget-header-icon {
-    width: 28px;
-    height: 28px;
-  }
-
-  .admin-ai-widget-header-icon svg {
-    width: 14px;
-    height: 14px;
-  }
-
-  .admin-ai-widget-btns {
-    flex-direction: column;
-    align-items: stretch;
-  }
+  .ai-widget { padding: 1.25rem; margin-bottom: 1rem; }
+  .ai-widget-row { grid-template-columns: 1fr; }
+  .ai-widget-desc { margin-left: 0; margin-top: 0.5rem; }
+  .ai-widget-icon { width: 32px; height: 32px; }
+  .ai-widget-icon svg { width: 16px; height: 16px; }
+  .ai-widget-btns { flex-direction: column; align-items: stretch; }
 }
 </style>
 
-<div class="admin-ai-widget">
-    <div class="admin-ai-widget-header">
-        <div class="admin-ai-widget-header-icon">
+<div class="ai-widget">
+    <div class="ai-widget-header">
+        <div class="ai-widget-icon">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
         </div>
         <h2>AI Description Generator</h2>
-        <span id="ai-badge" class="admin-ai-badge" style="display:none;">
+        <span id="ai-badge" class="ai-widget-badge" style="display:none;">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             Image Analysis
         </span>
     </div>
-    <p class="admin-ai-widget-desc">Let AI craft a compelling product description — uses your images for visual context</p>
+    <p class="ai-widget-desc">Let AI craft a compelling product description — uses your images for visual context</p>
 
-    <div class="admin-ai-widget-fields">
-        <div class="admin-ai-widget-row">
+    <div class="ai-widget-fields">
+        <div class="ai-widget-row">
             <div>
-                <label class="admin-ai-widget-label">Category</label>
-                <select id="ai-category" class="admin-ai-widget-select">
+                <label class="ai-widget-label">Category</label>
+                <select id="ai-category" class="ai-widget-select">
                     <option value="">Auto-detect</option>
                     {% for cat in categories %}
                     <option value="{{ cat.name }}">{{ cat.name }}</option>
@@ -432,8 +224,8 @@
                 </select>
             </div>
             <div>
-                <label class="admin-ai-widget-label">Tone</label>
-                <select id="ai-tone" class="admin-ai-widget-select">
+                <label class="ai-widget-label">Tone</label>
+                <select id="ai-tone" class="ai-widget-select">
                     <option value="professional">Professional</option>
                     <option value="casual">Casual & Friendly</option>
                     <option value="luxury">Luxury & Premium</option>
@@ -444,49 +236,48 @@
             </div>
         </div>
         <div>
-            <label class="admin-ai-widget-label">Keywords (optional, comma-separated)</label>
-            <input type="text" id="ai-keywords" placeholder="e.g. handmade, sustainable, gift" class="admin-ai-widget-input">
+            <label class="ai-widget-label">Keywords (optional, comma-separated)</label>
+            <input type="text" id="ai-keywords" placeholder="e.g. handmade, sustainable, gift" class="ai-widget-input">
         </div>
 
-        <!-- Product images from form -->
         <div>
-            <label class="admin-ai-widget-label">Product Images</label>
-            <div id="ai-image-strip" class="admin-ai-widget-images"></div>
-            <p id="ai-image-hint" class="admin-ai-widget-img-count" style="margin:4px 0 0;">
+            <label class="ai-widget-label">Product Images</label>
+            <div id="ai-image-strip" class="ai-widget-images"></div>
+            <p id="ai-image-hint" class="ai-widget-img-count" style="margin:4px 0 0;">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                 <span id="ai-image-count-text">No images yet — upload images below first</span>
             </p>
         </div>
 
-        <div class="admin-ai-widget-btns">
-            <button type="button" onclick="generateAIDescription()" id="ai-gen-btn" class="admin-ai-widget-generate-btn">
+        <div class="ai-widget-btns">
+            <button type="button" onclick="generateAIDescription()" id="ai-gen-btn" class="ai-widget-generate-btn">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                 Generate Description
             </button>
-            <button type="button" onclick="generateAISpecs()" id="ai-specs-btn" class="admin-ai-widget-retry-btn">
+            <button type="button" onclick="generateAISpecs()" id="ai-specs-btn" class="ai-widget-retry-btn">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                 Generate Specs
             </button>
-            <button type="button" onclick="retryAIDescription()" id="ai-retry-btn" class="admin-ai-widget-retry-btn" style="display:none;">
+            <button type="button" onclick="retryAIDescription()" id="ai-retry-btn" class="ai-widget-retry-btn" style="display:none;">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 Retry
             </button>
-            <span id="ai-retry-info" class="admin-ai-widget-retry-info" style="display:none;"></span>
+            <span id="ai-retry-info" class="ai-widget-retry-info" style="display:none;"></span>
         </div>
 
-        <div id="ai-result" class="admin-ai-widget-result">
-            <label class="admin-ai-widget-label">Generated Description</label>
-            <div class="admin-ai-widget-output-wrap">
-                <textarea id="ai-description-output" rows="6" class="admin-ai-widget-output" readonly></textarea>
-                <button type="button" onclick="useAIDescription()" class="admin-ai-widget-use-btn">Use This Description</button>
+        <div id="ai-result" class="ai-widget-result">
+            <label class="ai-widget-label">Generated Description</label>
+            <div class="ai-widget-output-wrap">
+                <textarea id="ai-description-output" rows="6" class="ai-widget-output" readonly></textarea>
+                <button type="button" onclick="useAIDescription()" class="ai-widget-use-btn">Use This Description</button>
             </div>
         </div>
 
-        <div id="ai-specs-result" class="admin-ai-widget-result">
-            <label class="admin-ai-widget-label">Generated Specifications</label>
-            <div class="admin-ai-widget-output-wrap">
-                <textarea id="ai-specs-output" rows="5" class="admin-ai-widget-output" readonly></textarea>
-                <button type="button" onclick="useAISpecs()" class="admin-ai-widget-use-btn">Use These Specs</button>
+        <div id="ai-specs-result" class="ai-widget-result">
+            <label class="ai-widget-label">Generated Specifications</label>
+            <div class="ai-widget-output-wrap">
+                <textarea id="ai-specs-output" rows="5" class="ai-widget-output" readonly></textarea>
+                <button type="button" onclick="useAISpecs()" class="ai-widget-use-btn">Use These Specs</button>
             </div>
         </div>
     </div>
@@ -498,12 +289,10 @@
     let retryCount = 0;
     let lastParams = null;
 
-    // Auto-fill image strip from form
     function refreshImageStrip() {
         const imagesRaw = document.getElementById('images-input')?.value || '';
         const urls = imagesRaw.split('\n').filter(l => l.trim());
         const strip = document.getElementById('ai-image-strip');
-        const hint = document.getElementById('ai-image-hint');
         const countText = document.getElementById('ai-image-count-text');
         const badge = document.getElementById('ai-badge');
 
@@ -512,7 +301,7 @@
             urls.slice(0, 6).forEach(url => {
                 const img = document.createElement('img');
                 img.src = url;
-                img.className = 'admin-ai-widget-img-thumb';
+                img.className = 'ai-widget-img-thumb';
                 img.alt = 'Product image';
                 strip.appendChild(img);
             });
@@ -524,27 +313,22 @@
         }
     }
 
-    // Watch for image changes
     const observer = new MutationObserver(refreshImageStrip);
     const imagesInput = document.getElementById('images-input');
     if (imagesInput) {
         observer.observe(imagesInput, { childList: true, characterData: true, subtree: true });
-        // Also watch for input event
         imagesInput.addEventListener('input', refreshImageStrip);
     }
 
-    // Also poll every 500ms for changes (images-input is a textarea updated by JS)
     setInterval(refreshImageStrip, 500);
     refreshImageStrip();
 
-    // Auto-fill category from form's category select
     const formCategory = document.querySelector('select[name="category_id"]');
     if (formCategory) {
         formCategory.addEventListener('change', () => {
             const selected = formCategory.options[formCategory.selectedIndex];
             if (selected && selected.text) {
                 const aiCategory = document.getElementById('ai-category');
-                // Try to match
                 for (let i = 0; i < aiCategory.options.length; i++) {
                     if (aiCategory.options[i].value === selected.text) {
                         aiCategory.selectedIndex = i;
@@ -598,7 +382,7 @@
         const retryBtn = document.getElementById('ai-retry-btn');
         btn.disabled = true;
         retryBtn.disabled = true;
-        btn.innerHTML = '<svg class="animate-spin" viewBox="0 0 24 24" width="14" height="14"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Generating...';
+        btn.innerHTML = '<svg class="animate-spin" viewBox="0 0 24 24" width="16" height="16"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Generating...';
 
         try {
             const res = await fetch('/api/admin/ai/generate-description', {
@@ -620,7 +404,7 @@
         } finally {
             btn.disabled = false;
             retryBtn.disabled = false;
-            btn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Generate Description';
+            btn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Generate Description';
             updateRetryUI();
         }
     }
@@ -650,7 +434,6 @@
         }
     };
 
-    // ─── Specifications Generator ───
     window.generateAISpecs = async function() {
         const name = document.querySelector('input[name="name"]')?.value;
         if (!name) {
@@ -660,7 +443,7 @@
 
         const btn = document.getElementById('ai-specs-btn');
         btn.disabled = true;
-        btn.innerHTML = '<svg class="animate-spin" viewBox="0 0 24 24" width="14" height="14"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Generating...';
+        btn.innerHTML = '<svg class="animate-spin" viewBox="0 0 24 24" width="16" height="16"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Generating...';
 
         const images = getProductImages();
         const brand = document.querySelector('input[name="brand"]')?.value || '';
@@ -680,7 +463,6 @@
             });
             const data = await res.json();
             if (data.success && data.specifications) {
-                // Format as key: value pairs
                 const formatted = Object.entries(data.specifications)
                     .map(([k, v]) => k + ': ' + v)
                     .join('\n');
@@ -693,7 +475,7 @@
             showToast('Failed to generate specifications', 'error');
         } finally {
             btn.disabled = false;
-            btn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg> Generate Specs';
+            btn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg> Generate Specs';
         }
     };
 
@@ -701,7 +483,6 @@
         const specsInput = document.querySelector('input[name="specifications"], textarea[name="specifications"]');
         const aiOutput = document.getElementById('ai-specs-output');
         if (specsInput && aiOutput) {
-            // Convert from key: value format to comma-separated for the input
             const lines = aiOutput.value.split('\n').filter(l => l.trim());
             const commaFormat = lines.map(l => l.replace(/^([^:]+):\s*/, '$1: ')).join(', ');
             specsInput.value = commaFormat;

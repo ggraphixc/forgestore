@@ -4,89 +4,148 @@
 
 {% block content %}
 <style>
-  :root {
-    --amber-50:#fffbeb;--amber-100:#fef3c7;--amber-200:#fde68a;--amber-300:#fcd34d;
-    --amber-400:#fbbf24;--amber-500:#f59e0b;--amber-600:#d97706;--amber-700:#b45309;
-    --amber-800:#92400e;
-    --stone-50:#fafaf9;--stone-100:#f5f5f4;--stone-200:#e7e5e4;--stone-300:#d6d3d1;
-    --stone-400:#a8a29e;--stone-500:#78716c;--stone-600:#57534e;--stone-700:#44403c;
-    --stone-800:#292524;--stone-900:#1c1917;
-    --emerald-100:#d1fae5;--emerald-600:#059669;
-    --blue-100:#dbeafe;--blue-600:#2563eb;
-    --purple-100:#f3e8ff;--purple-600:#9333ea;
-    --red-100:#fee2e2;--red-500:#ef4444;
-    --radius-sm:6px;--radius-md:10px;--radius-lg:14px;--radius-xl:16px;--radius-full:9999px;
-    --shadow-sm:0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 12px rgba(0,0,0,.06);
-    --transition-fast:150ms ease;--transition-base:200ms ease;
-  }
-  .admin-page{max-width:800px;margin:0 auto;padding:0}
-  .admin-page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;gap:1rem;flex-wrap:wrap}
-  .admin-page-eyebrow{font-size:.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:.2em;color:var(--amber-600);margin-bottom:.5rem}
-  .admin-page-title{font-size:1.875rem;font-weight:900;color:var(--stone-900);display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
-  .admin-page-subtitle{font-size:.875rem;color:var(--stone-500);margin-top:.5rem}
-  .admin-unread-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:var(--radius-full);font-size:.625rem;font-weight:700;background:var(--amber-100);color:#92400e;border:1px solid var(--amber-200)}
-  .admin-btn-outline{display:inline-flex;align-items:center;padding:.5rem 1rem;font-size:.75rem;font-weight:500;color:var(--stone-500);background:#fff;border:1px solid var(--stone-200);border-radius:var(--radius-md);cursor:pointer;transition:all var(--transition-fast);min-height:44px}
-  .admin-btn-outline:hover{color:var(--stone-900);border-color:var(--stone-300)}
-  .admin-card{background:#fff;border:1px solid var(--stone-200);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm)}
-  .admin-card-body{padding:1.5rem}
-  .admin-empty-icon{width:64px;height:64px;background:var(--stone-50);border-radius:var(--radius-full);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
-  .admin-empty-icon svg{width:32px;height:32px;color:var(--stone-300)}
-  .admin-empty-title{font-size:.875rem;font-weight:500;color:var(--stone-500)}
-  .admin-empty-sub{font-size:.75rem;color:var(--stone-400);margin-top:.25rem}
-  .admin-notif-item{background:#fff;border-radius:var(--radius-md);padding:1rem;display:flex;align-items:flex-start;gap:1rem;border:1px solid var(--stone-200);transition:box-shadow var(--transition-base);margin-bottom:.5rem}
-  .admin-notif-item.unread{border-color:var(--amber-200);background:rgba(255,251,235,.3)}
-  .admin-notif-item.clickable{cursor:pointer}
-  .admin-notif-item:hover{box-shadow:var(--shadow-md)}
-  .admin-notif-icon{width:40px;height:40px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .admin-notif-icon svg{width:20px;height:20px}
-  .admin-notif-icon.green{background:var(--emerald-100);color:var(--emerald-600)}
-  .admin-notif-icon.blue{background:var(--blue-100);color:var(--blue-600)}
-  .admin-notif-icon.purple{background:var(--purple-100);color:var(--purple-600)}
-  .admin-notif-icon.red{background:var(--red-100);color:var(--red-500)}
-  .admin-notif-icon.amber{background:var(--amber-100);color:var(--amber-600)}
-  .admin-notif-icon.gray{background:var(--stone-100);color:var(--stone-600)}
-  .admin-notif-body{flex:1;min-width:0}
-  .admin-notif-title-row{display:flex;align-items:center;gap:.5rem}
-  .admin-notif-title{font-size:.875rem;font-weight:600;color:var(--stone-900)}
-  .admin-notif-dot{width:8px;height:8px;border-radius:var(--radius-full);background:var(--amber-500);flex-shrink:0}
-  .admin-notif-message{font-size:.75rem;color:var(--stone-500);margin-top:2px}
-  .admin-notif-time{font-size:.625rem;color:var(--stone-400);margin-top:.375rem}
-  .admin-notif-check{flex-shrink:0;padding:6px;color:var(--stone-400);border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition-fast);border:none;background:none}
-  .admin-notif-check:hover{color:var(--stone-600);background:var(--stone-100)}
-  .admin-notif-check svg{width:16px;height:16px}
-  .admin-load-more{text-align:center;margin-top:1.5rem}
-  .admin-load-more-btn{padding:.75rem 1.5rem;font-size:.875rem;font-weight:500;color:var(--stone-600);background:#fff;border:1px solid var(--stone-200);border-radius:var(--radius-md);cursor:pointer;transition:all var(--transition-fast);box-shadow:var(--shadow-sm);min-height:44px}
-  .admin-load-more-btn:hover{border-color:var(--stone-300);color:var(--stone-900)}
-  .admin-spinner{width:24px;height:24px;border:2px solid var(--amber-500);border-top-color:transparent;border-radius:var(--radius-full);animation:spin 1s linear infinite;margin:0 auto 1rem}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .admin-hidden{display:none !important}
-  @media(max-width:640px){.admin-page-header{flex-direction:column;align-items:flex-start}.admin-card-body{padding:1rem}.admin-page-title{font-size:1.5rem}}
+@import url('/static/css/admin_portal.css');
+
+/* ── Notification-specific overrides ────────────────────── */
+.ap-notif-item {
+  background: var(--ap-bg-elevated);
+  border-radius: var(--ap-radius-lg);
+  padding: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  border: 1px solid var(--ap-border);
+  transition: all var(--ap-transition);
+  margin-bottom: 0.5rem;
+}
+.ap-notif-item:hover {
+  box-shadow: var(--ap-shadow-md);
+  border-color: var(--ap-border);
+}
+.ap-notif-item.unread {
+  border-color: var(--ap-primary);
+  background: var(--ap-bg-elevated);
+  box-shadow: 0 0 0 1px var(--ap-primary);
+}
+.dark .ap-notif-item.unread {
+  background: rgba(245, 158, 11, 0.05);
+}
+.ap-notif-item.clickable { cursor: pointer; }
+
+.ap-notif-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--ap-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ap-notif-icon svg { width: 20px; height: 20px; }
+.ap-notif-icon.green { background: var(--ap-emerald-soft); color: var(--ap-emerald); }
+.ap-notif-icon.blue { background: var(--ap-blue-soft); color: var(--ap-blue); }
+.ap-notif-icon.purple { background: var(--ap-purple-soft); color: var(--ap-purple); }
+.ap-notif-icon.red { background: var(--ap-red-soft); color: var(--ap-red); }
+.ap-notif-icon.amber { background: var(--ap-amber-soft); color: var(--ap-amber); }
+.ap-notif-icon.gray { background: var(--ap-bg); color: var(--ap-text-muted); }
+
+.ap-notif-body { flex: 1; min-width: 0; }
+.ap-notif-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.ap-notif-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ap-text);
+}
+.ap-notif-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--ap-radius-pill);
+  background: var(--ap-primary);
+  flex-shrink: 0;
+  animation: apFadeIn 0.3s ease-out;
+}
+.ap-notif-message {
+  font-size: 0.8125rem;
+  color: var(--ap-text-secondary);
+  margin-top: 0.125rem;
+}
+.ap-notif-time {
+  font-size: 0.75rem;
+  color: var(--ap-text-muted);
+  margin-top: 0.375rem;
+}
+
+.ap-notif-check {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ap-text-muted);
+  border-radius: var(--ap-radius-md);
+  cursor: pointer;
+  transition: all var(--ap-transition);
+  border: none;
+  background: none;
+}
+.ap-notif-check:hover {
+  color: var(--ap-primary);
+  background: var(--ap-amber-soft);
+}
+.ap-notif-check svg { width: 18px; height: 18px; }
+
+/* Load more */
+.ap-load-more {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+/* Spinner */
+.ap-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--ap-border);
+  border-top-color: var(--ap-primary);
+  border-radius: var(--ap-radius-pill);
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 1rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.ap-hidden { display: none !important; }
 </style>
 
-<div class="admin-page">
-    <div class="admin-page-header">
-        <div>
-            <p class="admin-page-eyebrow">System</p>
-            <h1 class="admin-page-title">
+<div class="ap-page">
+    <div class="ap-header">
+        <div class="ap-header-left">
+            <span class="ap-overline">System</span>
+            <h1>
                 Notifications
-                <span id="unread-badge" class="admin-unread-badge admin-hidden"></span>
+                <span id="unread-badge" class="ap-badge ap-badge-amber ap-hidden" style="margin-left:0.5rem;font-size:0.75rem;"></span>
             </h1>
-            <p class="admin-page-subtitle">Stay informed about new orders and system events</p>
+            <p class="ap-subtitle">Stay informed about new orders and system events</p>
         </div>
-        <button onclick="markAllRead()" class="admin-btn-outline">Mark All Read</button>
+        <div class="ap-header-actions">
+            <button onclick="markAllRead()" class="ap-btn ap-btn-outline">Mark All Read</button>
+        </div>
     </div>
 
     <div id="notifications-container">
-        <div class="admin-card">
-            <div class="admin-card-body" style="text-align:center;">
-                <div class="admin-spinner"></div>
-                <p class="admin-empty-title">Loading notifications...</p>
+        <div class="ap-card">
+            <div class="ap-card-body" style="text-align:center;padding:3rem 1.5rem;">
+                <div class="ap-spinner"></div>
+                <p style="font-size:0.9375rem;font-weight:500;color:var(--ap-text-secondary);">Loading notifications...</p>
             </div>
         </div>
     </div>
 
-    <div id="load-more-container" class="admin-load-more admin-hidden">
-        <button id="load-more-btn" onclick="loadMore()" class="admin-load-more-btn">Load More</button>
+    <div id="load-more-container" class="ap-load-more ap-hidden">
+        <button id="load-more-btn" onclick="loadMore()" class="ap-btn ap-btn-outline">Load More</button>
     </div>
 </div>
 {% endblock %}
@@ -108,9 +167,9 @@ async function loadNotifications(append = false) {
         const data = await res.json();
         if (!data.notifications || data.notifications.length === 0) {
             if (!append) {
-                container.innerHTML = `<div class="admin-card"><div class="admin-card-body" style="text-align:center;"><div class="admin-empty-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg></div><p class="admin-empty-title">No notifications yet</p><p class="admin-empty-sub">Notifications will appear when new orders are placed.</p></div></div>`;
+                container.innerHTML = `<div class="ap-card"><div class="ap-card-body ap-empty" style="padding:3rem 1.5rem;"><div class="ap-empty-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg></div><h3>No notifications yet</h3><p>Notifications will appear when new orders are placed.</p></div></div>`;
             }
-            loadMoreContainer.classList.add('admin-hidden');
+            loadMoreContainer.classList.add('ap-hidden');
             isLoading = false;
             return;
         }
@@ -130,21 +189,21 @@ async function loadNotifications(append = false) {
                 'default': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',
             };
             const iconPath = iconPaths[n.type] || iconPaths['default'];
-            html += `<div class="admin-notif-item ${n.read ? '' : 'unread'} ${n.link ? 'clickable' : ''}" onclick="${n.link ? `window.location.href='${n.link}'` : ''}">
-                <div class="admin-notif-icon ${iconClass}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24">${iconPath}</svg></div>
-                <div class="admin-notif-body">
-                    <div class="admin-notif-title-row"><p class="admin-notif-title">${n.title}</p>${!n.read ? '<span class="admin-notif-dot"></span>' : ''}</div>
-                    <p class="admin-notif-message">${n.message || ''}</p>
-                    <p class="admin-notif-time">${date}</p>
+            html += `<div class="ap-notif-item ${n.read ? '' : 'unread'} ${n.link ? 'clickable' : ''}" onclick="${n.link ? `window.location.href='${n.link}'` : ''}">
+                <div class="ap-notif-icon ${iconClass}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24">${iconPath}</svg></div>
+                <div class="ap-notif-body">
+                    <div class="ap-notif-title-row"><p class="ap-notif-title">${n.title}</p>${!n.read ? '<span class="ap-notif-dot"></span>' : ''}</div>
+                    <p class="ap-notif-message">${n.message || ''}</p>
+                    <p class="ap-notif-time">${date}</p>
                 </div>
-                ${!n.read ? `<button onclick="event.stopPropagation(); markRead('${n.id}')" class="admin-notif-check" title="Mark as read"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/></svg></button>` : ''}
+                ${!n.read ? `<button onclick="event.stopPropagation(); markRead('${n.id}')" class="ap-notif-check" title="Mark as read"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/></svg></button>` : ''}
             </div>`;
         }
         if (append) { container.insertAdjacentHTML('beforeend', html); } else { container.innerHTML = html; }
         currentOffset += data.notifications.length;
-        if (data.has_more) { loadMoreContainer.classList.remove('admin-hidden'); } else { loadMoreContainer.classList.add('admin-hidden'); }
+        if (data.has_more) { loadMoreContainer.classList.remove('ap-hidden'); } else { loadMoreContainer.classList.add('ap-hidden'); }
     } catch (err) {
-        if (!append) { container.innerHTML = `<div class="admin-card"><div class="admin-card-body"><p style="font-size:.875rem;color:var(--red-500);text-align:center;">Failed to load notifications.</p></div></div>`; }
+        if (!append) { container.innerHTML = `<div class="ap-card"><div class="ap-card-body"><p style="font-size:0.875rem;color:var(--ap-red);text-align:center;">Failed to load notifications.</p></div></div>`; }
     }
     isLoading = false;
 }
@@ -170,7 +229,7 @@ async function updateUnreadCount() {
         const res = await fetch('/api/admin/notifications/unread-count');
         const data = await res.json();
         const badge = document.getElementById('unread-badge');
-        if (data.count > 0) { badge.textContent = data.count; badge.classList.remove('admin-hidden'); } else { badge.classList.add('admin-hidden'); }
+        if (data.count > 0) { badge.textContent = data.count; badge.classList.remove('ap-hidden'); } else { badge.classList.add('ap-hidden'); }
     } catch (e) {}
 }
 

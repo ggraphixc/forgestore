@@ -2,132 +2,108 @@
 {% block title %}Product Moderation — {{ settings.site_name|default('ForgeStore') }}{% endblock %}
 {% block content %}
 <style>
-  :root {
-    --primary: {{ settings.primary_color|default('#f59e0b') }};
-    --primary-hover: {{ settings.secondary_color|default('#d97706') }};
-    --bg: #f8fafc;
-    --card: #ffffff;
-    --text: #1e293b;
-    --text-muted: #64748b;
-    --border: #e2e8f0;
-    --green: #10b981;
-    --green-bg: #d1fae5;
-    --red: #ef4444;
-    --red-bg: #fee2e2;
-    --yellow: #f59e0b;
-    --yellow-bg: #fef3c7;
-    --blue: #3b82f6;
-    --blue-bg: #dbeafe;
-  }
-  .dark { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --text-muted: #94a3b8; --border: #334155; }
-  .mod-page { max-width: 80rem; margin: 0 auto; padding: 1.5rem; }
-   .mod-page h1 { font-size: 1.75rem; font-weight: 800; color: var(--text); margin-bottom: 0.25rem; }
-   .mod-page .subtitle { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.5rem; }
-   .mod-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; }
-   .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; text-align: center; }
-   .stat-card .num { font-size: 1.75rem; font-weight: 800; }
-   .stat-card .label { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-top: 0.25rem; }
-   .stat-card.pending .num { color: var(--yellow); }
-   .stat-card.approved .num { color: var(--green); }
-   .stat-card.rejected .num { color: var(--red); }
-   .stat-card.flagged .num { color: var(--blue); }
-   .stat-card.accuracy .num { color: var(--blue); }
-   .stat-card.corrections .num { color: #f97316; }
-   .mod-accuracy-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
-   .mod-accuracy-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
-   .mod-accuracy-card h3 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.75rem; }
-   .mod-accuracy-bar { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
-   .mod-accuracy-bar .bar-label { font-size: 0.75rem; font-weight: 600; color: var(--text); width: 100px; }
-   .mod-accuracy-bar .bar-track { flex: 1; height: 8px; border-radius: 4px; background: var(--border); overflow: hidden; }
-   .mod-accuracy-bar .bar-fill { height: 100%; border-radius: 4px; }
-   .mod-accuracy-bar .bar-fill.green { background: var(--green); }
-   .mod-accuracy-bar .bar-fill.red { background: var(--red); }
-   .mod-accuracy-bar .bar-fill.yellow { background: var(--yellow); }
-   .mod-accuracy-bar .bar-fill.blue { background: var(--blue); }
-   .mod-accuracy-bar .bar-val { font-size: 0.75rem; font-weight: 700; color: var(--text); min-width: 36px; }
-   .mod-threshold-row { display: flex; gap: 1rem; margin-top: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
-   .mod-threshold { font-size: 0.75rem; color: var(--text-muted); }
-   .mod-threshold strong { color: var(--text); }
-  .mod-filters { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-  .mod-filter-btn { padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text-muted); transition: all 0.15s; }
-  .mod-filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  @import url('/static/css/admin_portal.css');
+
+  .mod-stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem; margin-bottom: 2rem; }
+  .mod-accuracy-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 2rem; }
+  .mod-accuracy-card { background: var(--ap-bg-elevated); border: 1px solid var(--ap-border); border-radius: var(--ap-radius-xl); padding: 1.25rem; }
+  .mod-accuracy-card h3 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ap-text-muted); margin-bottom: 0.75rem; }
+  .mod-accuracy-bar { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+  .mod-accuracy-bar .bar-label { font-size: 0.75rem; font-weight: 600; color: var(--ap-text); width: 100px; }
+  .mod-accuracy-bar .bar-track { flex: 1; height: 8px; border-radius: 4px; background: var(--ap-border-light); overflow: hidden; }
+  .mod-accuracy-bar .bar-fill { height: 100%; border-radius: 4px; }
+  .mod-accuracy-bar .bar-fill.green { background: var(--ap-emerald); }
+  .mod-accuracy-bar .bar-fill.red { background: var(--ap-red); }
+  .mod-accuracy-bar .bar-fill.yellow { background: var(--ap-amber); }
+  .mod-accuracy-bar .bar-fill.blue { background: var(--ap-blue); }
+  .mod-accuracy-bar .bar-val { font-size: 0.75rem; font-weight: 700; color: var(--ap-text); min-width: 36px; }
+  .mod-threshold-row { display: flex; gap: 1rem; margin-top: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--ap-border); }
+  .mod-threshold { font-size: 0.75rem; color: var(--ap-text-muted); }
+  .mod-threshold strong { color: var(--ap-text); }
   .mod-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-  .mod-table th { text-align: left; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 2px solid var(--border); background: var(--bg); }
-  .mod-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
-  .mod-table tbody tr:hover { background: rgba(245, 158, 11, 0.04); }
-  .mod-thumb { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: var(--border); }
+  .mod-table th { text-align: left; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ap-text-muted); border-bottom: 2px solid var(--ap-border); background: var(--ap-bg); }
+  .mod-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--ap-border-light); color: var(--ap-text); vertical-align: middle; }
+  .mod-table tbody tr:hover { background: rgba(99, 102, 241, 0.03); }
+  .mod-thumb { width: 48px; height: 48px; border-radius: var(--ap-radius-sm); object-fit: cover; background: var(--ap-border-light); }
   .mod-badge { display: inline-block; font-size: 0.6875rem; font-weight: 700; padding: 0.2rem 0.625rem; border-radius: 9999px; }
-  .mod-badge.pending { background: var(--yellow-bg); color: #92400e; }
-  .mod-badge.approved { background: var(--green-bg); color: #065f46; }
-  .mod-badge.rejected { background: var(--red-bg); color: #991b1b; }
-  .mod-badge.suspended { background: #e2e8f0; color: #475569; }
-  .mod-badge.flagged { background: var(--blue-bg); color: #1e40af; }
+  .mod-badge.pending { background: var(--ap-amber-soft); color: #92400e; }
+  .mod-badge.approved { background: var(--ap-emerald-soft); color: #065f46; }
+  .mod-badge.rejected { background: var(--ap-red-soft); color: #991b1b; }
+  .mod-badge.suspended { background: var(--ap-border-light); color: var(--ap-text-secondary); }
+  .mod-badge.flagged { background: var(--ap-blue-soft); color: #1e40af; }
   .mod-confidence { display: flex; align-items: center; gap: 0.5rem; }
-  .mod-conf-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; max-width: 80px; }
+  .mod-conf-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--ap-border-light); overflow: hidden; max-width: 80px; }
   .mod-conf-fill { height: 100%; border-radius: 3px; }
-  .mod-conf-fill.high { background: var(--green); }
-  .mod-conf-fill.medium { background: var(--yellow); }
-  .mod-conf-fill.low { background: var(--red); }
+  .mod-conf-fill.high { background: var(--ap-emerald); }
+  .mod-conf-fill.medium { background: var(--ap-amber); }
+  .mod-conf-fill.low { background: var(--ap-red); }
   .mod-actions { display: flex; gap: 0.375rem; }
-  .mod-btn { min-height: 36px; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: none; transition: all 0.15s; }
-  .mod-btn-approve { background: var(--green); color: #fff; }
+  .mod-btn { min-height: 44px; padding: 0.375rem 0.75rem; border-radius: var(--ap-radius-sm); font-size: 0.75rem; font-weight: 700; cursor: pointer; border: none; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; }
+  .mod-btn-approve { background: var(--ap-emerald); color: #fff; }
   .mod-btn-approve:hover { background: #059669; }
-  .mod-btn-reject { background: var(--red); color: #fff; }
+  .mod-btn-reject { background: var(--ap-red); color: #fff; }
   .mod-btn-reject:hover { background: #dc2626; }
-  .mod-btn-view { background: transparent; color: var(--primary); border: 1px solid var(--border); }
-  .mod-btn-view:hover { background: var(--yellow-bg); }
-  .mod-empty { text-align: center; padding: 4rem 1.5rem; color: var(--text-muted); }
+  .mod-btn-view { background: transparent; color: var(--ap-primary); border: 1px solid var(--ap-border); }
+  .mod-btn-view:hover { background: var(--ap-amber-soft); }
+  .mod-empty { text-align: center; padding: 4rem 1.5rem; color: var(--ap-text-muted); }
   .mod-empty svg { width: 3rem; height: 3rem; margin: 0 auto 1rem; opacity: 0.4; }
   .mod-pagination { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; }
-  .mod-page-btn { min-height: 36px; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); }
-  .mod-page-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .mod-page-btn { min-height: 44px; padding: 0.375rem 0.75rem; border-radius: var(--ap-radius-sm); font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: 1px solid var(--ap-border); background: var(--ap-bg-elevated); color: var(--ap-text); transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; }
+  .mod-page-btn.active { background: var(--ap-primary); color: #fff; border-color: var(--ap-primary); }
   .mod-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .mod-bulk { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding: 0.75rem 1rem; background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
-  .mod-bulk label { font-size: 0.8125rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
-  .mod-detail-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: flex-start; padding: 2rem; overflow-y: auto; }
+  .mod-bulk { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding: 0.75rem 1rem; background: var(--ap-bg-elevated); border: 1px solid var(--ap-border); border-radius: var(--ap-radius-md); }
+  .mod-bulk label { font-size: 0.8125rem; font-weight: 600; color: var(--ap-text); display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+  .mod-detail-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: flex-start; padding: 2rem; overflow-y: auto; }
   .mod-detail-overlay.active { display: flex; }
-  .mod-detail-card { background: var(--card); border-radius: 16px; max-width: 700px; width: 100%; padding: 2rem; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-  .mod-detail-card h2 { font-size: 1.25rem; font-weight: 800; margin-bottom: 1rem; color: var(--text); }
+  .mod-detail-card { background: var(--ap-bg-elevated); border-radius: var(--ap-radius-2xl); max-width: 700px; width: 100%; padding: 2rem; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+  .mod-detail-card h2 { font-size: 1.25rem; font-weight: 800; margin-bottom: 1rem; color: var(--ap-text); }
   .mod-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
-  .mod-detail-field { }
-  .mod-detail-field .label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
-  .mod-detail-field .value { font-size: 0.875rem; color: var(--text); margin-top: 0.125rem; }
+  .mod-detail-field .label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ap-text-muted); }
+  .mod-detail-field .value { font-size: 0.875rem; color: var(--ap-text); margin-top: 0.125rem; }
   .mod-detail-images { display: flex; gap: 0.5rem; overflow-x: auto; margin-bottom: 1rem; }
-  .mod-detail-images img { width: 120px; height: 120px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
-  .mod-ai-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
-  .mod-ai-box h4 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem; }
-  .mod-ai-box p { font-size: 0.8125rem; color: var(--text); line-height: 1.5; }
+  .mod-detail-images img { width: 120px; height: 120px; border-radius: var(--ap-radius-sm); object-fit: cover; flex-shrink: 0; }
+  .mod-ai-box { background: var(--ap-bg); border: 1px solid var(--ap-border); border-radius: var(--ap-radius-md); padding: 1rem; margin-bottom: 1rem; }
+  .mod-ai-box h4 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--ap-text-muted); margin-bottom: 0.5rem; }
+  .mod-ai-box p { font-size: 0.8125rem; color: var(--ap-text); line-height: 1.5; }
   .mod-detail-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
-  .mod-note-input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8125rem; margin-bottom: 0.75rem; background: var(--bg); color: var(--text); }
+  .mod-note-input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--ap-border); border-radius: var(--ap-radius-sm); font-size: 0.8125rem; margin-bottom: 0.75rem; background: var(--ap-bg); color: var(--ap-text); min-height: 44px; }
   @media (max-width: 640px) {
-    .mod-stats { grid-template-columns: repeat(2, 1fr); }
+    .mod-stats-row { grid-template-columns: repeat(2, 1fr); }
     .mod-table th:nth-child(n+5), .mod-table td:nth-child(n+5) { display: none; }
     .mod-detail-grid { grid-template-columns: 1fr; }
+    .mod-accuracy-row { grid-template-columns: 1fr; }
   }
 </style>
 
-<div class="mod-page">
-  <h1>Product Moderation</h1>
-  <p class="subtitle">AI-powered product review and approval queue</p>
+<div class="ap-page">
+  <div class="ap-header">
+    <div class="ap-header-left">
+      <span class="ap-overline">Moderation</span>
+      <h1>Product Moderation</h1>
+      <p class="ap-subtitle">AI-powered product review and approval queue</p>
+    </div>
+  </div>
 
-  <div class="mod-stats" id="modStats"></div>
+  <div class="mod-stats-row" id="modStats"></div>
   <div class="mod-accuracy-row" id="modAccuracy"></div>
 
-  <div class="mod-filters" id="modFilters">
-    <button class="mod-filter-btn active" data-status="PENDING_REVIEW">Pending Review</button>
-    <button class="mod-filter-btn" data-status="APPROVED">Approved</button>
-    <button class="mod-filter-btn" data-status="REJECTED">Rejected</button>
-    <button class="mod-filter-btn" data-status="SUSPENDED">Suspended</button>
+  <div class="ap-tabs" id="modFilters">
+    <button class="ap-tab active" data-status="PENDING_REVIEW">Pending Review</button>
+    <button class="ap-tab" data-status="APPROVED">Approved</button>
+    <button class="ap-tab" data-status="REJECTED">Rejected</button>
+    <button class="ap-tab" data-status="SUSPENDED">Suspended</button>
   </div>
 
   <div class="mod-bulk" id="modBulk" style="display:none;">
     <label><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"> Select All</label>
     <button class="mod-btn mod-btn-approve" onclick="bulkAction('approve')">Approve Selected</button>
     <button class="mod-btn mod-btn-reject" onclick="bulkAction('reject')">Reject Selected</button>
-    <span id="selectedCount" style="font-size:0.8125rem;color:var(--text-muted);"></span>
+    <span id="selectedCount" style="font-size:0.8125rem;color:var(--ap-text-muted);"></span>
   </div>
 
-  <div id="modTable"></div>
+  <div class="ap-card" style="margin-bottom:1.5rem;">
+    <div id="modTable"></div>
+  </div>
   <div class="mod-pagination" id="modPagination"></div>
 </div>
 
@@ -144,12 +120,12 @@ async function loadStats() {
   const d = await r.json();
   const acc = d.accuracy || {};
   document.getElementById('modStats').innerHTML = `
-    <div class="stat-card pending"><div class="num">${d.pending}</div><div class="label">Pending</div></div>
-    <div class="stat-card approved"><div class="num">${d.approved}</div><div class="label">Approved</div></div>
-    <div class="stat-card rejected"><div class="num">${d.rejected}</div><div class="label">Rejected</div></div>
-    <div class="stat-card flagged"><div class="num">${d.flagged}</div><div class="label">Flagged</div></div>
-    <div class="stat-card accuracy"><div class="num">${acc.accuracy_rate || 0}%</div><div class="label">AI Accuracy</div></div>
-    <div class="stat-card corrections"><div class="num">${acc.corrections || 0}</div><div class="label">Corrections</div></div>
+    <div class="ap-stat ap-stat-amber"><div class="ap-stat-icon amber"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div class="ap-stat-label">Pending</div><div class="ap-stat-value">${d.pending}</div></div>
+    <div class="ap-stat ap-stat-emerald"><div class="ap-stat-icon emerald"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div class="ap-stat-label">Approved</div><div class="ap-stat-value">${d.approved}</div></div>
+    <div class="ap-stat ap-stat-rose"><div class="ap-stat-icon rose"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div class="ap-stat-label">Rejected</div><div class="ap-stat-value">${d.rejected}</div></div>
+    <div class="ap-stat ap-stat-blue"><div class="ap-stat-icon blue"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg></div><div class="ap-stat-label">Flagged</div><div class="ap-stat-value">${d.flagged}</div></div>
+    <div class="ap-stat ap-stat-blue"><div class="ap-stat-icon purple"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div><div class="ap-stat-label">AI Accuracy</div><div class="ap-stat-value">${acc.accuracy_rate || 0}%</div></div>
+    <div class="ap-stat ap-stat-amber"><div class="ap-stat-icon amber"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></div><div class="ap-stat-label">Corrections</div><div class="ap-stat-value">${acc.corrections || 0}</div></div>
   `;
 
   const thresholds = acc.thresholds || {};
@@ -164,12 +140,12 @@ async function loadStats() {
     </div>
     <div class="mod-accuracy-card">
       <h3>Dynamic Thresholds</h3>
-      <div style="font-size:0.8125rem;color:var(--text);margin-bottom:0.75rem;">
+      <div style="font-size:0.8125rem;color:var(--ap-text);margin-bottom:0.75rem;">
         AI auto-approves products scoring above <strong>${thresholds.approve || 75}%</strong> and auto-rejects below <strong>${thresholds.escalate || 50}%</strong>. Products between these thresholds are escalated for human review.
       </div>
       <div class="mod-accuracy-bar"><span class="bar-label">FP Rate</span><div class="bar-track"><div class="bar-fill red" style="width:${acc.false_positive_rate || 0}%"></div></div><span class="bar-val">${acc.false_positive_rate || 0}%</span></div>
       <div class="mod-accuracy-bar"><span class="bar-label">FN Rate</span><div class="bar-track"><div class="bar-fill yellow" style="width:${acc.false_negative_rate || 0}%"></div></div><span class="bar-val">${acc.false_negative_rate || 0}%</span></div>
-      <div style="font-size:0.6875rem;color:var(--text-muted);margin-top:0.75rem;">Thresholds auto-adjust every 10 admin corrections to minimize errors.</div>
+      <div style="font-size:0.6875rem;color:var(--ap-text-muted);margin-top:0.75rem;">Thresholds auto-adjust every 10 admin corrections to minimize errors.</div>
     </div>
   `;
 }
@@ -182,9 +158,9 @@ async function loadQueue(page = 1) {
   document.getElementById('modBulk').style.display = isPending && d.products.length ? 'flex' : 'none';
 
   if (!d.products.length) {
-    document.getElementById('modTable').innerHTML = `<div class="mod-empty">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      <p>No products in this queue</p>
+    document.getElementById('modTable').innerHTML = `<div class="ap-empty">
+      <div class="ap-empty-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+      <h3>No products in this queue</h3>
     </div>`;
     document.getElementById('modPagination').innerHTML = '';
     return;
@@ -200,7 +176,7 @@ async function loadQueue(page = 1) {
     const thumb = p.images && p.images[0] ? `<img src="${p.images[0]}" class="mod-thumb" alt="">` : `<div class="mod-thumb"></div>`;
     html += `<tr>
       <td>${isPending ? `<input type="checkbox" class="row-check" value="${p.id}">` : ''}</td>
-      <td><div style="display:flex;align-items:center;gap:0.75rem;">${thumb}<div><div style="font-weight:600;">${p.name} ${p.flag_count ? `<span style="font-size:0.6875rem;font-weight:700;color:#dc2626;background:#fee2e2;padding:0.125rem 0.375rem;border-radius:9999px;vertical-align:middle;">${p.flag_count} flag${p.flag_count !== 1 ? 's' : ''}</span>` : ''}</div><div style="font-size:0.75rem;color:var(--text-muted);">${p.brand || ''} · ${p.retailer}</div></div></div></td>
+      <td><div style="display:flex;align-items:center;gap:0.75rem;">${thumb}<div><div style="font-weight:600;">${p.name} ${p.flag_count ? `<span class="ap-badge ap-badge-red" style="font-size:0.625rem;padding:0.125rem 0.375rem;vertical-align:middle;">${p.flag_count} flag${p.flag_count !== 1 ? 's' : ''}</span>` : ''}</div><div style="font-size:0.75rem;color:var(--ap-text-muted);">${p.brand || ''} · ${p.retailer}</div></div></div></td>
       <td style="font-size:0.8125rem;">${p.category || '—'}</td>
       <td style="font-weight:600;">₦${p.price.toLocaleString()}</td>
       <td><div class="mod-confidence"><div class="mod-conf-bar"><div class="mod-conf-fill ${confClass}" style="width:${conf || 0}%"></div></div><span style="font-size:0.75rem;font-weight:600;">${conf != null ? conf + '%' : '—'}</span></div></td>
@@ -249,9 +225,9 @@ async function viewProduct(id) {
   document.getElementById('detailCard').innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
       <h2>${p.name}</h2>
-      <button onclick="closeDetail()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-muted);">&times;</button>
+      <button onclick="closeDetail()" class="mod-btn mod-btn-view" style="min-width:44px;min-height:44px;font-size:1.25rem;">&times;</button>
     </div>
-    <div class="mod-detail-images">${images || '<div style="padding:2rem;background:var(--border);border-radius:8px;color:var(--text-muted);">No images</div>'}</div>
+    <div class="mod-detail-images">${images || '<div style="padding:2rem;background:var(--ap-border-light);border-radius:var(--ap-radius-sm);color:var(--ap-text-muted);">No images</div>'}</div>
     <div class="mod-detail-grid">
       <div class="mod-detail-field"><div class="label">Brand</div><div class="value">${p.brand || '—'}</div></div>
       <div class="mod-detail-field"><div class="label">Category</div><div class="value">${p.category || '—'}</div></div>
@@ -259,9 +235,9 @@ async function viewProduct(id) {
       <div class="mod-detail-field"><div class="label">Inventory</div><div class="value">${p.inventory} units</div></div>
       <div class="mod-detail-field"><div class="label">Retailer</div><div class="value">${p.retailer}</div></div>
       <div class="mod-detail-field"><div class="label">Status</div><div class="value"><span class="mod-badge ${p.status.toLowerCase()}">${p.status}</span></div></div>
-      ${p.flag_count ? `<div class="mod-detail-field"><div class="label">Customer Flags</div><div class="value" style="color:#dc2626;font-weight:700;">${p.flag_count} flag${p.flag_count !== 1 ? 's' : ''}</div></div>` : ''}
+      ${p.flag_count ? `<div class="mod-detail-field"><div class="label">Customer Flags</div><div class="value" style="color:var(--ap-red);font-weight:700;">${p.flag_count} flag${p.flag_count !== 1 ? 's' : ''}</div></div>` : ''}
     </div>
-    ${p.description ? `<div style="margin-bottom:1rem;"><div style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.25rem;">Description</div><p style="font-size:0.8125rem;color:var(--text);line-height:1.5;">${p.description}</p></div>` : ''}
+    ${p.description ? `<div style="margin-bottom:1rem;"><div style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;color:var(--ap-text-muted);margin-bottom:0.25rem;">Description</div><p style="font-size:0.8125rem;color:var(--ap-text);line-height:1.5;">${p.description}</p></div>` : ''}
     ${aiHtml}
     ${logsHtml}
     <input type="text" class="mod-note-input" id="modNote" placeholder="Add a note (optional)">
@@ -330,9 +306,9 @@ async function bulkAction(action) {
   loadQueue(currentPage);
 }
 
-document.querySelectorAll('.mod-filter-btn').forEach(btn => {
+document.querySelectorAll('.ap-tab').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.mod-filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.ap-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentStatus = btn.dataset.status;
     loadQueue(1);
