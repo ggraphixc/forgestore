@@ -46,13 +46,13 @@
 
 .dark {
   --lg-text: #f1f5f9;
-  --lg-text-secondary: #94a3b8;
-  --lg-text-muted: #64748b;
-  --lg-bg: #0f172a;
-  --lg-surface: #1e293b;
-  --lg-surface-raised: #334155;
-  --lg-border: #334155;
-  --lg-border-light: #1e293b;
+  --lg-text-secondary: #a3a3a3;
+  --lg-text-muted: #737373;
+  --lg-bg: #171717;
+  --lg-surface: #262626;
+  --lg-surface-raised: #404040;
+  --lg-border: #404040;
+  --lg-border-light: #262626;
   --lg-primary-light: rgba(245,158,11,.15);
   --lg-green-light: rgba(16,185,129,.15);
   --lg-blue-light: rgba(59,130,246,.15);

@@ -11,7 +11,7 @@
   --vp-accent-light: #818cf8;
   --vp-accent-dark: #4f46e5;
 
-  --vp-bg: #f8fafc;
+  --vp-bg: #ffffff;
   --vp-bg-elevated: #ffffff;
   --vp-bg-glass: rgba(255, 255, 255, 0.72);
   --vp-bg-glass-hover: rgba(255, 255, 255, 0.88);
@@ -44,7 +44,7 @@
   --vp-gradient-accent: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   --vp-gradient-emerald: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
   --vp-gradient-rose: linear-gradient(135deg, #f43f5e 0%, #ec4899 100%);
-  --vp-gradient-dark: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  --vp-gradient-dark: linear-gradient(135deg, #171717 0%, #262626 100%);
   --vp-gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 100%);
 
   --vp-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -73,16 +73,16 @@
 
 /* ── Dark Mode ──────────────────────────────────────────────────── */
 .dark {
-  --vp-bg: #0f172a;
-  --vp-bg-elevated: #1e293b;
-  --vp-bg-glass: rgba(30, 41, 59, 0.8);
-  --vp-bg-glass-hover: rgba(30, 41, 59, 0.95);
+  --vp-bg: #171717;
+  --vp-bg-elevated: #262626;
+  --vp-bg-glass: rgba(38, 38, 38, 0.8);
+  --vp-bg-glass-hover: rgba(38, 38, 38, 0.95);
   --vp-text: #f1f5f9;
-  --vp-text-secondary: #94a3b8;
-  --vp-text-muted: #64748b;
-  --vp-border: #334155;
-  --vp-border-light: #1e293b;
-  --vp-border-glass: rgba(51, 65, 85, 0.5);
+  --vp-text-secondary: #a3a3a3;
+  --vp-text-muted: #737373;
+  --vp-border: #404040;
+  --vp-border-light: #262626;
+  --vp-border-glass: rgba(64, 64, 64, 0.5);
   --vp-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
   --vp-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --vp-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);

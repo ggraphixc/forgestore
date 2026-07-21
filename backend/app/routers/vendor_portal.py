@@ -1565,11 +1565,25 @@ async def vendor_profile_update(request: Request, db: Session = Depends(get_db))
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return redirect
-    form = await request.form()
-    name = form.get("name", "").strip()
-    current_password = form.get("current_password", "")
-    new_password = form.get("new_password", "")
-    confirm_password = form.get("confirm_password", "")
+
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        data = await request.json()
+    else:
+        form = await request.form()
+        data = dict(form)
+
+    name = (data.get("name") or "").strip()
+    current_password = data.get("current_password", "")
+    new_password = data.get("new_password", "")
+    confirm_password = data.get("confirm_password", "")
+
+    # Store fields
+    store_name = (data.get("store_name") or "").strip()
+    store_bio = (data.get("store_bio") or "").strip()
+    store_location = (data.get("store_location") or "").strip()
+    logo_url = data.get("logo_url", "")
+    banner_url = data.get("banner_url", "")
 
     product_count = db.query(func.count(Product.id)).filter(
         Product.retailer_id == admin.vendor_id
@@ -1583,27 +1597,89 @@ async def vendor_profile_update(request: Request, db: Session = Depends(get_db))
         "success": None, "error": None,
     }
 
+    def _error_response(msg):
+        ctx["error"] = msg
+        if "application/json" in content_type:
+            return JSONResponse({"success": False, "message": msg}, status_code=400)
+        return render_template("vendor/profile.html", ctx)
+
     if name and name != admin.name:
         admin.name = name
     if new_password:
         if not current_password:
-            ctx["error"] = "Please enter your current password to set a new one."
-            return render_template("vendor/profile.html", ctx)
+            return _error_response("Please enter your current password to set a new one.")
         if not verify_password(current_password, admin.password):
-            ctx["error"] = "Current password is incorrect."
-            return render_template("vendor/profile.html", ctx)
+            return _error_response("Current password is incorrect.")
         from app.services.ai_service import get_setting
         min_len = int(get_setting(db, "password_min_length", "6"))
         if len(new_password) < min_len:
-            ctx["error"] = f"New password must be at least {min_len} characters."
-            return render_template("vendor/profile.html", ctx)
+            return _error_response(f"New password must be at least {min_len} characters.")
         if new_password != confirm_password:
-            ctx["error"] = "New passwords do not match."
-            return render_template("vendor/profile.html", ctx)
+            return _error_response("New passwords do not match.")
         admin.password = hash_password(new_password)
 
+    # Update retailer store profile
+    if retailer:
+        if store_name:
+            retailer.name = store_name
+        if store_bio is not None:
+            retailer.bio = store_bio
+        if store_location is not None:
+            retailer.location = store_location
+        if logo_url is not None:
+            retailer.logo_url = logo_url
+        if banner_url is not None:
+            retailer.banner_url = banner_url
+        retailer.updated_at = utcnow()
+
     db.commit()
+    if "application/json" in content_type:
+        return JSONResponse({"success": True, "message": "Profile updated successfully.", "redirect": "/vendor/me?success=Profile+updated+successfully."})
     return RedirectResponse(url="/vendor/me?success=Profile+updated+successfully.", status_code=302)
+
+
+# ─── VENDOR FILE UPLOAD ──────────────────────────────────────────────────────
+
+@router.post("/api/vendor/upload")
+async def vendor_upload_file(
+    files: list[UploadFile] = File(...),
+    request: Request = None,
+    db: Session = Depends(get_db),
+):
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    from app.core.cloudinary_upload import is_cloudinary_configured, upload_to_cloudinary
+    from app.core.image_compressor import compress_image, get_max_upload_size_bytes
+    import os
+
+    use_cloudinary = is_cloudinary_configured()
+    urls = []
+    upload_dir = os.path.join("app", "static", "uploads", "products")
+    os.makedirs(upload_dir, exist_ok=True)
+
+    for file in files:
+        try:
+            raw = await file.read()
+            max_bytes = get_max_upload_size_bytes()
+            if len(raw) > max_bytes:
+                continue
+            if use_cloudinary:
+                url = upload_to_cloudinary(raw, folder="forgestore/products")
+                if url:
+                    urls.append(url)
+                    continue
+            compressed, ext = compress_image(raw)
+            unique_name = f"{int(utcnow().timestamp())}-{uuid.uuid4().hex[:8]}.{ext}"
+            file_path = os.path.join(upload_dir, unique_name)
+            with open(file_path, "wb") as f:
+                f.write(compressed)
+            urls.append(f"/static/uploads/products/{unique_name}")
+        except Exception:
+            continue
+
+    return {"urls": urls}
 
 
 # ─── VENDOR AI TOOLS API ──────────────────────────────────────────────
