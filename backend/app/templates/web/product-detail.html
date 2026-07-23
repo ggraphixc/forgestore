@@ -1465,6 +1465,10 @@
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
           Buy Now
         </button>
+        <button onclick="addToCompare()" id="pd-compare-btn" style="background:transparent;border:1px solid var(--pd-border);border-radius:12px;padding:0 16px;min-height:44px;display:inline-flex;align-items:center;gap:6px;font-size:0.875rem;font-weight:600;color:var(--pd-text-secondary);cursor:pointer;transition:all 0.2s;">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
+          Compare
+        </button>
       </div>
 
       <!-- Shipping info -->
@@ -2278,6 +2282,19 @@ async function submitReport() {
     }
   } catch(e) { showToast('Network error. Please try again.', true); }
   if (btn) { btn.disabled = false; btn.textContent = 'Submit Report'; }
+}
+
+/* --- Compare --- */
+function addToCompare() {
+  fetch('/api/compare/add', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({product_id: PRODUCT_ID})
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.error) { showToast(d.error, true); return; }
+    showToast('Added to comparison (' + (d.count || '?') + ')');
+    document.getElementById('pd-compare-btn').innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> In Compare';
+  }).catch(function() { showToast('Failed to add to comparison', true); });
 }
 </script>
 {% endif %}

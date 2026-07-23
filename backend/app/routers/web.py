@@ -11,6 +11,8 @@ from app.models import Product, Category, Retailer, Order, OrderItem, Review, Us
 from app.auth import get_current_user_from_cookie, get_current_customer_from_cookie
 from app.templates_shared import render_template
 from app.config import get_site_settings, get_settings
+from app.core.seo import seo_context
+from app.core.cache import cache_get, cache_set
 
 router = APIRouter(prefix="/shop", tags=["web"])
 
@@ -142,6 +144,28 @@ def format_price(amount: float, currency: str = "NGN", db=None) -> str:
     return f"{symbol}{formatted}"
 
 
+def _product_seo(product, request, db) -> dict:
+    """Build SEO context for a product page."""
+    base_url = get_settings().site_base_url.rstrip("/")
+    cat = db.query(Category).filter(Category.id == product.category_id).first() if product.category_id else None
+    breadcrumbs = [{"name": "Home", "url": "/shop"}, {"name": "Shop", "url": "/shop/marketplace"}]
+    if cat:
+        breadcrumbs.append({"name": cat.name, "url": f"/shop/marketplace?category={cat.slug}"})
+    breadcrumbs.append({"name": product.name, "url": ""})
+
+    images = product.images or []
+    og_image = images[0] if images else f"{base_url}/static/images/og-default.png"
+
+    return seo_context(
+        request=request,
+        title=product.name,
+        description=(product.description or "")[:160] or f"Buy {product.name} on ForgeStore",
+        image=og_image,
+        product=product,
+        breadcrumbs=breadcrumbs,
+    )
+
+
 # --- Homepage ---
 @router.get("", response_class=HTMLResponse)
 def homepage(request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
@@ -151,63 +175,36 @@ def homepage(request: Request, background_tasks: BackgroundTasks, db: Session = 
 
     # Try Redis cache for product grids — falls back to DB on miss
     import json as _json
+    from app.core.cache import cache_get, cache_set
+
     flagship_products = None
     new_arrivals = None
     top_products = None
 
-    try:
-        from app.core.redis_manager import get_redis
-        r = get_redis()
-        client = r.get_sync()
+    raw_flagship = cache_get("homepage:flagship")
+    if raw_flagship:
+        flagship_products = _rehydrate_products(db, raw_flagship)
 
-        raw_flagship = client.get("cache:homepage:flagship")
-        if raw_flagship:
-            flagship_products_data = _json.loads(raw_flagship)
-            # Rehydrate as detached Product-like dicts for template rendering
-            flagship_products = _rehydrate_products(db, flagship_products_data)
+    raw_new = cache_get("homepage:new_arrivals")
+    if raw_new:
+        new_arrivals = _rehydrate_products(db, raw_new)
 
-        raw_new = client.get("cache:homepage:new_arrivals")
-        if raw_new:
-            new_arrivals_data = _json.loads(raw_new)
-            new_arrivals = _rehydrate_products(db, new_arrivals_data)
-
-        raw_top = client.get("cache:homepage:top_products")
-        if raw_top:
-            top_products_data = _json.loads(raw_top)
-            top_products = _rehydrate_products(db, top_products_data)
-    except Exception:
-        pass
+    raw_top = cache_get("homepage:top_products")
+    if raw_top:
+        top_products = _rehydrate_products(db, raw_top)
 
     # DB fallback for any cache misses
     if flagship_products is None:
         flagship_products = db.query(Product).filter(Product.is_flagship == True, Product.status == "APPROVED").order_by(desc(Product.created_at)).limit(5).all()
-        try:
-            from app.core.redis_manager import get_redis
-            r = get_redis()
-            client = r.get_sync()
-            client.set("cache:homepage:flagship", _json.dumps([_product_dict(p) for p in flagship_products], default=str), ex=300)
-        except Exception:
-            pass
+        cache_set("homepage:flagship", [_product_dict(p) for p in flagship_products], ttl=300)
 
     if new_arrivals is None:
         new_arrivals = db.query(Product).filter(Product.is_new_arrival == True, Product.status == "APPROVED").order_by(desc(Product.created_at)).limit(8).all()
-        try:
-            from app.core.redis_manager import get_redis
-            r = get_redis()
-            client = r.get_sync()
-            client.set("cache:homepage:new_arrivals", _json.dumps([_product_dict(p) for p in new_arrivals], default=str), ex=300)
-        except Exception:
-            pass
+        cache_set("homepage:new_arrivals", [_product_dict(p) for p in new_arrivals], ttl=300)
 
     if top_products is None:
         top_products = db.query(Product).filter(Product.status == "APPROVED").order_by(desc(Product.rating)).limit(8).all()
-        try:
-            from app.core.redis_manager import get_redis
-            r = get_redis()
-            client = r.get_sync()
-            client.set("cache:homepage:top_products", _json.dumps([_product_dict(p) for p in top_products], default=str), ex=300)
-        except Exception:
-            pass
+        cache_set("homepage:top_products", [_product_dict(p) for p in top_products], ttl=300)
 
     featured_retailers = db.query(Retailer).filter(Retailer.status == "ACTIVE").order_by(desc(Retailer.rating)).limit(6).all()
     categories = db.query(Category).all()
@@ -393,6 +390,7 @@ def product_detail(request: Request, slug: str, db: Session = Depends(get_db)):
         "category": category,
         "reviews": reviews,
         "related": related,
+        "seo": _product_seo(product, request, db),
     })
 
 
@@ -699,6 +697,12 @@ def faq_page(request: Request, db: Session = Depends(get_db)):
     return _render_page("web/faq.html", request, db)
 
 
+# --- Compare ---
+@router.get("/compare", response_class=HTMLResponse)
+def compare_page(request: Request, db: Session = Depends(get_db)):
+    return _render_page("web/compare.html", request, db)
+
+
 # --- Wishlist ---
 @router.get("/wishlist", response_class=HTMLResponse)
 def wishlist_page(request: Request, db: Session = Depends(get_db)):
@@ -706,6 +710,12 @@ def wishlist_page(request: Request, db: Session = Depends(get_db)):
     if isinstance(customer, RedirectResponse):
         return customer
     return _render_page("web/wishlist.html", request, db)
+
+
+# --- Shared Wishlist ---
+@router.get("/wishlist/shared/{share_token}", response_class=HTMLResponse)
+def shared_wishlist_page(request: Request, share_token: str, db: Session = Depends(get_db)):
+    return _render_page("web/wishlist.html", request, db, {"share_token": share_token})
 
 
 # --- Sitemap ---
@@ -719,13 +729,17 @@ def sitemap(request: Request, db: Session = Depends(get_db)):
     base = _site_settings(db).get("site_base_url", "").rstrip("/")
     products = db.query(Product).filter(Product.status == "APPROVED").order_by(Product.created_at.desc()).limit(500).all()
     categories = db.query(Category).order_by(Category.name).all()
+    retailers = db.query(Retailer).filter(Retailer.status == "ACTIVE").all()
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    xml += f'  <url><loc>{base}/shop</loc><changefreq>daily</changefreq><priority>1.0</priority></url>\n'
+    xml += f'  <url><loc>{base}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>\n'
+    xml += f'  <url><loc>{base}/shop</loc><changefreq>daily</changefreq><priority>0.9</priority></url>\n'
     xml += f'  <url><loc>{base}/shop/marketplace</loc><changefreq>daily</changefreq><priority>0.9</priority></url>\n'
     for p in products:
         xml += f'  <url><loc>{base}/shop/product/{p.slug or p.id}</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n'
     for c in categories:
         xml += f'  <url><loc>{base}/shop/marketplace?category={c.slug or c.id}</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>\n'
+    for r in retailers:
+        xml += f'  <url><loc>{base}/shop/shops/{r.slug}</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>\n'
     xml += '</urlset>'
     return Response(content=xml, media_type="application/xml")
 

@@ -1,0 +1,155 @@
+{% extends "web/base.html" %}
+{% block title %}Compare Products | ForgeStore{% endblock %}
+{% block body %}
+<style>
+:root { --cmp-accent: #f59e0b; --cmp-bg: #fafaf9; --cmp-card: #ffffff; --cmp-border: #e7e5e3; --cmp-text: #1c1917; --cmp-muted: #78716c; }
+.dark { --cmp-bg: #0c0a09; --cmp-card: #1c1917; --cmp-border: #292524; --cmp-text: #fafaf9; --cmp-muted: #a8a29e; }
+.compare-page { background: var(--cmp-bg); min-height: 100vh; padding: 24px 16px; }
+@media (min-width: 768px) { .compare-page { padding: 32px 24px; } }
+.compare-header { text-align: center; margin-bottom: 32px; }
+.compare-header h1 { font-size: 1.75rem; font-weight: 700; color: var(--cmp-text); margin-bottom: 8px; }
+.compare-header p { color: var(--cmp-muted); font-size: 0.95rem; }
+.compare-empty { text-align: center; padding: 80px 20px; }
+.compare-empty svg { width: 64px; height: 64px; margin: 0 auto 16px; color: var(--cmp-muted); opacity: 0.4; }
+.compare-empty h2 { font-size: 1.25rem; font-weight: 600; color: var(--cmp-text); margin-bottom: 8px; }
+.compare-empty p { color: var(--cmp-muted); margin-bottom: 24px; }
+.compare-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 10px; font-weight: 600; font-size: 0.875rem; text-decoration: none; min-height: 44px; transition: all 0.2s; }
+.compare-btn-primary { background: var(--cmp-accent); color: #000; }
+.compare-btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.compare-table { width: 100%; border-collapse: separate; border-spacing: 0; overflow-x: auto; display: block; }
+.compare-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.compare-table th, .compare-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--cmp-border); min-width: 200px; vertical-align: top; }
+.compare-table thead th { position: sticky; top: 0; background: var(--cmp-card); z-index: 10; }
+.compare-table .compare-product-img { width: 120px; height: 120px; object-fit: cover; border-radius: 12px; margin-bottom: 8px; }
+.compare-table .compare-product-name { font-weight: 600; font-size: 1rem; color: var(--cmp-text); margin-bottom: 4px; display: block; text-decoration: none; }
+.compare-table .compare-product-name:hover { color: var(--cmp-accent); }
+.compare-table .compare-product-price { font-size: 1.1rem; font-weight: 700; color: var(--cmp-accent); }
+.compare-table .compare-product-price .old-price { text-decoration: line-through; color: var(--cmp-muted); font-size: 0.85rem; font-weight: 400; margin-left: 6px; }
+.compare-table .compare-row-label { font-weight: 600; color: var(--cmp-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+.compare-table .compare-row-value { color: var(--cmp-text); }
+.compare-remove-btn { background: none; border: 1px solid var(--cmp-border); border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; color: var(--cmp-muted); cursor: pointer; transition: all 0.2s; }
+.compare-remove-btn:hover { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.05); }
+.compare-add-slot { border: 2px dashed var(--cmp-border); border-radius: 12px; padding: 32px 16px; text-align: center; min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--cmp-muted); transition: all 0.2s; }
+.compare-add-slot:hover { border-color: var(--cmp-accent); color: var(--cmp-accent); }
+.compare-rating { color: #f59e0b; }
+.compare-actions { display: flex; gap: 8px; margin-top: 8px; }
+</style>
+
+<div class="compare-page">
+  <div class="compare-header">
+    <h1>Compare Products</h1>
+    <p>Up to 4 products side by side</p>
+  </div>
+
+  <div id="compare-empty" class="compare-empty" style="display:none;">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
+    <h2>No products to compare</h2>
+    <p>Browse products and click "Compare" to add them here.</p>
+    <a href="/shop/marketplace" class="compare-btn compare-btn-primary">Browse Products</a>
+  </div>
+
+  <div id="compare-content" style="display:none;">
+    <div class="compare-table-wrapper">
+      <table class="compare-table" id="compare-table">
+        <thead><tr id="compare-header-row"></tr></thead>
+        <tbody id="compare-body"></tbody>
+      </table>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <button onclick="clearCompare()" class="compare-remove-btn" style="padding:10px 24px;">Clear All</button>
+      <a href="/shop/marketplace" class="compare-btn compare-btn-primary" style="margin-left:8px;">Add More</a>
+    </div>
+  </div>
+</div>
+
+<script>
+function getCookie(name){const v=document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)');return v?v.pop():'';}
+function setCookie(name,v,d){document.cookie=name+'='+v+';path=/;max-age='+(d||86400*30);}
+
+async function loadCompare(){
+  const raw=getCookie('compare_items');
+  const ids=raw?raw.split(',').filter(Boolean):[];
+  if(!ids.length){document.getElementById('compare-empty').style.display='';document.getElementById('compare-content').style.display='none';return;}
+  try{
+    const r=await fetch('/api/compare');
+    const data=await r.json();
+    if(!data.items||!data.items.length){document.getElementById('compare-empty').style.display='';document.getElementById('compare-content').style.display='none';return;}
+    document.getElementById('compare-empty').style.display='none';
+    document.getElementById('compare-content').style.display='';
+    renderCompare(data.items);
+  }catch(e){console.error(e);}
+}
+
+function renderCompare(items){
+  const headerRow=document.getElementById('compare-header-row');
+  const body=document.getElementById('compare-body');
+  headerRow.innerHTML='<th></th>';
+  items.forEach(p=>{
+    headerRow.innerHTML+=`<td style="text-align:center;">
+      <img src="${p.image||'/static/images/placeholder.png'}" class="compare-product-img" alt="${p.name}">
+      <a href="/shop/product/${p.slug}" class="compare-product-name">${p.name}</a>
+      <div class="compare-product-price">${formatCmp(p.discount_price||p.price)}${p.discount_price?'<span class="old-price">'+formatCmp(p.price)+'</span>':''}</div>
+      <div class="compare-actions"><button onclick="removeCompare('${p.id}')" class="compare-remove-btn">Remove</button></div>
+    </td>`;
+  });
+
+  const rows=[
+    {label:'Brand',key:'brand'},
+    {label:'Category',key:'category'},
+    {label:'Rating',key:'rating',fmt:v=>'<span class="compare-rating">★</span> '+(v||0).toFixed(1)+' ('+(items[0]?.review_count||0)+' reviews)'},
+    {label:'In Stock',key:'inventory',fmt:v=>v>0?'<span style="color:#16a34a">✓ '+v+' units</span>':'<span style="color:#ef4444">Out of stock</span>'},
+    {label:'Sold',key:'sold_count',fmt:v=>(v||0)+' units'},
+    {label:'Description',key:'description'},
+  ];
+
+  // Add spec rows from first product's specs
+  const allSpecs={};
+  items.forEach(p=>{if(p.specifications)Object.keys(p.specifications).forEach(k=>allSpecs[k]=1);});
+
+  body.innerHTML='';
+  rows.forEach(r=>{
+    let row='<tr><td class="compare-row-label">'+r.label+'</td>';
+    items.forEach(p=>{
+      let val=r.fmt?r.fmt(p[r.key]):(p[r.key]||'—');
+      row+='<td class="compare-row-value">'+val+'</td>';
+    });
+    row+='</tr>';
+    body.innerHTML+=row;
+  });
+
+  Object.keys(allSpecs).forEach(spec=>{
+    let row='<tr><td class="compare-row-label">'+spec+'</td>';
+    items.forEach(p=>{
+      const val=p.specifications&&p.specifications[spec]?p.specifications[spec]:'—';
+      row+='<td class="compare-row-value">'+val+'</td>';
+    });
+    row+='</tr>';
+    body.innerHTML+=row;
+  });
+}
+
+function formatCmp(n){return '₦'+Number(n||0).toLocaleString('en-NG',{minimumFractionDigits:0});}
+
+async function removeCompare(productId){
+  const raw=getCookie('compare_items');
+  let ids=raw?raw.split(',').filter(Boolean):[];
+  ids=ids.filter(id=>id!==productId);
+  setCookie('compare_items',ids.join(','));
+  loadCompare();
+}
+
+async function clearCompare(){
+  setCookie('compare_items','');
+  loadCompare();
+}
+
+// Auto-add from ?add= query param
+const addId=new URLSearchParams(location.search).get('add');
+if(addId){
+  fetch('/api/compare/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product_id:addId})})
+    .then(()=>{history.replaceState({},'',location.pathname);loadCompare();});
+} else {
+  loadCompare();
+}
+</script>
+{% endblock %}

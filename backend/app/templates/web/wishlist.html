@@ -84,10 +84,16 @@
 </style>
 
 <div class="ws-page">
-  <div class="ws-page-header">
-    <span class="ws-page-label">Saved Items</span>
-    <h1 class="ws-page-title">My <em>Wishlist</em></h1>
-    <p class="ws-page-sub" id="wishlist-count">Loading your saved pieces...</p>
+  <div class="ws-page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+    <div>
+      <span class="ws-page-label">Saved Items</span>
+      <h1 class="ws-page-title">My <em>Wishlist</em></h1>
+      <p class="ws-page-sub" id="wishlist-count">Loading your saved pieces...</p>
+    </div>
+    <button onclick="shareWishlist()" id="share-wishlist-btn" class="ws-btn ws-btn-primary" style="display:none;">
+      <svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+      Share Wishlist
+    </button>
   </div>
 
   <div id="wishlist-grid" class="ws-grid">
@@ -109,6 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (data.items && data.items.length > 0) {
             countEl.textContent = `${data.items.length} saved piece${data.items.length !== 1 ? 's' : ''}`;
+            document.getElementById('share-wishlist-btn').style.display = 'inline-flex';
 
             grid.innerHTML = data.items.map(p => `
                 <div class="ws-product wishlist-item-${p.id}">
@@ -179,5 +186,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
     }
 });
+
+function shareWishlist() {
+  fetch('/api/wishlist/share', {method:'POST', headers:{'Content-Type':'application/json'}})
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(d.error){alert(d.error);return;}
+      var url = d.share_url || (window.location.origin + '/shop/wishlist/shared/' + d.share_token);
+      if(navigator.clipboard){navigator.clipboard.writeText(url);}
+      var btn=document.getElementById('share-wishlist-btn');
+      btn.innerHTML='<svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Link Copied!';
+      setTimeout(function(){btn.innerHTML='<svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg> Share Wishlist';},2000);
+    }).catch(function(){alert('Failed to generate share link');});
+}
 </script>
 {% endblock %}

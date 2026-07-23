@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     brevo_api_key: str = ""
 
     # Brevo verified sender email
-    mail_from_email: str = "noreply@forgestore.com"
+    mail_from_email: str = ""
 
     # Console fallback: when True, emails print to stdout instead of sending
     mail_console_fallback: bool = False
@@ -50,6 +50,9 @@ class Settings(BaseSettings):
     whatsapp_access_token: str = ""
     whatsapp_phone_number_id: str = ""
     whatsapp_graph_api_version: str = "v18.0"
+
+    # CDN for static files (e.g. https://cdn.forgestore.com)
+    cdn_url: str = ""
 
     # Debug mode (set to "true" in development for detailed logging)
     debug: bool = False

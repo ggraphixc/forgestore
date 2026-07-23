@@ -3,22 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-    <title>{% block title %}{{ settings.meta_title|default('ForgeStore') }}{% endblock %}</title>
-    <meta name="description" content="{% block meta_description %}{{ settings.meta_description|default('Where the Workshop Meets the World — Discover handcrafted treasures from master artisans.') }}{% endblock %}">
-    {% if settings.og_image_url|default('') %}
+    <title>{% block title %}{% if seo and seo.title %}{{ seo.title }}{% else %}{{ settings.meta_title|default('ForgeStore') }}{% endif %}{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}{% if seo and seo.description %}{{ seo.description }}{% else %}{{ settings.meta_description|default('Where the Workshop Meets the World — Discover handcrafted treasures from master artisans.') }}{% endif %}{% endblock %}">
+    {% if seo and seo.og_title %}
+    <meta property="og:title" content="{{ seo.og_title }}">
+    <meta property="og:description" content="{{ seo.og_description }}">
+    {% if seo.og_image %}<meta property="og:image" content="{{ seo.og_image }}">{% endif %}
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ seo.og_url }}">
+    <meta property="og:site_name" content="{{ seo.og_site_name }}">
+    <meta name="twitter:card" content="{{ seo.twitter_card }}">
+    <meta name="twitter:title" content="{{ seo.og_title }}">
+    <meta name="twitter:description" content="{{ seo.og_description }}">
+    {% if seo.og_image %}<meta name="twitter:image" content="{{ seo.og_image }}">{% endif %}
+    {% elif settings.og_image_url|default('') %}
     <meta property="og:title" content="{% block og_title %}{{ settings.site_name|default('ForgeStore') }}{% endblock %}">
     <meta property="og:description" content="{% block og_description %}{{ settings.meta_description|default('') }}{% endblock %}">
     <meta property="og:image" content="{{ settings.og_image_url }}">
     <meta property="og:type" content="website">
     {% endif %}
-    {% if settings.canonical_url_enabled|default('true') == 'true' %}
+    {% if seo and seo.canonical_url %}
+    <link rel="canonical" href="{{ seo.canonical_url }}">
+    {% elif settings.canonical_url_enabled|default('true') == 'true' %}
     <link rel="canonical" href="{% block canonical_url %}{{ settings.site_base_url|default('') }}{{ request.url.path }}{% endblock %}">
+    {% endif %}
+    {% if seo and seo.json_ld %}
+    <script type="application/ld+json">{{ seo.json_ld }}</script>
     {% endif %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Alex+Brush&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/output.css">
-    <link rel="stylesheet" href="/static/css/forms-core.css">
+    <link rel="stylesheet" href="{% if settings and settings.cdn_url %}{{ settings.cdn_url }}{% endif %}/static/css/output.css">
+    <link rel="stylesheet" href="{% if settings and settings.cdn_url %}{{ settings.cdn_url }}{% endif %}/static/css/forms-core.css">
     {% if settings.favicon_url|default('') %}
     <link rel="icon" href="{{ settings.favicon_url }}">
     {% endif %}

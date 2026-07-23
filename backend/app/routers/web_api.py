@@ -22,7 +22,7 @@ from app.database import get_db
 from app.models import (
     Product, Category, Retailer, Order, OrderItem, Review,
     User, CartItem, WishlistItem, OrderStatus, Settings, AdminNotification,
-    NewsletterSubscriber,
+    NewsletterSubscriber, VendorPromotion,
 )
 from app.schemas import CartAddRequest, CartUpdateRequest, CheckoutRequest, ReviewCreateRequest
 from app.auth import get_current_customer_from_cookie
@@ -2072,3 +2072,242 @@ async def report_product(
             "confidence": triage["confidence"],
         },
     }
+
+
+# ═══════════════════════════════════════════════════════════════════
+# COUPON / PROMO CODE VALIDATION
+# ═══════════════════════════════════════════════════════════════════
+
+@router.post("/coupons/validate")
+def validate_coupon(
+    request: Request,
+    data: dict,
+    db: Session = Depends(get_db),
+):
+    """Validate a promo/coupon code and return discount info."""
+    code = data.get("code", "").strip().upper()
+    cart_total = data.get("cart_total", 0)
+
+    if not code:
+        raise HTTPException(status_code=400, detail="Coupon code is required")
+
+    promo = db.query(VendorPromotion).filter(
+        VendorPromotion.promo_code == code,
+        VendorPromotion.is_active == True,
+    ).first()
+
+    if not promo:
+        return {"valid": False, "message": "Invalid coupon code"}
+
+    now = utcnow()
+    if promo.start_date and now < promo.start_date:
+        return {"valid": False, "message": "This coupon is not active yet"}
+    if promo.end_date and now > promo.end_date:
+        return {"valid": False, "message": "This coupon has expired"}
+    if promo.usage_limit > 0 and promo.usage_count >= promo.usage_limit:
+        return {"valid": False, "message": "This coupon has reached its usage limit"}
+    if cart_total < promo.min_purchase:
+        return {
+            "valid": False,
+            "message": f"Minimum purchase of {promo.min_purchase} required",
+        }
+
+    # Calculate discount
+    if promo.discount_type == "percentage":
+        discount = round(cart_total * (promo.discount_value / 100), 2)
+    elif promo.discount_type == "fixed":
+        discount = min(promo.discount_value, cart_total)
+    else:
+        discount = 0
+
+    return {
+        "valid": True,
+        "code": code,
+        "type": promo.discount_type,
+        "value": promo.discount_value,
+        "discount": discount,
+        "title": promo.title,
+        "message": f"Coupon applied! You save {discount}",
+    }
+
+
+@router.post("/coupons/apply")
+def apply_coupon(
+    request: Request,
+    data: dict,
+    db: Session = Depends(get_db),
+):
+    """Apply a coupon to the current session cart. Returns updated totals."""
+    code = data.get("code", "").strip().upper()
+    cart_total = data.get("cart_total", 0)
+
+    result = validate_coupon(request, {"code": code, "cart_total": cart_total}, db)
+    if not result.get("valid"):
+        return result
+
+    # Increment usage count
+    promo = db.query(VendorPromotion).filter(
+        VendorPromotion.promo_code == code,
+        VendorPromotion.is_active == True,
+    ).first()
+    if promo:
+        promo.usage_count += 1
+        db.commit()
+
+    return result
+
+
+# ═══════════════════════════════════════════════════════════════════
+# PRODUCT COMPARISON
+# ═══════════════════════════════════════════════════════════════════
+
+COMPARE_COOKIE = "compare_items"
+MAX_COMPARE = 4
+
+
+def _get_compare_ids(request: Request) -> list[str]:
+    raw = request.cookies.get(COMPARE_COOKIE, "")
+    if not raw:
+        return []
+    return [pid for pid in raw.split(",") if pid][:MAX_COMPARE]
+
+
+def _set_compare_cookie(response, ids: list[str]):
+    response.set_cookie(
+        key=COMPARE_COOKIE,
+        value=",".join(ids),
+        max_age=86400 * 30,
+        httponly=True,
+    )
+
+
+@router.get("/compare")
+def get_compare_items(request: Request, db: Session = Depends(get_db)):
+    """Get comparison products."""
+    ids = _get_compare_ids(request)
+    if not ids:
+        return {"items": [], "count": 0}
+
+    products = db.query(Product).filter(Product.id.in_(ids), Product.status == "APPROVED").all()
+    items = []
+    for p in products:
+        cat = p.category
+        items.append({
+            "id": p.id,
+            "slug": p.slug,
+            "name": p.name,
+            "brand": p.brand or "",
+            "price": p.price,
+            "discount_price": p.discount_price,
+            "image": p.images[0] if p.images else None,
+            "rating": p.rating,
+            "review_count": p.review_count,
+            "description": (p.description or "")[:200],
+            "category": cat.name if cat else "",
+            "inventory": p.inventory,
+            "specifications": p.specifications or {},
+            "sold_count": p.sold_count,
+        })
+
+    return {"items": items, "count": len(items)}
+
+
+@router.post("/compare/add")
+def add_to_compare(
+    request: Request,
+    data: dict,
+    db: Session = Depends(get_db),
+):
+    """Add a product to comparison list."""
+    product_id = data.get("product_id", "")
+    if not product_id:
+        raise HTTPException(status_code=400, detail="product_id is required")
+
+    product = db.query(Product).filter(Product.id == product_id, Product.status == "APPROVED").first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    ids = _get_compare_ids(request)
+    if product_id in ids:
+        return {"success": True, "message": "Already in comparison"}
+    if len(ids) >= MAX_COMPARE:
+        return {"success": False, "message": f"Maximum {MAX_COMPARE} products for comparison"}
+
+    ids.append(product_id)
+    resp = JSONResponse({"success": True, "count": len(ids)})
+    _set_compare_cookie(resp, ids)
+    return resp
+
+
+@router.delete("/compare/remove/{product_id}")
+def remove_from_compare(
+    request: Request,
+    product_id: str,
+):
+    """Remove a product from comparison list."""
+    ids = _get_compare_ids(request)
+    ids = [pid for pid in ids if pid != product_id]
+    resp = JSONResponse({"success": True, "count": len(ids)})
+    _set_compare_cookie(resp, ids)
+    return resp
+
+
+@router.delete("/compare/clear")
+def clear_compare(request: Request):
+    """Clear comparison list."""
+    resp = JSONResponse({"success": True})
+    resp.delete_cookie(COMPARE_COOKIE)
+    return resp
+
+
+# ═══════════════════════════════════════════════════════════════════
+# WISHLIST SHARING
+# ═══════════════════════════════════════════════════════════════════
+
+@router.post("/wishlist/share")
+def create_wishlist_share(
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """Create a shareable wishlist link (token-based)."""
+    token = get_cart_token(request)
+    items = db.query(WishlistItem).filter(WishlistItem.token == token).all()
+    if not items:
+        return {"success": False, "message": "Wishlist is empty"}
+
+    # Generate a share token (short-lived, random)
+    share_token = secrets.token_urlsafe(16)
+    from app.core.cache import cache_set
+    cache_set(f"wishlist_share:{share_token}", token, ttl=86400 * 7)
+
+    return {"success": True, "share_token": share_token, "url": f"/wishlist/shared/{share_token}"}
+
+
+@router.get("/wishlist/shared/{share_token}")
+def get_shared_wishlist(
+    share_token: str,
+    db: Session = Depends(get_db),
+):
+    """View a shared wishlist by token."""
+    from app.core.cache import cache_get
+    original_token = cache_get(f"wishlist_share:{share_token}")
+    if not original_token:
+        return {"error": "Invalid or expired share link", "items": [], "count": 0}
+
+    items = db.query(WishlistItem).filter(WishlistItem.token == original_token).all()
+    products = []
+    for wi in items:
+        product = db.query(Product).filter(Product.id == wi.product_id, Product.status == "APPROVED").first()
+        if product:
+            products.append({
+                "id": product.id,
+                "slug": product.slug,
+                "name": product.name,
+                "price": product.price,
+                "discount_price": product.discount_price,
+                "image": product.images[0] if product.images else None,
+                "rating": product.rating,
+                "review_count": product.review_count,
+            })
+
+    return {"items": products, "count": len(products)}

@@ -121,6 +121,16 @@ def render_template(template_name: str, context: Optional[Dict[str, Any]] = None
         else:
             ctx["settings"] = _get_fallback_settings()
 
+    # Inject CDN URL into settings for static asset prefixing
+    if ctx.get("settings"):
+        from app.config import get_settings
+        try:
+            _app_settings = get_settings()
+            if _app_settings.cdn_url and not ctx["settings"].get("cdn_url"):
+                ctx["settings"]["cdn_url"] = _app_settings.cdn_url.rstrip("/")
+        except Exception:
+            pass
+
     template = env.get_template(template_name)
     html = template.render(**ctx)
     return HTMLResponse(content=html, status_code=status_code)
