@@ -1,6 +1,7 @@
 """Logistics Portal — isolated router for LOGISTICS role users."""
 import json
 import math
+import logging
 from fastapi import APIRouter, Depends, Request, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from sqlalchemy.orm import Session
@@ -14,6 +15,8 @@ from app.models import (
 from app.auth import get_current_user_from_cookie, has_permission, AdminRole as AR, log_admin_action
 from app.templates_shared import render_template
 from app.utils import utcnow
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["logistics-portal"])
 
@@ -29,6 +32,13 @@ def _require_logistics(request: Request, db: Session):
             return admin, RedirectResponse(url="/vendor/dashboard", status_code=302)
         return admin, RedirectResponse(url="/admin/dashboard", status_code=302)
     return admin, None
+
+
+@router.get("/logistics/logout")
+def logistics_logout():
+    resp = RedirectResponse(url="/admin/login", status_code=302)
+    resp.delete_cookie("access_token")
+    return resp
 
 
 @router.get("/logistics/dashboard", response_class=HTMLResponse)
