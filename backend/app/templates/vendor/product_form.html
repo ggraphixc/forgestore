@@ -481,7 +481,7 @@
         </div>
 
         <!-- ── Product Video ───────────────────────────────────── -->
-        {% if settings.product_video_enabled|default('true') != 'false' %}
+        {% if vendor_settings and vendor_settings.product_video_enabled != 'false' %}
         <div class="vp-card" style="margin-bottom:1.5rem;">
           <div class="vp-card-header">
             <h3>Product Video</h3>
@@ -567,9 +567,17 @@
             </div>
             <div id="vai-pricing-result"></div>
             <div class="vp-grid-2" style="margin-bottom:1rem;">
+              {% if vendor_settings and vendor_settings.inventory_tracking_enabled != 'false' %}
               <div class="vp-field">
                 <label class="vp-label">Inventory *</label>
                 <input type="number" name="inventory" required min="0" class="vp-input" placeholder="0" value="{{ product.inventory if product else '0' }}">
+              </div>
+              {% else %}
+              <div class="vp-field">
+                <label class="vp-label">Inventory</label>
+                <input type="number" name="inventory" min="0" class="vp-input" placeholder="0" value="{{ product.inventory if product else '0' }}">
+              </div>
+              {% endif %}
               </div>
               <div class="vp-field">
                 <label class="vp-label">Category</label>

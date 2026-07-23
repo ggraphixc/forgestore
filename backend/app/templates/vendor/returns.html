@@ -87,6 +87,13 @@
     </div>
   </div>
 
+  {% if vendor_settings and vendor_settings.return_window_days %}
+  <div class="vp-card" style="margin-bottom:1.5rem;padding:1rem 1.25rem;display:flex;align-items:center;gap:0.75rem;border-left:3px solid var(--vp-accent);">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:20px;height:20px;color:var(--vp-accent);flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <span style="font-size:0.875rem;color:var(--vp-text-secondary);">Return Window: <strong style="color:var(--vp-text);">{{ vendor_settings.return_window_days }} days</strong> from delivery{% if vendor_settings.refund_window_days %} · Refund Window: <strong style="color:var(--vp-text);">{{ vendor_settings.refund_window_days }} days</strong>{% endif %}</span>
+  </div>
+  {% endif %}
+
   <div class="vp-stats" id="vrStats"></div>
 
   <div class="vr-filter-bar" id="vrTabs"></div>

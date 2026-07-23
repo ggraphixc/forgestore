@@ -283,7 +283,7 @@
       <div class="vp-stat-icon amber">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>
       </div>
-      <span class="vp-stat-label">Total Commission</span>
+      <span class="vp-stat-label">Commission ({{ vendor_settings.market_commission_percentage|default('10') }}%)</span>
       <span class="vp-stat-value">&#8358;{{ "{:,.2f}".format(earnings|map(attribute='commission')|sum) }}</span>
     </div>
     <div class="vp-stat vp-stat-emerald">
@@ -292,6 +292,13 @@
       </div>
       <span class="vp-stat-label">Net Earnings</span>
       <span class="vp-stat-value">&#8358;{{ "{:,.2f}".format(total_net) }}</span>
+    </div>
+    <div class="vp-stat vp-stat-blue">
+      <div class="vp-stat-icon blue">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      </div>
+      <span class="vp-stat-label">Payout Schedule</span>
+      <span class="vp-stat-value" style="font-size:0.9rem;text-transform:capitalize;">{{ vendor_settings.payout_schedule|default('weekly') }}</span>
     </div>
   </div>
 

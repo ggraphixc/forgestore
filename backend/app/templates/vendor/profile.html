@@ -5,50 +5,18 @@
   @import url('/static/css/vendor_portal.css');
 
   :root {
-    --vp-accent: #f59e0b;
-    --vp-accent-hover: #d97706;
-    --vp-accent-glow: rgba(245, 158, 11, 0.12);
-    --vp-surface: #ffffff;
-    --vp-surface-alt: #f5f5f5;
-    --vp-surface-raised: #ffffff;
-    --vp-border: #e7e5e4;
-    --vp-border-subtle: #f5f5f4;
-    --vp-text: #1c1917;
-    --vp-text-secondary: #57534e;
-    --vp-text-muted: #a8a29e;
-    --vp-success-bg: #ecfdf5;
-    --vp-success-border: #a7f3d0;
-    --vp-success-text: #065f46;
-    --vp-error-bg: #fef2f2;
-    --vp-error-border: #fecaca;
-    --vp-error-text: #991b1b;
-    --vp-radius: 16px;
-    --vp-radius-sm: 10px;
-    --vp-radius-xs: 8px;
-    --vp-shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
-    --vp-shadow: 0 4px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
-    --vp-shadow-lg: 0 12px 40px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
-    --vp-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --vp-accent-glow: rgba(99, 102, 241, 0.12);
+    --vp-accent-hover: #4f46e5;
   }
 
   .dark {
-    --vp-surface: #1c1917;
-    --vp-surface-alt: #292524;
-    --vp-surface-raised: #292524;
-    --vp-border: #44403c;
-    --vp-border-subtle: #3a3532;
-    --vp-text: #fafaf9;
-    --vp-text-secondary: #d6d3d1;
-    --vp-text-muted: #78716c;
     --vp-success-bg: rgba(16,185,129,0.08);
     --vp-success-border: rgba(16,185,129,0.2);
     --vp-success-text: #6ee7b7;
     --vp-error-bg: rgba(239,68,68,0.08);
     --vp-error-border: rgba(239,68,68,0.2);
     --vp-error-text: #fca5a5;
-    --vp-shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
-    --vp-shadow: 0 4px 16px rgba(0,0,0,0.2);
-    --vp-shadow-lg: 0 12px 40px rgba(0,0,0,0.3);
+    --vp-accent-glow: rgba(99, 102, 241, 0.2);
   }
 
   .vp-wrap {
@@ -78,7 +46,7 @@
   .vp-hero {
     background: #ffffff;
     border: 1px solid var(--vp-border);
-    border-radius: var(--vp-radius);
+    border-radius: var(--vp-radius-lg);
     padding: 2rem 2.25rem;
     margin-bottom: 1.75rem;
     position: relative;
@@ -86,7 +54,7 @@
     box-shadow: var(--vp-shadow-lg);
   }
   .dark .vp-hero {
-    background: linear-gradient(145deg, #262626 0%, #2a2a2a 50%, #333333 100%);
+    background: var(--vp-bg);
     border: 1px solid var(--vp-border);
   }
   .vp-hero::before {
@@ -96,9 +64,10 @@
     right: -25%;
     width: 360px;
     height: 360px;
-    background: radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(245,158,11,0.06) 0%, transparent 70%);
     pointer-events: none;
   }
+  .dark .vp-hero::before { background: radial-gradient(circle, rgba(245,158,11,0.04) 0%, transparent 70%); }
   .vp-hero::after {
     content: '';
     position: absolute;
@@ -106,9 +75,10 @@
     left: -15%;
     width: 240px;
     height: 240px;
-    background: radial-gradient(circle, rgba(245,158,11,0.07) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(245,158,11,0.04) 0%, transparent 70%);
     pointer-events: none;
   }
+  .dark .vp-hero::after { background: radial-gradient(circle, rgba(245,158,11,0.02) 0%, transparent 70%); }
   .vp-hero-inner {
     display: flex;
     align-items: center;
@@ -169,7 +139,7 @@
     margin-bottom: 1.75rem;
   }
   .vp-stat-card {
-    background: var(--vp-surface-raised);
+    background: var(--vp-bg-elevated);
     border: 1px solid var(--vp-border);
     border-radius: var(--vp-radius-sm);
     padding: 1.125rem 1rem;
@@ -178,7 +148,7 @@
     transition: box-shadow var(--vp-transition), transform var(--vp-transition);
   }
   .vp-stat-card:hover {
-    box-shadow: var(--vp-shadow);
+    box-shadow: var(--vp-shadow-md);
     transform: translateY(-1px);
   }
   .vp-stat-icon {
@@ -211,9 +181,9 @@
 
   /* ── Cards ── */
   .vp-card {
-    background: var(--vp-surface-raised);
+    background: var(--vp-bg-elevated);
     border: 1px solid var(--vp-border);
-    border-radius: var(--vp-radius);
+    border-radius: var(--vp-radius-lg);
     padding: 1.5rem;
     margin-bottom: 1rem;
     box-shadow: var(--vp-shadow-sm);
@@ -224,7 +194,7 @@
     gap: 10px;
     margin-bottom: 1.25rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid var(--vp-border-subtle);
+    border-bottom: 1px solid var(--vp-border-light);
   }
   .vp-card-header-icon {
     width: 36px;
@@ -268,7 +238,7 @@
     border-radius: var(--vp-radius-xs);
     font-size: 0.875rem;
     color: var(--vp-text);
-    background: var(--vp-surface-alt);
+    background: var(--vp-bg-elevated);
     min-height: 44px;
     box-sizing: border-box;
     transition: border-color var(--vp-transition), box-shadow var(--vp-transition), background var(--vp-transition);
@@ -277,13 +247,13 @@
     outline: none;
     border-color: var(--vp-accent);
     box-shadow: 0 0 0 3px var(--vp-accent-glow);
-    background: var(--vp-surface);
+    background: var(--vp-bg);
   }
   .vp-input::placeholder { color: var(--vp-text-muted); }
   .vp-input[disabled] {
     opacity: 0.55;
     cursor: not-allowed;
-    background: var(--vp-surface-alt);
+    background: var(--vp-bg-elevated);
   }
   .vp-select {
     width: 100%;
@@ -292,7 +262,7 @@
     border-radius: var(--vp-radius-xs);
     font-size: 0.875rem;
     color: var(--vp-text);
-    background: var(--vp-surface-alt);
+    background: var(--vp-bg-elevated);
     min-height: 44px;
     box-sizing: border-box;
     appearance: none;
@@ -376,7 +346,7 @@
   }
   .vp-btn-ghost:hover {
     border-color: var(--vp-text-muted);
-    background: var(--vp-surface-alt);
+    background: var(--vp-bg-elevated);
   }
   .vp-header-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
 
@@ -385,12 +355,12 @@
     gap: 0.625rem;
     margin-top: 1.25rem;
     padding-top: 1.25rem;
-    border-top: 1px solid var(--vp-border-subtle);
+    border-top: 1px solid var(--vp-border-light);
   }
 
   .vp-section-divider {
     height: 1px;
-    background: var(--vp-border-subtle);
+    background: var(--vp-border-light);
     margin: 1.25rem 0;
   }
 
@@ -400,7 +370,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.75rem 0;
-    border-bottom: 1px solid var(--vp-border-subtle);
+    border-bottom: 1px solid var(--vp-border-light);
   }
   .vp-toggle-row:last-child { border-bottom: none; }
   .vp-toggle-info { flex: 1; min-width: 0; }
@@ -699,7 +669,7 @@
             <div class="vp-toggle-desc">Get notified when you receive new orders</div>
           </div>
           <label class="vp-toggle">
-            <input type="checkbox" name="notify_orders" value="1" checked>
+            <input type="checkbox" name="notify_orders" value="1" {% if notif_prefs.notify_orders %}checked{% endif %}>
             <span class="vp-toggle-track"></span>
           </label>
         </div>
@@ -709,7 +679,7 @@
             <div class="vp-toggle-desc">Alerts when customers leave reviews</div>
           </div>
           <label class="vp-toggle">
-            <input type="checkbox" name="notify_reviews" value="1" checked>
+            <input type="checkbox" name="notify_reviews" value="1" {% if notif_prefs.notify_reviews %}checked{% endif %}>
             <span class="vp-toggle-track"></span>
           </label>
         </div>
@@ -719,7 +689,7 @@
             <div class="vp-toggle-desc">Weekly digest of your earnings and payouts</div>
           </div>
           <label class="vp-toggle">
-            <input type="checkbox" name="notify_payouts" value="1">
+            <input type="checkbox" name="notify_payouts" value="1" {% if notif_prefs.notify_payouts %}checked{% endif %}>
             <span class="vp-toggle-track"></span>
           </label>
         </div>
@@ -729,7 +699,7 @@
             <div class="vp-toggle-desc">Product updates and new feature announcements</div>
           </div>
           <label class="vp-toggle">
-            <input type="checkbox" name="notify_announcements" value="1">
+            <input type="checkbox" name="notify_announcements" value="1" {% if notif_prefs.notify_announcements %}checked{% endif %}>
             <span class="vp-toggle-track"></span>
           </label>
         </div>
@@ -825,6 +795,12 @@
       data.store_name = fd.get('store_name') || '';
       data.store_bio = fd.get('store_bio') || '';
       data.store_location = fd.get('store_location') || '';
+
+      // Notification preferences
+      data.notify_orders = fd.get('notify_orders') === '1' ? true : false;
+      data.notify_reviews = fd.get('notify_reviews') === '1' ? true : false;
+      data.notify_payouts = fd.get('notify_payouts') === '1' ? true : false;
+      data.notify_announcements = fd.get('notify_announcements') === '1' ? true : false;
 
       // Handle logo upload
       var logoFile = fd.get('logo_file');

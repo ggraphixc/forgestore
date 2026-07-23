@@ -34,6 +34,60 @@ def format_price(value):
         return "₦0.00"
 
 
+def _get_vendor_settings(db: Session) -> dict:
+    """Get all admin settings relevant to the vendor portal as a dict."""
+    settings = {}
+    keys = [
+        # Feature toggles
+        "inventory_tracking_enabled", "bulk_order_enabled", "cod_enabled",
+        "flash_sales_enabled", "loyalty_points_enabled", "referral_program_enabled",
+        "ai_assistant_enabled", "ai_recommendations_enabled", "vendor_chat_enabled",
+        "live_chat_enabled", "comparison_enabled", "product_video_enabled",
+        "product_tags_enabled", "order_tracking_enabled",
+        # Financial
+        "market_commission_percentage", "payout_schedule", "payout_hold_days",
+        "auto_settlement_enabled", "max_order_amount", "auto_invoice_enabled",
+        "invoice_prefix", "tax_enabled", "tax_percentage", "tax_name",
+        # Returns/Refunds
+        "refund_window_days", "return_window_days", "partial_refund_enabled",
+        # Limits
+        "low_stock_limit", "minimum_payout_amount", "max_discount_percent",
+        "max_order_items",
+    ]
+    for key in keys:
+        row = db.query(Settings).filter(Settings.key == key).first()
+        settings[key] = row.value if row else None
+    # Defaults for booleans
+    for key in [
+        "inventory_tracking_enabled", "bulk_order_enabled", "cod_enabled",
+        "flash_sales_enabled", "loyalty_points_enabled", "referral_program_enabled",
+        "ai_assistant_enabled", "ai_recommendations_enabled", "vendor_chat_enabled",
+        "live_chat_enabled", "comparison_enabled", "product_video_enabled",
+        "product_tags_enabled", "order_tracking_enabled",
+        "auto_settlement_enabled", "auto_invoice_enabled",
+        "tax_enabled", "partial_refund_enabled",
+    ]:
+        if settings[key] is None:
+            settings[key] = "true"
+    # Defaults for numbers
+    for key, default in [
+        ("market_commission_percentage", "10.0"), ("low_stock_limit", "5"),
+        ("minimum_payout_amount", "5000"), ("max_discount_percent", "70"),
+        ("max_order_amount", "0"), ("max_order_items", "50"),
+        ("payout_hold_days", "7"), ("refund_window_days", "7"),
+        ("return_window_days", "14"), ("tax_percentage", "0"),
+    ]:
+        if settings[key] is None:
+            settings[key] = default
+    if settings["payout_schedule"] is None:
+        settings["payout_schedule"] = "weekly"
+    if settings["invoice_prefix"] is None:
+        settings["invoice_prefix"] = "INV-"
+    if settings["tax_name"] is None:
+        settings["tax_name"] = "VAT"
+    return settings
+
+
 def get_role_badge(role):
     badges = {
         "DIR_ADMIN": "bg-purple-100 text-purple-800 border-purple-200",
@@ -59,6 +113,13 @@ def _require_retailer(request: Request, db: Session):
     if admin.vendor_id:
         retailer = db.query(Retailer).filter(Retailer.id == admin.vendor_id).first()
     return admin, retailer, None
+
+
+def _feature_disabled(db: Session, setting_key: str) -> bool:
+    """Check if a vendor feature is disabled via admin settings."""
+    from app.models import Settings
+    val = db.query(Settings.value).filter(Settings.key == setting_key).scalar()
+    return val is not None and val.lower() == "false"
 
 
 @router.get("/vendor/apply", response_class=HTMLResponse)
@@ -144,6 +205,7 @@ def vendor_dashboard(request: Request, db: Session = Depends(get_db)):
         "total_earnings": float(total_earnings),
         "active_campaigns": active_campaigns,
         "has_permission": has_permission,
+        "vendor_settings": _get_vendor_settings(db),
     })
 
 
@@ -165,6 +227,7 @@ def vendor_products(request: Request, db: Session = Depends(get_db)):
         "products": products,
         "categories": categories,
         "has_permission": has_permission,
+        "vendor_settings": _get_vendor_settings(db),
     })
 
 
@@ -196,6 +259,7 @@ def vendor_orders(request: Request, db: Session = Depends(get_db)):
         "orders": orders,
         "customers": customers,
         "has_permission": has_permission,
+        "vendor_settings": _get_vendor_settings(db),
     })
 
 
@@ -262,6 +326,7 @@ def vendor_earnings(request: Request, db: Session = Depends(get_db)):
         "earnings": earnings,
         "total_net": total_net,
         "has_permission": has_permission,
+        "vendor_settings": _get_vendor_settings(db),
     })
 
 
@@ -283,6 +348,7 @@ def vendor_analytics(request: Request, db: Session = Depends(get_db)):
         "retailer": retailer,
         "analytics": analytics,
         "has_permission": has_permission,
+        "vendor_settings": _get_vendor_settings(db),
     })
 
 
@@ -1270,6 +1336,7 @@ def vendor_ads_page(request: Request, db: Session = Depends(get_db)):
         "products": [{"id": p.id, "name": p.name, "image": (p.images[0] if p.images else "")} for p in products],
         "wallet_balance": wallet_balance,
         "has_permission": has_permission,
+        "vendor_settings": _get_vendor_settings(db),
     })
 
 
@@ -1281,6 +1348,7 @@ def vendor_support(request: Request, db: Session = Depends(get_db)):
     return render_template("vendor/support.html", {
         "request": request, "admin": admin, "retailer": retailer,
         "has_permission": has_permission,
+        "vendor_settings": _get_vendor_settings(db),
     })
 
 
@@ -1292,6 +1360,7 @@ def vendor_notifications(request: Request, db: Session = Depends(get_db)):
     return render_template("vendor/notifications.html", {
         "request": request, "admin": admin, "retailer": retailer,
         "has_permission": has_permission,
+        "vendor_settings": _get_vendor_settings(db),
     })
 
 
@@ -1307,6 +1376,7 @@ def vendor_product_new(request: Request, db: Session = Depends(get_db)):
         "request": request, "admin": admin, "retailer": retailer,
         "categories": categories, "product": None,
         "has_permission": has_permission,
+        "vendor_settings": _get_vendor_settings(db),
     })
 
 
@@ -1440,6 +1510,7 @@ def vendor_product_detail(request: Request, product_id: str, db: Session = Depen
     return render_template("vendor/product_detail.html", {
         "request": request, "admin": admin, "retailer": retailer,
         "product": product, "has_permission": has_permission,
+        "vendor_settings": _get_vendor_settings(db),
     })
 
 
@@ -1456,6 +1527,7 @@ def vendor_product_edit(request: Request, product_id: str, db: Session = Depends
         "request": request, "admin": admin, "retailer": retailer,
         "categories": categories, "product": product,
         "has_permission": has_permission,
+        "vendor_settings": _get_vendor_settings(db),
     })
 
 
@@ -1541,6 +1613,30 @@ async def vendor_product_update(request: Request, product_id: str,
     return RedirectResponse(url=f"/vendor/products/{product.id}", status_code=302)
 
 
+# ─── Vendor Theme Toggle ─────────────────────────────────────────────────
+
+@router.post("/api/vendor/theme")
+async def vendor_theme_toggle(request: Request, db: Session = Depends(get_db)):
+    """Save vendor's dark mode preference to admin Settings (theme_mode)."""
+    admin, retailer, redirect = _require_retailer(request, db)
+    if redirect:
+        return JSONResponse({"success": False, "message": "Unauthorized"}, status_code=401)
+    data = await request.json()
+    mode = data.get("mode", "light")
+    if mode not in ("light", "dark", "system"):
+        mode = "light"
+    setting = db.query(Settings).filter(Settings.key == "theme_mode").first()
+    if setting:
+        setting.value = mode
+    else:
+        db.add(Settings(key="theme_mode", value=mode, category="design", setting_type="select",
+                        label="Theme Mode", description="Default color scheme."))
+    db.commit()
+    from app.config import invalidate_settings_cache
+    invalidate_settings_cache()
+    return {"success": True, "mode": mode}
+
+
 # ─── Vendor Profile ──────────────────────────────────────────────────────
 
 @router.get("/vendor/me", response_class=HTMLResponse)
@@ -1552,11 +1648,27 @@ def vendor_profile(request: Request, db: Session = Depends(get_db)):
         Product.retailer_id == admin.vendor_id
     ).scalar() if admin.vendor_id else 0
     days_active = (utcnow() - admin.created_at).days if admin.created_at else 0
+
+    # Load notification preferences
+    import json as _json
+    notif_prefs = {"notify_orders": True, "notify_reviews": True, "notify_payouts": False, "notify_announcements": False}
+    if admin.vendor_id:
+        notif_key = f"vendor_notif_prefs_{admin.vendor_id}"
+        from app.models import Settings as SettingsModel
+        saved = db.query(SettingsModel).filter(SettingsModel.key == notif_key).first()
+        if saved and saved.value:
+            try:
+                notif_prefs.update(_json.loads(saved.value))
+            except Exception:
+                pass
+
     return render_template("vendor/profile.html", {
         "request": request, "admin": admin, "retailer": retailer,
         "product_count": product_count, "days_active": days_active,
         "get_role_badge": get_role_badge, "has_permission": has_permission,
         "success": request.query_params.get("success"), "error": None,
+        "notif_prefs": notif_prefs,
+        "vendor_settings": _get_vendor_settings(db),
     })
 
 
@@ -1585,6 +1697,12 @@ async def vendor_profile_update(request: Request, db: Session = Depends(get_db))
     logo_url = data.get("logo_url", "")
     banner_url = data.get("banner_url", "")
 
+    # Notification preferences
+    notify_orders = data.get("notify_orders")
+    notify_reviews = data.get("notify_reviews")
+    notify_payouts = data.get("notify_payouts")
+    notify_announcements = data.get("notify_announcements")
+
     product_count = db.query(func.count(Product.id)).filter(
         Product.retailer_id == admin.vendor_id
     ).scalar() if admin.vendor_id else 0
@@ -1595,6 +1713,7 @@ async def vendor_profile_update(request: Request, db: Session = Depends(get_db))
         "product_count": product_count, "days_active": days_active,
         "get_role_badge": get_role_badge, "has_permission": has_permission,
         "success": None, "error": None,
+        "vendor_settings": _get_vendor_settings(db),
     }
 
     def _error_response(msg):
@@ -1631,6 +1750,23 @@ async def vendor_profile_update(request: Request, db: Session = Depends(get_db))
         if banner_url is not None:
             retailer.banner_url = banner_url
         retailer.updated_at = utcnow()
+
+    # Save notification preferences via Settings model
+    import json as _json
+    notif_prefs = {
+        "notify_orders": bool(notify_orders) if notify_orders is not None else True,
+        "notify_reviews": bool(notify_reviews) if notify_reviews is not None else True,
+        "notify_payouts": bool(notify_payouts) if notify_payouts is not None else False,
+        "notify_announcements": bool(notify_announcements) if notify_announcements is not None else False,
+    }
+    if retailer:
+        notif_key = f"vendor_notif_prefs_{admin.vendor_id}"
+        from app.models import Settings as SettingsModel
+        existing = db.query(SettingsModel).filter(SettingsModel.key == notif_key).first()
+        if existing:
+            existing.value = _json.dumps(notif_prefs)
+        else:
+            db.add(SettingsModel(key=notif_key, value=_json.dumps(notif_prefs), category="other"))
 
     db.commit()
     if "application/json" in content_type:
@@ -1844,12 +1980,15 @@ def vendor_bulk_orders(request: Request, db: Session = Depends(get_db)):
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return redirect
+    if _feature_disabled(db, "bulk_order_enabled"):
+        return RedirectResponse(url="/vendor/products", status_code=302)
     from app.models import BulkOrder, Product
     orders = db.query(BulkOrder).filter(BulkOrder.retailer_id == admin.vendor_id).order_by(BulkOrder.created_at.desc()).all()
     return render_template("vendor/bulk_orders.html", {
         "request": request, "admin": admin, "retailer": retailer,
         "orders": orders, "format_price": format_price,
         "has_permission": has_permission,
+        "vendor_settings": _get_vendor_settings(db),
     })
 
 
@@ -1858,6 +1997,8 @@ async def vendor_approve_bulk_order(order_id: str, request: Request, db: Session
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return JSONResponse({"success": False, "message": "Unauthorized"}, status_code=401)
+    if _feature_disabled(db, "bulk_order_enabled"):
+        return JSONResponse({"success": False, "message": "Bulk orders disabled"}, status_code=403)
     from app.models import BulkOrder
     order = db.query(BulkOrder).filter(BulkOrder.id == order_id, BulkOrder.retailer_id == admin.vendor_id).first()
     if not order:
@@ -1877,6 +2018,8 @@ async def vendor_reject_bulk_order(order_id: str, request: Request, db: Session 
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return JSONResponse({"success": False, "message": "Unauthorized"}, status_code=401)
+    if _feature_disabled(db, "bulk_order_enabled"):
+        return JSONResponse({"success": False, "message": "Bulk orders disabled"}, status_code=403)
     from app.models import BulkOrder
     order = db.query(BulkOrder).filter(BulkOrder.id == order_id, BulkOrder.retailer_id == admin.vendor_id).first()
     if not order:
@@ -1936,6 +2079,7 @@ def vendor_returns_page(request: Request, db: Session = Depends(get_db)):
         "status_labels": STATUS_LABELS,
         "status_colors": STATUS_COLORS,
         "has_permission": has_permission,
+        "vendor_settings": _get_vendor_settings(db),
     })
 
 
@@ -2014,6 +2158,7 @@ def vendor_return_detail_page(return_id: str, request: Request, db: Session = De
         "status_labels": STATUS_LABELS,
         "status_colors": STATUS_COLORS,
         "has_permission": has_permission,
+        "vendor_settings": _get_vendor_settings(db),
     })
 
 
@@ -2246,11 +2391,14 @@ def vendor_inventory_page(request: Request, db: Session = Depends(get_db)):
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return redirect
+    if _feature_disabled(db, "inventory_tracking_enabled"):
+        return RedirectResponse(url="/vendor/products", status_code=302)
     return render_template("vendor/inventory.html", {
         "request": request,
         "admin": admin,
         "retailer": retailer,
         "has_permission": has_permission,
+        "vendor_settings": _get_vendor_settings(db),
     })
 
 
@@ -2266,6 +2414,8 @@ def vendor_inventory_list(
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return JSONResponse({"success": False}, status_code=401)
+    if _feature_disabled(db, "inventory_tracking_enabled"):
+        return JSONResponse({"success": False, "message": "Inventory tracking disabled"}, status_code=403)
 
     from app.services.vendor_analytics_service import VendorAnalyticsService
     service = VendorAnalyticsService(db)
@@ -2339,6 +2489,8 @@ async def vendor_inventory_bulk_update(request: Request, db: Session = Depends(g
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return JSONResponse({"success": False}, status_code=401)
+    if _feature_disabled(db, "inventory_tracking_enabled"):
+        return JSONResponse({"success": False, "message": "Inventory tracking disabled"}, status_code=403)
 
     data = await request.json()
     updates = data.get("updates", [])
@@ -2369,6 +2521,8 @@ async def vendor_inventory_single_update(request: Request, db: Session = Depends
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return JSONResponse({"success": False}, status_code=401)
+    if _feature_disabled(db, "inventory_tracking_enabled"):
+        return JSONResponse({"success": False, "message": "Inventory tracking disabled"}, status_code=403)
 
     data = await request.json()
     product_id = data.get("product_id")
@@ -2394,6 +2548,8 @@ def vendor_inventory_export(request: Request, db: Session = Depends(get_db)):
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return JSONResponse({"success": False}, status_code=401)
+    if _feature_disabled(db, "inventory_tracking_enabled"):
+        return JSONResponse({"success": False, "message": "Inventory tracking disabled"}, status_code=403)
 
     from fastapi.responses import StreamingResponse
     import csv, io
@@ -2443,6 +2599,7 @@ def vendor_reviews_page(request: Request, db: Session = Depends(get_db)):
         "admin": admin,
         "retailer": retailer,
         "has_permission": has_permission,
+        "vendor_settings": _get_vendor_settings(db),
     })
 
 
@@ -2648,11 +2805,14 @@ def vendor_messages_page(request: Request, db: Session = Depends(get_db)):
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return redirect
+    if _feature_disabled(db, "vendor_chat_enabled"):
+        return RedirectResponse(url="/vendor/products", status_code=302)
     return render_template("vendor/messages.html", {
         "request": request,
         "admin": admin,
         "retailer": retailer,
         "has_permission": has_permission,
+        "vendor_settings": _get_vendor_settings(db),
     })
 
 
@@ -2661,6 +2821,8 @@ def vendor_message_threads(request: Request, db: Session = Depends(get_db)):
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return JSONResponse({"success": False}, status_code=401)
+    if _feature_disabled(db, "vendor_chat_enabled"):
+        return JSONResponse({"success": False, "message": "Vendor chat disabled"}, status_code=403)
 
     # Get products for this vendor
     product_ids = [p.id for p in db.query(Product.id).filter(Product.retailer_id == admin.vendor_id).all()]
@@ -2709,6 +2871,8 @@ def vendor_message_thread(product_id: str, request: Request, db: Session = Depen
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return JSONResponse({"success": False}, status_code=401)
+    if _feature_disabled(db, "vendor_chat_enabled"):
+        return JSONResponse({"success": False, "message": "Vendor chat disabled"}, status_code=403)
 
     product = db.query(Product).filter(Product.id == product_id, Product.retailer_id == admin.vendor_id).first()
     if not product:
@@ -2741,6 +2905,8 @@ async def vendor_reply_message(product_id: str, request: Request, db: Session = 
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return JSONResponse({"success": False}, status_code=401)
+    if _feature_disabled(db, "vendor_chat_enabled"):
+        return JSONResponse({"success": False, "message": "Vendor chat disabled"}, status_code=403)
 
     product = db.query(Product).filter(Product.id == product_id, Product.retailer_id == admin.vendor_id).first()
     if not product:
@@ -2768,6 +2934,8 @@ async def vendor_flag_message(message_id: str, request: Request, db: Session = D
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return JSONResponse({"success": False}, status_code=401)
+    if _feature_disabled(db, "vendor_chat_enabled"):
+        return JSONResponse({"success": False, "message": "Vendor chat disabled"}, status_code=403)
 
     msg = db.query(ProductChatMessage).filter(ProductChatMessage.id == message_id).first()
     if not msg:
@@ -2784,6 +2952,8 @@ def vendor_messages_unread(request: Request, db: Session = Depends(get_db)):
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return JSONResponse({"success": False}, status_code=401)
+    if _feature_disabled(db, "vendor_chat_enabled"):
+        return {"count": 0}
 
     product_ids = [p.id for p in db.query(Product.id).filter(Product.retailer_id == admin.vendor_id).all()]
     if not product_ids:
@@ -2802,6 +2972,8 @@ def vendor_message_ai_suggest(product_id: str, request: Request, db: Session = D
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return JSONResponse({"success": False}, status_code=401)
+    if _feature_disabled(db, "vendor_chat_enabled"):
+        return JSONResponse({"success": False, "message": "Vendor chat disabled"}, status_code=403)
 
     product = db.query(Product).filter(Product.id == product_id, Product.retailer_id == admin.vendor_id).first()
     if not product:
@@ -2847,6 +3019,8 @@ def vendor_message_categorize(product_id: str, request: Request, db: Session = D
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return JSONResponse({"success": False}, status_code=401)
+    if _feature_disabled(db, "vendor_chat_enabled"):
+        return JSONResponse({"success": False, "message": "Vendor chat disabled"}, status_code=403)
 
     messages = db.query(ProductChatMessage).filter(
         ProductChatMessage.product_id == product_id,
@@ -2885,6 +3059,8 @@ async def vendor_message_escalate(product_id: str, request: Request, db: Session
     admin, retailer, redirect = _require_retailer(request, db)
     if redirect:
         return JSONResponse({"success": False}, status_code=401)
+    if _feature_disabled(db, "vendor_chat_enabled"):
+        return JSONResponse({"success": False, "message": "Vendor chat disabled"}, status_code=403)
 
     product = db.query(Product).filter(Product.id == product_id, Product.retailer_id == admin.vendor_id).first()
     if not product:
@@ -2919,6 +3095,7 @@ def vendor_promotions_page(request: Request, db: Session = Depends(get_db)):
         "admin": admin,
         "retailer": retailer,
         "has_permission": has_permission,
+        "vendor_settings": _get_vendor_settings(db),
     })
 
 
@@ -3116,6 +3293,7 @@ def vendor_performance_page(request: Request, db: Session = Depends(get_db)):
         "admin": admin,
         "retailer": retailer,
         "has_permission": has_permission,
+        "vendor_settings": _get_vendor_settings(db),
     })
 
 

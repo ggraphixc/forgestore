@@ -156,6 +156,7 @@
 </style>
 
 <div class="vp-page">
+  {% if vendor_settings and vendor_settings.bulk_order_enabled != 'false' %}
   <div class="vp-header">
     <div class="vp-header-left">
       <h1>Bulk Orders</h1>
@@ -241,6 +242,13 @@
         <p>When customers submit bulk purchase requests, they will appear here for your review.</p>
       </div>
     </div>
+  </div>
+  {% endif %}
+  {% else %}
+  <div class="vp-card" style="text-align:center;padding:3rem 2rem;">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:48px;height:48px;color:var(--vp-text-muted);margin:0 auto 1rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+    <h3 style="margin-bottom:0.5rem;">Bulk Orders Disabled</h3>
+    <p style="color:var(--vp-text-secondary);font-size:0.875rem;">Bulk ordering is currently disabled. Contact admin to enable this feature.</p>
   </div>
   {% endif %}
 </div>
