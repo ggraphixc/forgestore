@@ -1,0 +1,75 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}AI Demand Forecast — Logistics Portal{% endblock %}
+{% block content %}
+<style>
+@import url('/static/css/logistics.css');
+.ai-demand { max-width: 800px; margin: 0 auto; padding: 2rem; }
+.ai-demand h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+.ai-demand .subtitle { color: var(--text-muted); margin-bottom: 2rem; }
+.ai-card { background: var(--surface-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+.ai-badge { background: linear-gradient(135deg, #10b981, #06b6d4); color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.6875rem; font-weight: 700; }
+.forecast-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; margin-top: 1rem; }
+.forecast-day { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; }
+.forecast-day .day-name { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem; }
+.forecast-day .day-date { font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.5rem; }
+.forecast-day .day-orders { font-size: 1.75rem; font-weight: 700; color: var(--primary); }
+.forecast-day .day-drivers { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+.recommendation { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.75rem; background: rgba(16,185,129,0.05); border-radius: 8px; margin-bottom: 0.5rem; font-size: 0.875rem; }
+.recommendation::before { content: '💡'; flex-shrink: 0; }
+.loading { display: none; text-align: center; padding: 2rem; }
+.spinner { width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: #10b981; border-radius: 50%; animation: spin 0.6s linear infinite; margin: 0 auto; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<div class="ai-demand">
+  <h1>📊 AI Demand Forecast</h1>
+  <p class="subtitle">Predict delivery volume and recommend driver positioning</p>
+
+  <div class="ai-card">
+    <h3><span class="ai-badge">AI</span> 7-Day Forecast</h3>
+    <div class="loading" id="loader"><div class="spinner"></div><p style="margin-top:0.75rem;color:var(--text-muted);">Analyzing patterns...</p></div>
+    <div id="forecastContent">
+      <button class="btn btn-primary" style="background:#10b981;color:white;padding:0.75rem 1.5rem;border:none;border-radius:8px;font-weight:600;cursor:pointer;min-height:44px;" onclick="loadForecast()">Generate Forecast</button>
+    </div>
+  </div>
+
+  <div class="ai-card" id="recsCard" style="display:none;">
+    <h3>📋 Recommendations</h3>
+    <div id="recommendations"></div>
+  </div>
+</div>
+
+<script>
+async function loadForecast() {
+  document.getElementById('loader').style.display = 'block';
+  document.getElementById('forecastContent').innerHTML = '';
+  try {
+    const res = await fetch('/logistics/api/ai/demand-forecast?days=7');
+    const data = await res.json();
+    document.getElementById('loader').style.display = 'none';
+    if (data.forecast?.length) {
+      document.getElementById('forecastContent').innerHTML = '<div class="forecast-grid">' +
+        data.forecast.map(f => `
+          <div class="forecast-day">
+            <div class="day-name">${f.day_name}</div>
+            <div class="day-date">${f.date}</div>
+            <div class="day-orders">${f.predicted_orders}</div>
+            <div class="day-drivers">🚗 ${f.recommended_drivers} drivers</div>
+          </div>
+        `).join('') + '</div>';
+    } else {
+      document.getElementById('forecastContent').innerHTML = '<p style="color:var(--text-muted);text-align:center;">No data available yet. Orders will generate forecasts.</p>';
+    }
+    if (data.recommendations?.length) {
+      document.getElementById('recsCard').style.display = 'block';
+      document.getElementById('recommendations').innerHTML = data.recommendations.map(r =>
+        `<div class="recommendation">${r}</div>`
+      ).join('');
+    }
+  } catch(e) {
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('forecastContent').innerHTML = '<p style="color:var(--danger);">Error loading forecast</p>';
+  }
+}
+</script>
+{% endblock %}

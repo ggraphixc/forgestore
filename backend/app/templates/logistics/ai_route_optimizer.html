@@ -1,0 +1,112 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}AI Route Optimizer — Logistics Portal{% endblock %}
+{% block content %}
+<style>
+@import url('/static/css/logistics.css');
+.ai-route { max-width: 800px; margin: 0 auto; padding: 2rem; }
+.ai-route h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+.ai-route .subtitle { color: var(--text-muted); margin-bottom: 2rem; }
+.ai-card { background: var(--surface-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+.ai-card h3 { font-size: 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+.ai-badge { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.6875rem; font-weight: 700; }
+.stop-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+.stop-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+.stop-num { width: 28px; height: 28px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+.stop-item input { flex: 1; border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; font-size: 0.875rem; background: var(--surface); color: var(--text); }
+.btn { padding: 0.75rem 1.25rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; min-height: 44px; font-size: 0.875rem; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.result-card { background: rgba(99,102,241,0.05); border: 1px solid rgba(99,102,241,0.2); border-radius: 12px; padding: 1.5rem; }
+.result-stat { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
+.result-stat:last-child { border-bottom: none; }
+.result-stat strong { color: var(--primary); }
+.loading { display: none; text-align: center; padding: 2rem; }
+.spinner { width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.6s linear infinite; margin: 0 auto; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<div class="ai-route">
+  <h1>🧠 AI Route Optimizer</h1>
+  <p class="subtitle">Multi-stop route optimization using nearest-neighbor + 2-opt improvement</p>
+
+  <div class="ai-card">
+    <h3><span class="ai-badge">AI</span> Add Delivery Stops</h3>
+    <div class="stop-list" id="stopList">
+      <div class="stop-item">
+        <div class="stop-num">1</div>
+        <input type="text" placeholder="Stop name (e.g. Customer A)" class="stop-name">
+        <input type="number" step="any" placeholder="Lat" class="stop-lat" style="width:100px;">
+        <input type="number" step="any" placeholder="Lng" class="stop-lng" style="width:100px;">
+      </div>
+    </div>
+    <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+      <button class="btn btn-outline" onclick="addStop()">+ Add Stop</button>
+      <button class="btn btn-outline" onclick="useMyLocation()">📍 Use My Location</button>
+    </div>
+    <div style="display:flex;gap:0.5rem;">
+      <button class="btn btn-primary" onclick="optimize()">🧠 Optimize Route</button>
+    </div>
+  </div>
+
+  <div class="loading" id="loader"><div class="spinner"></div><p style="margin-top:0.75rem;color:var(--text-muted);">Optimizing route...</p></div>
+
+  <div class="ai-card" id="resultCard" style="display:none;">
+    <h3>✅ Optimized Route</h3>
+    <div class="result-card">
+      <div class="result-stat"><span>Total Distance</span><strong id="resDist">-</strong></div>
+      <div class="result-stat"><span>Estimated Time</span><strong id="resTime">-</strong></div>
+      <div class="result-stat"><span>Stops</span><strong id="resStops">-</strong></div>
+    </div>
+    <h3 style="margin-top:1.5rem;">📍 Stop Order</h3>
+    <div id="optimizedList"></div>
+  </div>
+</div>
+
+<script>
+let stopCount = 1;
+function addStop() {
+  stopCount++;
+  const div = document.createElement('div');
+  div.className = 'stop-item';
+  div.innerHTML = `<div class="stop-num">${stopCount}</div>
+    <input type="text" placeholder="Stop name" class="stop-name">
+    <input type="number" step="any" placeholder="Lat" class="stop-lat" style="width:100px;">
+    <input type="number" step="any" placeholder="Lng" class="stop-lng" style="width:100px;">`;
+  document.getElementById('stopList').appendChild(div);
+}
+function useMyLocation() {
+  if (!navigator.geolocation) return alert('GPS not available');
+  navigator.geolocation.getCurrentPosition(pos => {
+    const items = document.querySelectorAll('.stop-item');
+    const last = items[items.length - 1];
+    last.querySelector('.stop-lat').value = pos.coords.latitude.toFixed(6);
+    last.querySelector('.stop-lng').value = pos.coords.longitude.toFixed(6);
+  });
+}
+async function optimize() {
+  const stops = [];
+  document.querySelectorAll('.stop-item').forEach(item => {
+    const name = item.querySelector('.stop-name').value || 'Stop';
+    const lat = parseFloat(item.querySelector('.stop-lat').value);
+    const lng = parseFloat(item.querySelector('.stop-lng').value);
+    if (!isNaN(lat) && !isNaN(lng)) stops.push({id: name, lat, lng});
+  });
+  if (stops.length < 2) return alert('Add at least 2 stops with coordinates');
+  document.getElementById('loader').style.display = 'block';
+  document.getElementById('resultCard').style.display = 'none';
+  const res = await fetch('/logistics/api/ai/route-optimize', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({stops, driver_lat: 0, driver_lng: 0})
+  });
+  const data = await res.json();
+  document.getElementById('loader').style.display = 'none';
+  document.getElementById('resultCard').style.display = 'block';
+  document.getElementById('resDist').textContent = data.total_distance_km + ' km';
+  document.getElementById('resTime').textContent = data.estimated_time_min + ' min';
+  document.getElementById('resStops').textContent = data.stop_count || stops.length;
+  document.getElementById('optimizedList').innerHTML = (data.optimized_order || []).map((id, i) =>
+    `<div class="stop-item"><div class="stop-num">${i+1}</div><span>${id}</span></div>`
+  ).join('');
+}
+</script>
+{% endblock %}

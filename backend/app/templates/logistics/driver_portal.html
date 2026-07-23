@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Driver Portal — ForgeStore</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --dp-bg: #f8fafc; --dp-surface: #ffffff; --dp-text: #0f172a;
+      --dp-text-secondary: #64748b; --dp-border: #e2e8f0;
+      --dp-primary: #6366f1; --dp-primary-hover: #4f46e5;
+      --dp-success: #10b981; --dp-warning: #f59e0b; --dp-danger: #ef4444;
+      --dp-radius: 16px; --dp-radius-sm: 10px;
+      --dp-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
+    .dark { --dp-bg: #0f172a; --dp-surface: #1e293b; --dp-text: #f1f5f9;
+      --dp-text-secondary: #94a3b8; --dp-border: #334155; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--dp-bg); color: var(--dp-text); min-height: 100vh;
+      -webkit-tap-highlight-color: transparent; }
+    /* Login Screen */
+    .dp-login { display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 1.5rem; }
+    .dp-login-card { background: var(--dp-surface); border-radius: var(--dp-radius);
+      padding: 2.5rem 2rem; width: 100%; max-width: 380px;
+      box-shadow: var(--dp-shadow); text-align: center; }
+    .dp-login-card h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+    .dp-login-card p { color: var(--dp-text-secondary); font-size: 0.875rem; margin-bottom: 2rem; }
+    .dp-login-card .dp-logo { font-size: 2.5rem; margin-bottom: 1rem; }
+    .dp-field { margin-bottom: 1rem; text-align: left; }
+    .dp-field label { display: block; font-size: 0.8125rem; font-weight: 600;
+      color: var(--dp-text-secondary); margin-bottom: 0.375rem; }
+    .dp-field input { width: 100%; padding: 0.875rem 1rem; border: 1.5px solid var(--dp-border);
+      border-radius: var(--dp-radius-sm); font-size: 1rem; background: var(--dp-bg);
+      color: var(--dp-text); min-height: 48px; outline: none; transition: border-color 0.2s; }
+    .dp-field input:focus { border-color: var(--dp-primary); }
+    .dp-btn { width: 100%; padding: 0.875rem; border: none; border-radius: var(--dp-radius-sm);
+      font-size: 1rem; font-weight: 600; cursor: pointer; min-height: 48px;
+      transition: all 0.2s; }
+    .dp-btn-primary { background: var(--dp-primary); color: white; }
+    .dp-btn-primary:hover { background: var(--dp-primary-hover); }
+    .dp-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .dp-error { background: #fef2f2; color: #991b1b; padding: 0.75rem 1rem;
+      border-radius: var(--dp-radius-sm); font-size: 0.875rem; margin-bottom: 1rem;
+      border: 1px solid #fecaca; display: none; }
+    /* App Shell */
+    .dp-app { display: none; min-height: 100vh; padding-bottom: 80px; }
+    .dp-header { position: sticky; top: 0; z-index: 100; background: var(--dp-surface);
+      border-bottom: 1px solid var(--dp-border); padding: 1rem 1.25rem; }
+    .dp-header-row { display: flex; align-items: center; justify-content: space-between; }
+    .dp-header h2 { font-size: 1.125rem; }
+    .dp-status-pill { display: inline-flex; align-items: center; gap: 0.375rem;
+      padding: 0.375rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+    .dp-status-pill.online { background: rgba(16,185,129,0.12); color: #059669; }
+    .dp-status-pill.busy { background: rgba(245,158,11,0.12); color: #d97706; }
+    .dp-status-pill.offline { background: rgba(239,68,68,0.12); color: #dc2626; }
+    .dp-status-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dp-status-pill.online .dp-status-dot { background: #10b981; }
+    .dp-status-pill.busy .dp-status-dot { background: #f59e0b; }
+    .dp-status-pill.offline .dp-status-dot { background: #ef4444; }
+    /* Tab Bar */
+    .dp-tabs { display: flex; gap: 0.25rem; padding: 0.5rem 1.25rem;
+      overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .dp-tab { padding: 0.5rem 1rem; border-radius: 999px; font-size: 0.8125rem;
+      font-weight: 500; border: none; cursor: pointer; white-space: nowrap;
+      background: transparent; color: var(--dp-text-secondary); transition: all 0.2s;
+      min-height: 36px; }
+    .dp-tab.active { background: var(--dp-primary); color: white; }
+    /* Content */
+    .dp-content { padding: 1.25rem; }
+    .dp-section { display: none; }
+    .dp-section.active { display: block; }
+    /* Shipment Card */
+    .dp-shipment { background: var(--dp-surface); border: 1px solid var(--dp-border);
+      border-radius: var(--dp-radius); padding: 1.25rem; margin-bottom: 0.75rem;
+      transition: all 0.2s; }
+    .dp-shipment-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
+    .dp-shipment-id { font-size: 0.75rem; color: var(--dp-text-secondary); }
+    .dp-shipment-tracking { font-weight: 700; font-size: 0.9375rem; }
+    .dp-badge { display: inline-flex; padding: 0.25rem 0.625rem; border-radius: 999px;
+      font-size: 0.6875rem; font-weight: 600; }
+    .dp-badge-pending { background: #fef3c7; color: #92400e; }
+    .dp-badge-transit { background: #dbeafe; color: #1e40af; }
+    .dp-badge-delivered { background: #d1fae5; color: #065f46; }
+    .dp-badge-failed { background: #fee2e2; color: #991b1b; }
+    .dp-shipment-detail { font-size: 0.8125rem; color: var(--dp-text-secondary);
+      display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.25rem; }
+    .dp-shipment-detail svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .dp-shipment-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+    .dp-action-btn { flex: 1; padding: 0.625rem; border-radius: var(--dp-radius-sm);
+      border: none; font-size: 0.8125rem; font-weight: 600; cursor: pointer;
+      min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 0.375rem; }
+    .dp-action-navigate { background: var(--dp-primary); color: white; }
+    .dp-action-status { background: var(--dp-success); color: white; }
+    .dp-action-fail { background: var(--dp-danger); color: white; }
+    .dp-action-proof { background: #f1f5f9; color: var(--dp-text); border: 1px solid var(--dp-border); }
+    /* GPS Banner */
+    .dp-gps-banner { background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white; padding: 0.75rem 1.25rem; font-size: 0.8125rem;
+      display: flex; align-items: center; gap: 0.5rem; }
+    .dp-gps-banner.pulse { animation: dpPulse 2s ease-in-out infinite; }
+    @keyframes dpPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    /* Stats Row */
+    .dp-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;
+      margin-bottom: 1.25rem; }
+    .dp-stat { background: var(--dp-surface); border: 1px solid var(--dp-border);
+      border-radius: var(--dp-radius-sm); padding: 1rem; text-align: center; }
+    .dp-stat-value { font-size: 1.5rem; font-weight: 700; }
+    .dp-stat-label { font-size: 0.6875rem; color: var(--dp-text-secondary); margin-top: 0.125rem; }
+    /* Bottom Nav */
+    .dp-bottom-nav { position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--dp-surface); border-top: 1px solid var(--dp-border);
+      display: flex; z-index: 100; padding: 0.5rem 0; padding-bottom: env(safe-area-inset-bottom, 0.5rem); }
+    .dp-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center;
+      gap: 0.125rem; padding: 0.375rem; border: none; background: none;
+      color: var(--dp-text-secondary); font-size: 0.625rem; cursor: pointer;
+      min-height: 44px; justify-content: center; }
+    .dp-nav-item.active { color: var(--dp-primary); }
+    .dp-nav-item svg { width: 22px; height: 22px; }
+    /* Modal */
+    .dp-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      z-index: 200; display: none; align-items: flex-end; justify-content: center; }
+    .dp-modal-overlay.active { display: flex; }
+    .dp-modal { background: var(--dp-surface); border-radius: var(--dp-radius) var(--dp-radius) 0 0;
+      width: 100%; max-width: 480px; max-height: 80vh; overflow-y: auto; padding: 1.5rem; }
+    .dp-modal h3 { margin-bottom: 1rem; }
+    /* Status Update Buttons */
+    .dp-status-options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .dp-status-option { padding: 1rem; border: 1.5px solid var(--dp-border);
+      border-radius: var(--dp-radius-sm); background: var(--dp-bg);
+      display: flex; align-items: center; gap: 0.75rem; cursor: pointer;
+      transition: all 0.2s; min-height: 52px; }
+    .dp-status-option:hover, .dp-status-option:active { border-color: var(--dp-primary);
+      background: rgba(99,102,241,0.04); }
+    .dp-status-option .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    /* Empty State */
+    .dp-empty { text-align: center; padding: 3rem 1.5rem; color: var(--dp-text-secondary); }
+    .dp-empty svg { width: 64px; height: 64px; margin-bottom: 1rem; opacity: 0.3; }
+    /* Loading */
+    .dp-loading { display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .dp-spinner { width: 24px; height: 24px; border: 3px solid var(--dp-border);
+      border-top-color: var(--dp-primary); border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  {# ── LOGIN SCREEN ── #}
+  <div class="dp-login" id="loginScreen">
+    <div class="dp-login-card">
+      <div class="dp-logo">🚚</div>
+      <h1>Driver Portal</h1>
+      <p>Sign in with your phone number</p>
+      <div class="dp-error" id="loginError"></div>
+      <form id="loginForm" onsubmit="return driverLogin(event)">
+        <div class="dp-field">
+          <label>Phone Number</label>
+          <input type="tel" id="loginPhone" placeholder="e.g. 08012345678" required>
+        </div>
+        <div class="dp-field">
+          <label>Driver ID</label>
+          <input type="text" id="loginDriverId" placeholder="Your driver ID" required>
+        </div>
+        <button type="submit" class="dp-btn dp-btn-primary" id="loginBtn">Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  {# ── MAIN APP ── #}
+  <div class="dp-app" id="appShell">
+    <div class="dp-gps-banner pulse" id="gpsBanner">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <span id="gpsStatus">Getting location...</span>
+    </div>
+
+    <div class="dp-header">
+      <div class="dp-header-row">
+        <div>
+          <h2 id="driverName">Driver</h2>
+          <span style="font-size:0.75rem;color:var(--dp-text-secondary);" id="driverVehicle"></span>
+        </div>
+        <div class="dp-status-pill online" id="statusPill" onclick="showStatusModal()">
+          <div class="dp-status-dot"></div>
+          <span id="statusText">Online</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dp-tabs">
+      <button class="dp-tab active" onclick="switchTab('deliveries')">Deliveries</button>
+      <button class="dp-tab" onclick="switchTab('returns')">Returns</button>
+      <button class="dp-tab" onclick="switchTab('history')">History</button>
+    </div>
+
+    <div class="dp-content">
+      <div class="dp-stats" id="statsRow">
+        <div class="dp-stat"><div class="dp-stat-value" id="statAssigned">0</div><div class="dp-stat-label">Assigned</div></div>
+        <div class="dp-stat"><div class="dp-stat-value" id="statDelivered">0</div><div class="dp-stat-label">Delivered</div></div>
+        <div class="dp-stat"><div class="dp-stat-value" id="statEarnings">₦0</div><div class="dp-stat-label">Today</div></div>
+      </div>
+
+      <div class="dp-section active" id="tab-deliveries">
+        <div class="dp-loading" id="deliveriesLoader"><div class="dp-spinner"></div></div>
+        <div id="deliveriesList"></div>
+      </div>
+
+      <div class="dp-section" id="tab-returns">
+        <div class="dp-loading" id="returnsLoader"><div class="dp-spinner"></div></div>
+        <div id="returnsList"></div>
+      </div>
+
+      <div class="dp-section" id="tab-history">
+        <div class="dp-loading" id="historyLoader"><div class="dp-spinner"></div></div>
+        <div id="historyList"></div>
+      </div>
+    </div>
+
+    <nav class="dp-bottom-nav">
+      <button class="dp-nav-item active" onclick="switchTab('deliveries')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        Deliveries
+      </button>
+      <button class="dp-nav-item" onclick="switchTab('returns')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+        Returns
+      </button>
+      <button class="dp-nav-item" onclick="switchTab('history')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        History
+      </button>
+      <button class="dp-nav-item" onclick="showStatusModal()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        Profile
+      </button>
+    </nav>
+  </div>
+
+  {# ── STATUS MODAL ── #}
+  <div class="dp-modal-overlay" id="statusModal">
+    <div class="dp-modal">
+      <h3>Update Status</h3>
+      <div class="dp-status-options">
+        <div class="dp-status-option" onclick="updateDriverStatus('AVAILABLE')">
+          <div class="dot" style="background:#10b981;"></div>
+          <div><strong>Online</strong><br><span style="font-size:0.75rem;color:var(--dp-text-secondary);">Ready for deliveries</span></div>
+        </div>
+        <div class="dp-status-option" onclick="updateDriverStatus('BUSY')">
+          <div class="dot" style="background:#f59e0b;"></div>
+          <div><strong>Busy</strong><br><span style="font-size:0.75rem;color:var(--dp-text-secondary);">On a delivery</span></div>
+        </div>
+        <div class="dp-status-option" onclick="updateDriverStatus('OFFLINE')">
+          <div class="dot" style="background:#ef4444;"></div>
+          <div><strong>Offline</strong><br><span style="font-size:0.75rem;color:var(--dp-text-secondary);">Not available</span></div>
+        </div>
+      </div>
+      <button class="dp-btn" style="margin-top:1rem;background:var(--dp-bg);color:var(--dp-text);border:1px solid var(--dp-border);" onclick="closeModal('statusModal')">Cancel</button>
+    </div>
+  </div>
+
+  {# ── PROOF MODAL ── #}
+  <div class="dp-modal-overlay" id="proofModal">
+    <div class="dp-modal">
+      <h3>Upload Delivery Proof</h3>
+      <p style="font-size:0.875rem;color:var(--dp-text-secondary);margin-bottom:1rem;">Take a photo of the delivered package</p>
+      <input type="file" id="proofFile" accept="image/*" capture="environment" style="width:100%;margin-bottom:1rem;">
+      <input type="hidden" id="proofShipmentId">
+      <div style="display:flex;gap:0.5rem;">
+        <button class="dp-btn" style="flex:1;background:var(--dp-bg);color:var(--dp-text);border:1px solid var(--dp-border);" onclick="closeModal('proofModal')">Cancel</button>
+        <button class="dp-btn dp-btn-primary" style="flex:1;" onclick="submitProof()">Upload</button>
+      </div>
+    </div>
+  </div>
+
+  {# ── GPS TRACKING + APP LOGIC ── #}
+  <script>
+    let driverId = null;
+    let driverData = null;
+    let gpsWatchId = null;
+
+    // ── Login ──
+    async function driverLogin(e) {
+      e.preventDefault();
+      const phone = document.getElementById('loginPhone').value.trim();
+      const driverIdInput = document.getElementById('loginDriverId').value.trim();
+      const errEl = document.getElementById('loginError');
+      const btn = document.getElementById('loginBtn');
+      errEl.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+      try {
+        const res = await fetch('/driver/api/login', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({phone, driver_id: driverIdInput})
+        });
+        const d = await res.json();
+        if (d.success) {
+          driverId = d.driver_id;
+          driverData = d.driver;
+          document.getElementById('loginScreen').style.display = 'none';
+          document.getElementById('appShell').style.display = 'block';
+          document.getElementById('driverName').textContent = driverData.name;
+          document.getElementById('driverVehicle').textContent = [driverData.vehicle_type, driverData.vehicle_number].filter(Boolean).join(' · ') || '';
+          updateStatusPill(driverData.status);
+          startGPS();
+          loadDeliveries();
+        } else {
+          errEl.textContent = d.message || 'Invalid credentials';
+          errEl.style.display = 'block';
+        }
+      } catch(err) {
+        errEl.textContent = 'Connection error. Try again.';
+        errEl.style.display = 'block';
+      }
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+      return false;
+    }
+
+    // ── GPS Tracking ──
+    function startGPS() {
+      if (!navigator.geolocation) {
+        document.getElementById('gpsStatus').textContent = 'GPS not available';
+        return;
+      }
+      gpsWatchId = navigator.geolocation.watchPosition(
+        pos => {
+          const {latitude, longitude, accuracy} = pos.coords;
+          document.getElementById('gpsStatus').textContent = `Location active (±${Math.round(accuracy)}m)`;
+          document.getElementById('gpsBanner').classList.remove('pulse');
+          // Send to server
+          fetch('/driver/api/location', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({latitude, longitude, accuracy})
+          }).catch(() => {});
+        },
+        err => {
+          document.getElementById('gpsStatus').textContent = 'Location access denied';
+          document.getElementById('gpsBanner').classList.add('pulse');
+        },
+        {enableHighAccuracy: true, maximumAge: 10000, timeout: 15000}
+      );
+    }
+
+    // ── Status ──
+    function updateStatusPill(status) {
+      const pill = document.getElementById('statusPill');
+      const text = document.getElementById('statusText');
+      pill.className = 'dp-status-pill ' + (status === 'AVAILABLE' ? 'online' : status === 'BUSY' ? 'busy' : 'offline');
+      text.textContent = status === 'AVAILABLE' ? 'Online' : status === 'BUSY' ? 'Busy' : 'Offline';
+    }
+
+    async function updateDriverStatus(status) {
+      await fetch('/driver/api/status', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({status})
+      });
+      updateStatusPill(status);
+      closeModal('statusModal');
+    }
+
+    function showStatusModal() { document.getElementById('statusModal').classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    // ── Tabs ──
+    function switchTab(tab) {
+      document.querySelectorAll('.dp-section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.dp-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.dp-nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+      document.querySelectorAll('.dp-tab') [['deliveries','returns','history'].indexOf(tab)].classList.add('active');
+      document.querySelectorAll('.dp-nav-item') [['deliveries','returns','history'].indexOf(tab)].classList.add('active');
+      if (tab === 'returns') loadReturns();
+      if (tab === 'history') loadHistory();
+    }
+
+    // ── Load Deliveries ──
+    async function loadDeliveries() {
+      document.getElementById('deliveriesLoader').style.display = 'flex';
+      try {
+        const res = await fetch('/driver/api/shipments');
+        const d = await res.json();
+        document.getElementById('deliveriesLoader').style.display = 'none';
+        document.getElementById('statAssigned').textContent = d.stats?.assigned || 0;
+        document.getElementById('statDelivered').textContent = d.stats?.delivered || 0;
+        document.getElementById('statEarnings').textContent = '₦' + (d.stats?.earnings || 0).toLocaleString();
+        const list = document.getElementById('deliveriesList');
+        if (!d.shipments?.length) {
+          list.innerHTML = '<div class="dp-empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><p>No active deliveries</p></div>';
+          return;
+        }
+        list.innerHTML = d.shipments.map(s => `
+          <div class="dp-shipment">
+            <div class="dp-shipment-top">
+              <div>
+                <div class="dp-shipment-id">${s.tracking_number}</div>
+                <div class="dp-shipment-tracking">#${s.order_number || 'N/A'}</div>
+              </div>
+              <span class="dp-badge dp-badge-${s.status === 'PENDING' ? 'pending' : s.status === 'IN_TRANSIT' || s.status === 'OUT_FOR_DELIVERY' ? 'transit' : 'delivered'}">${s.status.replace(/_/g,' ')}</span>
+            </div>
+            <div class="dp-shipment-detail">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+              ${s.destination || 'No address'}
+            </div>
+            <div class="dp-shipment-detail">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+              ${s.customer_name || 'Customer'} · ${s.customer_phone || ''}
+            </div>
+            ${s.cod_amount > 0 ? `<div class="dp-shipment-detail" style="color:var(--dp-warning);font-weight:600;">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+              COD: ₦${s.cod_amount.toLocaleString()}
+            </div>` : ''}
+            <div class="dp-shipment-actions">
+              ${s.destination_lat ? `<button class="dp-action-btn dp-action-navigate" onclick="navigate(${s.destination_lat},${s.destination_lng})">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                Navigate
+              </button>` : ''}
+              ${s.status === 'OUT_FOR_DELIVERY' ? `
+                <button class="dp-action-btn dp-action-status" onclick="markDelivered('${s.id}')">Delivered</button>
+                <button class="dp-action-btn dp-action-fail" onclick="markFailed('${s.id}')">Failed</button>
+              ` : s.status === 'PENDING' || s.status === 'PICKED_UP' ? `
+                <button class="dp-action-btn dp-action-status" onclick="startDelivery('${s.id}')">Start</button>
+              ` : ''}
+              <button class="dp-action-btn dp-action-proof" onclick="showProofModal('${s.id}')">Photo</button>
+            </div>
+          </div>
+        `).join('');
+      } catch(err) {
+        document.getElementById('deliveriesLoader').innerHTML = '<p style="color:var(--dp-danger);">Error loading deliveries</p>';
+      }
+    }
+
+    // ── Load Returns ──
+    async function loadReturns() {
+      document.getElementById('returnsLoader').style.display = 'flex';
+      try {
+        const res = await fetch('/driver/api/returns');
+        const d = await res.json();
+        document.getElementById('returnsLoader').style.display = 'none';
+        const list = document.getElementById('returnsList');
+        if (!d.returns?.length) {
+          list.innerHTML = '<div class="dp-empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg><p>No return pickups</p></div>';
+          return;
+        }
+        list.innerHTML = d.returns.map(r => `
+          <div class="dp-shipment">
+            <div class="dp-shipment-top">
+              <div>
+                <div class="dp-shipment-id">${r.return_number}</div>
+                <div class="dp-shipment-tracking">${r.reason}</div>
+              </div>
+              <span class="dp-badge dp-badge-pending">${r.status.replace(/_/g,' ')}</span>
+            </div>
+            <div class="dp-shipment-detail">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+              ${r.pickup_address || 'No address'}
+            </div>
+            <div class="dp-shipment-actions">
+              ${r.pickup_address_lat ? `<button class="dp-action-btn dp-action-navigate" onclick="navigate(${r.pickup_address_lat},${r.pickup_address_lng})">Navigate</button>` : ''}
+              <button class="dp-action-btn dp-action-status" onclick="completeReturn('${r.id}')">Picked Up</button>
+            </div>
+          </div>
+        `).join('');
+      } catch(err) {
+        document.getElementById('returnsLoader').innerHTML = '<p style="color:var(--dp-danger);">Error loading returns</p>';
+      }
+    }
+
+    // ── Load History ──
+    async function loadHistory() {
+      document.getElementById('historyLoader').style.display = 'flex';
+      try {
+        const res = await fetch('/driver/api/history');
+        const d = await res.json();
+        document.getElementById('historyLoader').style.display = 'none';
+        const list = document.getElementById('historyList');
+        if (!d.shipments?.length) {
+          list.innerHTML = '<div class="dp-empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><p>No delivery history</p></div>';
+          return;
+        }
+        list.innerHTML = d.shipments.map(s => `
+          <div class="dp-shipment" style="opacity:0.7;">
+            <div class="dp-shipment-top">
+              <div>
+                <div class="dp-shipment-id">${s.tracking_number}</div>
+                <div class="dp-shipment-tracking">#${s.order_number || 'N/A'}</div>
+              </div>
+              <span class="dp-badge dp-badge-delivered">${s.status}</span>
+            </div>
+            <div class="dp-shipment-detail">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+              ${s.destination || 'N/A'}
+            </div>
+            <div class="dp-shipment-detail" style="font-size:0.75rem;">
+              ${s.delivered_at ? 'Delivered ' + new Date(s.delivered_at).toLocaleDateString() : ''}
+            </div>
+          </div>
+        `).join('');
+      } catch(err) {
+        document.getElementById('historyLoader').innerHTML = '<p style="color:var(--dp-danger);">Error loading history</p>';
+      }
+    }
+
+    // ── Actions ──
+    async function startDelivery(shipmentId) {
+      await fetch('/driver/api/shipment/' + shipmentId + '/start', {method:'POST'});
+      loadDeliveries();
+    }
+    async function markDelivered(shipmentId) {
+      if (!confirm('Mark as delivered?')) return;
+      await fetch('/driver/api/shipment/' + shipmentId + '/deliver', {method:'POST'});
+      loadDeliveries();
+    }
+    async function markFailed(shipmentId) {
+      const reason = prompt('Reason for failed delivery:');
+      if (reason === null) return;
+      await fetch('/driver/api/shipment/' + shipmentId + '/fail', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({reason})
+      });
+      loadDeliveries();
+    }
+    async function completeReturn(returnId) {
+      if (!confirm('Mark return as picked up?')) return;
+      await fetch('/driver/api/return/' + returnId + '/pickup', {method:'POST'});
+      loadReturns();
+    }
+
+    function showProofModal(shipmentId) {
+      document.getElementById('proofShipmentId').value = shipmentId;
+      document.getElementById('proofFile').value = '';
+      document.getElementById('proofModal').classList.add('active');
+    }
+    async function submitProof() {
+      const shipmentId = document.getElementById('proofShipmentId').value;
+      const file = document.getElementById('proofFile').files[0];
+      if (!file) { alert('Please select a photo'); return; }
+      const fd = new FormData();
+      fd.append('proof', file);
+      await fetch('/driver/api/shipment/' + shipmentId + '/proof', {method:'POST', body: fd});
+      closeModal('proofModal');
+      loadDeliveries();
+    }
+
+    function navigate(lat, lng) {
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+    }
+
+    // ── Check existing session ──
+    (async function() {
+      try {
+        const res = await fetch('/driver/api/me');
+        const d = await res.json();
+        if (d.success) {
+          driverId = d.driver_id;
+          driverData = d.driver;
+          document.getElementById('loginScreen').style.display = 'none';
+          document.getElementById('appShell').style.display = 'block';
+          document.getElementById('driverName').textContent = driverData.name;
+          document.getElementById('driverVehicle').textContent = [driverData.vehicle_type, driverData.vehicle_number].filter(Boolean).join(' · ') || '';
+          updateStatusPill(driverData.status);
+          startGPS();
+          loadDeliveries();
+        }
+      } catch(e) {}
+    })();
+  </script>
+</body>
+</html>

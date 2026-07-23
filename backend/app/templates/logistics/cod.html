@@ -1,0 +1,53 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}COD Management — Logistics Portal{% endblock %}
+{% block content %}
+<style>
+@import url('/static/css/logistics.css');
+.cod-page { max-width: 900px; margin: 0 auto; padding: 2rem; }
+.cod-page h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+.cod-page .subtitle { color: var(--text-muted); margin-bottom: 2rem; }
+.cod-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
+.cod-stat { background: var(--surface-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; text-align: center; }
+.cod-stat .val { font-size: 1.75rem; font-weight: 700; color: var(--primary); }
+.cod-stat .label { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.125rem; }
+.cod-card { background: var(--surface-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; }
+.cod-row { display: flex; justify-content: space-between; align-items: center; padding: 0.875rem 0; border-bottom: 1px solid var(--border); }
+.cod-row:last-child { border-bottom: none; }
+.cod-row .order-num { font-weight: 600; }
+.cod-row .amount { font-weight: 700; color: var(--primary); }
+.cod-row .status { font-size: 0.75rem; padding: 0.25rem 0.625rem; border-radius: 999px; }
+.cod-row .status.pending { background: #fef3c7; color: #92400e; }
+.cod-row .status.collected { background: #d1fae5; color: #065f46; }
+.btn { padding: 0.625rem 1rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; min-height: 44px; font-size: 0.8125rem; }
+.btn-collect { background: #10b981; color: white; }
+</style>
+
+<div class="cod-page">
+  <h1>💰 COD Management</h1>
+  <p class="subtitle">Cash on Delivery tracking and reconciliation</p>
+
+  <div class="cod-stats">
+    <div class="cod-stat"><div class="val">{{ cod_pending|length }}</div><div class="label">Pending Collection</div></div>
+    <div class="cod-stat"><div class="val">₦{{ "{:,.0f}".format(cod_total) }}</div><div class="label">Total Pending</div></div>
+    <div class="cod-stat"><div class="val">0</div><div class="label">Collected Today</div></div>
+  </div>
+
+  <div class="cod-card">
+    <h3 style="margin-bottom:1rem;">📋 Pending COD Orders</h3>
+    {% if cod_pending %}
+      {% for order in cod_pending %}
+      <div class="cod-row" id="cod-{{ order.id }}">
+        <div>
+          <div class="order-num">#{{ order.order_number }}</div>
+          <div style="font-size:0.8125rem;color:var(--text-muted);">{{ order.customer_name or 'Customer' }}</div>
+        </div>
+        <div class="amount">₦{{ "{:,.0f}".format(order.total_amount) }}</div>
+        <span class="status pending">Pending</span>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p style="color:var(--text-muted);text-align:center;padding:2rem;">No pending COD orders</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

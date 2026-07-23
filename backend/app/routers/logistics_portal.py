@@ -58,6 +58,16 @@ def logistics_dashboard(request: Request, db: Session = Depends(get_db)):
 
     recent_shipments = db.query(Shipment).order_by(desc(Shipment.created_at)).limit(10).all()
 
+    # Real COD calculation
+    from app.models import Order
+    cod_orders = db.query(Order).filter(
+        Order.fulfillment_mode == "PLATFORM",
+        Order.status.in_(["PAID", "PROCESSING", "SHIPPED"]),
+    ).all()
+    cod_pending = [o for o in cod_orders if getattr(o, 'payment_method', '') == 'cod']
+    cod_pending_count = len(cod_pending)
+    cod_pending_total = sum(o.total_amount for o in cod_pending)
+
     return render_template("logistics/dashboard.html", {
         "request": request,
         "admin": admin,
@@ -69,8 +79,8 @@ def logistics_dashboard(request: Request, db: Session = Depends(get_db)):
         "available_agents": available_agents,
         "unassigned_count": unassigned_count,
         "platform_fulfilled": platform_fulfilled,
-        "cod_pending_count": 0,
-        "cod_pending_total": 0,
+        "cod_pending_count": cod_pending_count,
+        "cod_pending_total": cod_pending_total,
         "recent_shipments": recent_shipments,
         "has_permission": has_permission,
     })
@@ -1121,4 +1131,464 @@ async def logistics_3pl_create_shipment(request: Request, db: Session = Depends(
         "estimated_delivery": result.estimated_delivery,
         "provider": result.provider,
         "raw": result.raw,
+    })
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# DRIVER SELF-SERVICE PORTAL
+# ══════════════════════════════════════════════════════════════════════════════
+
+DRIVER_COOKIE = "driver_token"
+
+
+def _get_driver(request: Request, db: Session):
+    """Get driver from cookie."""
+    from app.core.security import decode_access_token
+    token = request.cookies.get(DRIVER_COOKIE)
+    if not token:
+        return None
+    try:
+        payload = decode_access_token(token)
+        driver_id = payload.get("sub") or payload.get("driver_id")
+        if driver_id:
+            return db.query(DeliveryAgent).filter(DeliveryAgent.id == driver_id).first()
+    except Exception:
+        pass
+    return None
+
+
+@router.get("/driver", response_class=HTMLResponse)
+def driver_portal_page(request: Request):
+    return render_template("logistics/driver_portal.html", {"request": request})
+
+
+@router.post("/driver/api/login")
+async def driver_login(request: Request, db: Session = Depends(get_db)):
+    data = await request.json()
+    phone = data.get("phone", "").strip()
+    driver_id = data.get("driver_id", "").strip()
+
+    if not phone or not driver_id:
+        return JSONResponse({"success": False, "message": "Phone and Driver ID required"})
+
+    driver = db.query(DeliveryAgent).filter(
+        DeliveryAgent.id == driver_id,
+        DeliveryAgent.phone == phone
+    ).first()
+
+    if not driver:
+        return JSONResponse({"success": False, "message": "Invalid phone or Driver ID"})
+
+    from app.core.security import create_access_token
+    token = create_access_token({"sub": driver.id, "role": "DRIVER"})
+
+    resp = JSONResponse({
+        "success": True,
+        "driver_id": driver.id,
+        "driver": {
+            "name": driver.name,
+            "phone": driver.phone,
+            "vehicle_type": driver.vehicle_type,
+            "vehicle_number": driver.vehicle_number,
+            "status": driver.status,
+            "rating": driver.rating,
+            "total_deliveries": driver.total_deliveries,
+        }
+    })
+    resp.set_cookie(DRIVER_COOKIE, token, httponly=True, max_age=86400 * 7, samesite="lax")
+    return resp
+
+
+@router.get("/driver/api/me")
+def driver_me(request: Request, db: Session = Depends(get_db)):
+    driver = _get_driver(request, db)
+    if not driver:
+        return JSONResponse({"success": False}, status_code=401)
+    return JSONResponse({
+        "success": True,
+        "driver_id": driver.id,
+        "driver": {
+            "name": driver.name,
+            "phone": driver.phone,
+            "vehicle_type": driver.vehicle_type,
+            "vehicle_number": driver.vehicle_number,
+            "status": driver.status,
+            "rating": driver.rating,
+            "total_deliveries": driver.total_deliveries,
+        }
+    })
+
+
+@router.post("/driver/api/location")
+async def driver_update_location(request: Request, db: Session = Depends(get_db)):
+    driver = _get_driver(request, db)
+    if not driver:
+        return JSONResponse({"success": False}, status_code=401)
+    data = await request.json()
+    lat = data.get("latitude")
+    lng = data.get("longitude")
+    accuracy = data.get("accuracy")
+    if lat is None or lng is None:
+        return JSONResponse({"success": False, "message": "latitude/longitude required"})
+
+    driver.current_latitude = float(lat)
+    driver.current_longitude = float(lng)
+    driver.last_location_update = datetime.utcnow()
+
+    # Log location
+    from app.models import DeliveryLocationLog
+    log = DeliveryLocationLog(
+        agent_id=driver.id,
+        latitude=float(lat),
+        longitude=float(lng),
+        accuracy=float(accuracy) if accuracy else None
+    )
+    db.add(log)
+    db.commit()
+    return {"success": True}
+
+
+@router.post("/driver/api/status")
+async def driver_update_status(request: Request, db: Session = Depends(get_db)):
+    driver = _get_driver(request, db)
+    if not driver:
+        return JSONResponse({"success": False}, status_code=401)
+    data = await request.json()
+    status = data.get("status")
+    if status not in ("AVAILABLE", "BUSY", "OFFLINE"):
+        return JSONResponse({"success": False, "message": "Invalid status"})
+    driver.status = status
+    db.commit()
+    return {"success": True}
+
+
+@router.get("/driver/api/shipments")
+def driver_shipments(request: Request, db: Session = Depends(get_db)):
+    driver = _get_driver(request, db)
+    if not driver:
+        return JSONResponse({"success": False}, status_code=401)
+
+    from app.models import Order
+    active = db.query(Shipment).filter(
+        Shipment.delivery_agent_id == driver.id,
+        Shipment.status.in_(["PENDING", "PICKED_UP", "IN_TRANSIT", "OUT_FOR_DELIVERY"])
+    ).order_by(desc(Shipment.created_at)).all()
+
+    shipments = []
+    for s in active:
+        order = s.order
+        shipments.append({
+            "id": s.id,
+            "tracking_number": s.tracking_number,
+            "order_number": order.order_number if order else None,
+            "status": s.status,
+            "destination": s.destination,
+            "destination_lat": getattr(s, 'dest_latitude', None),
+            "destination_lng": getattr(s, 'dest_longitude', None),
+            "customer_name": order.customer_name if order else None,
+            "customer_phone": order.customer_phone if order else None,
+            "cod_amount": order.total_amount if order and getattr(order, 'payment_method', '') == 'cod' else 0,
+            "notes": s.notes,
+            "proof_photo_url": s.proof_photo_url,
+        })
+
+    delivered_today = db.query(func.count(Shipment.id)).filter(
+        Shipment.delivery_agent_id == driver.id,
+        Shipment.status == "DELIVERED",
+        func.date(Shipment.updated_at) == func.date(datetime.utcnow())
+    ).scalar() or 0
+
+    return {
+        "shipments": shipments,
+        "stats": {
+            "assigned": len(active),
+            "delivered": delivered_today,
+            "earnings": delivered_today * 500  # ₦500 per delivery placeholder
+        }
+    }
+
+
+@router.get("/driver/api/returns")
+def driver_returns(request: Request, db: Session = Depends(get_db)):
+    driver = _get_driver(request, db)
+    if not driver:
+        return JSONResponse({"success": False}, status_code=401)
+
+    from app.models import ReturnRequest
+    returns = db.query(ReturnRequest).filter(
+        ReturnRequest.status == "PICKUP_SCHEDULED"
+    ).order_by(desc(ReturnRequest.created_at)).limit(20).all()
+
+    return {
+        "returns": [{
+            "id": r.id,
+            "return_number": r.return_number,
+            "reason": r.reason,
+            "status": r.status,
+            "pickup_address": r.pickup_address,
+            "pickup_address_lat": getattr(r, 'pickup_latitude', None),
+            "pickup_address_lng": getattr(r, 'pickup_longitude', None),
+        } for r in returns]
+    }
+
+
+@router.get("/driver/api/history")
+def driver_history(request: Request, db: Session = Depends(get_db)):
+    driver = _get_driver(request, db)
+    if not driver:
+        return JSONResponse({"success": False}, status_code=401)
+
+    from app.models import Order
+    completed = db.query(Shipment).filter(
+        Shipment.delivery_agent_id == driver.id,
+        Shipment.status.in_(["DELIVERED", "FAILED", "RETURNED"])
+    ).order_by(desc(Shipment.updated_at)).limit(50).all()
+
+    shipments = []
+    for s in completed:
+        order = s.order
+        shipments.append({
+            "id": s.id,
+            "tracking_number": s.tracking_number,
+            "order_number": order.order_number if order else None,
+            "status": s.status,
+            "destination": s.destination,
+            "delivered_at": s.actual_delivery.isoformat() if s.actual_delivery else None,
+        })
+
+    return {"shipments": shipments}
+
+
+@router.post("/driver/api/shipment/{shipment_id}/start")
+async def driver_start_delivery(shipment_id: str, request: Request, db: Session = Depends(get_db)):
+    driver = _get_driver(request, db)
+    if not driver:
+        return JSONResponse({"success": False}, status_code=401)
+    shipment = db.query(Shipment).filter(Shipment.id == shipment_id, Shipment.delivery_agent_id == driver.id).first()
+    if not shipment:
+        return JSONResponse({"success": False, "message": "Not found"})
+    shipment.status = "IN_TRANSIT"
+    event = ShipmentEvent(shipment_id=shipment_id, status="IN_TRANSIT", description="Driver started delivery")
+    db.add(event)
+    db.commit()
+    return {"success": True}
+
+
+@router.post("/driver/api/shipment/{shipment_id}/deliver")
+async def driver_mark_delivered(shipment_id: str, request: Request, db: Session = Depends(get_db)):
+    driver = _get_driver(request, db)
+    if not driver:
+        return JSONResponse({"success": False}, status_code=401)
+    shipment = db.query(Shipment).filter(Shipment.id == shipment_id, Shipment.delivery_agent_id == driver.id).first()
+    if not shipment:
+        return JSONResponse({"success": False, "message": "Not found"})
+    shipment.status = "DELIVERED"
+    shipment.actual_delivery = datetime.utcnow()
+    event = ShipmentEvent(shipment_id=shipment_id, status="DELIVERED", description="Delivered by driver")
+    db.add(event)
+    # Update driver stats
+    driver.total_deliveries += 1
+    driver.successful_deliveries += 1
+    db.commit()
+    return {"success": True}
+
+
+@router.post("/driver/api/shipment/{shipment_id}/fail")
+async def driver_mark_failed(shipment_id: str, request: Request, db: Session = Depends(get_db)):
+    driver = _get_driver(request, db)
+    if not driver:
+        return JSONResponse({"success": False}, status_code=401)
+    data = await request.json()
+    shipment = db.query(Shipment).filter(Shipment.id == shipment_id, Shipment.delivery_agent_id == driver.id).first()
+    if not shipment:
+        return JSONResponse({"success": False, "message": "Not found"})
+    shipment.status = "FAILED"
+    event = ShipmentEvent(shipment_id=shipment_id, status="FAILED", description=data.get("reason", "Delivery failed"))
+    db.add(event)
+    driver.total_deliveries += 1
+    db.commit()
+    return {"success": True}
+
+
+@router.post("/driver/api/shipment/{shipment_id}/proof")
+async def driver_upload_proof(shipment_id: str, request: Request, proof: UploadFile = File(...), db: Session = Depends(get_db)):
+    driver = _get_driver(request, db)
+    if not driver:
+        return JSONResponse({"success": False}, status_code=401)
+    shipment = db.query(Shipment).filter(Shipment.id == shipment_id, Shipment.delivery_agent_id == driver.id).first()
+    if not shipment:
+        return JSONResponse({"success": False, "message": "Not found"})
+
+    # Upload to Cloudinary
+    contents = await proof.read()
+    url = None
+    try:
+        from app.core.cloudinary_upload import is_cloudinary_configured, upload_to_cloudinary
+        if is_cloudinary_configured():
+            url = upload_to_cloudinary(contents, folder="delivery_proofs")
+    except Exception as e:
+        logger.warning("Cloudinary upload failed: %s", e)
+
+    if not url:
+        # Save locally
+        import os
+        os.makedirs("app/static/delivery_proofs", exist_ok=True)
+        filename = f"{shipment_id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.jpg"
+        filepath = f"app/static/delivery_proofs/{filename}"
+        with open(filepath, "wb") as f:
+            f.write(contents)
+        url = f"/static/delivery_proofs/{filename}"
+
+    shipment.proof_photo_url = url
+    db.commit()
+    return {"success": True, "url": url}
+
+
+@router.post("/driver/api/return/{return_id}/pickup")
+async def driver_complete_return(return_id: str, request: Request, db: Session = Depends(get_db)):
+    driver = _get_driver(request, db)
+    if not driver:
+        return JSONResponse({"success": False}, status_code=401)
+    from app.models import ReturnRequest, ReturnEvent
+    ret = db.query(ReturnRequest).filter(ReturnRequest.id == return_id).first()
+    if not ret:
+        return JSONResponse({"success": False, "message": "Not found"})
+    ret.status = "IN_TRANSIT"
+    event = ReturnEvent(return_id=return_id, status="IN_TRANSIT", description=f"Picked up by driver {driver.name}", created_by=driver.id)
+    db.add(event)
+    db.commit()
+    return {"success": True}
+
+
+@router.post("/driver/logout")
+def driver_logout():
+    resp = RedirectResponse(url="/driver", status_code=302)
+    resp.delete_cookie(DRIVER_COOKIE)
+    return resp
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# LOGISTICS AI TOOLS
+# ══════════════════════════════════════════════════════════════════════════════
+
+@router.get("/logistics/ai/route-optimizer", response_class=HTMLResponse)
+def logistics_ai_route_optimizer(request: Request, db: Session = Depends(get_db)):
+    admin, redirect = _require_logistics(request, db)
+    if redirect:
+        return redirect
+    return render_template("logistics/ai_route_optimizer.html", {
+        "request": request, "admin": admin, "has_permission": has_permission,
+    })
+
+
+@router.get("/logistics/ai/demand-forecast", response_class=HTMLResponse)
+def logistics_ai_demand_forecast(request: Request, db: Session = Depends(get_db)):
+    admin, redirect = _require_logistics(request, db)
+    if redirect:
+        return redirect
+    return render_template("logistics/ai_demand_forecast.html", {
+        "request": request, "admin": admin, "has_permission": has_permission,
+    })
+
+
+@router.get("/logistics/ai/anomalies", response_class=HTMLResponse)
+def logistics_ai_anomalies(request: Request, db: Session = Depends(get_db)):
+    admin, redirect = _require_logistics(request, db)
+    if redirect:
+        return redirect
+    return render_template("logistics/ai_anomalies.html", {
+        "request": request, "admin": admin, "has_permission": has_permission,
+    })
+
+
+@router.get("/logistics/ai/smart-assign", response_class=HTMLResponse)
+def logistics_ai_smart_assign(request: Request, db: Session = Depends(get_db)):
+    admin, redirect = _require_logistics(request, db)
+    if redirect:
+        return redirect
+    unassigned = db.query(Shipment).filter(Shipment.delivery_agent_id.is_(None), Shipment.status == "PENDING").all()
+    return render_template("logistics/ai_smart_assign.html", {
+        "request": request, "admin": admin, "has_permission": has_permission,
+        "unassigned_count": len(unassigned),
+    })
+
+
+@router.post("/logistics/api/ai/route-optimize")
+async def logistics_api_route_optimize(request: Request, db: Session = Depends(get_db)):
+    admin, redirect = _require_logistics(request, db)
+    if redirect:
+        return JSONResponse({"success": False}, status_code=401)
+    data = await request.json()
+    stops = data.get("stops", [])
+    driver_lat = data.get("driver_lat", 0)
+    driver_lng = data.get("driver_lng", 0)
+    from app.services.logistics_ai import optimize_route
+    result = optimize_route(stops, driver_lat, driver_lng)
+    return result
+
+
+@router.post("/logistics/api/ai/predict-eta")
+async def logistics_api_predict_eta(request: Request, db: Session = Depends(get_db)):
+    admin, redirect = _require_logistics(request, db)
+    if redirect:
+        return JSONResponse({"success": False}, status_code=401)
+    data = await request.json()
+    shipment_id = data.get("shipment_id")
+    driver_lat = data.get("driver_lat", 0)
+    driver_lng = data.get("driver_lng", 0)
+    from app.services.logistics_ai import predict_eta
+    result = predict_eta(db, shipment_id, driver_lat, driver_lng)
+    return result
+
+
+@router.get("/logistics/api/ai/demand-forecast")
+def logistics_api_demand_forecast(request: Request, days: int = 7, db: Session = Depends(get_db)):
+    admin, redirect = _require_logistics(request, db)
+    if redirect:
+        return JSONResponse({"success": False}, status_code=401)
+    from app.services.logistics_ai import forecast_demand
+    result = forecast_demand(db, days_ahead=days)
+    return result
+
+
+@router.get("/logistics/api/ai/anomalies")
+def logistics_api_anomalies(request: Request, db: Session = Depends(get_db)):
+    admin, redirect = _require_logistics(request, db)
+    if redirect:
+        return JSONResponse({"success": False}, status_code=401)
+    from app.services.logistics_ai import detect_anomalies
+    result = detect_anomalies(db)
+    return result
+
+
+@router.post("/logistics/api/ai/smart-assign/{shipment_id}")
+async def logistics_api_smart_assign(shipment_id: str, request: Request, db: Session = Depends(get_db)):
+    admin, redirect = _require_logistics(request, db)
+    if redirect:
+        return JSONResponse({"success": False}, status_code=401)
+    from app.services.logistics_ai import smart_auto_assign
+    result = smart_auto_assign(db, shipment_id)
+    return result
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# COD INTEGRATION
+# ══════════════════════════════════════════════════════════════════════════════
+
+@router.get("/logistics/cod", response_class=HTMLResponse)
+def logistics_cod_page(request: Request, db: Session = Depends(get_db)):
+    admin, redirect = _require_logistics(request, db)
+    if redirect:
+        return redirect
+    from app.models import Order
+    cod_orders = db.query(Order).filter(
+        Order.fulfillment_mode == "PLATFORM",
+        Order.status.in_(["PAID", "PROCESSING", "SHIPPED"])
+    ).all()
+    # Filter to COD-like payment methods (placeholder logic)
+    cod_pending = [o for o in cod_orders if getattr(o, 'payment_method', '') == 'cod']
+    return render_template("logistics/cod.html", {
+        "request": request, "admin": admin, "has_permission": has_permission,
+        "cod_pending": cod_pending,
+        "cod_total": sum(o.total_amount for o in cod_pending),
     })

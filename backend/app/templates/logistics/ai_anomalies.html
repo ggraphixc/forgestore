@@ -1,0 +1,90 @@
+{% extends "admin/sidebar.html" %}
+{% block title %}AI Anomaly Detection — Logistics Portal{% endblock %}
+{% block content %}
+<style>
+@import url('/static/css/logistics.css');
+.ai-anomaly { max-width: 800px; margin: 0 auto; padding: 2rem; }
+.ai-anomaly h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+.ai-anomaly .subtitle { color: var(--text-muted); margin-bottom: 2rem; }
+.ai-card { background: var(--surface-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+.ai-badge { background: linear-gradient(135deg, #ef4444, #f97316); color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.6875rem; font-weight: 700; }
+.summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-bottom: 1.5rem; }
+.summary-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; }
+.summary-item .val { font-size: 1.75rem; font-weight: 700; }
+.summary-item .label { font-size: 0.6875rem; color: var(--text-muted); margin-top: 0.125rem; }
+.summary-item.high .val { color: #ef4444; }
+.summary-item.medium .val { color: #f59e0b; }
+.anomaly-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.anomaly-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+.anomaly-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1rem; }
+.anomaly-icon.high { background: rgba(239,68,68,0.1); }
+.anomaly-icon.medium { background: rgba(245,158,11,0.1); }
+.anomaly-text { flex: 1; }
+.anomaly-text strong { font-size: 0.875rem; }
+.anomaly-text p { font-size: 0.8125rem; color: var(--text-muted); margin-top: 0.125rem; }
+.anomaly-severity { font-size: 0.6875rem; font-weight: 600; padding: 0.125rem 0.5rem; border-radius: 999px; }
+.sev-high { background: rgba(239,68,68,0.1); color: #dc2626; }
+.sev-medium { background: rgba(245,158,11,0.1); color: #d97706; }
+.loading { display: none; text-align: center; padding: 2rem; }
+.spinner { width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: #ef4444; border-radius: 50%; animation: spin 0.6s linear infinite; margin: 0 auto; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<div class="ai-anomaly">
+  <h1>🚨 AI Anomaly Detection</h1>
+  <p class="subtitle">Detect late deliveries, failed attempts, and driver performance issues</p>
+
+  <div class="ai-card">
+    <h3><span class="ai-badge">AI</span> System Scan</h3>
+    <button class="btn" style="background:#ef4444;color:white;padding:0.75rem 1.5rem;border:none;border-radius:8px;font-weight:600;cursor:pointer;min-height:44px;" onclick="scanAnomalies()">🔍 Run Scan</button>
+    <div class="loading" id="loader"><div class="spinner"></div><p style="margin-top:0.75rem;color:var(--text-muted);">Scanning for anomalies...</p></div>
+  </div>
+
+  <div id="results" style="display:none;">
+    <div class="summary-grid" id="summaryGrid"></div>
+    <div class="ai-card">
+      <h3>⚠️ Detected Issues</h3>
+      <div class="anomaly-list" id="anomalyList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function scanAnomalies() {
+  document.getElementById('loader').style.display = 'block';
+  document.getElementById('results').style.display = 'none';
+  try {
+    const res = await fetch('/logistics/api/ai/anomalies');
+    const data = await res.json();
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('results').style.display = 'block';
+    const s = data.summary || {};
+    document.getElementById('summaryGrid').innerHTML = `
+      <div class="summary-item high"><div class="val">${s.high || 0}</div><div class="label">High Severity</div></div>
+      <div class="summary-item medium"><div class="val">${s.medium || 0}</div><div class="label">Medium Severity</div></div>
+      <div class="summary-item"><div class="val">${s.late_deliveries || 0}</div><div class="label">Late Deliveries</div></div>
+      <div class="summary-item"><div class="val">${s.stale_gps || 0}</div><div class="label">Stale GPS</div></div>
+    `;
+    const list = data.anomalies || [];
+    if (!list.length) {
+      document.getElementById('anomalyList').innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:2rem;">No anomalies detected ✅</p>';
+      return;
+    }
+    const icons = {'LATE_DELIVERY': '⏰', 'HIGH_FAILURE_RATE': '❌', 'DRIVER_PERFORMANCE': '📉', 'STALE_GPS': '📍'};
+    document.getElementById('anomalyList').innerHTML = list.map(a => `
+      <div class="anomaly-item">
+        <div class="anomaly-icon ${a.severity}">${icons[a.type] || '⚠️'}</div>
+        <div class="anomaly-text">
+          <strong>${a.type.replace(/_/g, ' ')}</strong>
+          <p>${a.message}</p>
+        </div>
+        <span class="anomaly-severity sev-${a.severity}">${a.severity}</span>
+      </div>
+    `).join('');
+  } catch(e) {
+    document.getElementById('loader').style.display = 'none';
+    alert('Error scanning anomalies');
+  }
+}
+</script>
+{% endblock %}
