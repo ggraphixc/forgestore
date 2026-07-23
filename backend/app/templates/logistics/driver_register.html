@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Driver Registration — ForgeStore</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --dp-bg: #f8fafc; --dp-surface: #ffffff; --dp-text: #0f172a;
+      --dp-text-secondary: #64748b; --dp-border: #e2e8f0;
+      --dp-primary: #6366f1; --dp-primary-hover: #4f46e5;
+      --dp-success: #10b981; --dp-warning: #f59e0b; --dp-danger: #ef4444;
+      --dp-radius: 16px; --dp-radius-sm: 10px;
+      --dp-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
+    .dark { --dp-bg: #0f172a; --dp-surface: #1e293b; --dp-text: #f1f5f9;
+      --dp-text-secondary: #94a3b8; --dp-border: #334155; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--dp-bg); color: var(--dp-text); min-height: 100vh;
+      -webkit-tap-highlight-color: transparent; }
+    .dp-register { display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 1.5rem; }
+    .dp-register-card { background: var(--dp-surface); border-radius: var(--dp-radius);
+      padding: 2.5rem 2rem; width: 100%; max-width: 420px;
+      box-shadow: var(--dp-shadow); }
+    .dp-register-card h1 { font-size: 1.5rem; margin-bottom: 0.25rem; text-align: center; }
+    .dp-register-card .subtitle { color: var(--dp-text-secondary); font-size: 0.875rem;
+      margin-bottom: 2rem; text-align: center; }
+    .dp-register-card .dp-logo { font-size: 2.5rem; margin-bottom: 1rem; text-align: center; }
+    .dp-field { margin-bottom: 1rem; }
+    .dp-field label { display: block; font-size: 0.8125rem; font-weight: 600;
+      color: var(--dp-text-secondary); margin-bottom: 0.375rem; }
+    .dp-field input, .dp-field select { width: 100%; padding: 0.875rem 1rem;
+      border: 1.5px solid var(--dp-border); border-radius: var(--dp-radius-sm);
+      font-size: 1rem; background: var(--dp-bg); color: var(--dp-text);
+      min-height: 48px; outline: none; transition: border-color 0.2s; }
+    .dp-field input:focus, .dp-field select:focus { border-color: var(--dp-primary); }
+    .dp-field .hint { font-size: 0.75rem; color: var(--dp-text-secondary); margin-top: 0.25rem; }
+    .dp-btn { width: 100%; padding: 0.875rem; border: none; border-radius: var(--dp-radius-sm);
+      font-size: 1rem; font-weight: 600; cursor: pointer; min-height: 48px;
+      transition: all 0.2s; }
+    .dp-btn-primary { background: var(--dp-primary); color: white; }
+    .dp-btn-primary:hover { background: var(--dp-primary-hover); }
+    .dp-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .dp-btn-outline { background: transparent; border: 1.5px solid var(--dp-border);
+      color: var(--dp-text); margin-top: 0.75rem; }
+    .dp-btn-outline:hover { border-color: var(--dp-primary); color: var(--dp-primary); }
+    .dp-error { background: #fef2f2; color: #991b1b; padding: 0.75rem 1rem;
+      border-radius: var(--dp-radius-sm); font-size: 0.875rem; margin-bottom: 1rem;
+      border: 1px solid #fecaca; display: none; }
+    .dp-success-box { background: #f0fdf4; color: #166534; padding: 1.25rem 1rem;
+      border-radius: var(--dp-radius-sm); font-size: 0.875rem; margin-bottom: 1rem;
+      border: 1px solid #bbf7d0; display: none; text-align: center; }
+    .dp-success-box .driver-id { font-size: 1.5rem; font-weight: 800; font-family: monospace;
+      color: var(--dp-primary); margin: 0.75rem 0; letter-spacing: 0.1em; }
+    .dp-disabled-msg { background: #fef3c7; color: #92400e; padding: 1.5rem;
+      border-radius: var(--dp-radius-sm); text-align: center; border: 1px solid #fde68a; }
+    .dp-disabled-msg h3 { margin-bottom: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="dp-register">
+    <div class="dp-register-card">
+      <div class="dp-logo">🚴</div>
+      <h1>Driver Registration</h1>
+      <p class="subtitle">Join ForgeStore as a delivery driver</p>
+
+      {% if disabled %}
+      <div class="dp-disabled-msg">
+        <h3>Registration Closed</h3>
+        <p>Driver self-registration is currently disabled. Please contact the logistics team to register.</p>
+      </div>
+      <a href="/driver" class="dp-btn dp-btn-outline" style="display:block;text-align:center;text-decoration:none;margin-top:1rem;">Back to Login</a>
+
+      {% else %}
+      <div class="dp-error" id="regError"></div>
+      <div class="dp-success-box" id="regSuccess">
+        <div>🎉 Registration Successful!</div>
+        <div class="driver-id" id="regDriverId"></div>
+        <div id="regSuccessMsg"></div>
+        <a href="/driver" class="dp-btn dp-btn-primary" style="display:block;text-align:center;text-decoration:none;margin-top:1rem;">Go to Login</a>
+      </div>
+
+      <form id="regForm">
+        <div class="dp-field">
+          <label>Full Name *</label>
+          <input type="text" id="regName" placeholder="e.g. Chukwuemeka Obi" required>
+        </div>
+        <div class="dp-field">
+          <label>Phone Number *</label>
+          <input type="tel" id="regPhone" placeholder="e.g. 08012345678" required>
+          <div class="hint">This will be your login credential</div>
+        </div>
+        <div class="dp-field">
+          <label>Email (optional)</label>
+          <input type="email" id="regEmail" placeholder="e.g. emeka@example.com">
+        </div>
+        <div class="dp-field">
+          <label>Vehicle Type</label>
+          <select id="regVehicleType">
+            <option value="">Select vehicle...</option>
+            <option value="motorcycle">Motorcycle</option>
+            <option value="tricycle">Tricycle</option>
+            <option value="van">Van</option>
+            <option value="car">Car</option>
+            <option value="bicycle">Bicycle</option>
+            <option value="on_foot">On Foot</option>
+          </select>
+        </div>
+        <div class="dp-field">
+          <label>Vehicle Number (optional)</label>
+          <input type="text" id="regVehicleNum" placeholder="e.g. Lagos ABC 123">
+        </div>
+        <button type="submit" class="dp-btn dp-btn-primary" id="regSubmit">Register</button>
+        <a href="/driver" class="dp-btn dp-btn-outline" style="display:block;text-align:center;text-decoration:none;">Already have an account? Login</a>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    {% if not disabled %}
+    document.getElementById('regForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const errEl = document.getElementById('regError');
+      const successEl = document.getElementById('regSuccess');
+      const submitBtn = document.getElementById('regSubmit');
+
+      const name = document.getElementById('regName').value.trim();
+      const phone = document.getElementById('regPhone').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const vehicle_type = document.getElementById('regVehicleType').value;
+      const vehicle_number = document.getElementById('regVehicleNum').value.trim();
+
+      if (!name || !phone) {
+        errEl.textContent = 'Name and phone are required';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Registering...';
+      errEl.style.display = 'none';
+
+      try {
+        const resp = await fetch('/driver/api/register', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({name, phone, email, vehicle_type, vehicle_number})
+        });
+        const data = await resp.json();
+        if (data.success) {
+          document.getElementById('regForm').style.display = 'none';
+          document.getElementById('regDriverId').textContent = data.driver_id;
+          document.getElementById('regSuccessMsg').textContent = data.message;
+          successEl.style.display = 'block';
+        } else {
+          errEl.textContent = data.message || 'Registration failed';
+          errEl.style.display = 'block';
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Register';
+        }
+      } catch(err) {
+        errEl.textContent = 'Network error. Please try again.';
+        errEl.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Register';
+      }
+    });
+    {% endif %}
+  </script>
+</body>
+</html>

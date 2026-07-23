@@ -34,6 +34,59 @@ def _require_logistics(request: Request, db: Session):
     return admin, None
 
 
+def _get_logistics_settings(db: Session) -> dict:
+    """Fetch logistics-relevant admin settings into a dict with sensible defaults."""
+    from app.models import Settings
+
+    defaults = _default_logistics_settings()
+    d = dict(defaults)
+
+    # Load all logistics-category settings from DB
+    rows = db.query(Settings).filter(Settings.category == "logistics").all()
+    for row in rows:
+        d[row.key] = row.value
+
+    # Also load a few specific non-logistics settings used in templates
+    for key in ("site_name", "cod_enabled", "whatsapp_enabled", "email_notifications_enabled"):
+        row = db.query(Settings).filter(Settings.key == key).first()
+        if row:
+            d[key] = row.value
+
+    return d
+
+
+def _default_logistics_settings() -> dict:
+    return {
+        "default_shipping_fee": 1500,
+        "free_shipping_threshold": 50000,
+        "tax_percentage": 7.5,
+        "return_window_days": 7,
+        "max_order_items": 50,
+        "logistics_auto_dispatch_enabled": "true",
+        "low_stock_limit": 10,
+        "three_pl_provider": "mock",
+        "three_pl_sandbox": "true",
+        "cod_enabled": "false",
+        "site_name": "ForgeStore",
+        "whatsapp_enabled": "false",
+        "email_notifications_enabled": "true",
+        "delivery_zone_rates": "{}",
+        "delivery_demand_peak_multiplier": 1.5,
+        "delivery_return_fee_ratio": 0.6,
+        "delivery_return_flat_fee": 500,
+    }
+
+
+def _feature_disabled(db: Session, setting_key: str) -> bool:
+    """Return True if the feature is explicitly disabled in admin settings."""
+    from app.models import Settings
+    settings_obj = db.query(Settings).first()
+    if not settings_obj:
+        return False
+    val = settings_obj.get_setting(setting_key)
+    return str(val).lower() == "false"
+
+
 @router.get("/logistics/logout")
 def logistics_logout():
     resp = RedirectResponse(url="/admin/login", status_code=302)
@@ -68,6 +121,8 @@ def logistics_dashboard(request: Request, db: Session = Depends(get_db)):
     cod_pending_count = len(cod_pending)
     cod_pending_total = sum(o.total_amount for o in cod_pending)
 
+    logistics_settings = _get_logistics_settings(db)
+
     return render_template("logistics/dashboard.html", {
         "request": request,
         "admin": admin,
@@ -83,6 +138,7 @@ def logistics_dashboard(request: Request, db: Session = Depends(get_db)):
         "cod_pending_total": cod_pending_total,
         "recent_shipments": recent_shipments,
         "has_permission": has_permission,
+        "logistics_settings": logistics_settings,
     })
 
 
@@ -94,6 +150,7 @@ def logistics_shipments(request: Request, db: Session = Depends(get_db)):
 
     shipments = db.query(Shipment).order_by(desc(Shipment.created_at)).all()
     agents = {a.id: a.name for a in db.query(DeliveryAgent).all()}
+    logistics_settings = _get_logistics_settings(db)
 
     return render_template("logistics/shipments.html", {
         "request": request,
@@ -101,6 +158,7 @@ def logistics_shipments(request: Request, db: Session = Depends(get_db)):
         "shipments": shipments,
         "agents": agents,
         "has_permission": has_permission,
+        "logistics_settings": logistics_settings,
     })
 
 
@@ -111,12 +169,14 @@ def logistics_drivers(request: Request, db: Session = Depends(get_db)):
         return redirect
 
     drivers = db.query(DeliveryAgent).order_by(desc(DeliveryAgent.created_at)).all()
+    logistics_settings = _get_logistics_settings(db)
 
     return render_template("logistics/drivers.html", {
         "request": request,
         "admin": admin,
         "drivers": drivers,
         "has_permission": has_permission,
+        "logistics_settings": logistics_settings,
     })
 
 
@@ -163,9 +223,11 @@ def logistics_notifications(request: Request, db: Session = Depends(get_db)):
     admin, redirect = _require_logistics(request, db)
     if redirect:
         return redirect
+    logistics_settings = _get_logistics_settings(db)
     return render_template("logistics/notifications.html", {
         "request": request, "admin": admin,
         "has_permission": has_permission,
+        "logistics_settings": logistics_settings,
     })
 
 
@@ -186,6 +248,7 @@ def logistics_shipment_detail(shipment_id: str, request: Request, db: Session = 
     available_drivers = db.query(DeliveryAgent).filter(
         DeliveryAgent.status == "AVAILABLE"
     ).all()
+    logistics_settings = _get_logistics_settings(db)
 
     return render_template("logistics/shipment_detail.html", {
         "request": request,
@@ -194,6 +257,7 @@ def logistics_shipment_detail(shipment_id: str, request: Request, db: Session = 
         "events": events,
         "available_drivers": available_drivers,
         "has_permission": has_permission,
+        "logistics_settings": logistics_settings,
     })
 
 
@@ -308,12 +372,14 @@ def logistics_live_map(request: Request, db: Session = Depends(get_db)):
             "lng": d.current_longitude,
             "last_update": d.last_location_update.strftime("%b %d, %H:%M") if d.last_location_update else "No data",
         })
+    logistics_settings = _get_logistics_settings(db)
 
     return render_template("logistics/live_map.html", {
         "request": request,
         "admin": admin,
         "drivers_json": json.dumps(driver_data),
         "has_permission": has_permission,
+        "logistics_settings": logistics_settings,
     })
 
 
@@ -413,6 +479,8 @@ def logistics_route_optimizer(request: Request, db: Session = Depends(get_db)):
                 "total_eta_minutes": total_eta,
             }
 
+    logistics_settings = _get_logistics_settings(db)
+
     return render_template("logistics/route_optimizer.html", {
         "request": request,
         "admin": admin,
@@ -420,6 +488,7 @@ def logistics_route_optimizer(request: Request, db: Session = Depends(get_db)):
         "selected_driver": selected_driver,
         "optimized_route": optimized_route,
         "has_permission": has_permission,
+        "logistics_settings": logistics_settings,
     })
 
 
@@ -514,6 +583,7 @@ def logistics_performance(request: Request, db: Session = Depends(get_db)):
     success_rate = (total_success / total_deliveries * 100) if total_deliveries > 0 else 0
 
     driver_stats.sort(key=lambda x: (x["rating"] * 0.5 + (x["success_count"] / max(x["total_deliveries"], 1) * 100) * 0.5), reverse=True)
+    logistics_settings = _get_logistics_settings(db)
 
     return render_template("logistics/performance.html", {
         "request": request,
@@ -526,6 +596,7 @@ def logistics_performance(request: Request, db: Session = Depends(get_db)):
             "total_deliveries": total_deliveries,
         },
         "has_permission": has_permission,
+        "logistics_settings": logistics_settings,
     })
 
 
@@ -538,12 +609,14 @@ def logistics_pickup_points(request: Request, db: Session = Depends(get_db)):
         return redirect
 
     points = db.query(PickupPoint).order_by(desc(PickupPoint.created_at)).all()
+    logistics_settings = _get_logistics_settings(db)
 
     return render_template("logistics/pickup_points.html", {
         "request": request,
         "admin": admin,
         "points": points,
         "has_permission": has_permission,
+        "logistics_settings": logistics_settings,
     })
 
 
@@ -579,12 +652,14 @@ def logistics_pickup_point_edit(point_id: str, request: Request, db: Session = D
     point = db.query(PickupPoint).filter(PickupPoint.id == point_id).first()
     if not point:
         return RedirectResponse(url="/logistics/pickup-points", status_code=302)
+    logistics_settings = _get_logistics_settings(db)
 
     return render_template("logistics/pickup_point_edit.html", {
         "request": request,
         "admin": admin,
         "point": point,
         "has_permission": has_permission,
+        "logistics_settings": logistics_settings,
     })
 
 
@@ -680,6 +755,9 @@ def logistics_auto_assign(shipment_id: str, request: Request, db: Session = Depe
     if not admin:
         return JSONResponse({"error": "unauthorized"}, status_code=401)
 
+    if _feature_disabled(db, "logistics_auto_dispatch_enabled"):
+        return JSONResponse({"error": "Auto-dispatch is disabled in admin settings"}, status_code=403)
+
     shipment = db.query(Shipment).filter(Shipment.id == shipment_id).first()
     if not shipment:
         return JSONResponse({"error": "shipment not found"}, status_code=404)
@@ -737,6 +815,9 @@ def logistics_batch_assign(request: Request, db: Session = Depends(get_db)):
     admin = get_current_user_from_cookie(request, db)
     if not admin:
         return JSONResponse({"error": "unauthorized"}, status_code=401)
+
+    if _feature_disabled(db, "logistics_auto_dispatch_enabled"):
+        return JSONResponse({"error": "Auto-dispatch is disabled in admin settings"}, status_code=403)
 
     unassigned = db.query(Shipment).filter(
         Shipment.delivery_agent_id.is_(None),
@@ -890,6 +971,8 @@ def logistics_batch_assign_page(request: Request, db: Session = Depends(get_db))
         if len(group["shipments"]) >= 2:
             groups.append(group)
 
+    logistics_settings = _get_logistics_settings(db)
+
     return render_template("logistics/batch_assign.html", {
         "request": request,
         "admin": admin,
@@ -897,6 +980,7 @@ def logistics_batch_assign_page(request: Request, db: Session = Depends(get_db))
         "available_drivers": len(available),
         "groups": groups,
         "has_permission": has_permission,
+        "logistics_settings": logistics_settings,
     })
 
 
@@ -920,11 +1004,13 @@ def logistics_returns(request: Request, db: Session = Depends(get_db)):
     pending = db.query(func.count(ReturnRequest.id)).filter(ReturnRequest.status == "PENDING").scalar() or 0
     in_transit = db.query(func.count(ReturnRequest.id)).filter(ReturnRequest.status.in_(["APPROVED", "PICKUP_SCHEDULED", "IN_TRANSIT"])).scalar() or 0
     received = db.query(func.count(ReturnRequest.id)).filter(ReturnRequest.status == "RECEIVED").scalar() or 0
+    logistics_settings = _get_logistics_settings(db)
 
     return render_template("logistics/returns.html", {
         "request": request, "admin": admin, "returns": returns,
         "pending": pending, "in_transit_returns": in_transit, "received": received,
         "status_filter": status_filter, "has_permission": has_permission,
+        "logistics_settings": logistics_settings,
     })
 
 
@@ -942,10 +1028,12 @@ def logistics_return_detail(return_id: str, request: Request, db: Session = Depe
     events = db.query(ReturnEvent).filter(ReturnEvent.return_id == rr.id).order_by(ReturnEvent.created_at).all()
     from app.models import DeliveryAgent
     available_drivers = db.query(DeliveryAgent).filter(DeliveryAgent.status == "AVAILABLE").all()
+    logistics_settings = _get_logistics_settings(db)
 
     return render_template("logistics/return_detail.html", {
         "request": request, "admin": admin, "rr": rr, "events": events,
         "available_drivers": available_drivers, "has_permission": has_permission,
+        "logistics_settings": logistics_settings,
     })
 
 
@@ -1009,9 +1097,11 @@ def logistics_pricing(request: Request, db: Session = Depends(get_db)):
     admin, redirect = _require_logistics(request, db)
     if redirect:
         return redirect
+    logistics_settings = _get_logistics_settings(db)
 
     return render_template("logistics/pricing.html", {
         "request": request, "admin": admin, "has_permission": has_permission,
+        "logistics_settings": logistics_settings,
     })
 
 
@@ -1054,10 +1144,12 @@ def logistics_3pl_settings(request: Request, db: Session = Depends(get_db)):
 
     from app.services.three_pl_service import list_providers
     providers = list_providers()
+    logistics_settings = _get_logistics_settings(db)
 
     return render_template("logistics/3pl_settings.html", {
         "request": request, "admin": admin, "settings": settings,
         "providers": providers, "has_permission": has_permission,
+        "logistics_settings": logistics_settings,
     })
 
 
@@ -1158,8 +1250,79 @@ def _get_driver(request: Request, db: Session):
 
 
 @router.get("/driver", response_class=HTMLResponse)
-def driver_portal_page(request: Request):
-    return render_template("logistics/driver_portal.html", {"request": request})
+def driver_portal_page(request: Request, db: Session = Depends(get_db)):
+    logistics_settings = _get_logistics_settings(db)
+    return render_template("logistics/driver_portal.html", {
+        "request": request,
+        "logistics_settings": logistics_settings,
+    })
+
+
+@router.get("/driver/register", response_class=HTMLResponse)
+def driver_register_page(request: Request, db: Session = Depends(get_db)):
+    logistics_settings = _get_logistics_settings(db)
+    # Check if driver self-registration is enabled
+    if _feature_disabled(db, "driver_self_register_enabled"):
+        return render_template("logistics/driver_register.html", {
+            "request": request,
+            "logistics_settings": logistics_settings,
+            "disabled": True,
+        })
+    return render_template("logistics/driver_register.html", {
+        "request": request,
+        "logistics_settings": logistics_settings,
+        "disabled": False,
+    })
+
+
+@router.post("/driver/api/register")
+async def driver_register(request: Request, db: Session = Depends(get_db)):
+    logistics_settings = _get_logistics_settings(db)
+    if _feature_disabled(db, "driver_self_register_enabled"):
+        return JSONResponse({"success": False, "message": "Driver registration is currently disabled"})
+
+    data = await request.json()
+    name = data.get("name", "").strip()
+    phone = data.get("phone", "").strip()
+    email = data.get("email", "").strip()
+    vehicle_type = data.get("vehicle_type", "").strip()
+    vehicle_number = data.get("vehicle_number", "").strip()
+
+    if not name or not phone:
+        return JSONResponse({"success": False, "message": "Name and phone are required"})
+
+    # Check for duplicate phone
+    existing = db.query(DeliveryAgent).filter(DeliveryAgent.phone == phone).first()
+    if existing:
+        return JSONResponse({"success": False, "message": "A driver with this phone number already exists"})
+
+    # Generate a unique driver ID
+    import uuid
+    driver_id = f"DRV-{uuid.uuid4().hex[:8].upper()}"
+
+    agent = DeliveryAgent(
+        id=driver_id,
+        name=name,
+        phone=phone,
+        email=email or None,
+        vehicle_type=vehicle_type or None,
+        vehicle_number=vehicle_number or None,
+        status="AVAILABLE",
+        rating=0.0,
+        total_deliveries=0,
+        successful_deliveries=0,
+        avg_delivery_hours=0.0,
+        performance_score=0.0,
+    )
+    db.add(agent)
+    db.commit()
+
+    logger.info("Driver self-registered: %s (%s)", name, driver_id)
+    return JSONResponse({
+        "success": True,
+        "driver_id": driver_id,
+        "message": f"Registration successful! Your Driver ID is {driver_id}. Save it — you'll need it to log in.",
+    })
 
 
 @router.post("/driver/api/login")
@@ -1224,6 +1387,11 @@ async def driver_update_location(request: Request, db: Session = Depends(get_db)
     driver = _get_driver(request, db)
     if not driver:
         return JSONResponse({"success": False}, status_code=401)
+
+    if _feature_disabled(db, "driver_gps_required"):
+        # GPS not required — still accept updates but don't enforce
+        pass
+
     data = await request.json()
     lat = data.get("latitude")
     lng = data.get("longitude")
@@ -1382,6 +1550,13 @@ async def driver_mark_delivered(shipment_id: str, request: Request, db: Session 
     shipment = db.query(Shipment).filter(Shipment.id == shipment_id, Shipment.delivery_agent_id == driver.id).first()
     if not shipment:
         return JSONResponse({"success": False, "message": "Not found"})
+
+    # Check COD collection permission
+    order = shipment.order
+    is_cod = order and getattr(order, 'payment_method', '') == 'cod'
+    if is_cod and _feature_disabled(db, "driver_cod_collection_enabled"):
+        return JSONResponse({"success": False, "message": "COD collection is disabled. Please complete delivery without collecting cash."})
+
     shipment.status = "DELIVERED"
     shipment.actual_delivery = datetime.utcnow()
     event = ShipmentEvent(shipment_id=shipment_id, status="DELIVERED", description="Delivered by driver")
@@ -1476,8 +1651,10 @@ def logistics_ai_route_optimizer(request: Request, db: Session = Depends(get_db)
     admin, redirect = _require_logistics(request, db)
     if redirect:
         return redirect
+    logistics_settings = _get_logistics_settings(db)
     return render_template("logistics/ai_route_optimizer.html", {
         "request": request, "admin": admin, "has_permission": has_permission,
+        "logistics_settings": logistics_settings,
     })
 
 
@@ -1486,8 +1663,10 @@ def logistics_ai_demand_forecast(request: Request, db: Session = Depends(get_db)
     admin, redirect = _require_logistics(request, db)
     if redirect:
         return redirect
+    logistics_settings = _get_logistics_settings(db)
     return render_template("logistics/ai_demand_forecast.html", {
         "request": request, "admin": admin, "has_permission": has_permission,
+        "logistics_settings": logistics_settings,
     })
 
 
@@ -1496,8 +1675,10 @@ def logistics_ai_anomalies(request: Request, db: Session = Depends(get_db)):
     admin, redirect = _require_logistics(request, db)
     if redirect:
         return redirect
+    logistics_settings = _get_logistics_settings(db)
     return render_template("logistics/ai_anomalies.html", {
         "request": request, "admin": admin, "has_permission": has_permission,
+        "logistics_settings": logistics_settings,
     })
 
 
@@ -1507,9 +1688,11 @@ def logistics_ai_smart_assign(request: Request, db: Session = Depends(get_db)):
     if redirect:
         return redirect
     unassigned = db.query(Shipment).filter(Shipment.delivery_agent_id.is_(None), Shipment.status == "PENDING").all()
+    logistics_settings = _get_logistics_settings(db)
     return render_template("logistics/ai_smart_assign.html", {
         "request": request, "admin": admin, "has_permission": has_permission,
         "unassigned_count": len(unassigned),
+        "logistics_settings": logistics_settings,
     })
 
 
@@ -1587,8 +1770,10 @@ def logistics_cod_page(request: Request, db: Session = Depends(get_db)):
     ).all()
     # Filter to COD-like payment methods (placeholder logic)
     cod_pending = [o for o in cod_orders if getattr(o, 'payment_method', '') == 'cod']
+    logistics_settings = _get_logistics_settings(db)
     return render_template("logistics/cod.html", {
         "request": request, "admin": admin, "has_permission": has_permission,
         "cod_pending": cod_pending,
         "cod_total": sum(o.total_amount for o in cod_pending),
+        "logistics_settings": logistics_settings,
     })

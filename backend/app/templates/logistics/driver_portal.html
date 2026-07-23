@@ -163,6 +163,7 @@
         </div>
         <button type="submit" class="dp-btn dp-btn-primary" id="loginBtn">Sign In</button>
       </form>
+      <a href="/driver/register" style="display:block;text-align:center;margin-top:1rem;font-size:0.875rem;color:var(--dp-primary);text-decoration:none;">Don't have an account? Register</a>
     </div>
   </div>
 
@@ -273,6 +274,12 @@
 
   {# ── GPS TRACKING + APP LOGIC ── #}
   <script>
+    // Admin settings injected from server
+    const SETTINGS = {
+      gps_required: {{ 'true' if logistics_settings.get('driver_gps_required', 'true') != 'false' else 'false' }},
+      cod_enabled: {{ 'true' if logistics_settings.get('driver_cod_collection_enabled', 'true') != 'false' else 'false' }},
+      whatsapp_enabled: {{ 'true' if logistics_settings.get('whatsapp_enabled', 'false') != 'false' else 'false' }},
+    };
     let driverId = null;
     let driverData = null;
     let gpsWatchId = null;
@@ -302,7 +309,11 @@
           document.getElementById('driverName').textContent = driverData.name;
           document.getElementById('driverVehicle').textContent = [driverData.vehicle_type, driverData.vehicle_number].filter(Boolean).join(' · ') || '';
           updateStatusPill(driverData.status);
-          startGPS();
+          if (SETTINGS.gps_required) {
+            startGPS();
+          } else {
+            document.getElementById('gpsBanner').style.display = 'none';
+          }
           loadDeliveries();
         } else {
           errEl.textContent = d.message || 'Invalid credentials';
@@ -408,7 +419,7 @@
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
               ${s.customer_name || 'Customer'} · ${s.customer_phone || ''}
             </div>
-            ${s.cod_amount > 0 ? `<div class="dp-shipment-detail" style="color:var(--dp-warning);font-weight:600;">
+            ${s.cod_amount > 0 && SETTINGS.cod_enabled ? `<div class="dp-shipment-detail" style="color:var(--dp-warning);font-weight:600;">
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
               COD: ₦${s.cod_amount.toLocaleString()}
             </div>` : ''}
@@ -561,7 +572,11 @@
           document.getElementById('driverName').textContent = driverData.name;
           document.getElementById('driverVehicle').textContent = [driverData.vehicle_type, driverData.vehicle_number].filter(Boolean).join(' · ') || '';
           updateStatusPill(driverData.status);
-          startGPS();
+          if (SETTINGS.gps_required) {
+            startGPS();
+          } else {
+            document.getElementById('gpsBanner').style.display = 'none';
+          }
           loadDeliveries();
         }
       } catch(e) {}

@@ -1113,6 +1113,15 @@ SETTINGS_DEFINITIONS: List[Dict[str, Any]] = [
     {"key": "logistics_auto_dispatch_enabled", "category": "logistics", "type": "boolean", "label": "Auto-Dispatch Shipments",
      "description": "Automatically assign shipments when orders enter PROCESSING status.", "default": "true"},
 
+    {"key": "driver_self_register_enabled", "category": "logistics", "type": "boolean", "label": "Driver Self-Registration",
+     "description": "Allow drivers to register themselves via the public /driver/register page.", "default": "false"},
+
+    {"key": "driver_gps_required", "category": "logistics", "type": "boolean", "label": "Require GPS from Drivers",
+     "description": "Require drivers to share location before they can accept deliveries.", "default": "true"},
+
+    {"key": "driver_cod_collection_enabled", "category": "logistics", "type": "boolean", "label": "Driver COD Collection",
+     "description": "Allow drivers to collect cash on delivery from customers.", "default": "true"},
+
     # ── Multi-Vendor / Affiliate ──
     {"key": "vendor_to_vendor_percentage_cut", "category": "global", "type": "number", "label": "Vendor-to-Vendor Affiliate %",
      "description": "Percentage cut credited to the referring vendor when an invited vendor makes a sale.", "default": "2.5"},
