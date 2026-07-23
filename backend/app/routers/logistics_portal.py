@@ -1235,12 +1235,12 @@ DRIVER_COOKIE = "driver_token"
 
 def _get_driver(request: Request, db: Session):
     """Get driver from cookie."""
-    from app.core.security import decode_access_token
+    from app.core.security import decode_token
     token = request.cookies.get(DRIVER_COOKIE)
     if not token:
         return None
     try:
-        payload = decode_access_token(token)
+        payload = decode_token(token)
         driver_id = payload.get("sub") or payload.get("driver_id")
         if driver_id:
             return db.query(DeliveryAgent).filter(DeliveryAgent.id == driver_id).first()
