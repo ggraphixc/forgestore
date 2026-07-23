@@ -43,6 +43,14 @@ class Settings(BaseSettings):
     # Default payment provider ("paystack")
     default_payment_provider: str = "paystack"
 
+    # Redis (used by Celery broker and caching)
+    redis_url: str = ""
+
+    # WhatsApp Cloud API (Meta)
+    whatsapp_access_token: str = ""
+    whatsapp_phone_number_id: str = ""
+    whatsapp_graph_api_version: str = "v18.0"
+
     # Debug mode (set to "true" in development for detailed logging)
     debug: bool = False
 

@@ -515,11 +515,16 @@ def health():
 
 
 @app.get("/api/debug/ip")
-def debug_ip():
+def debug_ip(request: Request):
     """Detect the server's public outbound IP (for Brevo SMTP authorization).
-    Makes an outbound HTTP request to api.ipify.org — this shows the
-    actual IP address that Brevo's SMTP server sees when we connect.
+    Admin-only in production.
     """
+    from app.auth import get_current_user_from_cookie
+    from app.database import get_db
+    db = next(get_db())
+    user = get_current_user_from_cookie(request, db)
+    if not user or user.role.value not in ("DIR_ADMIN", "TECH_ADMIN"):
+        return JSONResponse({"error": "unauthorized"}, status_code=403)
     import requests
     try:
         outbound_ip = requests.get("https://api.ipify.org", timeout=5).text.strip()
