@@ -388,20 +388,34 @@ def shop_detail(request: Request, slug: str, db: Session = Depends(get_db)):
 @router.get("/products/{slug}", response_class=HTMLResponse)
 def product_detail(request: Request, slug: str, db: Session = Depends(get_db)):
 
+    from app.core.cache import cache_get, cache_set
+
     currency = get_currency(db)
-    product = db.query(Product).filter(Product.slug == slug, Product.status == "APPROVED").first()
+
+    # Cache product data (short TTL — views still increment)
+    cache_key = f"product:{slug}"
+    cached = cache_get(cache_key)
+
+    if cached:
+        product = db.query(Product).filter(Product.slug == slug, Product.status == "APPROVED").first()
+        retailer = db.query(Retailer).filter(Retailer.id == product.retailer_id).first() if product and product.retailer_id else None
+        category = db.query(Category).filter(Category.id == product.category_id).first() if product and product.category_id else None
+    else:
+        product = db.query(Product).filter(Product.slug == slug, Product.status == "APPROVED").first()
+        retailer = db.query(Retailer).filter(Retailer.id == product.retailer_id).first() if product and product.retailer_id else None
+        category = db.query(Category).filter(Category.id == product.category_id).first() if product and product.category_id else None
+
     if not product:
         return _render_page("web/404.html", request, db, status_code=404)
 
-    # Increment views count
+    # Increment views (always, even with cache)
     try:
         product.views_count = (product.views_count or 0) + 1
         db.commit()
+        cache_set(cache_key, {"slug": slug}, ttl=180)
     except Exception:
         db.rollback()
 
-    retailer = db.query(Retailer).filter(Retailer.id == product.retailer_id).first() if product.retailer_id else None
-    category = db.query(Category).filter(Category.id == product.category_id).first() if product.category_id else None
     reviews = db.query(Review).filter(Review.product_id == product.id).order_by(desc(Review.created_at)).all()
 
     # Related products from same retailer

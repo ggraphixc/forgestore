@@ -126,7 +126,7 @@ def _feature_disabled(db: Session, setting_key: str) -> bool:
 
 @router.get("/vendor/logout")
 def vendor_logout():
-    resp = RedirectResponse(url="/vendor/login", status_code=302)
+    resp = RedirectResponse(url="/admin/login", status_code=302)
     resp.delete_cookie("access_token")
     return resp
 
