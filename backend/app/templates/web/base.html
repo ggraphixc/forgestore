@@ -5,7 +5,7 @@
 :root {
   --c-amber-50: #fffbeb; --c-amber-100: #fef3c7; --c-amber-200: #fde68a; --c-amber-300: #fcd34d;
   --c-amber-400: #fbbf24; --c-amber-500: {{ settings.primary_color|default('#f59e0b') }}; --c-amber-600: {{ settings.secondary_color|default('#d97706') }}; --c-amber-700: #b45309;
-  --c-amber-800: #92400e; --c-amber-900: #78350f;
+  --c-amber-800: #92400e; --c-amber-900: #78350f; --c-sharpred: #fe0707;
   --c-stone-50: #fafaf9; --c-stone-100: #f5f5f4; --c-stone-200: #e7e5e3; --c-stone-300: #d6d3d1;
   --c-stone-400: #a8a29e; --c-stone-500: {{ settings.text_color|default('#78716c') }}; --c-stone-600: #57534e; --c-stone-700: #44403c;
   --c-stone-800: #292524; --c-stone-900: {{ settings.dark_color|default('#1c1917') }}; --c-stone-950: #0c0a09;
@@ -232,7 +232,7 @@
 
 .web-badge {
   position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 4px;
-  background: var(--c-amber-500); color: #fff; font-size: 9px; font-weight: 700;
+  background: var(--c-sharpred) !important; color: #fff; font-size: 9px; font-weight: 700;
   border-radius: 9999px; display: flex; align-items: center; justify-content: center;
   box-shadow: 0 1px 3px rgba(0,0,0,0.15);
 }

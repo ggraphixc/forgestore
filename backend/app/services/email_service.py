@@ -26,7 +26,7 @@ def _render_email_template(template_name: str, context: dict) -> str:
 def _base_context(**kwargs) -> dict:
     """Build base template context with site-wide defaults and email branding."""
     ctx = {
-        "site_name": settings.site_name or "ForgeStore",
+        "site_name": settings.site_name,
         "site_tagline": settings.site_tagline or "",
         "base_url": settings.site_base_url.rstrip("/"),
         # Email branding defaults
@@ -231,7 +231,7 @@ def send_password_reset_email(to_email: str, reset_link: str) -> bool:
     """Send password reset email (async background dispatch)."""
     return _dispatch(
         to_email,
-        f"Reset Your {settings.site_name or 'ForgeStore'} Password",
+        f"Reset Your {settings.site_name} Password",
         "password_reset.html",
         {
             "heading": "Reset Your Password",
@@ -248,11 +248,11 @@ def send_welcome_email(to_email: str, customer_name: str) -> bool:
     """Send welcome email (async background dispatch)."""
     return _dispatch(
         to_email,
-        f"Welcome to {settings.site_name or 'ForgeStore'}!",
+        f"Welcome to {settings.site_name}!",
         "welcome.html",
         {
             "heading": f"Welcome, {customer_name}!",
-            "subtitle": f"Your {settings.site_name or 'ForgeStore'} account is ready. Here's what you can do:",
+            "subtitle": f"Your {settings.site_name} account is ready. Here's what you can do:",
             "icon": {"emoji": "👋", "bg": "#fef3c7"},
             "cta_url": f"{settings.site_base_url.rstrip('/')}/shop",
             "cta_label": "Start Shopping",
@@ -265,7 +265,7 @@ def send_newsletter_confirmation_email(to_email: str, confirm_url: str) -> bool:
     """Send newsletter confirmation email (async background dispatch)."""
     return _dispatch(
         to_email,
-        f"Confirm your newsletter subscription — {settings.site_name or 'ForgeStore'}",
+        f"Confirm your newsletter subscription — {settings.site_name}",
         "newsletter_confirm.html",
         {
             "heading": "Almost There!",
@@ -287,7 +287,7 @@ def send_payout_email(
     """Send payout processed email (async background dispatch)."""
     return _dispatch(
         to_email,
-        f"Payout Processed — {settings.site_name or 'ForgeStore'}",
+        f"Payout Processed — {settings.site_name}",
         "payout_processed.html",
         {
             "heading": "Payout Sent!",
@@ -310,7 +310,9 @@ def send_newsletter_broadcast(
     subscriber_id: str = "",
 ) -> bool:
     """Send broadcast email with tracking pixel and link wrapping."""
+    from datetime import datetime
     base_url = settings.site_base_url.rstrip("/")
+    current_year = datetime.now().year
 
     # Wrap links for click tracking
     if campaign_id and subscriber_id:
@@ -325,7 +327,7 @@ def send_newsletter_broadcast(
     if unsubscribe_url:
         unsubscribe_html = f"""
         <div style="margin-top:32px;padding-top:20px;border-top:1px solid #f5f5f4;font-size:11px;color:#a8a29e;text-align:center;">
-          <p style="margin:0 0 6px 0;">You're receiving this because you subscribed to {settings.site_name or 'ForgeStore'} newsletters.</p>
+          <p style="margin:0 0 6px 0;">You're receiving this because you subscribed to {settings.site_name} newsletters.</p>
           <a href="{unsubscribe_url}" style="color:#a8a29e;text-decoration:underline;">Unsubscribe instantly</a>
         </div>
         """
@@ -339,7 +341,7 @@ def send_newsletter_broadcast(
     <tr><td align="center">
     <table width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
       <tr><td style="background:linear-gradient(135deg,#1c1917 0%,#292524 50%,#44403c 100%);padding:36px 40px 32px;text-align:center;">
-        <span style="color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px;">{settings.site_name or 'ForgeStore'}</span>
+        <span style="color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px;">{settings.site_name}</span>
         <div style="margin:20px auto 0;width:48px;height:3px;background:linear-gradient(90deg,#f59e0b,#d97706);border-radius:2px;"></div>
       </td></tr>
       <tr><td style="padding:40px;">
@@ -348,7 +350,7 @@ def send_newsletter_broadcast(
         {unsubscribe_html}
       </td></tr>
       <tr><td style="padding:28px 40px 36px;text-align:center;">
-        <p style="font-size:11px;color:#d6d3d1;margin:0;">&copy; 2026 {settings.site_name or 'ForgeStore'}. All rights reserved.</p>
+        <p style="font-size:11px;color:#d6d3d1;margin:0;">&copy; {current_year} {settings.site_name}. All rights reserved.</p>
       </td></tr>
     </table>
     </td></tr>
@@ -376,7 +378,7 @@ def _wrap_links_for_tracking(html_body: str, campaign_id: str, subscriber_id: st
         if url.startswith("#") or "unsubscribe" in url.lower():
             return full
         sig = hmac.new(
-            settings.secret_key.encode() if settings.secret_key else b"forgestore",
+            settings.secret_key.encode() if settings.secret_key else b"site-secret",
             f"{campaign_id}:{subscriber_id}:{url}".encode(),
             hashlib.sha256,
         ).hexdigest()[:16]

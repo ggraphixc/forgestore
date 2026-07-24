@@ -53,7 +53,7 @@ def _resolve_config() -> dict:
         "api_key": env.brevo_api_key,
         "from_email": env.mail_from_email,
         "console_fallback": env.mail_console_fallback,
-        "site_name": env.site_name or "ForgeStore",
+        "site_name": env.site_name,
     }
 
 

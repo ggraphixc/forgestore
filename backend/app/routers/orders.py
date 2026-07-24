@@ -25,12 +25,15 @@ logger = logging.getLogger("app.orders")
 router = APIRouter(prefix="/api/orders", tags=["orders"])
 
 
-def _generate_order_number() -> str:
-    """Generate a unique order number."""
+def _generate_order_number(db) -> str:
+    """Generate a unique order number using the configurable order prefix."""
     import random, string
+    from app.models import Settings
+    prefix_row = db.query(Settings).filter(Settings.key == "order_prefix").first()
+    prefix = prefix_row.value if prefix_row else "ORD"
     ts = uuid.uuid4().hex[:8].upper()
     rand = "".join(random.choices(string.digits, k=4))
-    return f"FS-{ts}-{rand}"
+    return f"{prefix}-{ts}-{rand}"
 
 
 @router.post("/checkout")
@@ -178,10 +181,11 @@ async def checkout_mixed_cart(
     max_order_setting = db.query(SettingsModel).filter(SettingsModel.key == "max_order_amount").first()
     max_order_amount = float(max_order_setting.value) if max_order_setting else 0.0
     if max_order_amount > 0 and total_naira > max_order_amount:
-        raise HTTPException(status_code=400, detail=f"Order total ₦{total_naira:,.2f} exceeds maximum allowed ₦{max_order_amount:,.2f}")
+        from app.templates_shared import _format_price_global
+        raise HTTPException(status_code=400, detail=f"Order total {_format_price_global(total_naira)} exceeds maximum allowed {_format_price_global(max_order_amount)}")
 
     # 4. Create parent Order
-    order_reference = f"FS-ORD-{uuid.uuid4().hex[:8].upper()}"
+    order_reference = _generate_order_number(db)
 
     order = Order(
         order_number=order_reference,
@@ -271,10 +275,10 @@ async def checkout_mixed_cart(
         from app.core.email import dispatch_email_background
         from app.services.email_service import send_order_confirmation_email
         summary_lines = [
-            {"label": "Subtotal", "value": f"₦{grand_subtotal:,.2f}"},
-            {"label": "Shipping", "value": f"₦{total_shipping:,.2f}"},
-            {"label": "Tax", "value": f"₦{total_tax:,.2f}"},
-            {"label": "Total", "value": f"₦{total_naira:,.2f}"},
+            {"label": "Subtotal", "value": _format_price_global(grand_subtotal)},
+            {"label": "Shipping", "value": _format_price_global(total_shipping)},
+            {"label": "Tax", "value": _format_price_global(total_tax)},
+            {"label": "Total", "value": _format_price_global(total_naira)},
         ]
         items_table = [
             {"name": i["name"], "quantity": i["quantity"], "price": i["price"]}

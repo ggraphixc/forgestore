@@ -78,7 +78,8 @@ from app.config import get_settings
 
 rate_limiter = Limiter(key_func=get_remote_address)
 
-app = FastAPI(title="ForgeStore", version="1.0.0")
+_settings = get_settings()
+app = FastAPI(title=_settings.site_name, version="1.0.0")
 
 
 # ─── CSRF Protection Middleware ─────────────────────────────────────

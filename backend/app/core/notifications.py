@@ -33,8 +33,8 @@ async def send_platform_email(to_email: str, subject: str, html_content: str):
     from app.config import get_settings
     _cfg = get_settings()
     api_key = _cfg.brevo_api_key.strip() if _cfg.brevo_api_key else os.getenv("BREVO_API_KEY", "").strip()
-    from_email = _cfg.mail_from_email.strip() if _cfg.mail_from_email else os.getenv("MAIL_FROM_EMAIL", "noreply@forgestore.com").strip()
-    sender_name = _get_db_setting("brevo_sender_name", "ForgeStore Support")
+    from_email = _cfg.mail_from_email.strip() if _cfg.mail_from_email else os.getenv("MAIL_FROM_EMAIL", "").strip()
+    sender_name = _get_db_setting("brevo_sender_name", _cfg.site_name)
     console_fallback = os.getenv("MAIL_CONSOLE_FALLBACK", "False").lower() in ("true", "1", "t")
 
     if console_fallback or not api_key:
@@ -182,7 +182,8 @@ async def send_order_placed_whatsapp(phone: str, order_number: str, total: float
     phone = _normalize_phone(phone)
     if not phone:
         return
-    sn = _get_db_setting("site_name", "ForgeStore")
+    from app.config import get_settings as _gs
+    sn = _get_db_setting("site_name", _gs().site_name)
     body = (
         f"Hi! Your {sn} order *{order_number}* has been placed successfully.\n\n"
         f"Items: {items_summary}\n"
@@ -197,7 +198,8 @@ async def send_order_confirmed_whatsapp(phone: str, order_number: str, vendor_na
     phone = _normalize_phone(phone)
     if not phone:
         return
-    sn = _get_db_setting("site_name", "ForgeStore")
+    from app.config import get_settings as _gs
+    sn = _get_db_setting("site_name", _gs().site_name)
     vendor_text = f" by {vendor_name}" if vendor_name else ""
     body = (
         f"Great news! Your {sn} order *{order_number}* has been confirmed{vendor_text}.\n\n"
@@ -211,7 +213,8 @@ async def send_order_shipped_whatsapp(phone: str, order_number: str, carrier: st
     phone = _normalize_phone(phone)
     if not phone:
         return
-    sn = _get_db_setting("site_name", "ForgeStore")
+    from app.config import get_settings as _gs
+    sn = _get_db_setting("site_name", _gs().site_name)
     carrier_text = f" via {carrier}" if carrier else ""
     tracking_text = f"\nTrack your order: {tracking_url}" if tracking_url else ""
     body = (
@@ -226,7 +229,8 @@ async def send_order_delivered_whatsapp(phone: str, order_number: str):
     phone = _normalize_phone(phone)
     if not phone:
         return
-    sn = _get_db_setting("site_name", "ForgeStore")
+    from app.config import get_settings as _gs
+    sn = _get_db_setting("site_name", _gs().site_name)
     body = (
         f"Your {sn} order *{order_number}* has been delivered! 🎉\n\n"
         f"We hope you love your purchase. Rate your experience in the app to help other buyers."
@@ -239,7 +243,8 @@ async def send_order_cancelled_whatsapp(phone: str, order_number: str, reason: s
     phone = _normalize_phone(phone)
     if not phone:
         return
-    sn = _get_db_setting("site_name", "ForgeStore")
+    from app.config import get_settings as _gs
+    sn = _get_db_setting("site_name", _gs().site_name)
     reason_text = f"\nReason: {reason}" if reason else ""
     body = (
         f"Your {sn} order *{order_number}* has been cancelled.{reason_text}\n\n"

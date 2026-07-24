@@ -67,7 +67,7 @@ def _default_logistics_settings() -> dict:
         "three_pl_provider": "mock",
         "three_pl_sandbox": "true",
         "cod_enabled": "false",
-        "site_name": "ForgeStore",
+        "site_name": "",  # Populated from DB settings at runtime
         "whatsapp_enabled": "false",
         "email_notifications_enabled": "true",
         "delivery_zone_rates": "{}",
