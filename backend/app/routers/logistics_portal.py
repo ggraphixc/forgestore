@@ -80,11 +80,8 @@ def _default_logistics_settings() -> dict:
 def _feature_disabled(db: Session, setting_key: str) -> bool:
     """Return True if the feature is explicitly disabled in admin settings."""
     from app.models import Settings
-    settings_obj = db.query(Settings).first()
-    if not settings_obj:
-        return False
-    val = settings_obj.get_setting(setting_key)
-    return str(val).lower() == "false"
+    val = db.query(Settings.value).filter(Settings.key == setting_key).scalar()
+    return val is not None and val.lower() == "false"
 
 
 @router.get("/logistics/logout")
