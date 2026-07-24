@@ -42,6 +42,23 @@ def _escapejs(value):
 env.filters['escapejs'] = _escapejs
 
 
+def _cdn_url(value):
+    """Prefix a relative image URL with the CDN URL if configured."""
+    if not value or value.startswith('http') or value.startswith('data:'):
+        return value
+    from app.config import get_settings
+    try:
+        s = get_settings()
+        if s.cdn_url:
+            return s.cdn_url.rstrip("/") + "/" + value.lstrip("/")
+    except Exception:
+        pass
+    return value
+
+
+env.filters['cdn'] = _cdn_url
+
+
 def _get_fallback_settings():
     """Return Pydantic settings as a plain dict for global template use."""
     from app.config import get_settings

@@ -257,30 +257,52 @@ def marketplace(request: Request, background_tasks: BackgroundTasks, db: Session
     currency = get_currency(db)
     category_slug = request.query_params.get("category")
 
-    query = db.query(Product).filter(Product.status == "APPROVED")
-    if category_slug:
-        cat = db.query(Category).filter(Category.slug == category_slug).first()
-        if cat:
-            query = query.filter(Product.category_id == cat.id)
+    from app.core.cache import cache_get, cache_set
 
-    products = query.order_by(desc(Product.created_at)).all()
-    categories = db.query(Category).all()
+    # Cache products + categories (short TTL since marketplace updates frequently)
+    cache_key = f"marketplace:{category_slug or 'all'}"
+    cached = cache_get(cache_key)
 
-    # Get retailer names
-    retailers = {r.id: r.name for r in db.query(Retailer).all()}
+    if cached:
+        products = _rehydrate_products(db, cached.get("products", []))
+        categories_data = cached.get("categories", [])
+        from app.models import Category as CatModel
+        categories = []
+        for cd in categories_data:
+            cat_obj = db.query(CatModel).filter(CatModel.id == cd["id"]).first()
+            if cat_obj:
+                categories.append(cat_obj)
+        retailers_data = cached.get("retailers", {})
+        retailers = retailers_data
+        cat_counts = cached.get("cat_counts", {})
+    else:
+        query = db.query(Product).filter(Product.status == "APPROVED")
+        if category_slug:
+            cat = db.query(Category).filter(Category.slug == category_slug).first()
+            if cat:
+                query = query.filter(Product.category_id == cat.id)
 
-    # Product counts per category
-    cat_counts = {}
-    for cat in categories:
-        cat_counts[cat.id] = db.query(func.count(Product.id)).filter(Product.category_id == cat.id).scalar() or 0
+        products = query.order_by(desc(Product.created_at)).all()
+        categories = db.query(Category).all()
+        retailers = {r.id: r.name for r in db.query(Retailer).all()}
+        cat_counts = {}
+        for cat in categories:
+            cat_counts[cat.id] = db.query(func.count(Product.id)).filter(Product.category_id == cat.id).scalar() or 0
 
-    # Active ad campaigns for marketplace banners — chronological expiration enforced
+        cache_set(cache_key, {
+            "products": [_product_dict(p) for p in products],
+            "categories": [{"id": c.id, "name": c.name, "slug": c.slug} for c in categories],
+            "retailers": retailers,
+            "cat_counts": cat_counts,
+        }, ttl=120)
+
+    # Active ad campaigns for marketplace banners
     active_ad_campaigns = db.query(AdCampaign).filter(
         AdCampaign.status == "ACTIVE",
         AdCampaign.end_date > utcnow()
     ).order_by(desc(AdCampaign.created_at)).limit(4).all()
 
-    # Active promo ads (admin-created flash sales, holiday deals, etc.)
+    # Active promo ads
     flash_setting2 = db.query(Settings).filter(Settings.key == "flash_sales_enabled").first()
     flash_enabled2 = not flash_setting2 or flash_setting2.value.lower() != "false"
     active_promo_ads = []
@@ -290,9 +312,17 @@ def marketplace(request: Request, background_tasks: BackgroundTasks, db: Session
             (PromoAd.end_date == None) | (PromoAd.end_date > utcnow())
         ).order_by(desc(PromoAd.created_at)).limit(6).all()
 
-    # Track impressions asynchronously — avoids blocking page load
     if active_ad_campaigns:
         background_tasks.add_task(log_ad_impressions_background, [ad.id for ad in active_ad_campaigns])
+
+    # SEO context for marketplace
+    from app.core.seo import seo_context
+    seo = seo_context(
+        title="Marketplace — Shop Unique Products",
+        description="Browse thousands of unique products from verified vendors. Discover electronics, fashion, home goods and more.",
+        url=f"{request.base_url}shop/marketplace",
+        image="",
+    )
 
     return _render_page("web/marketplace.html", request, db, {
         "currency": currency,
@@ -304,6 +334,7 @@ def marketplace(request: Request, background_tasks: BackgroundTasks, db: Session
         "active_ad_campaigns": active_ad_campaigns,
         "active_promo_ads": active_promo_ads,
         "utcnow": utcnow,
+        "seo": seo,
     })
 
 

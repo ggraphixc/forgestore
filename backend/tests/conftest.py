@@ -13,18 +13,16 @@ from pathlib import Path
 # Ensure the app module is importable
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from fastapi.testclient import TestClient
-
 # Override DATABASE_URL before any app imports
 # Use a temporary file with a unique name to avoid locking conflicts
-import tempfile
 _tmp_db = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
 _tmp_db.close()
 _test_db = Path(_tmp_db.name)
 os.environ["DATABASE_URL"] = f"sqlite:///{_test_db.as_posix()}"
 
+from fastapi.testclient import TestClient
+from fastapi import FastAPI
 from app.database import Base, init_db, SessionLocal, get_db
-from app.main import app
 from app.models import (
     Product, Category, Retailer, User, Order, OrderItem,
     Review, AdminUser, CartItem, Settings, AdminRole,
@@ -55,7 +53,9 @@ def db():
 
 @pytest.fixture
 def client():
-    """FastAPI test client with overridden DB dependency."""
+    """FastAPI test client with overridden DB dependency, no startup event."""
+    from app.main import app
+
     def override_get_db():
         db = SessionLocal()
         try:
@@ -64,6 +64,10 @@ def client():
             db.close()
 
     app.dependency_overrides[get_db] = override_get_db
+
+    # Remove startup events so TestClient doesn't block on migrations/Redis
+    app.router.on_startup.clear()
+
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()

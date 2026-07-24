@@ -239,7 +239,7 @@
   <div class="vp-hero">
     <div class="vp-hero-gallery">
       {% if product.images %}
-        <img class="vp-hero-main-img" src="{{ product.images[0] }}" alt="{{ product.name }}">
+        <img class="vp-hero-main-img" src="{{ product.images[0]|cdn }}" alt="{{ product.name }}">
         {% if product.images|length > 1 %}
         <div class="vp-hero-thumbs">
           {% for img in product.images %}

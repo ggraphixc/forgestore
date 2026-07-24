@@ -191,6 +191,19 @@
   font-size: 0.6875rem; color: #999; display: flex; align-items: center; gap: 0.25rem;
 }
 .mp-product-rating svg { width: 0.7rem; height: 0.7rem; color: var(--c-amber-500); fill: var(--c-amber-500); }
+.mp-compare-btn {
+  position: absolute; bottom: 0.625rem; left: 0.625rem; z-index: 5;
+  width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.9); backdrop-filter: blur(8px);
+  border: 1.5px solid #e5e7eb; display: flex; align-items: center;
+  justify-content: center; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  transition: all 0.2s; opacity: 0;
+}
+.mp-product-card:hover .mp-compare-btn { opacity: 1; }
+.mp-compare-btn:hover { background: #3b82f6; border-color: #3b82f6; }
+.mp-compare-btn:hover svg { color: #fff; }
+.mp-compare-btn svg { width: 0.875rem; height: 0.875rem; color: #555; }
+.mp-compare-btn.added { background: #3b82f6; border-color: #3b82f6; opacity: 1; }
+.mp-compare-btn.added svg { color: #fff; }
 .mp-product-add-btn {
   position: absolute; bottom: 0.625rem; right: 0.625rem; z-index: 5;
   width: 34px; height: 34px; border-radius: 50%; background: #fff;
@@ -311,6 +324,9 @@
 .dark .mp-wishlist-btn svg { color: red; }
 .dark .mp-product-add-btn { background: var(--c-stone-700); border-color: var(--c-stone-600); }
 .dark .mp-product-add-btn svg { color: var(--c-stone-200); }
+.dark .mp-compare-btn { background: rgba(41,37,36,.85); border-color: var(--c-stone-600); }
+.dark .mp-compare-btn svg { color: var(--c-stone-300); }
+.dark .mp-compare-btn:hover { background: #3b82f6; border-color: #3b82f6; }
 .dark .mp-search-input { background: var(--c-stone-800); border-color: var(--c-stone-700); color: var(--c-stone-100); }
 .dark .mp-search-input::placeholder { color: var(--c-stone-500); }
 .dark .mp-category-link { color: var(--c-stone-300); }
@@ -496,6 +512,9 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
             </svg>
           </button>
+          <button onclick="event.preventDefault(); event.stopPropagation(); addToCompare('{{ p.id }}', this)" class="mp-compare-btn" data-product-id="{{ p.id }}" aria-label="Add to compare" title="Compare">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+          </button>
           <a href="/shop/products/{{ p.slug }}">
             <div class="mp-product-img-wrap">
               {% if p.discount_price and p.discount_price < p.price %}
@@ -505,7 +524,7 @@
               <span class="mp-new-badge{% if p.discount_price and p.discount_price < p.price %} has-discount{% endif %}">New</span>
               {% endif %}
               {% if p.images and p.images|length > 0 %}
-              <img loading="lazy" src="{{ p.images[0] }}" alt="{{ p.name }}" class="mp-product-img">
+              <img loading="lazy" src="{{ p.images[0]|cdn }}" alt="{{ p.name }}" class="mp-product-img">
               {% else %}
               <div class="mp-product-placeholder">
                 <svg style="width:3rem;height:3rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>

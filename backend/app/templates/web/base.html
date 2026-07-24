@@ -1245,6 +1245,18 @@ async function toggleWishlist(productId, btn) {
   }
 }
 
+function addToCompare(productId, btn) {
+  fetch('/api/compare/add', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({product_id: productId})
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.error) { showToast(d.error, true); return; }
+    showToast('Added to comparison (' + (d.count || '?') + ')');
+    if (btn) { btn.classList.add('added'); }
+  }).catch(function() { showToast('Failed to add to comparison', true); });
+}
+
 function openMobileMenu() {
   const menu = document.getElementById('mobile-menu');
   const backdrop = document.getElementById('mobile-backdrop');

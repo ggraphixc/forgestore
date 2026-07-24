@@ -114,6 +114,8 @@
 <script>
 let currentStatus = 'PENDING_REVIEW';
 let currentPage = 1;
+const CDN_URL = '{{ settings.cdn_url|default("") }}';
+function cdnPrefix(url) { if (!url || !CDN_URL || url.startsWith('http')) return url; return CDN_URL.replace(/\/$/, '') + '/' + url.replace(/^\//, ''); }
 
 async function loadStats() {
   const r = await fetch('/api/admin/moderation/stats');
@@ -173,7 +175,7 @@ async function loadQueue(page = 1) {
   for (const p of d.products) {
     const conf = p.ai_confidence;
     const confClass = conf >= 75 ? 'high' : conf >= 50 ? 'medium' : 'low';
-    const thumb = p.images && p.images[0] ? `<img src="${p.images[0]}" class="mod-thumb" alt="">` : `<div class="mod-thumb"></div>`;
+    const thumb = p.images && p.images[0] ? `<img src="${cdnPrefix(p.images[0])}" class="mod-thumb" alt="">` : `<div class="mod-thumb"></div>`;
     html += `<tr>
       <td>${isPending ? `<input type="checkbox" class="row-check" value="${p.id}">` : ''}</td>
       <td><div style="display:flex;align-items:center;gap:0.75rem;">${thumb}<div><div style="font-weight:600;">${p.name} ${p.flag_count ? `<span class="ap-badge ap-badge-red" style="font-size:0.625rem;padding:0.125rem 0.375rem;vertical-align:middle;">${p.flag_count} flag${p.flag_count !== 1 ? 's' : ''}</span>` : ''}</div><div style="font-size:0.75rem;color:var(--ap-text-muted);">${p.brand || ''} · ${p.retailer}</div></div></div></td>
