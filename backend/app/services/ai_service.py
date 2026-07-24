@@ -1289,6 +1289,8 @@ SETTINGS_DEFINITIONS: List[Dict[str, Any]] = [
                  {"value": "12", "label": "12 hours"}, {"value": "24", "label": "24 hours"}]},
     {"key": "auto_invoice_enabled", "category": "financial", "type": "boolean", "label": "Auto Invoice Generation",
      "description": "Automatically generate invoices for completed orders.", "default": "true"},
+    {"key": "order_prefix", "category": "financial", "type": "text", "label": "Order Number Prefix",
+     "description": "Prefix for order numbers (e.g. ORD-, FS-, MY-).", "default": "ORD"},
     {"key": "invoice_prefix", "category": "financial", "type": "text", "label": "Invoice Number Prefix",
      "description": "Prefix for invoice numbers (e.g. INV-, FS-).", "default": "INV-"},
     {"key": "tax_enabled", "category": "financial", "type": "boolean", "label": "Tax Collection",
@@ -1372,7 +1374,7 @@ SETTINGS_DEFINITIONS: List[Dict[str, Any]] = [
 
     # ── SEO & Analytics ──
     {"key": "meta_title", "category": "technical", "type": "text", "label": "Default Meta Title",
-     "description": "Default HTML title tag for pages without a custom title.", "default": "ForgeStore — Where the Workshop Meets the World"},
+     "description": "Default HTML title tag for pages without a custom title.", "default": "{site_name} — Where the Workshop Meets the World"},
     {"key": "meta_description", "category": "technical", "type": "textarea", "label": "Default Meta Description",
      "description": "Default meta description for pages without a custom description.", "default": "Discover authentic, handcrafted products from independent African artisans. Shop unique textiles, ceramics, jewelry and more."},
     {"key": "og_image_url", "category": "technical", "type": "text", "label": "Open Graph Image URL",
@@ -1392,7 +1394,7 @@ SETTINGS_DEFINITIONS: List[Dict[str, Any]] = [
     {"key": "email_header_color", "category": "design", "type": "color", "label": "Email Header Color",
      "description": "Background color for email headers.", "default": "#f59e0b"},
     {"key": "email_footer_text", "category": "design", "type": "textarea", "label": "Email Footer Text",
-     "description": "Footer text displayed in all outgoing emails.", "default": "ForgeStore — Where the Workshop Meets the World. You received this email because you have an account."},
+     "description": "Footer text displayed in all outgoing emails.", "default": "{site_name} — Where the Workshop Meets the World. You received this email because you have an account."},
     {"key": "email_logo_url", "category": "design", "type": "text", "label": "Email Logo URL",
      "description": "Logo image URL displayed in email headers (leave empty for text-only).", "default": ""},
     {"key": "email_template_style", "category": "design", "type": "select", "label": "Email Template Style",
@@ -1453,13 +1455,13 @@ SETTINGS_DEFINITIONS: List[Dict[str, Any]] = [
      "description": "Sender ID or phone number for outgoing SMS.", "default": ""},
     {"key": "sms_order_confirmation", "category": "technical", "type": "textarea", "label": "Order Confirmation SMS",
      "description": "SMS template for order confirmation. Use {order_id} and {total} as placeholders.",
-     "default": "ForgeStore: Your order #{order_id} is confirmed! Total: {total}. Track at {site_url}"},
+     "default": "{site_name}: Your order #{order_id} is confirmed! Total: {total}. Track at {site_url}"},
     {"key": "sms_shipping_update", "category": "technical", "type": "textarea", "label": "Shipping Update SMS",
      "description": "SMS template for shipping status updates. Use {order_id}, {status}, {driver_name} as placeholders.",
-     "default": "ForgeStore: Order #{order_id} is now {status}. Driver: {driver_name}."},
+     "default": "{site_name}: Order #{order_id} is now {status}. Driver: {driver_name}."},
     {"key": "sms_delivery_confirmation", "category": "technical", "type": "textarea", "label": "Delivery Confirmation SMS",
      "description": "SMS template for delivery confirmation. Use {order_id} as placeholder.",
-     "default": "ForgeStore: Order #{order_id} has been delivered! Thank you for shopping with us."},
+     "default": "{site_name}: Order #{order_id} has been delivered! Thank you for shopping with us."},
 
     # ── i18n (Internationalization) ──
     {"key": "site_language", "category": "global", "type": "select", "label": "Site Language",

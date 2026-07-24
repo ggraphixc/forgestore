@@ -26,7 +26,6 @@ from app.auth import get_current_admin, require_role, hash_password, has_permiss
 from app.config import get_settings
 from app.models import AdminUser, NewsletterSubscriber, BroadcastCampaign, BroadcastEvent, BroadcastTemplate, AdCampaign, PromoAd, OrderEarning
 from app.services.email_service import send_newsletter_broadcast
-from app.config import get_settings
 import csv
 import io
 import secrets
@@ -37,6 +36,14 @@ BROADCAST_EXECUTOR = ThreadPoolExecutor(max_workers=4)
 
 router = APIRouter(prefix="/api/admin", tags=["admin-api"])
 settings = get_settings()
+
+
+def format_price(value):
+    from app.templates_shared import _format_price_global
+    try:
+        return _format_price_global(float(value))
+    except (TypeError, ValueError):
+        return _format_price_global(0.0)
 
 # --- Background scheduler for scheduled broadcasts ---
 _scheduler_lock = threading.Lock()
@@ -2163,7 +2170,7 @@ PROMO_PRICING = {
 }
 
 AD_PROVIDERS = {
-    "internal": {"label": "Internal (Built-in)", "description": "Use ForgeStore's built-in ad system"},
+    "internal": {"label": "Internal (Built-in)", "description": "Use the built-in ad system"},
     "google_ads": {"label": "Google Ads", "description": "Google Ads integration for external ad serving"},
     "meta_ads": {"label": "Meta Ads (Facebook/Instagram)", "description": "Facebook & Instagram ad integration"},
 }
@@ -2982,7 +2989,7 @@ def request_earnings_payout(
     min_payout_setting = db.query(SettingsModel).filter(SettingsModel.key == "minimum_payout_amount").first()
     min_payout = float(min_payout_setting.value) if min_payout_setting else 0.0
     if min_payout > 0 and total_net < min_payout:
-        raise HTTPException(status_code=400, detail=f"Minimum payout is ₦{min_payout:,.2f}. Current: ₦{total_net:,.2f}")
+        raise HTTPException(status_code=400, detail=f"Minimum payout is {format_price(min_payout)}. Current: {format_price(total_net)}")
 
     for e in earnings:
         e.status = "PAID"
@@ -2994,7 +3001,7 @@ def request_earnings_payout(
 
     log_admin_action(
         db, admin, "request_payout", "order_earning", "",
-        f"Requested payout for {len(earnings)} order earnings (total net: ₦{total_net:.2f})"
+        f"Requested payout for {len(earnings)} order earnings (total net: {format_price(total_net)})"
     )
 
     # Send payout notification email (non-blocking via BackgroundTasks)
@@ -3650,7 +3657,7 @@ def process_payout(
             db.add(tx)
         db.commit()
         log_admin_action(db, admin, "reject_payout", "payout", payout_id,
-                         f"Rejected payout ₦{payout.amount:.2f} for {payout.retailer_id}")
+                         f"Rejected payout {format_price(payout.amount)} for {payout.retailer_id}")
         return {"success": True, "status": "REJECTED"}
 
     # Approve and process
@@ -3703,7 +3710,7 @@ def process_payout(
                 balance_before=wallet.balance,
                 balance_after=wallet.balance,
                 reference=ref,
-                description=f"Payout processed — ₦{payout.amount:.2f} transferred",
+                description=f"Payout processed — {format_price(payout.amount)} transferred",
                 status="COMPLETED",
             )
             db.add(tx)
@@ -3714,7 +3721,7 @@ def process_payout(
 
     db.commit()
     log_admin_action(db, admin, "process_payout", "payout", payout_id,
-                     f"Processed payout ₦{payout.amount:.2f} — status: {payout.status}")
+                     f"Processed payout {format_price(payout.amount)} — status: {payout.status}")
 
     # Send payout success receipt email via BackgroundTasks (non-blocking)
     _sn_val = "ForgeStore"
@@ -3723,8 +3730,8 @@ def process_payout(
         _sn_val = _sn.value if _sn else "ForgeStore"
     except Exception:
         pass
-    if payout.status == "SUCCESSFUL" and payout.retailer_id:
-        try:
+    try:
+        if payout.status == "SUCCESSFUL" and payout.retailer_id:
             from app.core.email import dispatch_email_background
             from app.services.email_service import _render_email_template, _base_context
             r_admin = db.query(AdminUser).filter(
@@ -3744,8 +3751,8 @@ def process_payout(
                     show_divider=False,
                 ))
                 background_tasks.add_task(dispatch_email_background, r_admin.email, f"Payout Processed — {_sn_val}", html)
-        except Exception:
-            pass
+    except Exception:
+        pass
 
     return {"success": True, "status": payout.status, "reference": payout.payment_reference}
 
@@ -3827,14 +3834,14 @@ def approve_payout_automated(
             balance_before=wallet.balance,
             balance_after=wallet.balance,
             reference=payout.payment_reference or "",
-            description=f"Payout processed — ₦{payout.amount:.2f} transferred",
+            description=f"Payout processed — {format_price(payout.amount)} transferred",
             status="COMPLETED",
         )
         db.add(tx)
 
     db.commit()
     log_admin_action(db, admin, "approve_payout", "payout", payout_id,
-                     f"Approved payout ₦{payout.amount:.2f} — status: {payout.status}")
+                     f"Approved payout {format_price(payout.amount)} — status: {payout.status}")
 
     # Send email + SMS notification
     if payout.status == "SUCCESSFUL" and payout.retailer_id:

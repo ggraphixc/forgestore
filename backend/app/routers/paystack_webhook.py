@@ -31,6 +31,14 @@ def _get_setting_value(db: Session, key: str, default: str = "") -> str:
     return s.value if s else default
 
 
+def format_price(value):
+    from app.templates_shared import _format_price_global
+    try:
+        return _format_price_global(float(value))
+    except (TypeError, ValueError):
+        return _format_price_global(0.0)
+
+
 def _settle_vendor_commission(db: Session, order_id: str, retailer_id: str, item_total: float, reference: str):
     """Compute platform commission, credit vendor wallet, record settlement."""
     from app.utils import utcnow
@@ -55,7 +63,7 @@ def _settle_vendor_commission(db: Session, order_id: str, retailer_id: str, item
             balance_after=wallet.balance,
             order_id=order_id,
             reference=reference,
-            description=f"Earning from order — ₦{net:.2f} (commission: ₦{commission:.2f})",
+            description=f"Earning from order — {net:.2f} (commission: {commission:.2f})",
             status="COMPLETED",
         )
         db.add(tx)
@@ -225,7 +233,7 @@ async def paystack_webhook(request: Request, background_tasks: BackgroundTasks =
         # Admin notification
         notif = AdminNotification(
             type="payment_received", title="Payment Received",
-            message=f"Order {order.order_number} paid — ₦{order.total_amount:,.2f} via Paystack",
+            message=f"Order {order.order_number} paid — {format_price(order.total_amount)} via Paystack",
             link=f"/admin/orders/{order.id}",
         )
         db.add(notif)

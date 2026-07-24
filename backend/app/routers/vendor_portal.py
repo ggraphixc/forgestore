@@ -28,10 +28,12 @@ router = APIRouter(tags=["vendor-portal"])
 
 
 def format_price(value):
+    """Format price using the global i18n-aware formatter (respects DB currency settings)."""
+    from app.templates_shared import _format_price_global
     try:
-        return f"₦{float(value):,.2f}"
+        return _format_price_global(float(value))
     except (TypeError, ValueError):
-        return "₦0.00"
+        return _format_price_global(0.0)
 
 
 def _get_vendor_settings(db: Session) -> dict:
@@ -120,6 +122,13 @@ def _feature_disabled(db: Session, setting_key: str) -> bool:
     from app.models import Settings
     val = db.query(Settings.value).filter(Settings.key == setting_key).scalar()
     return val is not None and val.lower() == "false"
+
+
+@router.get("/vendor/logout")
+def vendor_logout():
+    resp = RedirectResponse(url="/vendor/login", status_code=302)
+    resp.delete_cookie("access_token")
+    return resp
 
 
 @router.get("/vendor/apply", response_class=HTMLResponse)
@@ -547,7 +556,8 @@ def vendor_analytics_pdf_export(
     for oi in order_items:
         product = db.query(Product).filter(Product.id == oi.product_id).first()
         order = db.query(Order).filter(Order.id == oi.order_id).first()
-        rows += f"<tr><td>{order.created_at.strftime('%Y-%m-%d') if order else ''}</td><td>{order.order_number if order else ''}</td><td>{product.name if product else ''}</td><td>{oi.quantity}</td><td>₦{oi.price:.2f}</td><td>₦{(oi.price or 0) * (oi.quantity or 1):.2f}</td><td>{order.status if order else ''}</td></tr>"
+        from app.templates_shared import _format_price_global
+        rows += f"<tr><td>{order.created_at.strftime('%Y-%m-%d') if order else ''}</td><td>{order.order_number if order else ''}</td><td>{product.name if product else ''}</td><td>{oi.quantity}</td><td>{_format_price_global(oi.price or 0)}</td><td>{_format_price_global((oi.price or 0) * (oi.quantity or 1))}</td><td>{order.status if order else ''}</td></tr>"
 
     html = f"""<!DOCTYPE html><html><head><title>Analytics Report</title>
     <style>body{{font-family:sans-serif;padding:2rem;}}table{{width:100%;border-collapse:collapse;font-size:12px;}}th,td{{border:1px solid #ddd;padding:6px 8px;text-align:left;}}th{{background:#f5f5f5;font-weight:700;}}h1{{font-size:18px;}}</style>
@@ -590,9 +600,9 @@ def vendor_analytics_ai_insights(
 
     prompt = f"""Analyze this vendor's performance and give 3-5 actionable insights:
 
-Revenue (last {days}d): ₦{total_revenue:,.0f}
+Revenue (last {days}d): {format_price(total_revenue)}
 Orders: {total_orders}
-Avg Order Value: ₦{avg_order_value:,.0f}
+Avg Order Value: {format_price(avg_order_value)}
 Products: {len(forecast)}
 Out of Stock: {out_of_stock}
 Low Stock: {low_stock}
@@ -621,7 +631,7 @@ Give concise, specific recommendations in JSON format:
         if low_stock > 3:
             insights.append({"title": "Low Stock Warning", "detail": f"{low_stock} products will run out within 2 weeks based on current sales velocity.", "impact": "high"})
         if avg_order_value < 5000:
-            insights.append({"title": "Increase AOV", "detail": "Your average order value is below ₦5,000. Consider bundling products or offering free shipping above a threshold.", "impact": "medium"})
+            insights.append({"title": "Increase AOV", "detail": f"Your average order value is below {format_price(5000)}. Consider bundling products or offering free shipping above a threshold.", "impact": "medium"})
         if total_orders < 10:
             insights.append({"title": "Boost Marketing", "detail": "Low order volume. Run ad campaigns or offer discounts to drive more traffic.", "impact": "medium"})
         if not insights:
@@ -659,7 +669,7 @@ def vendor_payout_request(
     if not wallet:
         raise HTTPException(status_code=400, detail="Vendor wallet not found")
     if wallet.balance < amount:
-        raise HTTPException(status_code=400, detail=f"Insufficient balance. Available: ₦{wallet.balance:.2f}")
+        raise HTTPException(status_code=400, detail=f"Insufficient balance. Available: {format_price(wallet.balance)}")
 
     # Lock amount: deduct from balance, move to locked_escrow_balance
     balance_before = wallet.balance
@@ -674,7 +684,7 @@ def vendor_payout_request(
         balance_before=balance_before,
         balance_after=wallet.balance,
         reference=f"PAYOUT-{uuid.uuid4().hex[:12].upper()}",
-        description=f"Payout request for ₦{amount:.2f}",
+        description=f"Payout request for {format_price(amount)}",
         status="PENDING",
     )
     db.add(tx)
@@ -701,7 +711,7 @@ def vendor_payout_request(
     db.refresh(payout)
 
     log_admin_action(db, admin, "payout_request", "payout", payout.id,
-                     f"Vendor requested payout of ₦{amount:.2f}")
+                     f"Vendor requested payout of {format_price(amount)}")
 
     return {"success": True, "payout_id": payout.id, "locked": amount, "remaining_balance": wallet.balance}
 
@@ -1003,7 +1013,7 @@ def vendor_request_payout(
     min_payout_setting = db.query(SettingsModel).filter(SettingsModel.key == "minimum_payout_amount").first()
     min_payout = float(min_payout_setting.value) if min_payout_setting else 0.0
     if min_payout > 0 and amount < min_payout:
-        raise HTTPException(status_code=400, detail=f"Minimum payout is ₦{min_payout:,.2f}")
+        raise HTTPException(status_code=400, detail=f"Minimum payout is {format_price(min_payout)}")
 
     wallet = db.query(VendorWallet).filter(VendorWallet.retailer_id == admin.vendor_id).first()
     if not wallet:
@@ -1011,7 +1021,7 @@ def vendor_request_payout(
 
     accessible = wallet.balance - wallet.locked_escrow_balance
     if amount > accessible:
-        raise HTTPException(status_code=400, detail=f"Insufficient accessible balance. Available: ₦{accessible:.2f}")
+        raise HTTPException(status_code=400, detail=f"Insufficient accessible balance. Available: {format_price(accessible)}")
 
     # Get bank details
     retailer = db.query(Retailer).filter(Retailer.id == admin.vendor_id).first()
@@ -1035,7 +1045,7 @@ def vendor_request_payout(
         balance_before=balance_before,
         balance_after=wallet.balance,
         reference=f"PAYOUT-{uuid.uuid4().hex[:12].upper()}",
-        description=f"Payout request for ₦{amount:.2f}",
+        description=f"Payout request for {format_price(amount)}",
         status="PENDING",
     )
     db.add(tx)
@@ -1055,7 +1065,7 @@ def vendor_request_payout(
     db.refresh(payout)
 
     log_admin_action(db, admin, "payout_request", "payout", payout.id,
-                     f"Vendor requested payout of ₦{amount:.2f}")
+                     f"Vendor requested payout of {format_price(amount)}")
 
     return {"success": True, "payout_id": payout.id, "locked": amount, "remaining_balance": wallet.balance}
 
@@ -1125,7 +1135,7 @@ def vendor_launch_ad_campaign(
 
     # Check wallet balance
     if wallet.balance < budget:
-        raise HTTPException(status_code=400, detail=f"Insufficient wallet balance. Required: ₦{budget:,.0f}, Available: ₦{wallet.balance:,.0f}. Please top up your wallet first.")
+        raise HTTPException(status_code=400, detail=f"Insufficient wallet balance. Required: {format_price(budget)}, Available: {format_price(wallet.balance)}. Please top up your wallet first.")
 
     # Deduct budget from wallet
     balance_before = wallet.balance
@@ -1179,7 +1189,7 @@ def vendor_launch_ad_campaign(
     db.refresh(campaign)
 
     log_admin_action(db, admin, "launch_ad_campaign", "ad_campaign", campaign.id,
-                     f"Vendor launched {ad_type} ad campaign (budget: ₦{budget:.2f})")
+                     f"Vendor launched {ad_type} ad campaign (budget: {format_price(budget)})")
 
     return {
         "success": True,
@@ -1268,7 +1278,7 @@ def vendor_wallet_callback(request: Request, db: Session = Depends(get_db)):
                     balance_before=balance_before,
                     balance_after=wallet.balance,
                     reference=reference,
-                    description=f"Wallet top-up of ₦{amount:,.2f}",
+                    description=f"Wallet top-up of {format_price(amount)}",
                 )
                 db.add(txn)
                 db.commit()
