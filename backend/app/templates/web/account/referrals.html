@@ -2,10 +2,28 @@
 {% block title %}Referrals — {{ settings.site_name|default("ForgeStore") }}{% endblock %}
 {% block content %}
 <style>
-  .acct-page{padding:2rem 1rem;max-width:72rem;margin:0 auto}
-  .acct-header{display:flex;flex-direction:column;gap:.25rem}
-  .acct-header h1{font-size:1.875rem;font-weight:800;color:var(--color-stone-900)}
-  .acct-header p{font-size:.875rem;color:var(--color-stone-500)}
+  :root{--ac-bg:#fafaf9;--ac-card:#ffffff;--ac-border:#e7e5e3;--ac-text:#1c1917;--ac-muted:#78716c;--ac-amber:#f59e0b;--ac-amber-light:#fef3c7;--ac-amber-dark:#b45309;--ac-sidebar-w:260px}
+  .dark{--ac-bg:#0c0a09;--ac-card:#1c1917;--ac-border:#292524;--ac-text:#fafaf9;--ac-muted:#a8a29e;--ac-amber-light:#422006}
+  .ac{display:flex;min-height:100vh;background:var(--ac-bg);gap:0}
+  .ac-sidebar{width:var(--ac-sidebar-w);background:var(--ac-card);border-right:1px solid var(--ac-border);padding:1.5rem 1rem;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0}
+  .ac-sidebar-brand{display:flex;align-items:center;gap:.75rem;padding:0 .75rem;margin-bottom:2rem}
+  .ac-sidebar-brand .avatar{width:2.75rem;height:2.75rem;border-radius:1rem;background:linear-gradient(135deg,var(--ac-amber),#f97316);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:1rem;flex-shrink:0}
+  .ac-sidebar-brand .user-info{min-width:0}
+  .ac-sidebar-brand .user-name{font-size:.875rem;font-weight:700;color:var(--ac-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ac-sidebar-brand .user-email{font-size:.75rem;color:var(--ac-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ac-nav{display:flex;flex-direction:column;gap:.25rem;flex:1}
+  .ac-nav-section{font-size:.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ac-muted);padding:.75rem .75rem .375rem;opacity:.6}
+  .ac-nav-link{display:flex;align-items:center;gap:.75rem;padding:.625rem .75rem;border-radius:.75rem;font-size:.875rem;font-weight:500;color:var(--ac-muted);text-decoration:none;min-height:40px;transition:all .15s}
+  .ac-nav-link:hover{background:var(--ac-border);color:var(--ac-text)}
+  .ac-nav-link.active{background:var(--ac-amber-light);color:var(--ac-amber-dark);font-weight:600}
+  .dark .ac-nav-link.active{color:var(--ac-amber)}
+  .ac-nav-link svg{width:1.125rem;height:1.125rem;flex-shrink:0;opacity:.7}
+  .ac-nav-link.active svg{opacity:1}
+  .ac-main{flex:1;padding:2rem;min-width:0}
+  .ac-header{margin-bottom:2rem}
+  .ac-header h1{font-size:1.75rem;font-weight:800;color:var(--ac-text);line-height:1.2}
+  .ac-header p{font-size:.875rem;color:var(--ac-muted);margin-top:.25rem}
+  @media(max-width:768px){.ac-sidebar{display:none}.ac-main{padding:1.25rem}.ac-header h1{font-size:1.375rem}}
   .acct-card{background:var(--color-white);border:1px solid var(--color-stone-200);border-radius:1rem;padding:1.5rem}
   .acct-stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
   .acct-stat-card{display:flex;flex-direction:column;align-items:center;gap:.25rem;padding:1.25rem;background:var(--color-white);border:1px solid var(--color-stone-200);border-radius:1rem;text-align:center}
@@ -16,8 +34,6 @@
   .acct-btn--primary:hover{background:var(--color-amber-700)}
   .acct-btn--ghost{background:transparent;color:var(--color-stone-600);border:1px solid var(--color-stone-200)}
   .acct-btn--ghost:hover{background:var(--color-stone-50)}
-  .back-link{display:inline-flex;align-items:center;gap:.5rem;font-size:.875rem;color:var(--color-stone-500);text-decoration:none;min-height:44px;margin-bottom:1rem}
-  .back-link:hover{color:var(--color-stone-900)}
   .referral-code-box{display:inline-flex;align-items:center;gap:.75rem}
   .referral-code-display{padding:.75rem 1.25rem;background:var(--color-stone-100);border:1px solid var(--color-stone-200);border-radius:.75rem;font-size:1.25rem;font-family:monospace;font-weight:800;letter-spacing:.1em;color:var(--color-stone-900)}
   .earnings-row{display:flex;align-items:center;justify-content:space-between;padding:.75rem 0;border-bottom:1px solid var(--color-stone-100);min-height:44px}
@@ -26,119 +42,141 @@
   .spinner{width:2rem;height:2rem;border:2px solid var(--color-amber-500);border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;margin:0 auto .75rem}
   @keyframes spin{to{transform:rotate(360deg)}}
   @media(min-width:640px){.acct-stats-grid{grid-template-columns:repeat(4,1fr)}}
-  @media(min-width:768px){.acct-page{padding:2.5rem 1.5rem}.acct-header h1{font-size:2.25rem}}
   @media(min-width:1024px){.referral-grid{display:grid;grid-template-columns:2fr 1fr;gap:1.5rem}}
 </style>
 
-<div class="acct-page">
-  <div class="acct-header" style="margin-bottom:2rem">
-    <a href="/shop/account" class="back-link">
-      <svg style="width:1.25rem;height:1.25rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 12H5m7-7l-7 7 7 7"/></svg>
-      Back to Account
-    </a>
-    <h1>Refer & <span style="color:var(--color-amber-600)">Earn</span></h1>
-    <p>Invite friends and earn rewards</p>
-  </div>
-
-  <div class="acct-stats-grid" style="margin-bottom:1.5rem">
-    <div class="acct-stat-card">
-      <span class="label">Referrals</span>
-      <span class="value" id="stat-referrals">—</span>
-    </div>
-    <div class="acct-stat-card">
-      <span class="label">Total Earned</span>
-      <span class="value" style="color:var(--color-emerald-600)" id="stat-earned">—</span>
-    </div>
-    <div class="acct-stat-card">
-      <span class="label">Wallet Balance</span>
-      <span class="value" style="color:var(--color-amber-600)" id="stat-wallet">—</span>
-    </div>
-    <div class="acct-stat-card">
-      <span class="label">Total Paid</span>
-      <span class="value" id="stat-paid">—</span>
-    </div>
-  </div>
-
-  <div class="acct-card" style="margin-bottom:1.5rem">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
-      <div style="flex:1">
-        <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--color-stone-400);margin-bottom:.5rem">Your Referral Code</p>
-        <div class="referral-code-box">
-          <div class="referral-code-display" id="referral-code">—</div>
-          <button onclick="copyReferralCode()" class="acct-btn acct-btn--ghost" style="padding:.75rem" title="Copy code">
-            <svg style="width:1.25rem;height:1.25rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-          </button>
-        </div>
+<div class="ac">
+  <aside class="ac-sidebar">
+    <div class="ac-sidebar-brand">
+      <div class="avatar">{{ user.name[0]|default('U')|upper }}</div>
+      <div class="user-info">
+        <div class="user-name">{{ user.name|default('Customer') }}</div>
+        <div class="user-email">{{ user.email }}</div>
       </div>
-      <button onclick="shareReferral()" class="acct-btn acct-btn--primary">
-        <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
-        Share Link
-      </button>
     </div>
-  </div>
+    <nav class="ac-nav">
+      <div class="ac-nav-section">Overview</div>
+      <a href="/shop/account" class="ac-nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Dashboard</a>
+      <div class="ac-nav-section">Shopping</div>
+      <a href="/shop/account/orders" class="ac-nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>My Orders</a>
+      <a href="/shop/account/tracking" class="ac-nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Track Order</a>
+      <a href="/shop/wishlist" class="ac-nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>Wishlist</a>
+      <a href="/shop/compare" class="ac-nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>Compare</a>
+      <a href="/shop/account/reviews" class="ac-nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>Reviews</a>
+      <div class="ac-nav-section">Finance</div>
+      <a href="/shop/account/wallet" class="ac-nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>Wallet</a>
+      <a href="/shop/account/referrals" class="ac-nav-link active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Referrals</a>
+      <div class="ac-nav-section">Account</div>
+      <a href="/shop/account/settings" class="ac-nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Settings</a>
+    </nav>
+  </aside>
 
-  <div class="referral-grid">
-    <div class="acct-card">
-      <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:1.25rem">Earnings History</p>
-      <div id="earnings-container">
-        <div id="earnings-loading" style="text-align:center;padding:2.5rem 0">
-          <div class="spinner"></div>
-          <p style="font-size:.75rem;color:var(--color-stone-400)">Loading earnings...</p>
-        </div>
-        <div id="earnings-list" style="display:none;flex-direction:column;gap:.75rem"></div>
-        <div id="earnings-empty" style="display:none;text-align:center;padding:2.5rem 0">
-          <div style="width:3.5rem;height:3.5rem;background:var(--color-stone-100);border-radius:.75rem;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
-            <svg style="width:1.75rem;height:1.75rem;color:var(--color-stone-400)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
-          </div>
-          <p style="font-size:.875rem;color:var(--color-stone-500)">No earnings yet</p>
-          <p style="font-size:.75rem;color:var(--color-stone-400);margin-top:.25rem">Share your referral link to start earning!</p>
-        </div>
+  <main class="ac-main">
+    <div class="ac-header">
+      <h1>Refer & <span style="color:var(--ac-amber)">Earn</span></h1>
+      <p>Invite friends and earn rewards</p>
+    </div>
+
+    <div class="acct-stats-grid" style="margin-bottom:1.5rem">
+      <div class="acct-stat-card">
+        <span class="label">Referrals</span>
+        <span class="value" id="stat-referrals">—</span>
+      </div>
+      <div class="acct-stat-card">
+        <span class="label">Total Earned</span>
+        <span class="value" style="color:var(--color-emerald-600)" id="stat-earned">—</span>
+      </div>
+      <div class="acct-stat-card">
+        <span class="label">Wallet Balance</span>
+        <span class="value" style="color:var(--color-amber-600)" id="stat-wallet">—</span>
+      </div>
+      <div class="acct-stat-card">
+        <span class="label">Total Paid</span>
+        <span class="value" id="stat-paid">—</span>
       </div>
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:1.5rem">
-      <div class="acct-card">
-        <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:1rem">How It Works</p>
-        <div style="display:flex;flex-direction:column;gap:1.25rem">
-          <div style="display:flex;gap:.75rem">
-            <div class="step-num">
-              <span style="font-size:.75rem;font-weight:700;color:var(--color-amber-700)">1</span>
-            </div>
-            <div>
-              <p style="font-size:.875rem;font-weight:600;color:var(--color-stone-800)">Share Your Code</p>
-              <p style="font-size:.75rem;color:var(--color-stone-500)">Send your unique referral code to friends</p>
-            </div>
-          </div>
-          <div style="display:flex;gap:.75rem">
-            <div class="step-num">
-              <span style="font-size:.75rem;font-weight:700;color:var(--color-amber-700)">2</span>
-            </div>
-            <div>
-              <p style="font-size:.875rem;font-weight:600;color:var(--color-stone-800)">They Sign Up</p>
-              <p style="font-size:.75rem;color:var(--color-stone-500)">New users register using your referral code</p>
-            </div>
-          </div>
-          <div style="display:flex;gap:.75rem">
-            <div class="step-num">
-              <span style="font-size:.75rem;font-weight:700;color:var(--color-amber-700)">3</span>
-            </div>
-            <div>
-              <p style="font-size:.875rem;font-weight:600;color:var(--color-stone-800)">You Earn Rewards</p>
-              <p style="font-size:.75rem;color:var(--color-stone-500)">Get credited when they make their first purchase</p>
-            </div>
+    <div class="acct-card" style="margin-bottom:1.5rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+        <div style="flex:1">
+          <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--color-stone-400);margin-bottom:.5rem">Your Referral Code</p>
+          <div class="referral-code-box">
+            <div class="referral-code-display" id="referral-code">—</div>
+            <button onclick="copyReferralCode()" class="acct-btn acct-btn--ghost" style="padding:.75rem" title="Copy code">
+              <svg style="width:1.25rem;height:1.25rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            </button>
           </div>
         </div>
-      </div>
-      <div class="acct-card">
-        <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:.75rem">Withdraw Earnings</p>
-        <p style="font-size:.75rem;color:var(--color-stone-500);margin-bottom:1rem">Your earnings are automatically added to your wallet balance. You can withdraw anytime.</p>
-        <button onclick="withdrawEarnings()" class="acct-btn acct-btn--primary" style="width:100%">
-          <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-          Withdraw to Bank
+        <button onclick="shareReferral()" class="acct-btn acct-btn--primary">
+          <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+          Share Link
         </button>
       </div>
     </div>
-  </div>
+
+    <div class="referral-grid">
+      <div class="acct-card">
+        <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:1.25rem">Earnings History</p>
+        <div id="earnings-container">
+          <div id="earnings-loading" style="text-align:center;padding:2.5rem 0">
+            <div class="spinner"></div>
+            <p style="font-size:.75rem;color:var(--color-stone-400)">Loading earnings...</p>
+          </div>
+          <div id="earnings-list" style="display:none;flex-direction:column;gap:.75rem"></div>
+          <div id="earnings-empty" style="display:none;text-align:center;padding:2.5rem 0">
+            <div style="width:3.5rem;height:3.5rem;background:var(--color-stone-100);border-radius:.75rem;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
+              <svg style="width:1.75rem;height:1.75rem;color:var(--color-stone-400)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+            </div>
+            <p style="font-size:.875rem;color:var(--color-stone-500)">No earnings yet</p>
+            <p style="font-size:.75rem;color:var(--color-stone-400);margin-top:.25rem">Share your referral link to start earning!</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:1.5rem">
+        <div class="acct-card">
+          <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:1rem">How It Works</p>
+          <div style="display:flex;flex-direction:column;gap:1.25rem">
+            <div style="display:flex;gap:.75rem">
+              <div class="step-num">
+                <span style="font-size:.75rem;font-weight:700;color:var(--color-amber-700)">1</span>
+              </div>
+              <div>
+                <p style="font-size:.875rem;font-weight:600;color:var(--color-stone-800)">Share Your Code</p>
+                <p style="font-size:.75rem;color:var(--color-stone-500)">Send your unique referral code to friends</p>
+              </div>
+            </div>
+            <div style="display:flex;gap:.75rem">
+              <div class="step-num">
+                <span style="font-size:.75rem;font-weight:700;color:var(--color-amber-700)">2</span>
+              </div>
+              <div>
+                <p style="font-size:.875rem;font-weight:600;color:var(--color-stone-800)">They Sign Up</p>
+                <p style="font-size:.75rem;color:var(--color-stone-500)">New users register using your referral code</p>
+              </div>
+            </div>
+            <div style="display:flex;gap:.75rem">
+              <div class="step-num">
+                <span style="font-size:.75rem;font-weight:700;color:var(--color-amber-700)">3</span>
+              </div>
+              <div>
+                <p style="font-size:.875rem;font-weight:600;color:var(--color-stone-800)">You Earn Rewards</p>
+                <p style="font-size:.75rem;color:var(--color-stone-500)">Get credited when they make their first purchase</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="acct-card">
+          <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:.75rem">Withdraw Earnings</p>
+          <p style="font-size:.75rem;color:var(--color-stone-500);margin-bottom:1rem">Your earnings are automatically added to your wallet balance. You can withdraw anytime.</p>
+          <button onclick="withdrawEarnings()" class="acct-btn acct-btn--primary" style="width:100%">
+            <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            Withdraw to Bank
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
 </div>
 
 <script>
@@ -154,10 +192,10 @@ async function loadReferralData() {
     referralData = stats;
 
     document.getElementById('stat-referrals').textContent = stats.total_referrals || 0;
-    document.getElementById('stat-earned').textContent = '₦' + (stats.total_earned || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
-    document.getElementById('stat-wallet').textContent = '₦' + (stats.wallet_balance || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
-    document.getElementById('stat-paid').textContent = '₦' + (stats.total_paid || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
-    document.getElementById('referral-code').textContent = stats.referral_code || '—';
+    document.getElementById('stat-earned').textContent = '\u20A6' + (stats.total_earned || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
+    document.getElementById('stat-wallet').textContent = '\u20A6' + (stats.wallet_balance || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
+    document.getElementById('stat-paid').textContent = '\u20A6' + (stats.total_paid || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
+    document.getElementById('referral-code').textContent = stats.referral_code || '\u2014';
 
     const earnRes = await fetch('/api/referrals/earnings');
     const earnData = await earnRes.json();
@@ -173,7 +211,7 @@ async function loadReferralData() {
     }
     list.style.display = 'flex';
     list.innerHTML = earnings.map(e => {
-      const date = e.created_at ? new Date(e.created_at).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'}) : '—';
+      const date = e.created_at ? new Date(e.created_at).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'}) : '\u2014';
       return `<div class="earnings-row">
         <div style="display:flex;align-items:center;gap:.75rem">
           <div style="width:2.25rem;height:2.25rem;background:var(--color-emerald-50);border-radius:.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -184,7 +222,7 @@ async function loadReferralData() {
             <p style="font-size:.75rem;color:var(--color-stone-400)">${date}</p>
           </div>
         </div>
-        <span style="font-size:.875rem;font-family:monospace;font-weight:700;color:var(--color-emerald-600)">+₦${Math.abs(e.amount || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+        <span style="font-size:.875rem;font-family:monospace;font-weight:700;color:var(--color-emerald-600)">+\u20A6${Math.abs(e.amount || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
       </div>`;
     }).join('');
   } catch {
@@ -196,7 +234,7 @@ async function loadReferralData() {
 
 function copyReferralCode() {
   const code = document.getElementById('referral-code').textContent;
-  if (code && code !== '—') {
+  if (code && code !== '\u2014') {
     navigator.clipboard.writeText(code).then(() => {
       showToast('Referral code copied!', 'success');
     }).catch(() => {
@@ -207,7 +245,7 @@ function copyReferralCode() {
 
 function shareReferral() {
   const code = document.getElementById('referral-code').textContent;
-  if (!code || code === '—') return;
+  if (!code || code === '\u2014') return;
   const url = window.location.origin + '/shop/signup?ref=' + code;
   if (navigator.share) {
     navigator.share({ title: 'Join {{ settings.site_name|default("ForgeStore") }}', text: `Use my referral code ${code} to join {{ settings.site_name|default("ForgeStore") }}!`, url }).catch(() => {});

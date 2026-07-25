@@ -2,117 +2,247 @@
 {% block title %}My Account — {{ settings.site_name|default("ForgeStore") }}{% endblock %}
 {% block content %}
 <style>
-  .acct-page{padding:2rem 1rem;max-width:72rem;margin:0 auto}
-  .acct-sidebar{display:flex;flex-direction:column;gap:.25rem;background:var(--color-white);border:1px solid var(--color-stone-200);border-radius:1rem;padding:.5rem}
-  .acct-sidebar-link{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border-radius:.75rem;font-size:.875rem;font-weight:500;color:var(--color-stone-600);text-decoration:none;min-height:44px;transition:all .15s}
-  .acct-sidebar-link:hover{background:var(--color-stone-50);color:var(--color-stone-900)}
-  .acct-sidebar-link.active{background:var(--color-amber-50);color:var(--color-amber-700);font-weight:600}
-  .acct-main{display:grid;gap:2rem}
-  .acct-header{display:flex;flex-direction:column;gap:.25rem}
-  .acct-header h1{font-size:1.875rem;font-weight:800;color:var(--color-stone-900)}
-  .acct-header p{font-size:.875rem;color:var(--color-stone-500)}
-  .acct-card{background:var(--color-white);border:1px solid var(--color-stone-200);border-radius:1rem;padding:1.5rem}
-  .acct-stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
-  .acct-stat-card{display:flex;flex-direction:column;gap:.25rem;padding:1.25rem;background:var(--color-white);border:1px solid var(--color-stone-200);border-radius:1rem;text-decoration:none;transition:all .15s;min-height:44px}
-  .acct-stat-card:hover{border-color:var(--color-amber-200);box-shadow:0 1px 3px rgba(0,0,0,.06)}
-  .acct-stat-card .icon{width:2.5rem;height:2.5rem;border-radius:.75rem;display:flex;align-items:center;justify-content:center;margin-bottom:.5rem}
-  .acct-stat-card .icon svg{width:1.25rem;height:1.25rem}
-  .acct-stat-card .label{font-size:.875rem;font-weight:600;color:var(--color-stone-900)}
-  .acct-stat-card .sub{font-size:.75rem;color:var(--color-stone-500)}
-  .acct-table{width:100%;border-collapse:collapse}
-  .acct-table th{text-align:left;font-size:.75rem;font-weight:600;color:var(--color-stone-500);text-transform:uppercase;letter-spacing:.05em;padding:.75rem 1rem;border-bottom:1px solid var(--color-stone-200)}
-  .acct-table td{padding:.75rem 1rem;font-size:.875rem;color:var(--color-stone-700);border-bottom:1px solid var(--color-stone-100)}
-  .acct-table tr:last-child td{border-bottom:none}
-  .acct-table tr:hover td{background:var(--color-stone-50)}
-  .acct-badge{display:inline-flex;align-items:center;padding:.25rem .75rem;border-radius:9999px;font-size:.75rem;font-weight:600}
-  .acct-badge--amber{background:var(--color-amber-100);color:var(--color-amber-700)}
-  .acct-badge--emerald{background:var(--color-emerald-100);color:var(--color-emerald-700)}
-  .acct-badge--stone{background:var(--color-stone-100);color:var(--color-stone-600)}
-  .acct-btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.5rem;border-radius:.75rem;font-size:.875rem;font-weight:600;min-height:44px;border:none;cursor:pointer;transition:all .15s;text-decoration:none}
-  .acct-btn--primary{background:var(--color-amber-600);color:white}
-  .acct-btn--primary:hover{background:var(--color-amber-700)}
-  .acct-btn--ghost{background:transparent;color:var(--color-stone-600);border:1px solid var(--color-stone-200)}
-  .acct-btn--ghost:hover{background:var(--color-stone-50)}
-  @media(min-width:640px){.acct-stats-grid{grid-template-columns:repeat(4,1fr)}}
-  @media(min-width:768px){.acct-page{padding:2.5rem 1.5rem}.acct-header h1{font-size:2.25rem}}
+  :root{--ac-bg:#fafaf9;--ac-card:#ffffff;--ac-border:#e7e5e3;--ac-text:#1c1917;--ac-muted:#78716c;--ac-amber:#f59e0b;--ac-amber-light:#fef3c7;--ac-amber-dark:#b45309;--ac-sidebar-w:260px}
+  .dark{--ac-bg:#0c0a09;--ac-card:#1c1917;--ac-border:#292524;--ac-text:#fafaf9;--ac-muted:#a8a29e;--ac-amber-light:#422006}
+  .ac{display:flex;min-height:100vh;background:var(--ac-bg);gap:0}
+  .ac-sidebar{width:var(--ac-sidebar-w);background:var(--ac-card);border-right:1px solid var(--ac-border);padding:1.5rem 1rem;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0}
+  .ac-sidebar-brand{display:flex;align-items:center;gap:.75rem;padding:0 .75rem;margin-bottom:2rem}
+  .ac-sidebar-brand .avatar{width:2.75rem;height:2.75rem;border-radius:1rem;background:linear-gradient(135deg,var(--ac-amber),#f97316);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:1rem;flex-shrink:0}
+  .ac-sidebar-brand .user-info{min-width:0}
+  .ac-sidebar-brand .user-name{font-size:.875rem;font-weight:700;color:var(--ac-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ac-sidebar-brand .user-email{font-size:.75rem;color:var(--ac-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ac-nav{display:flex;flex-direction:column;gap:.25rem;flex:1}
+  .ac-nav-section{font-size:.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ac-muted);padding:.75rem .75rem .375rem;opacity:.6}
+  .ac-nav-link{display:flex;align-items:center;gap:.75rem;padding:.625rem .75rem;border-radius:.75rem;font-size:.875rem;font-weight:500;color:var(--ac-muted);text-decoration:none;min-height:40px;transition:all .15s}
+  .ac-nav-link:hover{background:var(--ac-border);color:var(--ac-text)}
+  .ac-nav-link.active{background:var(--ac-amber-light);color:var(--ac-amber-dark);font-weight:600}
+  .dark .ac-nav-link.active{color:var(--ac-amber)}
+  .ac-nav-link svg{width:1.125rem;height:1.125rem;flex-shrink:0;opacity:.7}
+  .ac-nav-link.active svg{opacity:1}
+  .ac-nav-link .badge{margin-left:auto;background:var(--ac-amber);color:#fff;font-size:.6875rem;font-weight:700;padding:.125rem .5rem;border-radius:9999px;min-width:1.25rem;text-align:center}
+  .ac-main{flex:1;padding:2rem;min-width:0}
+  .ac-header{margin-bottom:2rem}
+  .ac-header h1{font-size:1.75rem;font-weight:800;color:var(--ac-text);line-height:1.2}
+  .ac-header p{font-size:.875rem;color:var(--ac-muted);margin-top:.25rem}
+  .ac-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem}
+  .ac-stat{background:var(--ac-card);border:1px solid var(--ac-border);border-radius:1rem;padding:1.25rem;display:flex;align-items:center;gap:1rem;transition:all .2s;text-decoration:none;color:inherit}
+  .ac-stat:hover{border-color:var(--ac-amber);box-shadow:0 4px 12px rgba(0,0,0,.06);transform:translateY(-2px)}
+  .ac-stat .stat-icon{width:3rem;height:3rem;border-radius:.875rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .ac-stat .stat-icon svg{width:1.25rem;height:1.25rem}
+  .ac-stat .stat-info .stat-value{font-size:1.5rem;font-weight:800;font-family:monospace;color:var(--ac-text);line-height:1}
+  .ac-stat .stat-info .stat-label{font-size:.75rem;font-weight:600;color:var(--ac-muted);margin-top:.25rem}
+  .ac-section{background:var(--ac-card);border:1px solid var(--ac-border);border-radius:1rem;overflow:hidden;margin-bottom:1.5rem}
+  .ac-section-header{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid var(--ac-border)}
+  .ac-section-header h2{font-size:1rem;font-weight:700;color:var(--ac-text)}
+  .ac-section-header a{font-size:.8125rem;font-weight:600;color:var(--ac-amber);text-decoration:none;display:flex;align-items:center;gap:.25rem}
+  .ac-section-header a:hover{text-decoration:underline}
+  .ac-order-row{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:1px solid var(--ac-border);text-decoration:none;color:inherit;min-height:56px;transition:background .15s}
+  .ac-order-row:last-child{border-bottom:none}
+  .ac-order-row:hover{background:rgba(245,158,11,.03)}
+  .ac-order-id{font-size:.875rem;font-weight:600;color:var(--ac-text)}
+  .ac-order-date{font-size:.75rem;color:var(--ac-muted)}
+  .ac-order-amount{font-size:.875rem;font-weight:700;font-family:monospace;color:var(--ac-text)}
+  .ac-badge{display:inline-flex;align-items:center;padding:.25rem .625rem;border-radius:9999px;font-size:.6875rem;font-weight:600;letter-spacing:.02em}
+  .ac-badge--emerald{background:#d1fae5;color:#065f46}
+  .dark .ac-badge--emerald{background:#064e3b;color:#6ee7b7}
+  .ac-badge--blue{background:#dbeafe;color:#1e40af}
+  .dark .ac-badge--blue{background:#1e3a5a;color:#93c5fd}
+  .ac-badge--amber{background:#fef3c7;color:#92400e}
+  .dark .ac-badge--amber{background:#422006;color:#fcd34d}
+  .ac-badge--red{background:#fee2e2;color:#991b1b}
+  .dark .ac-badge--red{background:#450a0a;color:#fca5a5}
+  .ac-badge--stone{background:#f5f5f4;color:#57534e}
+  .dark .ac-badge--stone{background:#292524;color:#a8a29e}
+  .ac-empty{text-align:center;padding:3rem 1.5rem}
+  .ac-empty svg{width:3.5rem;height:3.5rem;color:var(--ac-muted);opacity:.3;margin:0 auto 1rem}
+  .ac-empty h3{font-size:1rem;font-weight:700;color:var(--ac-text);margin-bottom:.5rem}
+  .ac-empty p{font-size:.8125rem;color:var(--ac-muted);margin-bottom:1.5rem;max-width:20rem;margin-left:auto;margin-right:auto}
+  .ac-btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.625rem 1.25rem;border-radius:.75rem;font-size:.8125rem;font-weight:600;min-height:40px;border:none;cursor:pointer;transition:all .15s;text-decoration:none}
+  .ac-btn--primary{background:var(--ac-amber);color:#fff}
+  .ac-btn--primary:hover{filter:brightness(1.1)}
+  .ac-quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;padding:1.25rem 1.5rem}
+  .ac-quick-link{display:flex;flex-direction:column;align-items:center;gap:.5rem;padding:1rem;border-radius:.75rem;text-decoration:none;color:var(--ac-muted);transition:all .15s;min-height:44px}
+  .ac-quick-link:hover{background:var(--ac-border);color:var(--ac-text)}
+  .ac-quick-link svg{width:1.5rem;height:1.5rem}
+  .ac-quick-link span{font-size:.75rem;font-weight:600;text-align:center}
+  @media(max-width:768px){
+    .ac-sidebar{display:none}
+    .ac-main{padding:1.25rem}
+    .ac-header h1{font-size:1.375rem}
+    .ac-stats{grid-template-columns:1fr 1fr}
+  }
 </style>
 
-<div class="acct-page">
-  <div class="acct-header" style="margin-bottom:2rem">
-    <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.15em;color:var(--color-amber-600);margin-bottom:.5rem">Account</p>
-    <h1>Welcome back, <span style="color:var(--color-amber-600)">{{ user.name|default('there') }}</span></h1>
-  </div>
+<div class="ac">
+  <!-- Sidebar -->
+  <aside class="ac-sidebar">
+    <div class="ac-sidebar-brand">
+      <div class="avatar">{{ user.name[0]|default('U')|upper }}</div>
+      <div class="user-info">
+        <div class="user-name">{{ user.name|default('Customer') }}</div>
+        <div class="user-email">{{ user.email }}</div>
+      </div>
+    </div>
+    <nav class="ac-nav">
+      <div class="ac-nav-section">Overview</div>
+      <a href="/shop/account" class="ac-nav-link active">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Dashboard
+      </a>
+      <div class="ac-nav-section">Shopping</div>
+      <a href="/shop/account/orders" class="ac-nav-link">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        My Orders
+        {% if orders|length > 0 %}<span class="badge">{{ orders|length }}</span>{% endif %}
+      </a>
+      <a href="/shop/account/tracking" class="ac-nav-link">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Track Order
+      </a>
+      <a href="/shop/wishlist" class="ac-nav-link">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        Wishlist
+      </a>
+      <a href="/shop/compare" class="ac-nav-link">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+        Compare
+      </a>
+      <a href="/shop/account/reviews" class="ac-nav-link">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+        Reviews
+      </a>
+      <div class="ac-nav-section">Finance</div>
+      <a href="/shop/account/wallet" class="ac-nav-link">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+        Wallet
+      </a>
+      <a href="/shop/account/referrals" class="ac-nav-link">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Referrals
+      </a>
+      <div class="ac-nav-section">Account</div>
+      <a href="/shop/account/settings" class="ac-nav-link">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Settings
+      </a>
+    </nav>
+  </aside>
 
-  <div class="acct-stats-grid" style="margin-bottom:2rem">
-    <a href="/shop/account/orders" class="acct-stat-card">
-      <div class="icon" style="background:var(--color-amber-100)">
-        <svg style="color:var(--color-amber-600)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-      </div>
-      <span class="label">My Orders</span>
-      <span class="sub">{{ orders|length }} order{% if orders|length != 1 %}s{% endif %}</span>
-    </a>
-    <a href="/shop/account/tracking" class="acct-stat-card">
-      <div class="icon" style="background:var(--color-blue-50)">
-        <svg style="color:var(--color-blue-500)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      </div>
-      <span class="label">Track Order</span>
-      <span class="sub">Real-time tracking</span>
-    </a>
-    <a href="/shop/account/settings" class="acct-stat-card">
-      <div class="icon" style="background:var(--color-stone-100)">
-        <svg style="color:var(--color-stone-600)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      </div>
-      <span class="label">Settings</span>
-      <span class="sub">Profile & preferences</span>
-    </a>
-    <a href="/shop/wishlist" class="acct-stat-card">
-      <div class="icon" style="background:var(--color-rose-50)">
-        <svg style="color:var(--color-rose-500)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-      </div>
-      <span class="label">Wishlist</span>
-      <span class="sub">Saved items</span>
-    </a>
-    <a href="/shop/account/reviews" class="acct-stat-card">
-      <div class="icon" style="background:var(--color-amber-100)">
-        <svg style="color:var(--color-amber-600)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
-      </div>
-      <span class="label">Reviews</span>
-      <span class="sub">Your feedback</span>
-    </a>
-  </div>
+  <!-- Main Content -->
+  <main class="ac-main">
+    <div class="ac-header">
+      <h1>Welcome back, <span style="color:var(--ac-amber)">{{ user.name|default('there') }}</span></h1>
+      <p>Manage your orders, wishlist, and account from here.</p>
+    </div>
 
-  <div>
-    <h2 style="font-size:1.125rem;font-weight:700;color:var(--color-stone-900);margin-bottom:1.25rem">Recent Orders</h2>
-    {% if orders %}
-    <div class="acct-card" style="padding:0;overflow:hidden">
-      {% for order in orders[:5] %}
-      <a href="/shop/account/orders/{{ order.id }}" style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;text-decoration:none;border-bottom:1px solid var(--color-stone-100);min-height:44px;transition:background .15s">
-        <div style="display:flex;align-items:center;gap:1rem">
-          <div style="width:2.5rem;height:2.5rem;background:var(--color-stone-100);border-radius:.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg style="width:1.25rem;height:1.25rem;color:var(--color-stone-500)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-          </div>
-          <div>
-            <p style="font-size:.875rem;font-weight:600;color:var(--color-stone-900)">#{{ order.id[:12] }}</p>
-            <p style="font-size:.75rem;color:var(--color-stone-500)">{{ order.created_at.strftime('%b %d, %Y') }}</p>
-          </div>
+    <!-- Stats -->
+    <div class="ac-stats">
+      <a href="/shop/account/orders" class="ac-stat">
+        <div class="stat-icon" style="background:var(--ac-amber-light)">
+          <svg style="color:var(--ac-amber)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
         </div>
-        <div style="text-align:right">
-          <span style="font-size:.875rem;font-weight:700;color:var(--color-stone-900);font-family:monospace">{{ format_price(order.total_amount, currency) }}</span>
-          <span style="display:block;font-size:.75rem;font-weight:600 {% if order.status == 'completed' %}color:var(--color-emerald-600){% elif order.status == 'pending' %}color:var(--color-amber-600){% else %}color:var(--color-stone-500){% endif %}">{{ order.status|capitalize }}</span>
+        <div class="stat-info">
+          <div class="stat-value">{{ orders|length }}</div>
+          <div class="stat-label">Total Orders</div>
         </div>
       </a>
-      {% endfor %}
+      <a href="/shop/account/tracking" class="ac-stat">
+        <div class="stat-icon" style="background:#dbeafe">
+          <svg style="color:#3b82f6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{ orders|selectattr('status', 'equalto', 'SHIPPED')|list|length }}</div>
+          <div class="stat-label">In Transit</div>
+        </div>
+      </a>
+      <a href="/shop/wishlist" class="ac-stat">
+        <div class="stat-icon" style="background:#fce7f3">
+          <svg style="color:#ec4899" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">—</div>
+          <div class="stat-label">Wishlist</div>
+        </div>
+      </a>
+      <a href="/shop/account/reviews" class="ac-stat">
+        <div class="stat-icon" style="background:#fef3c7">
+          <svg style="color:#f59e0b" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">—</div>
+          <div class="stat-label">Reviews</div>
+        </div>
+      </a>
     </div>
-    <a href="/shop/account/orders" style="display:inline-flex;align-items:center;gap:.375rem;font-size:.875rem;font-weight:600;color:var(--color-amber-600);text-decoration:none;margin-top:1rem">
-      View All Orders
-      <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-    </a>
-    {% else %}
-    <div class="acct-card" style="text-align:center;padding:2rem">
-      <p style="font-size:.875rem;color:var(--color-stone-500);margin-bottom:1rem">No orders yet. Start exploring our marketplace!</p>
-      <a href="/shop/marketplace" class="acct-btn acct-btn--primary">Browse Marketplace</a>
+
+    <!-- Quick Actions -->
+    <div class="ac-section">
+      <div class="ac-section-header">
+        <h2>Quick Actions</h2>
+      </div>
+      <div class="ac-quick">
+        <a href="/shop/marketplace" class="ac-quick-link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+          <span>Shop Now</span>
+        </a>
+        <a href="/shop/compare" class="ac-quick-link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+          <span>Compare</span>
+        </a>
+        <a href="/shop/account/wallet" class="ac-quick-link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          <span>Wallet</span>
+        </a>
+        <a href="/shop/account/referrals" class="ac-quick-link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <span>Referrals</span>
+        </a>
+        <a href="/shop/support" class="ac-quick-link">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>Support</span>
+        </a>
+      </div>
     </div>
-    {% endif %}
-  </div>
+
+    <!-- Recent Orders -->
+    <div class="ac-section">
+      <div class="ac-section-header">
+        <h2>Recent Orders</h2>
+        {% if orders %}<a href="/shop/account/orders">View All <svg style="width:.875rem;height:.875rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></a>{% endif %}
+      </div>
+      {% if orders %}
+        {% for order in orders[:5] %}
+        <a href="/shop/account/orders/{{ order.id }}" class="ac-order-row">
+          <div>
+            <div class="ac-order-id">#{{ order.order_number|default(order.id[:12]) }}</div>
+            <div class="ac-order-date">{{ order.created_at.strftime('%b %d, %Y') if order.created_at else '—' }}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:.75rem">
+            <span class="ac-order-amount">{{ format_price(order.total_amount, currency) }}</span>
+            {% set status_str = order.status|string|lower if order.status else 'pending' %}
+            {% if 'delivered' in status_str %}
+            <span class="ac-badge ac-badge--emerald">Delivered</span>
+            {% elif 'shipped' in status_str or 'transit' in status_str %}
+            <span class="ac-badge ac-badge--blue">Shipped</span>
+            {% elif 'processing' in status_str %}
+            <span class="ac-badge ac-badge--amber">Processing</span>
+            {% elif 'cancelled' in status_str %}
+            <span class="ac-badge ac-badge--red">Cancelled</span>
+            {% else %}
+            <span class="ac-badge ac-badge--stone">{{ order.status|capitalize if order.status else 'Pending' }}</span>
+            {% endif %}
+          </div>
+        </a>
+        {% endfor %}
+      {% else %}
+        <div class="ac-empty">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          <h3>No orders yet</h3>
+          <p>Start exploring our marketplace and make your first purchase!</p>
+          <a href="/shop/marketplace" class="ac-btn ac-btn--primary">Browse Marketplace</a>
+        </div>
+      {% endif %}
+    </div>
+  </main>
 </div>
 {% endblock %}

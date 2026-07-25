@@ -700,6 +700,54 @@ def account_settings(request: Request, db: Session = Depends(get_db)):
     })
 
 
+@router.get("/account/wallet", response_class=HTMLResponse)
+def account_wallet(request: Request, db: Session = Depends(get_db)):
+    customer = get_current_customer_from_cookie(request, db)
+    if not customer:
+        return RedirectResponse(url="/shop/login", status_code=302)
+
+    categories = db.query(Category).order_by(Category.name).all()
+
+    return render_template("web/account/wallet.html", {
+        "request": request,
+        "settings": _site_settings(db),
+        "user": customer,
+        "categories": categories,
+    })
+
+
+@router.get("/account/referrals", response_class=HTMLResponse)
+def account_referrals(request: Request, db: Session = Depends(get_db)):
+    customer = get_current_customer_from_cookie(request, db)
+    if not customer:
+        return RedirectResponse(url="/shop/login", status_code=302)
+
+    categories = db.query(Category).order_by(Category.name).all()
+
+    return render_template("web/account/referrals.html", {
+        "request": request,
+        "settings": _site_settings(db),
+        "user": customer,
+        "categories": categories,
+    })
+
+
+@router.get("/account/compare", response_class=HTMLResponse)
+def account_compare(request: Request, db: Session = Depends(get_db)):
+    customer = get_current_customer_from_cookie(request, db)
+    if not customer:
+        return RedirectResponse(url="/shop/login", status_code=302)
+
+    categories = db.query(Category).order_by(Category.name).all()
+
+    return render_template("web/account/compare.html", {
+        "request": request,
+        "settings": _site_settings(db),
+        "user": customer,
+        "categories": categories,
+    })
+
+
 # --- Password Reset Pages ---
 
 @router.get("/forgot-password", response_class=HTMLResponse)

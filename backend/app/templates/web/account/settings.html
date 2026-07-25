@@ -2,10 +2,28 @@
 {% block title %}Account Settings — {{ settings.site_name|default("ForgeStore") }}{% endblock %}
 {% block content %}
 <style>
-  .acct-page{padding:2rem 1rem;max-width:72rem;margin:0 auto}
-  .acct-header{display:flex;flex-direction:column;gap:.25rem}
-  .acct-header h1{font-size:1.875rem;font-weight:800;color:var(--color-stone-900)}
-  .acct-header p{font-size:.875rem;color:var(--color-stone-500)}
+  :root{--ac-bg:#fafaf9;--ac-card:#ffffff;--ac-border:#e7e5e3;--ac-text:#1c1917;--ac-muted:#78716c;--ac-amber:#f59e0b;--ac-amber-light:#fef3c7;--ac-amber-dark:#b45309;--ac-sidebar-w:260px}
+  .dark{--ac-bg:#0c0a09;--ac-card:#1c1917;--ac-border:#292524;--ac-text:#fafaf9;--ac-muted:#a8a29e;--ac-amber-light:#422006}
+  .ac{display:flex;min-height:100vh;background:var(--ac-bg);gap:0}
+  .ac-sidebar{width:var(--ac-sidebar-w);background:var(--ac-card);border-right:1px solid var(--ac-border);padding:1.5rem 1rem;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0}
+  .ac-sidebar-brand{display:flex;align-items:center;gap:.75rem;padding:0 .75rem;margin-bottom:2rem}
+  .ac-sidebar-brand .avatar{width:2.75rem;height:2.75rem;border-radius:1rem;background:linear-gradient(135deg,var(--ac-amber),#f97316);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:1rem;flex-shrink:0}
+  .ac-sidebar-brand .user-info{min-width:0}
+  .ac-sidebar-brand .user-name{font-size:.875rem;font-weight:700;color:var(--ac-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ac-sidebar-brand .user-email{font-size:.75rem;color:var(--ac-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ac-nav{display:flex;flex-direction:column;gap:.25rem;flex:1}
+  .ac-nav-section{font-size:.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ac-muted);padding:.75rem .75rem .375rem;opacity:.6}
+  .ac-nav-link{display:flex;align-items:center;gap:.75rem;padding:.625rem .75rem;border-radius:.75rem;font-size:.875rem;font-weight:500;color:var(--ac-muted);text-decoration:none;min-height:40px;transition:all .15s}
+  .ac-nav-link:hover{background:var(--ac-border);color:var(--ac-text)}
+  .ac-nav-link.active{background:var(--ac-amber-light);color:var(--ac-amber-dark);font-weight:600}
+  .dark .ac-nav-link.active{color:var(--ac-amber)}
+  .ac-nav-link svg{width:1.125rem;height:1.125rem;flex-shrink:0;opacity:.7}
+  .ac-nav-link.active svg{opacity:1}
+  .ac-main{flex:1;padding:2rem;min-width:0}
+  .ac-header{margin-bottom:2rem}
+  .ac-header h1{font-size:1.75rem;font-weight:800;color:var(--ac-text);line-height:1.2}
+  .ac-header p{font-size:.875rem;color:var(--ac-muted);margin-top:.25rem}
+  @media(max-width:768px){.ac-sidebar{display:none}.ac-main{padding:1.25rem}.ac-header h1{font-size:1.375rem}}
   .acct-card{background:var(--color-white);border:1px solid var(--color-stone-200);border-radius:1rem;padding:1.5rem}
   .acct-form-group{margin-bottom:1.25rem}
   .acct-form-group:last-child{margin-bottom:0}
@@ -18,8 +36,6 @@
   .acct-btn--primary:hover{background:var(--color-amber-700)}
   .acct-btn--danger{background:transparent;color:var(--color-red-600);border:1px solid var(--color-red-200)}
   .acct-btn--danger:hover{background:var(--color-red-50);border-color:var(--color-red-300)}
-  .back-link{display:inline-flex;align-items:center;gap:.5rem;font-size:.875rem;color:var(--color-stone-500);text-decoration:none;min-height:44px;margin-bottom:1rem}
-  .back-link:hover{color:var(--color-stone-900)}
   .pw-strength-bar{height:4px;border-radius:2px;transition:width .3s}
   .pw-strength-bar.weak{background:var(--color-red-400);width:33%}
   .pw-strength-bar.medium{background:var(--color-amber-400);width:66%}
@@ -27,128 +43,125 @@
   .pw-strength-text.weak{color:var(--color-red-600)}
   .pw-strength-text.medium{color:var(--color-amber-600)}
   .pw-strength-text.strong{color:var(--color-emerald-600)}
-  .sidebar-link{display:flex;align-items:center;gap:.75rem;padding:.625rem .75rem;font-size:.875rem;color:var(--color-stone-600);text-decoration:none;border-radius:.75rem;min-height:44px;transition:all .15s}
-  .sidebar-link:hover{background:var(--color-stone-50);color:var(--color-stone-900)}
-  .sidebar-link svg{width:1rem;height:1rem;flex-shrink:0}
-  @media(min-width:768px){.acct-page{padding:2.5rem 1.5rem}.acct-header h1{font-size:2.25rem}}
   @media(min-width:1024px){.settings-grid{display:grid;grid-template-columns:2fr 1fr;gap:1.5rem}}
 </style>
 
-<div class="acct-page">
-  <div class="acct-header" style="margin-bottom:2rem">
-    <a href="/shop/account" class="back-link">
-      <svg style="width:1.25rem;height:1.25rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 12H5m7-7l-7 7 7 7"/></svg>
-      Back to Account
-    </a>
-    <h1>Account <span style="color:var(--color-amber-600)">Settings</span></h1>
-    <p>Manage your profile and security</p>
-  </div>
+<div class="ac">
+  <aside class="ac-sidebar">
+    <div class="ac-sidebar-brand">
+      <div class="avatar">{{ user.name[0]|default('U')|upper }}</div>
+      <div class="user-info">
+        <div class="user-name">{{ user.name|default('Customer') }}</div>
+        <div class="user-email">{{ user.email }}</div>
+      </div>
+    </div>
+    <nav class="ac-nav">
+      <div class="ac-nav-section">Overview</div>
+      <a href="/shop/account" class="ac-nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Dashboard</a>
+      <div class="ac-nav-section">Shopping</div>
+      <a href="/shop/account/orders" class="ac-nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>My Orders</a>
+      <a href="/shop/account/tracking" class="ac-nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Track Order</a>
+      <a href="/shop/wishlist" class="ac-nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>Wishlist</a>
+      <a href="/shop/compare" class="ac-nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>Compare</a>
+      <a href="/shop/account/reviews" class="ac-nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>Reviews</a>
+      <div class="ac-nav-section">Finance</div>
+      <a href="/shop/account/wallet" class="ac-nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>Wallet</a>
+      <a href="/shop/account/referrals" class="ac-nav-link"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Referrals</a>
+      <div class="ac-nav-section">Account</div>
+      <a href="/shop/account/settings" class="ac-nav-link active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Settings</a>
+    </nav>
+  </aside>
 
-  <div class="settings-grid">
-    <div style="display:flex;flex-direction:column;gap:1.5rem">
-      <div class="acct-card">
-        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--color-stone-100)">
-          <div style="width:4rem;height:4rem;background:linear-gradient(135deg,var(--color-amber-100),var(--color-amber-200));border-radius:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 0 4px var(--color-amber-50)">
-            <span style="font-size:1.25rem;font-weight:700;color:var(--color-amber-700)">{{ user.name[0]|default('U')|upper }}</span>
+  <main class="ac-main">
+    <div class="ac-header">
+      <h1>Account <span style="color:var(--ac-amber)">Settings</span></h1>
+      <p>Manage your profile and security</p>
+    </div>
+
+    <div class="settings-grid">
+      <div style="display:flex;flex-direction:column;gap:1.5rem">
+        <div class="acct-card">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--color-stone-100)">
+            <div style="width:4rem;height:4rem;background:linear-gradient(135deg,var(--color-amber-100),var(--color-amber-200));border-radius:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 0 4px var(--color-amber-50)">
+              <span style="font-size:1.25rem;font-weight:700;color:var(--color-amber-700)">{{ user.name[0]|default('U')|upper }}</span>
+            </div>
+            <div>
+              <h2 style="font-size:1.125rem;font-weight:700;color:var(--color-stone-900)">{{ user.name|default('Customer') }}</h2>
+              <p style="font-size:.875rem;color:var(--color-stone-500)">{{ user.email }}</p>
+              <p style="font-size:.75rem;color:var(--color-stone-400)">Member since {{ user.created_at.strftime('%B %Y') if user.created_at else '—' }}</p>
+            </div>
           </div>
-          <div>
-            <h2 style="font-size:1.125rem;font-weight:700;color:var(--color-stone-900)">{{ user.name|default('Customer') }}</h2>
-            <p style="font-size:.875rem;color:var(--color-stone-500)">{{ user.email }}</p>
-            <p style="font-size:.75rem;color:var(--color-stone-400)">Member since {{ user.created_at.strftime('%B %Y') if user.created_at else '—' }}</p>
+
+          <div class="acct-form-group">
+            <label for="profile-name">Full Name</label>
+            <div style="display:flex;gap:.75rem">
+              <input id="profile-name" type="text" value="{{ user.name|default('') }}" class="acct-form-input" style="flex:1">
+              <button id="save-name-btn" onclick="saveProfileName()" class="acct-btn acct-btn--primary" style="padding:0 1.25rem;white-space:nowrap">Save</button>
+            </div>
+          </div>
+
+          <div class="acct-form-group">
+            <label>Email Address</label>
+            <input type="email" value="{{ user.email }}" disabled class="acct-form-input" style="opacity:.6;cursor:not-allowed">
+            <p style="font-size:.75rem;color:var(--color-stone-400);margin-top:.375rem">Email cannot be changed. Contact support for assistance.</p>
           </div>
         </div>
 
-        <div class="acct-form-group">
-          <label for="profile-name">Full Name</label>
-          <div style="display:flex;gap:.75rem">
-            <input id="profile-name" type="text" value="{{ user.name|default('') }}" class="acct-form-input" style="flex:1">
-            <button id="save-name-btn" onclick="saveProfileName()" class="acct-btn acct-btn--primary" style="padding:0 1.25rem;white-space:nowrap">Save</button>
+        <div class="acct-card">
+          <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:1.25rem">Change Password</p>
+          <div id="password-form" style="display:flex;flex-direction:column;gap:1rem;max-width:28rem">
+            <div class="acct-form-group">
+              <label for="current-password">Current Password</label>
+              <div style="position:relative">
+                <input id="current-password" type="password" class="acct-form-input" placeholder="Enter current password" style="padding-right:2.5rem">
+                <button type="button" onclick="togglePasswordVisibility('current-password', this)" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--color-stone-400);cursor:pointer;padding:.25rem;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center" tabindex="-1">
+                  <svg class="eye-open" style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  <svg class="eye-closed" style="width:1rem;height:1rem;display:none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="acct-form-group">
+              <label for="new-password">New Password</label>
+              <div style="position:relative">
+                <input id="new-password" type="password" class="acct-form-input" placeholder="At least 6 characters" oninput="checkPasswordStrength(this.value)" style="padding-right:2.5rem">
+                <button type="button" onclick="togglePasswordVisibility('new-password', this)" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--color-stone-400);cursor:pointer;padding:.25rem;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center" tabindex="-1">
+                  <svg class="eye-open" style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  <svg class="eye-closed" style="width:1rem;height:1rem;display:none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                </button>
+              </div>
+              <div style="display:flex;align-items:center;gap:.5rem;margin-top:.5rem">
+                <div id="pw-strength-bar" class="pw-strength-bar" style="width:0%"></div>
+                <span id="pw-strength-text" class="pw-strength-text" style="font-size:.75rem;color:var(--color-stone-400)"></span>
+              </div>
+            </div>
+            <button onclick="changePassword()" id="change-pw-btn" class="acct-btn acct-btn--primary" style="align-self:flex-start">Update Password</button>
           </div>
-        </div>
-
-        <div class="acct-form-group">
-          <label>Email Address</label>
-          <input type="email" value="{{ user.email }}" disabled class="acct-form-input" style="opacity:.6;cursor:not-allowed">
-          <p style="font-size:.75rem;color:var(--color-stone-400);margin-top:.375rem">Email cannot be changed. Contact support for assistance.</p>
         </div>
       </div>
 
-      <div class="acct-card">
-        <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:1.25rem">Change Password</p>
-        <div id="password-form" style="display:flex;flex-direction:column;gap:1rem;max-width:28rem">
-          <div class="acct-form-group">
-            <label for="current-password">Current Password</label>
-            <div style="position:relative">
-              <input id="current-password" type="password" class="acct-form-input" placeholder="Enter current password" style="padding-right:2.5rem">
-              <button type="button" onclick="togglePasswordVisibility('current-password', this)" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--color-stone-400);cursor:pointer;padding:.25rem;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center" tabindex="-1">
-                <svg class="eye-open" style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                <svg class="eye-closed" style="width:1rem;height:1rem;display:none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
-              </button>
+      <div style="display:flex;flex-direction:column;gap:1.5rem">
+        <div class="acct-card">
+          <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:.75rem">Account Security</p>
+          <div style="display:flex;flex-direction:column;gap:.75rem;font-size:.875rem;color:var(--color-stone-600)">
+            <div style="display:flex;align-items:center;gap:.75rem">
+              <div style="width:.5rem;height:.5rem;border-radius:50%;background:var(--color-emerald-500)"></div>
+              <span>Account active</span>
             </div>
+            <p style="font-size:.75rem;color:var(--color-stone-400)">Use a strong, unique password to protect your account.</p>
           </div>
-          <div class="acct-form-group">
-            <label for="new-password">New Password</label>
-            <div style="position:relative">
-              <input id="new-password" type="password" class="acct-form-input" placeholder="At least 6 characters" oninput="checkPasswordStrength(this.value)" style="padding-right:2.5rem">
-              <button type="button" onclick="togglePasswordVisibility('new-password', this)" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--color-stone-400);cursor:pointer;padding:.25rem;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center" tabindex="-1">
-                <svg class="eye-open" style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                <svg class="eye-closed" style="width:1rem;height:1rem;display:none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
-              </button>
-            </div>
-            <div style="display:flex;align-items:center;gap:.5rem;margin-top:.5rem">
-              <div id="pw-strength-bar" class="pw-strength-bar" style="width:0%"></div>
-              <span id="pw-strength-text" class="pw-strength-text" style="font-size:.75rem;color:var(--color-stone-400)"></span>
-            </div>
-          </div>
-          <button onclick="changePassword()" id="change-pw-btn" class="acct-btn acct-btn--primary" style="align-self:flex-start">Update Password</button>
+        </div>
+
+        <div class="acct-card">
+          <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:.75rem">Danger Zone</p>
+          <p style="font-size:.75rem;color:var(--color-stone-500);margin-bottom:1rem">Permanently delete your account and all associated data.</p>
+          <button onclick="showToast('Contact support to delete your account.', 'warning')" class="acct-btn acct-btn--danger" style="width:100%">
+            <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            Delete Account
+          </button>
         </div>
       </div>
     </div>
-
-    <div style="display:flex;flex-direction:column;gap:1.5rem">
-      <div class="acct-card">
-        <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:1rem">Quick Links</p>
-        <div style="display:flex;flex-direction:column;gap:.25rem">
-          <a href="/shop/account/orders" class="sidebar-link">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-            My Orders
-          </a>
-          <a href="/shop/account/tracking" class="sidebar-link">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            Track Order
-          </a>
-          <a href="/shop/account/reviews" class="sidebar-link">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
-            My Reviews
-          </a>
-          <a href="/shop/wishlist" class="sidebar-link">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-            Wishlist
-          </a>
-        </div>
-      </div>
-
-      <div class="acct-card">
-        <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:.75rem">Account Security</p>
-        <div style="display:flex;flex-direction:column;gap:.75rem;font-size:.875rem;color:var(--color-stone-600)">
-          <div style="display:flex;align-items:center;gap:.75rem">
-            <div style="width:.5rem;height:.5rem;border-radius:50%;background:var(--color-emerald-500)"></div>
-            <span>Account active</span>
-          </div>
-          <p style="font-size:.75rem;color:var(--color-stone-400)">Use a strong, unique password to protect your account.</p>
-        </div>
-      </div>
-
-      <div class="acct-card">
-        <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-stone-400);margin-bottom:.75rem">Danger Zone</p>
-        <p style="font-size:.75rem;color:var(--color-stone-500);margin-bottom:1rem">Permanently delete your account and all associated data.</p>
-        <button onclick="showToast('Contact support to delete your account.', 'warning')" class="acct-btn acct-btn--danger" style="width:100%">
-          <svg style="width:1rem;height:1rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-          Delete Account
-        </button>
-      </div>
-    </div>
-  </div>
+  </main>
 </div>
 
 <script>
