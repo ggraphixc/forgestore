@@ -1252,7 +1252,8 @@ function addToCompare(productId, btn) {
     body: JSON.stringify({product_id: productId})
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (d.error) { showToast(d.error, true); return; }
-    showToast('Added to comparison (' + (d.count || '?') + ')');
+    if (d.success === false) { showToast(d.message || 'Could not add to comparison', true); return; }
+    showToast(d.message || ('Added to comparison (' + (d.count || '?') + ')'));
     if (btn) { btn.classList.add('added'); }
   }).catch(function() { showToast('Failed to add to comparison', true); });
 }

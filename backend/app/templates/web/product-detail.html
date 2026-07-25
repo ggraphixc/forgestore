@@ -2292,7 +2292,8 @@ function addToCompare() {
     body: JSON.stringify({product_id: PRODUCT_ID})
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (d.error) { showToast(d.error, true); return; }
-    showToast('Added to comparison (' + (d.count || '?') + ')');
+    if (d.success === false) { showToast(d.message || 'Could not add to comparison', true); return; }
+    showToast(d.message || ('Added to comparison (' + (d.count || '?') + ')'));
     document.getElementById('pd-compare-btn').innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> In Compare';
   }).catch(function() { showToast('Failed to add to comparison', true); });
 }

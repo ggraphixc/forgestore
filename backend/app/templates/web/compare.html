@@ -63,13 +63,7 @@
 </div>
 
 <script>
-function getCookie(name){const v=document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)');return v?v.pop():'';}
-function setCookie(name,v,d){document.cookie=name+'='+v+';path=/;max-age='+(d||86400*30);}
-
 async function loadCompare(){
-  const raw=getCookie('compare_items');
-  const ids=raw?raw.split(',').filter(Boolean):[];
-  if(!ids.length){document.getElementById('compare-empty').style.display='';document.getElementById('compare-content').style.display='none';return;}
   try{
     const r=await fetch('/api/compare');
     const data=await r.json();
@@ -131,15 +125,16 @@ function renderCompare(items){
 function formatCmp(n){return '₦'+Number(n||0).toLocaleString('en-NG',{minimumFractionDigits:0});}
 
 async function removeCompare(productId){
-  const raw=getCookie('compare_items');
-  let ids=raw?raw.split(',').filter(Boolean):[];
-  ids=ids.filter(id=>id!==productId);
-  setCookie('compare_items',ids.join(','));
+  try{
+    await fetch('/api/compare/remove/'+encodeURIComponent(productId),{method:'DELETE'});
+  }catch(e){}
   loadCompare();
 }
 
 async function clearCompare(){
-  setCookie('compare_items','');
+  try{
+    await fetch('/api/compare/clear',{method:'DELETE'});
+  }catch(e){}
   loadCompare();
 }
 
