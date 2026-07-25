@@ -93,6 +93,7 @@ def logistics_logout():
 
 @router.get("/logistics/dashboard", response_class=HTMLResponse)
 def logistics_dashboard(request: Request, db: Session = Depends(get_db)):
+    from app.models import Order
     admin, redirect = _require_logistics(request, db)
     if redirect:
         return redirect
@@ -109,7 +110,6 @@ def logistics_dashboard(request: Request, db: Session = Depends(get_db)):
     recent_shipments = db.query(Shipment).order_by(desc(Shipment.created_at)).limit(10).all()
 
     # Real COD calculation
-    from app.models import Order
     cod_orders = db.query(Order).filter(
         Order.fulfillment_mode == "PLATFORM",
         Order.status.in_(["PAID", "PROCESSING", "SHIPPED"]),
