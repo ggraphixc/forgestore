@@ -324,7 +324,7 @@ def marketplace(request: Request, background_tasks: BackgroundTasks, db: Session
         image="",
     )
 
-    return _render_page("web/marketplace.html", request, db, {
+    resp = _render_page("web/marketplace.html", request, db, {
         "currency": currency,
         "format_price": format_price,
         "products": products,
@@ -336,6 +336,9 @@ def marketplace(request: Request, background_tasks: BackgroundTasks, db: Session
         "utcnow": utcnow,
         "seo": seo,
     })
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    resp.headers["Pragma"] = "no-cache"
+    return resp
 
 
 # --- Shops ---
@@ -793,7 +796,10 @@ def faq_page(request: Request, db: Session = Depends(get_db)):
 # --- Compare ---
 @router.get("/compare", response_class=HTMLResponse)
 def compare_page(request: Request, db: Session = Depends(get_db)):
-    return _render_page("web/compare.html", request, db)
+    resp = _render_page("web/compare.html", request, db)
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    resp.headers["Pragma"] = "no-cache"
+    return resp
 
 
 # --- Wishlist ---
