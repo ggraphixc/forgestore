@@ -1310,7 +1310,7 @@ function addToCompare(productId, btn) {
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (d.error) { showToast(d.error, true); return; }
     if (d.success === false) { showToast(d.message || 'Already in comparison', 'info', '/shop/compare', 'View Compare'); return; }
-    showToast(d.message || ('Added to comparison (' + (d.count || '?') + ')'));
+    showToast(d.message || ('Added to comparison (' + (d.count || '?') + ')'), 'success', '/shop/compare', 'View');
     if (btn) { btn.classList.add('added'); }
   }).catch(function() { showToast('Failed to add to comparison', true); });
 }

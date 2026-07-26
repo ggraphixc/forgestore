@@ -2302,7 +2302,7 @@ function addToCompare() {
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (d.error) { showToast(d.error, true); return; }
     if (d.success === false) { showToast(d.message || 'Already in comparison', 'info', '/shop/compare', 'View Compare'); return; }
-    showToast(d.message || ('Added to comparison (' + (d.count || '?') + ')'));
+    showToast(d.message || ('Added to comparison (' + (d.count || '?') + ')'), false, '/shop/compare', 'View');
     document.getElementById('pd-compare-btn').innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> In Compare';
   }).catch(function() { showToast('Failed to add to comparison', true); });
 }
