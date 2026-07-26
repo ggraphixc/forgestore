@@ -2253,11 +2253,20 @@ function closeReportModal() {
   document.getElementById('reportReason').value = '';
   document.getElementById('reportDesc').value = '';
 }
-function showToast(msg, isError) {
+function showToast(msg, isError, ctaUrl, ctaText) {
   let t = document.createElement('div');
-  t.style.cssText = 'position:fixed;top:1.5rem;right:1.5rem;z-index:9999;padding:0.75rem 1.25rem;border-radius:10px;font-size:0.875rem;font-weight:600;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,0.2);transition:opacity 0.3s;';
+  t.style.cssText = 'position:fixed;top:1.5rem;right:1.5rem;z-index:9999;padding:0.75rem 1.25rem;border-radius:10px;font-size:0.875rem;font-weight:600;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,0.2);transition:opacity 0.3s;display:flex;align-items:center;gap:10px;';
   t.style.background = isError ? '#ef4444' : '#10b981';
   t.textContent = msg;
+  if (ctaUrl && ctaText) {
+    const cta = document.createElement('a');
+    cta.href = ctaUrl;
+    cta.textContent = ctaText;
+    cta.style.cssText = 'background:rgba(255,255,255,0.2);color:#fff;text-decoration:none;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:600;white-space:nowrap;transition:background 0.2s;';
+    cta.addEventListener('mouseenter', () => cta.style.background = 'rgba(255,255,255,0.35)');
+    cta.addEventListener('mouseleave', () => cta.style.background = 'rgba(255,255,255,0.2)');
+    t.appendChild(cta);
+  }
   document.body.appendChild(t);
   setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
 }
@@ -2292,7 +2301,7 @@ function addToCompare() {
     body: JSON.stringify({product_id: PRODUCT_ID})
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (d.error) { showToast(d.error, true); return; }
-    if (d.success === false) { showToast(d.message || 'Could not add to comparison', true); return; }
+    if (d.success === false) { showToast(d.message || 'Already in comparison', 'info', '/shop/compare', 'View Compare'); return; }
     showToast(d.message || ('Added to comparison (' + (d.count || '?') + ')'));
     document.getElementById('pd-compare-btn').innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> In Compare';
   }).catch(function() { showToast('Failed to add to comparison', true); });

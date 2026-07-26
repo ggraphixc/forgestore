@@ -407,7 +407,7 @@ def natural_language_search(
     from app.services.ai_service import ai_search_assistant
 
     try:
-        products = db.query(Product).filter(Product.inventory > 0, Product.status == "APPROVED").limit(200).all()
+        products = db.query(Product).filter(Product.inventory > 0, Product.status == "APPROVED").limit(50).all()
         product_list = [
             {
                 "id": p.id,

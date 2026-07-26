@@ -886,8 +886,56 @@
         </div>
       </a>
       {% endif %}
+      <a href="/shop/compare" class="web-mobile-quick-card">
+        <div class="web-mobile-quick-card-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6;">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
+          </svg>
+        </div>
+        <div>
+          <span>Compare</span>
+          <small>Side by side</small>
+        </div>
+      </a>
     </div>
   </div>
+
+  {% if user and request.url.path.startswith('/shop/account') %}
+  <!-- Account Sidebar (mobile) -->
+  <div class="web-mobile-nav">
+    <p class="web-mobile-nav-title">My Account</p>
+    <div class="web-mobile-nav-list">
+      <a href="/shop/account" class="web-mobile-nav-link {% if request.url.path == '/shop/account' %}web-mobile-nav-link--active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <a href="/shop/account/orders" class="web-mobile-nav-link {% if '/account/orders' in request.url.path %}web-mobile-nav-link--active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        <span>My Orders</span>
+      </a>
+      <a href="/shop/account/tracking" class="web-mobile-nav-link {% if '/account/tracking' in request.url.path %}web-mobile-nav-link--active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>Track Order</span>
+      </a>
+      <a href="/shop/account/reviews" class="web-mobile-nav-link {% if '/account/reviews' in request.url.path %}web-mobile-nav-link--active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+        <span>Reviews</span>
+      </a>
+      <a href="/shop/account/wallet" class="web-mobile-nav-link {% if '/account/wallet' in request.url.path %}web-mobile-nav-link--active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+        <span>Wallet</span>
+      </a>
+      <a href="/shop/account/referrals" class="web-mobile-nav-link {% if '/account/referrals' in request.url.path %}web-mobile-nav-link--active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span>Referrals</span>
+      </a>
+      <a href="/shop/account/settings" class="web-mobile-nav-link {% if '/account/settings' in request.url.path %}web-mobile-nav-link--active{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span>Settings</span>
+      </a>
+    </div>
+  </div>
+  {% endif %}
 
   <!-- Promo & Bottom -->
   <div class="web-mobile-promo">
@@ -1101,15 +1149,24 @@ function formatCurrency(amount, currency) {
   return symbol + num.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
 
-function showToast(message, type) {
+function showToast(message, type, ctaUrl, ctaText) {
   const existing = document.querySelector('.web-toast');
   if (existing) existing.remove();
   const toast = document.createElement('div');
   toast.className = 'web-toast';
-  toast.style.cssText = 'position:fixed;top:6rem;right:1rem;padding:0.75rem 1.25rem;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.15);font-size:0.875rem;font-weight:500;color:#fff;z-index:9999;transition:opacity 0.3s;opacity:0;';
+  toast.style.cssText = 'position:fixed;top:6rem;right:1rem;padding:0.75rem 1.25rem;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.15);font-size:0.875rem;font-weight:500;color:#fff;z-index:9999;transition:opacity 0.3s;opacity:0;display:flex;align-items:center;gap:10px;';
   const colors = { success: '#059669', error: '#dc2626', warning: '#d97706', info: '#2563eb' };
   toast.style.background = colors[type] || '#44403c';
   toast.textContent = message;
+  if (ctaUrl && ctaText) {
+    const cta = document.createElement('a');
+    cta.href = ctaUrl;
+    cta.textContent = ctaText;
+    cta.style.cssText = 'background:rgba(255,255,255,0.2);color:#fff;text-decoration:none;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:600;white-space:nowrap;transition:background 0.2s;';
+    cta.addEventListener('mouseenter', () => cta.style.background = 'rgba(255,255,255,0.35)');
+    cta.addEventListener('mouseleave', () => cta.style.background = 'rgba(255,255,255,0.2)');
+    toast.appendChild(cta);
+  }
   document.body.appendChild(toast);
   requestAnimationFrame(() => { toast.style.opacity = '1'; });
   setTimeout(() => {
@@ -1252,7 +1309,7 @@ function addToCompare(productId, btn) {
     body: JSON.stringify({product_id: productId})
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (d.error) { showToast(d.error, true); return; }
-    if (d.success === false) { showToast(d.message || 'Could not add to comparison', true); return; }
+    if (d.success === false) { showToast(d.message || 'Already in comparison', 'info', '/shop/compare', 'View Compare'); return; }
     showToast(d.message || ('Added to comparison (' + (d.count || '?') + ')'));
     if (btn) { btn.classList.add('added'); }
   }).catch(function() { showToast('Failed to add to comparison', true); });

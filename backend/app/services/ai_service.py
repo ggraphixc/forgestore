@@ -145,7 +145,7 @@ def _call_llm_sync(
         # When finish_reason=length, the response was truncated. Return whatever
         # partial content we got instead of None — callers can work with partial JSON.
         if content is None and finish_reason == "length":
-            logger.warning("LLM response truncated (finish_reason=length) — returning None so caller falls back")
+            logger.warning("LLM response truncated (finish_reason=length) — attempting to extract partial content")
         # Log full response details when content is None to diagnose provider issues
         if content is None:
             msg = resp.choices[0].message
@@ -161,6 +161,26 @@ def _call_llm_sync(
             if content is None and hasattr(msg, 'reasoning_content') and msg.reasoning_content:
                 content = msg.reasoning_content
                 logger.info(f"Extracted content from reasoning_content: {repr(content[:200])}")
+        # When finish_reason=length but we have partial content, try to salvage it
+        if content is not None and finish_reason == "length":
+            logger.info("LLM response truncated but partial content available — attempting to fix truncated JSON")
+            try:
+                # Find the last complete JSON object/array in the partial content
+                for end_char, open_char in [('}', '{'), (']', '[')]:
+                    last_complete = content.rfind(end_char)
+                    if last_complete > 0:
+                        candidate = content[:last_complete + 1]
+                        # Try to balance braces
+                        opens = candidate.count(open_char)
+                        closes = candidate.count(end_char)
+                        if opens > closes:
+                            candidate += end_char * (opens - closes)
+                        json.loads(candidate)
+                        content = candidate
+                        logger.info(f"Salvaged truncated JSON by closing at position {last_complete}")
+                        break
+            except (json.JSONDecodeError, ValueError):
+                logger.info("Could not fix truncated JSON — returning raw partial content")
         logger.info(f"LLM content type={type(content)}, len={len(content) if content else 0}, preview={repr(content[:200]) if content else 'None'}")
         return content
 
@@ -728,7 +748,7 @@ def ai_search_assistant(
         ),
         user_prompt=f"Query: {query}\nProducts: {json.dumps(product_list)}",
         temperature=0.3,
-        max_tokens=2000,
+        max_tokens=4000,
     )
 
     if result:

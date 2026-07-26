@@ -2,149 +2,1170 @@
 {% block title %}Compare Products | ForgeStore{% endblock %}
 {% block body %}
 <style>
-:root { --cmp-accent: #f59e0b; --cmp-bg: #fafaf9; --cmp-card: #ffffff; --cmp-border: #e7e5e3; --cmp-text: #1c1917; --cmp-muted: #78716c; }
-.dark { --cmp-bg: #0c0a09; --cmp-card: #1c1917; --cmp-border: #292524; --cmp-text: #fafaf9; --cmp-muted: #a8a29e; }
-.compare-page { background: var(--cmp-bg); min-height: 100vh; padding: 24px 16px; }
-@media (min-width: 768px) { .compare-page { padding: 32px 24px; } }
-.compare-header { text-align: center; margin-bottom: 32px; }
-.compare-header h1 { font-size: 1.75rem; font-weight: 700; color: var(--cmp-text); margin-bottom: 8px; }
-.compare-header p { color: var(--cmp-muted); font-size: 0.95rem; }
-.compare-empty { text-align: center; padding: 80px 20px; }
-.compare-empty svg { width: 64px; height: 64px; margin: 0 auto 16px; color: var(--cmp-muted); opacity: 0.4; }
-.compare-empty h2 { font-size: 1.25rem; font-weight: 600; color: var(--cmp-text); margin-bottom: 8px; }
-.compare-empty p { color: var(--cmp-muted); margin-bottom: 24px; }
-.compare-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 10px; font-weight: 600; font-size: 0.875rem; text-decoration: none; min-height: 44px; transition: all 0.2s; }
-.compare-btn-primary { background: var(--cmp-accent); color: #000; }
-.compare-btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
-.compare-table { width: 100%; border-collapse: separate; border-spacing: 0; overflow-x: auto; display: block; }
-.compare-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.compare-table th, .compare-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--cmp-border); min-width: 200px; vertical-align: top; }
-.compare-table thead th { position: sticky; top: 0; background: var(--cmp-card); z-index: 10; }
-.compare-table .compare-product-img { width: 120px; height: 120px; object-fit: cover; border-radius: 12px; margin-bottom: 8px; }
-.compare-table .compare-product-name { font-weight: 600; font-size: 1rem; color: var(--cmp-text); margin-bottom: 4px; display: block; text-decoration: none; }
-.compare-table .compare-product-name:hover { color: var(--cmp-accent); }
-.compare-table .compare-product-price { font-size: 1.1rem; font-weight: 700; color: var(--cmp-accent); }
-.compare-table .compare-product-price .old-price { text-decoration: line-through; color: var(--cmp-muted); font-size: 0.85rem; font-weight: 400; margin-left: 6px; }
-.compare-table .compare-row-label { font-weight: 600; color: var(--cmp-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
-.compare-table .compare-row-value { color: var(--cmp-text); }
-.compare-remove-btn { background: none; border: 1px solid var(--cmp-border); border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; color: var(--cmp-muted); cursor: pointer; transition: all 0.2s; }
-.compare-remove-btn:hover { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.05); }
-.compare-add-slot { border: 2px dashed var(--cmp-border); border-radius: 12px; padding: 32px 16px; text-align: center; min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--cmp-muted); transition: all 0.2s; }
-.compare-add-slot:hover { border-color: var(--cmp-accent); color: var(--cmp-accent); }
-.compare-rating { color: #f59e0b; }
-.compare-actions { display: flex; gap: 8px; margin-top: 8px; }
+:root {
+  --cmp-accent: #f59e0b;
+  --cmp-bg: #fafaf9;
+  --cmp-card: #ffffff;
+  --cmp-border: #e7e5e3;
+  --cmp-text: #1c1917;
+  --cmp-muted: #78716c;
+  --cmp-accent-rgb: 245,158,11;
+  --cmp-success: #16a34a;
+  --cmp-danger: #ef4444;
+  --cmp-radius: 16px;
+  --cmp-radius-sm: 10px;
+  --cmp-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.03);
+  --cmp-shadow-lg: 0 4px 24px rgba(0,0,0,0.08);
+}
+.dark {
+  --cmp-bg: #0c0a09;
+  --cmp-card: #1c1917;
+  --cmp-border: #292524;
+  --cmp-text: #fafaf9;
+  --cmp-muted: #a8a29e;
+  --cmp-accent-rgb: 245,158,11;
+  --cmp-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.15);
+  --cmp-shadow-lg: 0 4px 24px rgba(0,0,0,0.3);
+}
+
+/* === Page === */
+.cmp-page {
+  background: var(--cmp-bg);
+  min-height: 100vh;
+  padding: 24px 16px 120px;
+}
+@media (min-width: 768px) {
+  .cmp-page { padding: 32px 24px 120px; }
+}
+
+/* === Header === */
+.cmp-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+.cmp-header-icon {
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg, rgba(var(--cmp-accent-rgb),0.15), rgba(var(--cmp-accent-rgb),0.05));
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.cmp-header-icon svg {
+  width: 28px; height: 28px;
+  color: var(--cmp-accent);
+}
+.cmp-header h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--cmp-text);
+  margin: 0 0 6px;
+  letter-spacing: -0.02em;
+}
+.cmp-header p {
+  color: var(--cmp-muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+.cmp-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 6px 14px;
+  background: rgba(var(--cmp-accent-rgb),0.08);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--cmp-accent);
+}
+.cmp-counter-dot {
+  width: 8px; height: 8px;
+  background: var(--cmp-accent);
+  border-radius: 50%;
+  animation: cmp-pulse 2s infinite;
+}
+@keyframes cmp-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* === Empty State === */
+.cmp-empty {
+  text-align: center;
+  padding: 60px 20px 80px;
+}
+.cmp-empty-visual {
+  position: relative;
+  width: 120px; height: 120px;
+  margin: 0 auto 24px;
+}
+.cmp-empty-circle {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(var(--cmp-accent-rgb),0.06);
+  animation: cmp-empty-ripple 3s infinite;
+}
+@keyframes cmp-empty-ripple {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.5; }
+}
+.cmp-empty-icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cmp-empty-icon svg {
+  width: 48px; height: 48px;
+  color: var(--cmp-muted);
+  opacity: 0.5;
+}
+.cmp-empty h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--cmp-text);
+  margin: 0 0 8px;
+}
+.cmp-empty p {
+  color: var(--cmp-muted);
+  font-size: 0.9rem;
+  margin: 0 0 28px;
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.cmp-empty .cmp-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+.cmp-empty-feature {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--cmp-card);
+  border: 1px solid var(--cmp-border);
+  border-radius: 10px;
+  font-size: 0.8rem;
+  color: var(--cmp-muted);
+}
+.cmp-empty-feature svg {
+  width: 16px; height: 16px;
+  color: var(--cmp-accent);
+  flex-shrink: 0;
+}
+
+/* === Buttons === */
+.cmp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: var(--cmp-radius-sm);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 44px;
+  white-space: nowrap;
+}
+.cmp-btn svg { width: 16px; height: 16px; }
+.cmp-btn-primary {
+  background: var(--cmp-accent);
+  color: #000;
+  box-shadow: 0 4px 12px rgba(var(--cmp-accent-rgb),0.3);
+}
+.cmp-btn-primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(var(--cmp-accent-rgb),0.4);
+}
+.cmp-btn-secondary {
+  background: var(--cmp-card);
+  color: var(--cmp-text);
+  border: 1px solid var(--cmp-border);
+}
+.cmp-btn-secondary:hover {
+  background: var(--cmp-border);
+}
+.cmp-btn-danger {
+  background: transparent;
+  color: var(--cmp-danger);
+  border: 1px solid var(--cmp-border);
+}
+.cmp-btn-danger:hover {
+  border-color: var(--cmp-danger);
+  background: rgba(239,68,68,0.05);
+}
+.cmp-btn-ghost {
+  background: transparent;
+  color: var(--cmp-muted);
+  padding: 8px 12px;
+  min-height: 36px;
+}
+.cmp-btn-ghost:hover { color: var(--cmp-text); }
+
+/* === Compare Cards Grid === */
+.cmp-cards-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -16px;
+  padding: 0 16px 16px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.cmp-cards-wrapper::-webkit-scrollbar { display: none; }
+.cmp-cards {
+  display: flex;
+  gap: 16px;
+  min-width: max-content;
+}
+@media (min-width: 768px) {
+  .cmp-cards-wrapper {
+    margin: 0;
+    padding: 0;
+    overflow-x: visible;
+  }
+  .cmp-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    min-width: auto;
+  }
+}
+
+/* === Product Card === */
+.cmp-card {
+  width: 300px;
+  flex-shrink: 0;
+  background: var(--cmp-card);
+  border: 1px solid var(--cmp-border);
+  border-radius: var(--cmp-radius);
+  overflow: hidden;
+  transition: all 0.25s;
+  scroll-snap-align: start;
+  position: relative;
+}
+@media (min-width: 768px) {
+  .cmp-card { width: auto; }
+}
+.cmp-card:hover {
+  box-shadow: var(--cmp-shadow-lg);
+  border-color: rgba(var(--cmp-accent-rgb),0.3);
+}
+.cmp-card-remove {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+  width: 32px; height: 32px;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(8px);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  opacity: 0;
+}
+.cmp-card:hover .cmp-card-remove { opacity: 1; }
+@media (min-width: 768px) {
+  .cmp-card-remove { opacity: 0; }
+  .cmp-card:hover .cmp-card-remove { opacity: 1; }
+}
+.cmp-card-remove:hover {
+  background: var(--cmp-danger);
+  transform: scale(1.1);
+}
+.cmp-card-remove svg { width: 14px; height: 14px; }
+
+.cmp-card-img-wrap {
+  position: relative;
+  padding-top: 75%;
+  background: var(--cmp-bg);
+  overflow: hidden;
+}
+.cmp-card-img {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s;
+}
+.cmp-card:hover .cmp-card-img { transform: scale(1.03); }
+.cmp-card-badge {
+  position: absolute;
+  top: 10px; left: 10px;
+  padding: 4px 10px;
+  background: var(--cmp-accent);
+  color: #000;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.cmp-card-body {
+  padding: 16px;
+}
+.cmp-card-brand {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--cmp-accent);
+  margin-bottom: 4px;
+}
+.cmp-card-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--cmp-text);
+  margin: 0 0 8px;
+  line-height: 1.3;
+}
+.cmp-card-name a {
+  text-decoration: none;
+  color: inherit;
+}
+.cmp-card-name a:hover { color: var(--cmp-accent); }
+.cmp-card-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.cmp-card-stars {
+  display: flex;
+  gap: 1px;
+  color: #f59e0b;
+}
+.cmp-card-stars svg { width: 14px; height: 14px; }
+.cmp-card-review-count {
+  font-size: 0.75rem;
+  color: var(--cmp-muted);
+}
+.cmp-card-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.cmp-card-price {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--cmp-accent);
+}
+.cmp-card-old-price {
+  font-size: 0.85rem;
+  color: var(--cmp-muted);
+  text-decoration: line-through;
+  font-weight: 400;
+}
+.cmp-card-discount {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(22,163,74,0.1);
+  color: var(--cmp-success);
+}
+.cmp-card-stock {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.cmp-card-stock-in { color: var(--cmp-success); }
+.cmp-card-stock-out { color: var(--cmp-danger); }
+.cmp-card-stock-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.cmp-card-desc {
+  font-size: 0.82rem;
+  color: var(--cmp-muted);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0 0 12px;
+}
+
+/* Spec rows inside card */
+.cmp-card-specs {
+  border-top: 1px solid var(--cmp-border);
+  padding-top: 12px;
+}
+.cmp-card-spec {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 0.8rem;
+  border-bottom: 1px dashed var(--cmp-border);
+}
+.cmp-card-spec:last-child { border-bottom: none; }
+.cmp-card-spec-label {
+  color: var(--cmp-muted);
+  font-weight: 500;
+  white-space: nowrap;
+  margin-right: 8px;
+}
+.cmp-card-spec-value {
+  color: var(--cmp-text);
+  font-weight: 600;
+  text-align: right;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cmp-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+.cmp-card-actions .cmp-btn { flex: 1; font-size: 0.8rem; padding: 8px 12px; min-height: 38px; }
+
+/* Add product slot */
+.cmp-add-slot {
+  border: 2px dashed var(--cmp-border);
+  border-radius: var(--cmp-radius);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  gap: 12px;
+  color: var(--cmp-muted);
+  transition: all 0.25s;
+  cursor: pointer;
+  text-decoration: none;
+}
+.cmp-add-slot:hover {
+  border-color: var(--cmp-accent);
+  color: var(--cmp-accent);
+  background: rgba(var(--cmp-accent-rgb),0.03);
+}
+.cmp-add-slot svg { width: 32px; height: 32px; opacity: 0.5; }
+.cmp-add-slot span {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* === AI Tools Section === */
+.cmp-ai-section {
+  margin-top: 40px;
+}
+.cmp-ai-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.cmp-ai-header-icon {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.cmp-ai-header-icon svg { width: 20px; height: 20px; color: #fff; }
+.cmp-ai-header h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--cmp-text);
+  margin: 0;
+}
+.cmp-ai-header p {
+  font-size: 0.8rem;
+  color: var(--cmp-muted);
+  margin: 0;
+}
+
+/* Accordion on mobile */
+.cmp-ai-grid {
+  display: grid;
+  gap: 12px;
+}
+@media (min-width: 768px) {
+  .cmp-ai-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.cmp-ai-card {
+  background: var(--cmp-card);
+  border: 1px solid var(--cmp-border);
+  border-radius: var(--cmp-radius);
+  overflow: hidden;
+  transition: all 0.25s;
+}
+.cmp-ai-card:hover {
+  box-shadow: var(--cmp-shadow);
+}
+
+/* Mobile accordion */
+.cmp-ai-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  gap: 12px;
+}
+@media (min-width: 768px) {
+  .cmp-ai-card-header { cursor: default; }
+}
+.cmp-ai-card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.cmp-ai-card-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.cmp-ai-card-icon svg { width: 18px; height: 18px; }
+.cmp-ai-card-icon--best {
+  background: rgba(59,130,246,0.1);
+  color: #3b82f6;
+}
+.cmp-ai-card-icon--pros {
+  background: rgba(22,163,74,0.1);
+  color: #16a34a;
+}
+.cmp-ai-card-icon--value {
+  background: rgba(245,158,11,0.1);
+  color: #f59e0b;
+}
+.cmp-ai-card-icon--expert {
+  background: rgba(139,92,246,0.1);
+  color: #8b5cf6;
+}
+.cmp-ai-card-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--cmp-text);
+}
+.cmp-ai-card-subtitle {
+  font-size: 0.72rem;
+  color: var(--cmp-muted);
+  margin-top: 1px;
+}
+.cmp-ai-chevron {
+  width: 20px; height: 20px;
+  color: var(--cmp-muted);
+  transition: transform 0.3s;
+  flex-shrink: 0;
+}
+.cmp-ai-card.open .cmp-ai-chevron {
+  transform: rotate(180deg);
+}
+@media (min-width: 768px) {
+  .cmp-ai-chevron { display: none; }
+}
+
+.cmp-ai-card-body {
+  display: none;
+  padding: 0 16px 16px;
+}
+.cmp-ai-card.open .cmp-ai-card-body {
+  display: block;
+}
+@media (min-width: 768px) {
+  .cmp-ai-card-body {
+    display: block !important;
+    padding: 0 16px 16px;
+  }
+}
+
+/* Input groups */
+.cmp-ai-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.cmp-ai-input {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--cmp-bg);
+  border: 1px solid var(--cmp-border);
+  border-radius: var(--cmp-radius-sm);
+  color: var(--cmp-text);
+  font-size: 0.85rem;
+  outline: none;
+  transition: all 0.2s;
+  min-height: 40px;
+  resize: vertical;
+  font-family: inherit;
+}
+.cmp-ai-input:focus {
+  border-color: var(--cmp-accent);
+  box-shadow: 0 0 0 3px rgba(var(--cmp-accent-rgb),0.12);
+}
+.cmp-ai-input::placeholder { color: var(--cmp-muted); }
+
+.cmp-ai-result {
+  background: var(--cmp-bg);
+  border: 1px solid var(--cmp-border);
+  border-radius: var(--cmp-radius-sm);
+  padding: 12px;
+  font-size: 0.82rem;
+  line-height: 1.65;
+  color: var(--cmp-text);
+  display: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.cmp-ai-result.show { display: block; }
+.cmp-ai-result .cmp-ai-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--cmp-muted);
+}
+.cmp-ai-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid var(--cmp-border);
+  border-top-color: var(--cmp-accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* === Floating Bar === */
+.cmp-float-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 90;
+  background: var(--cmp-card);
+  border-top: 1px solid var(--cmp-border);
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.08);
+  padding: 12px 16px;
+  transform: translateY(100%);
+  transition: transform 0.3s;
+}
+.cmp-float-bar.show { transform: translateY(0); }
+@media (min-width: 768px) {
+  .cmp-float-bar { padding: 12px 24px; }
+}
+.dark .cmp-float-bar {
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.4);
+}
+.cmp-float-inner {
+  max-width: 80rem;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cmp-float-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cmp-float-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--cmp-text);
+}
+.cmp-float-count-bar {
+  display: flex;
+  gap: 3px;
+}
+.cmp-float-count-dot {
+  width: 8px; height: 8px;
+  border-radius: 3px;
+  background: var(--cmp-border);
+  transition: background 0.3s;
+}
+.cmp-float-count-dot.filled {
+  background: var(--cmp-accent);
+}
+.cmp-float-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* === Bottom actions row === */
+.cmp-bottom-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+
+/* === Scrollbar === */
+.cmp-ai-result::-webkit-scrollbar { width: 4px; }
+.cmp-ai-result::-webkit-scrollbar-track { background: transparent; }
+.cmp-ai-result::-webkit-scrollbar-thumb { background: var(--cmp-border); border-radius: 4px; }
 </style>
 
-<div class="compare-page">
-  <div class="compare-header">
-    <h1>Compare Products</h1>
-    <p>Up to 4 products side by side</p>
-  </div>
-
-  <div id="compare-empty" class="compare-empty" style="display:none;">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
-    <h2>No products to compare</h2>
-    <p>Browse products and click "Compare" to add them here.</p>
-    <a href="/shop/marketplace" class="compare-btn compare-btn-primary">Browse Products</a>
-  </div>
-
-  <div id="compare-content" style="display:none;">
-    <div class="compare-table-wrapper">
-      <table class="compare-table" id="compare-table">
-        <thead><tr id="compare-header-row"></tr></thead>
-        <tbody id="compare-body"></tbody>
-      </table>
+<div class="cmp-page">
+  <!-- Header -->
+  <div class="cmp-header">
+    <div class="cmp-header-icon">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
+      </svg>
     </div>
-    <div style="text-align:center;margin-top:24px;">
-      <button onclick="clearCompare()" class="compare-remove-btn" style="padding:10px 24px;">Clear All</button>
-      <a href="/shop/marketplace" class="compare-btn compare-btn-primary" style="margin-left:8px;">Add More</a>
+    <h1>Compare Products</h1>
+    <p>Up to 4 products side by side — make smarter choices</p>
+    <div class="cmp-counter" id="cmp-counter" style="display:none;">
+      <span class="cmp-counter-dot"></span>
+      <span id="cmp-counter-text">0 / 4 products</span>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div id="cmp-empty" class="cmp-empty" style="display:none;">
+    <div class="cmp-empty-visual">
+      <div class="cmp-empty-circle"></div>
+      <div class="cmp-empty-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>
+        </svg>
+      </div>
+    </div>
+    <h2>No products to compare yet</h2>
+    <p>Browse the marketplace and add products to compare them side by side.</p>
+    <div class="cmp-features">
+      <div class="cmp-empty-feature">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"/></svg>
+        Side by side
+      </div>
+      <div class="cmp-empty-feature">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+        AI-powered insights
+      </div>
+      <div class="cmp-empty-feature">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+        Filter by specs
+      </div>
+    </div>
+    <a href="/shop/marketplace" class="cmp-btn cmp-btn-primary">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+      Browse Marketplace
+    </a>
+  </div>
+
+  <!-- Cards -->
+  <div id="cmp-cards-section" style="display:none;">
+    <div class="cmp-cards-wrapper">
+      <div class="cmp-cards" id="cmp-cards"></div>
+    </div>
+
+    <div class="cmp-bottom-actions">
+      <button onclick="clearCompare()" class="cmp-btn cmp-btn-danger">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        Clear All
+      </button>
+      <a href="/shop/marketplace" class="cmp-btn cmp-btn-secondary">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        Add More
+      </a>
+    </div>
+  </div>
+
+  <!-- AI Tools -->
+  <div class="cmp-ai-section" id="cmp-ai-section" style="display:none;">
+    <div class="cmp-ai-header">
+      <div class="cmp-ai-header-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+        </svg>
+      </div>
+      <div>
+        <h2>AI Compare Tools</h2>
+        <p>Get smart insights on your compared products</p>
+      </div>
+    </div>
+
+    <div class="cmp-ai-grid">
+      <!-- Best For Me -->
+      <div class="cmp-ai-card open" id="ai-best">
+        <div class="cmp-ai-card-header" onclick="toggleAiCard('ai-best')">
+          <div class="cmp-ai-card-header-left">
+            <div class="cmp-ai-card-icon cmp-ai-card-icon--best">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+            </div>
+            <div>
+              <div class="cmp-ai-card-title">Best For Me</div>
+              <div class="cmp-ai-card-subtitle">Tell us your budget & needs</div>
+            </div>
+          </div>
+          <svg class="cmp-ai-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div class="cmp-ai-card-body">
+          <div class="cmp-ai-input-group">
+            <input type="text" class="cmp-ai-input" id="ai-best-budget" placeholder="Your budget (e.g. ₦50,000)">
+            <textarea class="cmp-ai-input" id="ai-best-usecase" rows="2" placeholder="What will you use it for? (e.g. daily home use, photography, gift)"></textarea>
+          </div>
+          <button class="cmp-btn cmp-btn-primary" onclick="runAiTool('best')" style="width:100%;">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Find Best Match
+          </button>
+          <div class="cmp-ai-result" id="ai-best-result"></div>
+        </div>
+      </div>
+
+      <!-- Pros & Cons -->
+      <div class="cmp-ai-card" id="ai-pros">
+        <div class="cmp-ai-card-header" onclick="toggleAiCard('ai-pros')">
+          <div class="cmp-ai-card-header-left">
+            <div class="cmp-ai-card-icon cmp-ai-card-icon--pros">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+              <div class="cmp-ai-card-title">Pros & Cons</div>
+              <div class="cmp-ai-card-subtitle">Strengths & weaknesses of each</div>
+            </div>
+          </div>
+          <svg class="cmp-ai-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div class="cmp-ai-card-body">
+          <button class="cmp-btn cmp-btn-primary" onclick="runAiTool('pros')" style="width:100%;">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Generate Pros & Cons
+          </button>
+          <div class="cmp-ai-result" id="ai-pros-result"></div>
+        </div>
+      </div>
+
+      <!-- Value Score -->
+      <div class="cmp-ai-card" id="ai-value">
+        <div class="cmp-ai-card-header" onclick="toggleAiCard('ai-value')">
+          <div class="cmp-ai-card-header-left">
+            <div class="cmp-ai-card-icon cmp-ai-card-icon--value">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+              <div class="cmp-ai-card-title">Value Score</div>
+              <div class="cmp-ai-card-subtitle">Rate each on value for money</div>
+            </div>
+          </div>
+          <svg class="cmp-ai-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div class="cmp-ai-card-body">
+          <button class="cmp-btn cmp-btn-primary" onclick="runAiTool('value')" style="width:100%;">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Get Value Scores
+          </button>
+          <div class="cmp-ai-result" id="ai-value-result"></div>
+        </div>
+      </div>
+
+      <!-- Expert Review -->
+      <div class="cmp-ai-card" id="ai-expert">
+        <div class="cmp-ai-card-header" onclick="toggleAiCard('ai-expert')">
+          <div class="cmp-ai-card-header-left">
+            <div class="cmp-ai-card-icon cmp-ai-card-icon--expert">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+            </div>
+            <div>
+              <div class="cmp-ai-card-title">Expert Review</div>
+              <div class="cmp-ai-card-subtitle">Mini comparison review</div>
+            </div>
+          </div>
+          <svg class="cmp-ai-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div class="cmp-ai-card-body">
+          <button class="cmp-btn cmp-btn-primary" onclick="runAiTool('expert')" style="width:100%;">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+            Get Expert Review
+          </button>
+          <div class="cmp-ai-result" id="ai-expert-result"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Bar -->
+<div class="cmp-float-bar" id="cmp-float-bar">
+  <div class="cmp-float-inner">
+    <div class="cmp-float-info">
+      <div class="cmp-float-count-bar" id="cmp-float-dots"></div>
+      <span class="cmp-float-count" id="cmp-float-text">0 / 4 products</span>
+    </div>
+    <div class="cmp-float-actions">
+      <button onclick="clearCompare()" class="cmp-btn cmp-btn-ghost" style="color:var(--cmp-danger);font-size:0.8rem;">Clear</button>
+      <button onclick="scrollToCards()" class="cmp-btn cmp-btn-primary" style="font-size:0.8rem;padding:8px 16px;min-height:36px;">
+        Compare Now
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>
+      </button>
     </div>
   </div>
 </div>
 
 <script>
-async function loadCompare(){
-  try{
-    const r=await fetch('/api/compare');
-    const data=await r.json();
-    if(!data.items||!data.items.length){document.getElementById('compare-empty').style.display='';document.getElementById('compare-content').style.display='none';return;}
-    document.getElementById('compare-empty').style.display='none';
-    document.getElementById('compare-content').style.display='';
+let cmpProducts = [];
+
+function formatCmp(n) {
+  return '\u20A6' + Number(n || 0).toLocaleString('en-NG', { minimumFractionDigits: 0 });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+function scrollToCards() {
+  const el = document.getElementById('cmp-cards-section');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleAiCard(id) {
+  if (window.innerWidth >= 768) return;
+  document.getElementById(id).classList.toggle('open');
+}
+
+function buildStarsHtml(rating) {
+  const r = Math.round(rating || 0);
+  let html = '';
+  for (let i = 1; i <= 5; i++) {
+    html += i <= r
+      ? '<svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'
+      : '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" style="opacity:0.3"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+  }
+  return html;
+}
+
+function renderCompare(items) {
+  cmpProducts = items;
+  const container = document.getElementById('cmp-cards');
+  const count = items.length;
+
+  // Update counter
+  const counter = document.getElementById('cmp-counter');
+  counter.style.display = count > 0 ? 'inline-flex' : 'none';
+  document.getElementById('cmp-counter-text').textContent = count + ' / 4 products';
+
+  // Floating bar
+  updateFloatBar(count);
+
+  // Collect all spec keys
+  const allSpecs = {};
+  items.forEach(function(p) {
+    if (p.specifications) Object.keys(p.specifications).forEach(function(k) { allSpecs[k] = 1; });
+  });
+
+  let html = '';
+  items.forEach(function(p) {
+    const img = p.image || '/static/images/placeholder.png';
+    const price = p.discount_price || p.price;
+    const discount = p.discount_price ? Math.round((1 - p.discount_price / p.price) * 100) : 0;
+    const stockClass = p.inventory > 0 ? 'cmp-card-stock-in' : 'cmp-card-stock-out';
+    const stockText = p.inventory > 0 ? 'In Stock (' + p.inventory + ')' : 'Out of Stock';
+
+    html += '<div class="cmp-card" id="cmp-card-' + p.id + '">';
+    html += '<button class="cmp-card-remove" onclick="removeCompare(\'' + p.id + '\')" title="Remove product">';
+    html += '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>';
+    html += '</button>';
+    html += '<div class="cmp-card-img-wrap">';
+    html += '<img class="cmp-card-img" src="' + escapeHtml(img) + '" alt="' + escapeHtml(p.name) + '" loading="lazy">';
+    if (discount > 0) html += '<div class="cmp-card-badge">' + discount + '% OFF</div>';
+    html += '</div>';
+    html += '<div class="cmp-card-body">';
+    if (p.brand) html += '<div class="cmp-card-brand">' + escapeHtml(p.brand) + '</div>';
+    html += '<div class="cmp-card-name"><a href="/shop/product/' + escapeHtml(p.slug) + '">' + escapeHtml(p.name) + '</a></div>';
+    html += '<div class="cmp-card-rating">';
+    html += '<div class="cmp-card-stars">' + buildStarsHtml(p.rating) + '</div>';
+    html += '<span class="cmp-card-review-count">' + (p.review_count || 0) + ' reviews</span>';
+    html += '</div>';
+    html += '<div class="cmp-card-price-row">';
+    html += '<span class="cmp-card-price">' + formatCmp(price) + '</span>';
+    if (p.discount_price) html += '<span class="cmp-card-old-price">' + formatCmp(p.price) + '</span>';
+    if (discount > 0) html += '<span class="cmp-card-discount">-' + discount + '%</span>';
+    html += '</div>';
+    html += '<div class="cmp-card-stock ' + stockClass + '"><span class="cmp-card-stock-dot"></span>' + stockText + '</div>';
+    if (p.description) html += '<p class="cmp-card-desc">' + escapeHtml(p.description) + '</p>';
+
+    // Specs
+    html += '<div class="cmp-card-specs">';
+    if (p.category) {
+      html += '<div class="cmp-card-spec"><span class="cmp-card-spec-label">Category</span><span class="cmp-card-spec-value">' + escapeHtml(p.category) + '</span></div>';
+    }
+    if (p.sold_count !== undefined) {
+      html += '<div class="cmp-card-spec"><span class="cmp-card-spec-label">Sold</span><span class="cmp-card-spec-value">' + (p.sold_count || 0) + ' units</span></div>';
+    }
+    if (p.specifications) {
+      Object.keys(p.specifications).forEach(function(k) {
+        html += '<div class="cmp-card-spec"><span class="cmp-card-spec-label">' + escapeHtml(k) + '</span><span class="cmp-card-spec-value">' + escapeHtml(p.specifications[k]) + '</span></div>';
+      });
+    }
+    html += '</div>';
+
+    html += '<div class="cmp-card-actions">';
+    html += '<a href="/shop/product/' + escapeHtml(p.slug) + '" class="cmp-btn cmp-btn-secondary" style="flex:1;text-align:center;font-size:0.8rem;padding:8px 12px;min-height:38px;">View</a>';
+    html += '<button onclick="removeCompare(\'' + p.id + '\')" class="cmp-btn cmp-btn-danger" style="flex:0 0 auto;font-size:0.8rem;padding:8px 12px;min-height:38px;">Remove</button>';
+    html += '</div>';
+    html += '</div></div>';
+  });
+
+  // Add product slot (only if less than 4)
+  if (count < 4) {
+    html += '<a href="/shop/marketplace" class="cmp-add-slot">';
+    html += '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>';
+    html += '<span>Add Product</span>';
+    html += '</a>';
+  }
+
+  container.innerHTML = html;
+}
+
+function updateFloatBar(count) {
+  const bar = document.getElementById('cmp-float-bar');
+  const dotsContainer = document.getElementById('cmp-float-dots');
+  const text = document.getElementById('cmp-float-text');
+
+  if (count === 0) {
+    bar.classList.remove('show');
+    return;
+  }
+  bar.classList.add('show');
+  text.textContent = count + ' / 4 products';
+
+  let dots = '';
+  for (let i = 0; i < 4; i++) {
+    dots += '<div class="cmp-float-count-dot' + (i < count ? ' filled' : '') + '"></div>';
+  }
+  dotsContainer.innerHTML = dots;
+}
+
+async function loadCompare() {
+  try {
+    const r = await fetch('/api/compare');
+    const data = await r.json();
+    if (!data.items || !data.items.length) {
+      document.getElementById('cmp-empty').style.display = '';
+      document.getElementById('cmp-cards-section').style.display = 'none';
+      document.getElementById('cmp-ai-section').style.display = 'none';
+      document.getElementById('cmp-counter').style.display = 'none';
+      updateFloatBar(0);
+      return;
+    }
+    document.getElementById('cmp-empty').style.display = 'none';
+    document.getElementById('cmp-cards-section').style.display = '';
+    document.getElementById('cmp-ai-section').style.display = '';
     renderCompare(data.items);
-  }catch(e){console.error(e);}
+  } catch (e) {
+    console.error('Failed to load compare:', e);
+  }
 }
 
-function renderCompare(items){
-  const headerRow=document.getElementById('compare-header-row');
-  const body=document.getElementById('compare-body');
-  headerRow.innerHTML='<th></th>';
-  items.forEach(p=>{
-    headerRow.innerHTML+=`<td style="text-align:center;">
-      <img src="${p.image||'/static/images/placeholder.png'}" class="compare-product-img" alt="${p.name}">
-      <a href="/shop/product/${p.slug}" class="compare-product-name">${p.name}</a>
-      <div class="compare-product-price">${formatCmp(p.discount_price||p.price)}${p.discount_price?'<span class="old-price">'+formatCmp(p.price)+'</span>':''}</div>
-      <div class="compare-actions"><button onclick="removeCompare('${p.id}')" class="compare-remove-btn">Remove</button></div>
-    </td>`;
+async function removeCompare(productId) {
+  try {
+    await fetch('/api/compare/remove/' + encodeURIComponent(productId), { method: 'DELETE' });
+  } catch (e) {}
+  loadCompare();
+}
+
+async function clearCompare() {
+  try {
+    await fetch('/api/compare/clear', { method: 'DELETE' });
+  } catch (e) {}
+  loadCompare();
+}
+
+/* === AI Tools === */
+const aiQuestions = {
+  best: function() {
+    const budget = document.getElementById('ai-best-budget').value.trim();
+    const usecase = document.getElementById('ai-best-usecase').value.trim();
+    if (!budget && !usecase) return 'Which of these products is best for me?';
+    let q = 'Which of these products is best for me?';
+    if (budget) q += ' My budget is ' + budget + '.';
+    if (usecase) q += ' I need it for: ' + usecase + '.';
+    return q;
+  },
+  pros: function() {
+    return 'Generate detailed pros and cons for each of these products. Format with clear bullet points for each product.';
+  },
+  value: function() {
+    return 'Rate each of these products on value for money from 1 to 10. Explain your rating for each product and give a final recommendation on which offers the best value.';
+  },
+  expert: function() {
+    return 'Write a mini expert review comparing all of these products. Include an overview of each, key differences, who each product is best for, and a final verdict with your top pick.';
+  }
+};
+
+async function runAiTool(tool) {
+  if (!cmpProducts.length) return;
+
+  const resultEl = document.getElementById('ai-' + tool + '-result');
+  resultEl.className = 'cmp-ai-result show';
+  resultEl.innerHTML = '<div class="cmp-ai-loading"><div class="cmp-ai-spinner"></div>Analyzing products...</div>';
+
+  const products = cmpProducts.map(function(p) {
+    return { name: p.name, price: p.price, category: p.category, brand: p.brand, description: p.description };
   });
 
-  const rows=[
-    {label:'Brand',key:'brand'},
-    {label:'Category',key:'category'},
-    {label:'Rating',key:'rating',fmt:v=>'<span class="compare-rating">★</span> '+(v||0).toFixed(1)+' ('+(items[0]?.review_count||0)+' reviews)'},
-    {label:'In Stock',key:'inventory',fmt:v=>v>0?'<span style="color:#16a34a">✓ '+v+' units</span>':'<span style="color:#ef4444">Out of stock</span>'},
-    {label:'Sold',key:'sold_count',fmt:v=>(v||0)+' units'},
-    {label:'Description',key:'description'},
-  ];
-
-  // Add spec rows from first product's specs
-  const allSpecs={};
-  items.forEach(p=>{if(p.specifications)Object.keys(p.specifications).forEach(k=>allSpecs[k]=1);});
-
-  body.innerHTML='';
-  rows.forEach(r=>{
-    let row='<tr><td class="compare-row-label">'+r.label+'</td>';
-    items.forEach(p=>{
-      let val=r.fmt?r.fmt(p[r.key]):(p[r.key]||'—');
-      row+='<td class="compare-row-value">'+val+'</td>';
+  try {
+    const r = await fetch('/api/ai/assistant/compare', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ products: products, question: aiQuestions[tool]() })
     });
-    row+='</tr>';
-    body.innerHTML+=row;
-  });
+    const data = await r.json();
+    if (data.ok && data.response) {
+      resultEl.textContent = data.response;
+    } else {
+      resultEl.textContent = 'Unable to generate analysis. Please try again.';
+    }
+  } catch (e) {
+    resultEl.textContent = 'Something went wrong. Please try again later.';
+  }
+}
 
-  Object.keys(allSpecs).forEach(spec=>{
-    let row='<tr><td class="compare-row-label">'+spec+'</td>';
-    items.forEach(p=>{
-      const val=p.specifications&&p.specifications[spec]?p.specifications[spec]:'—';
-      row+='<td class="compare-row-value">'+val+'</td>';
+/* === Init === */
+(function() {
+  const addId = new URLSearchParams(location.search).get('add');
+  if (addId) {
+    fetch('/api/compare/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_id: addId })
+    }).then(function() {
+      history.replaceState({}, '', location.pathname);
+      loadCompare();
     });
-    row+='</tr>';
-    body.innerHTML+=row;
-  });
-}
-
-function formatCmp(n){return '₦'+Number(n||0).toLocaleString('en-NG',{minimumFractionDigits:0});}
-
-async function removeCompare(productId){
-  try{
-    await fetch('/api/compare/remove/'+encodeURIComponent(productId),{method:'DELETE'});
-  }catch(e){}
-  loadCompare();
-}
-
-async function clearCompare(){
-  try{
-    await fetch('/api/compare/clear',{method:'DELETE'});
-  }catch(e){}
-  loadCompare();
-}
-
-// Auto-add from ?add= query param
-const addId=new URLSearchParams(location.search).get('add');
-if(addId){
-  fetch('/api/compare/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product_id:addId})})
-    .then(()=>{history.replaceState({},'',location.pathname);loadCompare();});
-} else {
-  loadCompare();
-}
+  } else {
+    loadCompare();
+  }
+})();
 </script>
 {% endblock %}
