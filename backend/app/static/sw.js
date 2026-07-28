@@ -12,7 +12,6 @@ const PRECACHE_URLS = [
   '/static/js/main.js',
   '/static/img/placeholder.svg',
   '/static/img/placeholder-product.svg',
-  '/static/manifest.json',
 ];
 
 // Install — pre-cache critical assets

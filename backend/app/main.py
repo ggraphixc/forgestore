@@ -11,7 +11,7 @@ import dotenv
 dotenv.load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
 
 from fastapi import FastAPI, Request, Depends
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from sqlalchemy.orm import Session
@@ -229,6 +229,34 @@ try:
     _db.close()
 except Exception:
     pass
+
+# ─── Dynamic PWA Manifest ─────────────────────────────────────────
+@app.get("/manifest.json")
+async def pwa_manifest(request: Request, db: Session = Depends(get_db)):
+    """Serve manifest.json with dynamic favicon_url from admin settings."""
+    favicon = db.query(Settings).filter(Settings.key == "favicon_url").first()
+    favicon_url = favicon.value if favicon and favicon.value else "/static/img/icon-192.png"
+    site_name = db.query(Settings).filter(Settings.key == "site_name").first()
+    name = site_name.value if site_name and site_name.value else "ForgeStore"
+    return JSONResponse({
+        "name": f"{name} — Where the Workshop Meets the World",
+        "short_name": name,
+        "description": "Discover handcrafted treasures from master artisans. Shop unique products from verified vendors.",
+        "start_url": "/shop/marketplace",
+        "display": "standalone",
+        "orientation": "any",
+        "background_color": "#faf9f6",
+        "theme_color": "#d97706",
+        "scope": "/",
+        "lang": "en",
+        "categories": ["shopping", "business"],
+        "icons": [
+            {"src": favicon_url, "sizes": "any", "type": "image/png", "purpose": "any"},
+            {"src": "/static/img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"},
+            {"src": "/static/img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+        ],
+        "prefer_related_applications": False,
+    })
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")

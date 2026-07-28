@@ -41,12 +41,12 @@
     <link rel="icon" href="/static/img/favicon.png" type="image/png">
     {% endif %}
     <!-- PWA -->
-    <link rel="manifest" href="/static/manifest.json">
+    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#d97706">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="{{ settings.site_name|default('ForgeStore') }}">
-    <link rel="apple-touch-icon" href="/static/img/icon-192.png">
+    <link rel="apple-touch-icon" href="{{ settings.favicon_url|default('/static/img/icon-192.png') }}">
     {% if settings.custom_css|default('') %}
     <style>{{ settings.custom_css }}</style>
     {% endif %}
