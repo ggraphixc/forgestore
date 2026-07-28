@@ -37,7 +37,16 @@
     <link rel="stylesheet" href="{% if settings and settings.cdn_url %}{{ settings.cdn_url }}{% endif %}/static/css/forms-core.css">
     {% if settings.favicon_url|default('') %}
     <link rel="icon" href="{{ settings.favicon_url }}">
+    {% else %}
+    <link rel="icon" href="/static/img/favicon.png" type="image/png">
     {% endif %}
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#d97706">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="{{ settings.site_name|default('ForgeStore') }}">
+    <link rel="apple-touch-icon" href="/static/img/icon-192.png">
     {% if settings.custom_css|default('') %}
     <style>{{ settings.custom_css }}</style>
     {% endif %}
@@ -63,5 +72,27 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_id }}"></script>
     <script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', '{{ ga_id }}');</script>
     {% endif %}
+    <!-- PWA Service Worker -->
+    <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/static/sw.js')
+          .then((reg) => {
+            console.log('SW registered:', reg.scope);
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              if (newWorker) {
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                  }
+                });
+              }
+            });
+          })
+          .catch((err) => console.log('SW registration failed:', err));
+      });
+    }
+    </script>
 </body>
 </html>
