@@ -63,6 +63,7 @@
     <!-- Z-index system: defined in input.css :root { --z-header:50; --z-backdrop:60; --z-mobile-menu:70; --z-toast:100; --z-sidebar:40; ... } -->
 
     <script src="/static/js/main.js"></script>
+    <script src="/static/js/capacitor-bridge.js"></script>
     {% block extra_scripts %}{% endblock %}
     {% if settings.custom_js|default('') %}
     <script>{{ settings.custom_js }}</script>

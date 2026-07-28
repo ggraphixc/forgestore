@@ -42,6 +42,14 @@ data/
 node_modules/
 package-lock.json
 
+# Capacitor — ignore native build artifacts (regenerate with `npx cap sync`)
+android/app/build/
+android/.gradle/
+ios/App/Pods/
+ios/build/
+*.xcworkspace
+!ios/App/App.xcworkspace
+
 # Turbo/Claude
 .turbo/
 .claude/
