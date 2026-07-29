@@ -2,7 +2,7 @@ const { CapacitorConfig } = require('@capacitor/cli');
 
 // Hybrid app: loads from your deployed server (Render, etc.)
 // The native shell wraps your web app and adds native features.
-const WEB_URL = process.env.CAPACITOR_WEB_URL || 'https://your-render-url.onrender.com';
+const WEB_URL = process.env.CAPACITOR_WEB_URL || 'https://forgestore1.onrender.com';
 
 const config = {
   appId: 'com.forgestore.app',
@@ -11,8 +11,8 @@ const config = {
   server: {
     androidScheme: 'https',
     url: WEB_URL,
-    cleartext: true,
-    allowNavigation: ['*'],
+    cleartext: false,
+    allowNavigation: [new URL(WEB_URL).hostname],
   },
   plugins: {
     SplashScreen: {
