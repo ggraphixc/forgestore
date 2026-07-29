@@ -1,13 +1,14 @@
 """
 Capacitor Mobile App API endpoints.
 
-Provides config, icon, biometric, and offline-sync data for the
+Provides config, icon, biometric, offline-sync, and download for the
 native mobile shell (Capacitor bridge).
 """
 
+import os
 import logging
 from fastapi import APIRouter, Depends, Request, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
@@ -162,3 +163,34 @@ async def sync_offline_data(
         "recent_orders": recent_orders,
         "synced_at": str(__import__("datetime").datetime.utcnow().isoformat()),
     })
+
+
+# ─── 7. App Download (APK / IPA) ──────────────────────────────────
+# Store APK files in app/static/downloads/ — create the dir and place
+# your built .apk there. The endpoint serves it with proper headers
+# so Android browsers trigger the "Install APK" prompt.
+
+DOWNLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "downloads")
+
+
+@router.get("/download/apk")
+async def download_apk():
+    """Serve the Android APK for direct download."""
+    apk_path = os.path.join(DOWNLOAD_DIR, "app-release.apk")
+    if not os.path.isfile(apk_path):
+        raise HTTPException(
+            status_code=404,
+            detail="APK not available yet. The app is being prepared for release.",
+        )
+    return FileResponse(
+        apk_path,
+        media_type="application/vnd.android.package-archive",
+        filename="shop.apk",
+        headers={"Content-Disposition": 'attachment; filename="shop.apk"'},
+    )
+
+
+@router.get("/download/ios")
+async def download_ios_info():
+    """iOS can't be sideloaded — redirect to instructions or TestFlight."""
+    return RedirectResponse(url="/shop/download", status_code=302)

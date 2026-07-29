@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>ForgeStore</string>
+        <string>Shop</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -54,6 +54,6 @@
 	</array>
 	<!-- Face ID / Touch ID usage description -->
 	<key>NSFaceIDUsageDescription</key>
-	<string>Use Face ID to sign in to your ForgeStore account</string>
+	<string>Use Face ID to sign in to your account</string>
 </dict>
 </plist>

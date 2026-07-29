@@ -128,9 +128,11 @@
   async function biometricAuthenticate() {
     if (!isCapacitor()) return { success: false, reason: 'not_native' };
     try {
+      const config = await apiGet('/api/app/config');
+      const appName = (config && config.app_name) || 'the app';
       const { Biometric } = window.Capacitor.Plugins;
       const result = await Biometric.authenticate({
-        reason: 'Authenticate to access your ForgeStore account',
+        reason: `Authenticate to access your ${appName} account`,
         title: 'Biometric Login',
         cancelTitle: 'Use Password',
       });

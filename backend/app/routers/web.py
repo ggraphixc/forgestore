@@ -854,3 +854,15 @@ def robots_txt(request: Request, db: Session = Depends(get_db)):
     base = _site_settings(db).get("site_base_url", "").rstrip("/")
     content = f"User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /vendor/\nDisallow: /logistics/\nSitemap: {base}/sitemap.xml\n"
     return PlainTextResponse(content)
+
+
+# --- App Download Page ---
+@router.get("/download", response_class=HTMLResponse)
+def download_page(request: Request, db: Session = Depends(get_db)):
+    """Mobile app download page with direct APK download and iOS instructions."""
+    customer = _get_current_customer(request, db)
+    settings = _site_settings(db)
+    return _render_page("web/download.html", request, db, {
+        "user": customer,
+        "settings": settings,
+    })

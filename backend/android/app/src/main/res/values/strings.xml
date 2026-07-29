@@ -1,7 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">ForgeStore</string>
-    <string name="title_activity_main">ForgeStore</string>
+    <!-- Updated at build time from admin settings site_name -->
+    <string name="app_name">Shop</string>
+    <string name="title_activity_main">Shop</string>
     <string name="package_name">com.forgestore.app</string>
     <string name="custom_url_scheme">com.forgestore.app</string>
 </resources>

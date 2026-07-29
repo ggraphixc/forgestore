@@ -1,0 +1,102 @@
+{% extends "web/base.html" %}
+{% block title %}Download App — {{ settings.site_name|default('Shop') }}{% endblock %}
+{% block meta_description %}Download the {{ settings.site_name|default('Shop') }} app. Shop smarter on mobile with instant checkout, order tracking, and exclusive app-only deals.{% endblock %}
+
+{% block body %}
+<!-- Header -->
+{% include "web/navbar.html" %}
+
+<main class="min-h-screen bg-stone-50 dark:bg-stone-950 pt-20 pb-16">
+  <div class="max-w-2xl mx-auto px-4 text-center">
+
+    <!-- Hero -->
+    <div class="mb-12">
+      <div class="w-24 h-24 mx-auto mb-6 rounded-3xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/20">
+        <svg class="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+        </svg>
+      </div>
+      <h1 class="text-3xl md:text-4xl font-bold text-stone-900 dark:text-white mb-3">
+        Get the {{ settings.site_name|default('Shop') }} App
+      </h1>
+      <p class="text-stone-500 dark:text-stone-400 text-lg">
+        Shop smarter on mobile. Instant checkout, real-time tracking, and app-only deals.
+      </p>
+    </div>
+
+    <!-- Android Download -->
+    <div class="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-8 mb-6 shadow-sm">
+      <div class="flex items-center gap-4 mb-6">
+        <div class="w-14 h-14 rounded-xl bg-green-50 dark:bg-green-950 flex items-center justify-center">
+          <svg class="w-8 h-8 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3.18 23.72c.33.2.73.28 1.13.28.4 0 .8-.08 1.13-.28l8.38-4.84v-2.06l-8.38-4.84-8.38 4.84v2.06l8.38 4.84zm0-22.44L16.56 12 3.18 22.72V1.28z"/>
+          </svg>
+        </div>
+        <div class="text-left">
+          <h2 class="text-xl font-bold text-stone-900 dark:text-white">Android</h2>
+          <p class="text-stone-500 dark:text-stone-400 text-sm">Download APK directly</p>
+        </div>
+      </div>
+      <a href="/api/app/download/apk"
+         class="inline-flex items-center gap-2 px-8 py-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-green-600/20 min-h-[44px]">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 10.5v6m3-3H9m4.06-7.19l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+        </svg>
+        Download APK
+      </a>
+      <p class="text-stone-400 dark:text-stone-500 text-xs mt-4">
+        Version 1.0 • Requires Android 7.0+ • {{ settings.site_name|default('Shop') }} installer
+      </p>
+    </div>
+
+    <!-- iOS Download -->
+    <div class="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-8 mb-6 shadow-sm">
+      <div class="flex items-center gap-4 mb-6">
+        <div class="w-14 h-14 rounded-xl bg-blue-50 dark:bg-blue-950 flex items-center justify-center">
+          <svg class="w-8 h-8 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+          </svg>
+        </div>
+        <div class="text-left">
+          <h2 class="text-xl font-bold text-stone-900 dark:text-white">iPhone & iPad</h2>
+          <p class="text-stone-500 dark:text-stone-400 text-sm">Coming soon to the App Store</p>
+        </div>
+      </div>
+      <div class="inline-flex items-center gap-2 px-8 py-4 bg-stone-200 dark:bg-stone-800 text-stone-500 dark:text-stone-400 font-semibold rounded-xl min-h-[44px] cursor-not-allowed">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Coming Soon
+      </div>
+      <p class="text-stone-400 dark:text-stone-500 text-xs mt-4">
+        We're preparing for App Store submission. Stay tuned!
+      </p>
+    </div>
+
+    <!-- Features -->
+    <div class="mt-12">
+      <h3 class="text-lg font-semibold text-stone-900 dark:text-white mb-6">Why download the app?</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-5">
+          <div class="text-2xl mb-2">⚡</div>
+          <h4 class="font-semibold text-stone-900 dark:text-white text-sm">Instant Checkout</h4>
+          <p class="text-stone-500 dark:text-stone-400 text-xs mt-1">One-tap checkout with saved payment methods</p>
+        </div>
+        <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-5">
+          <div class="text-2xl mb-2">📦</div>
+          <h4 class="font-semibold text-stone-900 dark:text-white text-sm">Live Tracking</h4>
+          <p class="text-stone-500 dark:text-stone-400 text-xs mt-1">Real-time order tracking with push notifications</p>
+        </div>
+        <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-5">
+          <div class="text-2xl mb-2">🎁</div>
+          <h4 class="font-semibold text-stone-900 dark:text-white text-sm">App-Only Deals</h4>
+          <p class="text-stone-500 dark:text-stone-400 text-xs mt-1">Exclusive discounts and early access to sales</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+{% include "web/footer.html" %}
+{% endblock %}

@@ -6,7 +6,7 @@ const WEB_URL = process.env.CAPACITOR_WEB_URL || 'https://forgestore1.onrender.c
 
 const config = {
   appId: 'com.forgestore.app',
-  appName: 'ForgeStore',
+  appName: 'Shop',
   webDir: 'capacitor-web',
   server: {
     androidScheme: 'https',
@@ -55,7 +55,7 @@ const config = {
     ],
   },
   ios: {
-    scheme: 'ForgeStore',
+    scheme: 'Shop',
     contentInset: 'automatic',
     backgroundColor: '#faf9f6',
     preferredContentMode: 'mobile',
