@@ -47,5 +47,13 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<!-- Associated Domains for universal links (deep linking) -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:forgestore1.onrender.com</string>
+	</array>
+	<!-- Face ID / Touch ID usage description -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>Use Face ID to sign in to your ForgeStore account</string>
 </dict>
 </plist>

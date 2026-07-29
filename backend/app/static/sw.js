@@ -2,6 +2,7 @@
 const CACHE_NAME = 'forgestore-v1';
 const STATIC_CACHE = 'forgestore-static-v1';
 const PAGE_CACHE = 'forgestore-pages-v1';
+const API_CACHE = 'forgestore-api-v1';
 
 // Static assets to pre-cache on install
 const PRECACHE_URLS = [
@@ -13,6 +14,9 @@ const PRECACHE_URLS = [
   '/static/img/placeholder.svg',
   '/static/img/placeholder-product.svg',
 ];
+
+// API paths eligible for offline caching (GET only)
+const OFFLINE_API_PATHS = ['/api/app/sync', '/api/app/config', '/api/app/icon'];
 
 // Install — pre-cache critical assets
 self.addEventListener('install', (event) => {
@@ -29,7 +33,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== STATIC_CACHE && name !== PAGE_CACHE && name !== CACHE_NAME)
+          .filter((name) => name !== STATIC_CACHE && name !== PAGE_CACHE && name !== CACHE_NAME && name !== API_CACHE)
           .map((name) => caches.delete(name))
       );
     }).then(() => self.clients.claim())
@@ -41,15 +45,27 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET, API calls, admin/vendor/logistics portals, and auth pages
+  // Skip non-GET, admin/vendor/logistics portals, and auth pages
   if (request.method !== 'GET') return;
-  if (url.pathname.startsWith('/api/')) return;
   if (url.pathname.startsWith('/admin')) return;
   if (url.pathname.startsWith('/vendor')) return;
   if (url.pathname.startsWith('/driver')) return;
   if (url.pathname.startsWith('/logistics')) return;
   if (url.pathname.startsWith('/shop/login')) return;
   if (url.pathname.startsWith('/shop/register')) return;
+
+  // Eligible API responses — network-first with offline fallback to cache
+  if (url.pathname.startsWith('/api/app/')) {
+    const isCacheable = OFFLINE_API_PATHS.some(p => url.pathname.startsWith(p));
+    if (isCacheable) {
+      event.respondWith(networkFirstWithCache(request, API_CACHE));
+      return;
+    }
+    return;
+  }
+
+  // Skip remaining /api/ calls
+  if (url.pathname.startsWith('/api/')) return;
 
   // Static assets — cache-first (long-lived)
   if (url.pathname.startsWith('/static/')) {
@@ -132,6 +148,25 @@ async function networkFirst(request, cacheName) {
   } catch {
     const cached = await caches.match(request);
     return cached || offlinePage();
+  }
+}
+
+// Network-first with cache: try network, fallback to cached JSON (for offline API)
+async function networkFirstWithCache(request, cacheName) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(cacheName);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    return new Response(JSON.stringify({ error: 'offline', cart: [], wishlist: [], recent_orders: [] }), {
+      headers: { 'Content-Type': 'application/json' },
+      status: 503,
+    });
   }
 }
 

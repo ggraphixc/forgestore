@@ -34,11 +34,36 @@ const config = {
     },
     App: {},
   },
+  // Deep linking — universal links for iOS and Android
+  // Hosted assetlinks.json / apple-app-site-association must be served
+  // from the site base URL (https://forgestore1.onrender.com).
+  appLinks: {
+    links: [
+      {
+        // All paths on the production domain
+        href: 'https://forgestore1.onrender.com/shop/*',
+        rel: 'website',
+      },
+      {
+        href: 'https://forgestore1.onrender.com/product/*',
+        rel: 'website',
+      },
+      {
+        href: 'https://forgestore1.onrender.com/order/*',
+        rel: 'website',
+      },
+    ],
+  },
   ios: {
     scheme: 'ForgeStore',
     contentInset: 'automatic',
     backgroundColor: '#faf9f6',
     preferredContentMode: 'mobile',
+    // Associated Domains for iOS universal links
+    // Must match apple-app-site-association on the server
+    associatedDomains: [
+      'applinks:forgestore1.onrender.com',
+    ],
   },
   android: {
     backgroundColor: '#faf9f6',

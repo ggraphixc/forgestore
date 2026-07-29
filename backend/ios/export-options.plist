@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  ForgeStore iOS Export Options
+  ============================
+  Used with: xcodebuild -exportArchive -exportOptionsPlist export-options.plist
+
+  To use:
+    1. Copy this file to ios/export-options.plist
+    2. Fill in your provisioning profile names and team ID
+    3. Run: xcodebuild -exportArchive -archivePath build/ForgeStore.xcarchive \
+             -exportOptionsPlist ios/export-options.plist -exportPath ios/build
+
+  For App Store distribution:
+    method = "app-store"
+
+  For Ad Hoc distribution (internal testing):
+    method = "ad-hoc"
+
+  For Development (debug builds):
+    method = "development"
+-->
+<plist version="1.0">
+<dict>
+    <!-- Distribution method: app-store | ad-hoc | development | enterprise -->
+    <key>method</key>
+    <string>app-store</string>
+
+    <!-- Apple Developer Team ID (10-character string) -->
+    <key>teamID</key>
+    <string>YOUR_TEAM_ID</string>
+
+    <!-- Provisioning profile for the ForgeStore app -->
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>com.forgestore.app</key>
+        <string>ForgeStore App Store Profile</string>
+    </dict>
+
+    <!-- Upload bitcode (set false to speed up export) -->
+    <key>uploadBitcode</key>
+    <false/>
+
+    <!-- Upload symbols for crash reporting -->
+    <key>uploadSymbols</key>
+    <true/>
+
+    <!-- Compile Swift libs (required for Capacitor) -->
+    <key>compileBitcode</key>
+    <false/>
+
+    <!-- Destination for the exported IPA -->
+    <key>destination</key>
+    <string>upload</string>
+
+    <!-- Stripping non-public symbols -->
+    <key>stripSwiftSymbols</key>
+    <true/>
+
+    <!-- Signing style: Automatic or Manual -->
+    <key>signingStyle</key>
+    <string>automatic</string>
+</dict>
+</plist>

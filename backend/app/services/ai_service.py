@@ -1277,6 +1277,8 @@ SETTINGS_DEFINITIONS: List[Dict[str, Any]] = [
      "description": "Track product inventory levels and auto-disable out-of-stock items.", "default": "true"},
     {"key": "order_tracking_enabled", "category": "optional", "type": "boolean", "label": "Order Tracking",
      "description": "Allow customers to track order shipment status in real-time.", "default": "true"},
+    {"key": "biometric_login_enabled", "category": "optional", "type": "boolean", "label": "Biometric Login (Face ID / Fingerprint)",
+     "description": "Enable Face ID or fingerprint authentication for mobile app login.", "default": "false"},
 
     # ── Payment & Financial ──
     {"key": "minimum_payout_amount", "category": "financial", "type": "select", "label": "Minimum Payout Amount",

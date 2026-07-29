@@ -1,0 +1,29 @@
+# ForgeStore Android Release Signing Configuration
+# ==================================================
+# Copy this file to release-signing.properties and fill in your values.
+# NEVER commit the actual release-signing.properties to version control.
+#
+# To generate a keystore:
+#   keytool -genkey -v -keystore forgestore-release.keystore \
+#     -alias forgestore -keyalg RSA -keysize 2048 -validity 10000
+#
+# To verify a keystore:
+#   keytool -list -v -keystore forgestore-release.keystore
+
+# Path to the keystore file (relative to android/ or absolute)
+storeFile=../forgestore-release.keystore
+
+# Keystore password
+storePassword=CHANGE_ME_STORE_PASSWORD
+
+# Key alias inside the keystore
+keyAlias=forgestore
+
+# Key password
+keyPassword=CHANGE_ME_KEY_PASSWORD
+
+# Key algorithm (RSA recommended)
+keyAlgorithm=RSA
+
+# Signing scheme (use v2 for Android 7+)
+signingScheme=v2
