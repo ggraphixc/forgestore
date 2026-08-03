@@ -2,10 +2,7 @@
 {% block title %}Download App — {{ settings.site_name|default('Shop') }}{% endblock %}
 {% block meta_description %}Download the {{ settings.site_name|default('Shop') }} app. Shop smarter on mobile with instant checkout, order tracking, and exclusive app-only deals.{% endblock %}
 
-{% block body %}
-<!-- Header -->
-{% include "web/navbar.html" %}
-
+{% block content %}
 <main class="min-h-screen bg-stone-50 dark:bg-stone-950 pt-20 pb-16">
   <div class="max-w-2xl mx-auto px-4 text-center">
 
@@ -98,5 +95,4 @@
   </div>
 </main>
 
-{% include "web/footer.html" %}
 {% endblock %}
