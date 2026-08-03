@@ -16,11 +16,26 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Release signing — only applied when the keystore properties below are set
+    // (see gradle.properties). Without them, assembleRelease produces an UNSIGNED APK.
+    if (project.hasProperty('FORGESTORE_RELEASE_STORE_FILE')) {
+        signingConfigs {
+            release {
+                storeFile file(FORGESTORE_RELEASE_STORE_FILE)
+                storePassword FORGESTORE_RELEASE_STORE_PASSWORD
+                keyAlias FORGESTORE_RELEASE_KEY_ALIAS
+                keyPassword FORGESTORE_RELEASE_KEY_PASSWORD
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (project.hasProperty('FORGESTORE_RELEASE_STORE_FILE')) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
